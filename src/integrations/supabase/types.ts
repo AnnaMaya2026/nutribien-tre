@@ -14,7 +14,150 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      food_logs: {
+        Row: {
+          calcium: number | null
+          calories: number | null
+          carbs: number | null
+          created_at: string
+          fats: number | null
+          food_name: string
+          id: string
+          iron: number | null
+          logged_at: string
+          magnesium: number | null
+          meal_type: string | null
+          omega3: number | null
+          phytoestrogens: number | null
+          portion_size: number | null
+          proteins: number | null
+          user_id: string
+          vitamin_b12: number | null
+          vitamin_d: number | null
+        }
+        Insert: {
+          calcium?: number | null
+          calories?: number | null
+          carbs?: number | null
+          created_at?: string
+          fats?: number | null
+          food_name: string
+          id?: string
+          iron?: number | null
+          logged_at?: string
+          magnesium?: number | null
+          meal_type?: string | null
+          omega3?: number | null
+          phytoestrogens?: number | null
+          portion_size?: number | null
+          proteins?: number | null
+          user_id: string
+          vitamin_b12?: number | null
+          vitamin_d?: number | null
+        }
+        Update: {
+          calcium?: number | null
+          calories?: number | null
+          carbs?: number | null
+          created_at?: string
+          fats?: number | null
+          food_name?: string
+          id?: string
+          iron?: number | null
+          logged_at?: string
+          magnesium?: number | null
+          meal_type?: string | null
+          omega3?: number | null
+          phytoestrogens?: number | null
+          portion_size?: number | null
+          proteins?: number | null
+          user_id?: string
+          vitamin_b12?: number | null
+          vitamin_d?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          age: number | null
+          created_at: string
+          daily_calorie_goal: number | null
+          dietary_preferences: string[] | null
+          height: number | null
+          id: string
+          menopause_stage: string | null
+          profile_completed: boolean | null
+          symptoms: string[] | null
+          updated_at: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string
+          daily_calorie_goal?: number | null
+          dietary_preferences?: string[] | null
+          height?: number | null
+          id?: string
+          menopause_stage?: string | null
+          profile_completed?: boolean | null
+          symptoms?: string[] | null
+          updated_at?: string
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          age?: number | null
+          created_at?: string
+          daily_calorie_goal?: number | null
+          dietary_preferences?: string[] | null
+          height?: number | null
+          id?: string
+          menopause_stage?: string | null
+          profile_completed?: boolean | null
+          symptoms?: string[] | null
+          updated_at?: string
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
+      symptom_logs: {
+        Row: {
+          bouffees_chaleur: number | null
+          created_at: string
+          fatigue: number | null
+          id: string
+          insomnie: number | null
+          logged_at: string
+          notes: string | null
+          sautes_humeur: number | null
+          user_id: string
+        }
+        Insert: {
+          bouffees_chaleur?: number | null
+          created_at?: string
+          fatigue?: number | null
+          id?: string
+          insomnie?: number | null
+          logged_at?: string
+          notes?: string | null
+          sautes_humeur?: number | null
+          user_id: string
+        }
+        Update: {
+          bouffees_chaleur?: number | null
+          created_at?: string
+          fatigue?: number | null
+          id?: string
+          insomnie?: number | null
+          logged_at?: string
+          notes?: string | null
+          sautes_humeur?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
