@@ -132,6 +132,7 @@ export type Database = {
           logged_at: string
           notes: string | null
           sautes_humeur: number | null
+          selected_symptoms: string[] | null
           user_id: string
         }
         Insert: {
@@ -143,6 +144,7 @@ export type Database = {
           logged_at?: string
           notes?: string | null
           sautes_humeur?: number | null
+          selected_symptoms?: string[] | null
           user_id: string
         }
         Update: {
@@ -154,6 +156,7 @@ export type Database = {
           logged_at?: string
           notes?: string | null
           sautes_humeur?: number | null
+          selected_symptoms?: string[] | null
           user_id?: string
         }
         Relationships: []

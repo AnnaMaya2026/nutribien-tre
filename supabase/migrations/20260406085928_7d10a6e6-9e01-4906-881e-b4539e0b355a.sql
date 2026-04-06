@@ -1,0 +1,1 @@
+ALTER TABLE public.symptom_logs ADD COLUMN selected_symptoms text[] DEFAULT '{}';
