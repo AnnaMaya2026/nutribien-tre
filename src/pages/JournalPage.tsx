@@ -19,6 +19,7 @@ export default function JournalPage() {
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [portion, setPortion] = useState(1);
   const [mealType, setMealType] = useState("dejeuner");
+  const [showSearch, setShowSearch] = useState(false);
 
   const filtered = search.length > 1
     ? FOOD_DATABASE.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()))
@@ -45,6 +46,7 @@ export default function JournalPage() {
     setSelectedFood(null);
     setSearch("");
     setPortion(1);
+    setShowSearch(false);
   };
 
   return (
@@ -53,29 +55,31 @@ export default function JournalPage() {
       <p className="text-muted-foreground text-sm mb-4">Ajoutez vos repas du jour</p>
 
       {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setSelectedFood(null); }}
-          placeholder="Rechercher un aliment..."
-          className="pl-10 h-12 bg-card rounded-lg"
-        />
-        {filtered.length > 0 && !selectedFood && (
-          <div className="absolute z-10 top-14 left-0 right-0 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
-            {filtered.map((f) => (
-              <button
-                key={f.name}
-                onClick={() => { setSelectedFood(f); setSearch(f.name); }}
-                className="w-full text-left px-4 py-3 hover:bg-muted/50 border-b border-border last:border-0"
-              >
-                <div className="font-medium text-sm text-foreground">{f.name}</div>
-                <div className="text-xs text-muted-foreground">{f.calories} kcal · {f.portion}</div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {(showSearch || logs.length > 0) && (
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setSelectedFood(null); }}
+            placeholder="Rechercher un aliment..."
+            className="pl-10 h-12 bg-card rounded-lg"
+          />
+          {filtered.length > 0 && !selectedFood && (
+            <div className="absolute z-10 top-14 left-0 right-0 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {filtered.map((f) => (
+                <button
+                  key={f.name}
+                  onClick={() => { setSelectedFood(f); setSearch(f.name); }}
+                  className="w-full text-left px-4 py-3 hover:bg-muted/50 border-b border-border last:border-0"
+                >
+                  <div className="font-medium text-sm text-foreground">{f.name}</div>
+                  <div className="text-xs text-muted-foreground">{f.calories} kcal · {f.portion}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Selected food detail */}
       {selectedFood && (
@@ -152,10 +156,21 @@ export default function JournalPage() {
         </div>
       )}
 
-      {/* Today's logs */}
+      {/* Today's logs or empty state */}
       <h3 className="text-sm font-semibold text-foreground mb-2">Aujourd'hui</h3>
-      {logs.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-8">Aucun aliment enregistré</p>
+      {logs.length === 0 && !showSearch ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="text-6xl mb-4">🥗</div>
+          <p className="text-sm text-muted-foreground mb-6 max-w-[240px]">
+            Commencez à enregistrer vos repas pour suivre votre nutrition
+          </p>
+          <button
+            onClick={() => setShowSearch(true)}
+            className="px-6 py-3 bg-primary text-primary-foreground rounded-full font-semibold flex items-center gap-2 shadow-md"
+          >
+            <Plus className="w-4 h-4" /> Ajouter un aliment
+          </button>
+        </div>
       ) : (
         <div className="space-y-2">
           {logs.map((log) => (

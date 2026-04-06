@@ -25,11 +25,7 @@ export function useSymptomLogs() {
 
   const upsertLog = useMutation({
     mutationFn: async (log: {
-      fatigue: number;
-      bouffees_chaleur: number;
-      insomnie: number;
-      sautes_humeur: number;
-      notes?: string;
+      selected_symptoms: string[];
     }) => {
       if (!user) throw new Error("Not authenticated");
       
