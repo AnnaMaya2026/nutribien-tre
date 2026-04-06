@@ -4,7 +4,8 @@ import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { DAILY_TARGETS } from "@/lib/mockData";
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
-import { Activity, Flame, Moon, ThermometerSun } from "lucide-react";
+import { SymptomChips } from "@/components/SymptomChips";
+import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
 
 function ProgressBar({ value, max, label, unit }: { value: number; max: number; label: string; unit: string }) {
   const pct = Math.min((value / max) * 100, 100);
@@ -28,12 +29,9 @@ export default function Dashboard() {
   const { logs, weekLogs } = useFoodLogs();
   const { todayLog, upsertLog } = useSymptomLogs();
   const [showSymptoms, setShowSymptoms] = useState(false);
-  const [symptoms, setSymptoms] = useState({
-    fatigue: todayLog?.fatigue || 0,
-    bouffees_chaleur: todayLog?.bouffees_chaleur || 0,
-    insomnie: todayLog?.insomnie || 0,
-    sautes_humeur: todayLog?.sautes_humeur || 0,
-  });
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(
+    todayLog?.selected_symptoms || []
+  );
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
   const totals = logs.reduce(
@@ -75,8 +73,14 @@ export default function Dashboard() {
 
   const calPct = Math.min((totals.calories / calorieGoal) * 100, 100);
 
+  const toggleSymptom = (value: string) => {
+    setSelectedSymptoms((prev) =>
+      prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value]
+    );
+  };
+
   const handleSymptomSave = () => {
-    upsertLog.mutate(symptoms);
+    upsertLog.mutate({ selected_symptoms: selectedSymptoms });
     setShowSymptoms(false);
   };
 
@@ -87,31 +91,48 @@ export default function Dashboard() {
         <p className="text-muted-foreground text-sm">Votre suivi du jour</p>
       </div>
 
-      {/* Calorie ring */}
+      {/* Calorie ring + macro bars */}
       <div className="bg-card rounded-2xl p-6 card-soft mb-4 animate-fade-in">
-        <div className="flex items-center gap-6">
-          <div className="relative w-24 h-24 flex-shrink-0">
-            <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
+        {/* Circular progress ring */}
+        <div className="flex flex-col items-center mb-5">
+          <div className="relative w-32 h-32">
+            <svg className="w-32 h-32 -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--muted))" strokeWidth="7" />
               <circle
                 cx="50" cy="50" r="42" fill="none"
                 stroke={calPct < 50 ? "hsl(var(--progress-low))" : calPct < 80 ? "hsl(var(--progress-mid))" : "hsl(var(--progress-high))"}
-                strokeWidth="8"
+                strokeWidth="7"
                 strokeLinecap="round"
                 strokeDasharray={`${calPct * 2.64} 264`}
                 className="transition-all duration-700"
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-lg font-bold text-foreground">{Math.round(totals.calories)}</span>
-              <span className="text-[10px] text-muted-foreground">/{calorieGoal}</span>
+              <span className="text-2xl font-bold text-foreground">{Math.round(totals.calories)}</span>
+              <span className="text-xs text-muted-foreground">/ {calorieGoal} kcal</span>
             </div>
           </div>
-          <div className="flex-1 space-y-2">
-            <ProgressBar value={totals.proteins} max={DAILY_TARGETS.proteins} label="Protéines" unit="g" />
-            <ProgressBar value={totals.carbs} max={DAILY_TARGETS.carbs} label="Glucides" unit="g" />
-            <ProgressBar value={totals.fats} max={DAILY_TARGETS.fats} label="Lipides" unit="g" />
-          </div>
+        </div>
+
+        {/* 3 macro bars side by side */}
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: "Protéines", value: totals.proteins, max: DAILY_TARGETS.proteins, color: "bg-progress-high" },
+            { label: "Glucides", value: totals.carbs, max: DAILY_TARGETS.carbs, color: "bg-progress-mid" },
+            { label: "Lipides", value: totals.fats, max: DAILY_TARGETS.fats, color: "bg-primary" },
+          ].map((m) => {
+            const pct = Math.min((m.value / m.max) * 100, 100);
+            return (
+              <div key={m.label} className="text-center">
+                <div className="text-xs text-muted-foreground mb-1">{m.label}</div>
+                <div className="text-sm font-bold text-foreground">{Math.round(m.value)}g</div>
+                <div className="text-[10px] text-muted-foreground mb-1">/ {m.max}g</div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all duration-500 ${m.color}`} style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -134,48 +155,28 @@ export default function Dashboard() {
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-sm font-semibold text-foreground">Check-in symptômes</h3>
           {!showSymptoms && (
-            <button onClick={() => setShowSymptoms(true)} className="text-xs font-medium text-primary-foreground bg-primary/30 px-3 py-1 rounded-full">
+            <button onClick={() => { setShowSymptoms(true); setSelectedSymptoms(todayLog?.selected_symptoms || []); }} className="text-xs font-medium text-primary-foreground bg-primary/30 px-3 py-1 rounded-full">
               {todayLog ? "Modifier" : "Remplir"}
             </button>
           )}
         </div>
         {showSymptoms ? (
           <div className="space-y-3">
-            {[
-              { key: "fatigue" as const, label: "Fatigue", icon: Activity },
-              { key: "bouffees_chaleur" as const, label: "Bouffées de chaleur", icon: ThermometerSun },
-              { key: "insomnie" as const, label: "Insomnie", icon: Moon },
-              { key: "sautes_humeur" as const, label: "Sautes d'humeur", icon: Flame },
-            ].map(({ key, label, icon: Icon }) => (
-              <div key={key} className="flex items-center gap-3">
-                <Icon className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm flex-1 text-foreground">{label}</span>
-                <div className="flex gap-1">
-                  {[0, 1, 2, 3, 4, 5].map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setSymptoms({ ...symptoms, [key]: v })}
-                      className={`w-7 h-7 rounded-full text-xs font-medium transition-all ${
-                        symptoms[key] === v
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover:bg-primary/20"
-                      }`}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+            <SymptomChips selected={selectedSymptoms} onToggle={toggleSymptom} />
             <button onClick={handleSymptomSave} className="w-full mt-2 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium">
               Enregistrer
             </button>
           </div>
-        ) : todayLog ? (
-          <div className="flex gap-4 text-xs text-muted-foreground">
-            <span>Fatigue: {todayLog.fatigue}/5</span>
-            <span>Chaleur: {todayLog.bouffees_chaleur}/5</span>
-            <span>Insomnie: {todayLog.insomnie}/5</span>
+        ) : todayLog?.selected_symptoms && todayLog.selected_symptoms.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {todayLog.selected_symptoms.map((s) => {
+              const label = FULL_SYMPTOMS_LIST.find((x) => x.value === s)?.label || s;
+              return (
+                <span key={s} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-foreground">
+                  {label}
+                </span>
+              );
+            })}
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">Aucun check-in aujourd'hui</p>

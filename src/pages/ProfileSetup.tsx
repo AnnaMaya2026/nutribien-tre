@@ -3,18 +3,12 @@ import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronRight, ChevronLeft, Heart } from "lucide-react";
+import { SymptomChips } from "@/components/SymptomChips";
 
 const MENOPAUSE_STAGES = [
   { value: "perimenopause", label: "Périménopause" },
   { value: "menopause", label: "Ménopause" },
   { value: "postmenopause", label: "Postménopause" },
-];
-
-const SYMPTOMS = [
-  { value: "fatigue", label: "Fatigue" },
-  { value: "bouffees_chaleur", label: "Bouffées de chaleur" },
-  { value: "insomnie", label: "Insomnie" },
-  { value: "sautes_humeur", label: "Sautes d'humeur" },
 ];
 
 const DIETARY_PREFS = [
@@ -24,9 +18,8 @@ const DIETARY_PREFS = [
 ];
 
 function calculateCalories(age: number, weight: number, height: number): number {
-  // Mifflin-St Jeor for women with menopause adjustment
   const bmr = 10 * weight + 6.25 * height - 5 * age - 161;
-  return Math.round(bmr * 1.4); // Light activity
+  return Math.round(bmr * 1.4);
 }
 
 export default function ProfileSetup() {
@@ -39,6 +32,12 @@ export default function ProfileSetup() {
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [dietPrefs, setDietPrefs] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+
+  const toggleSymptom = (value: string) => {
+    setSymptoms((prev) =>
+      prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value]
+    );
+  };
 
   const toggleItem = (list: string[], setList: (v: string[]) => void, item: string) => {
     setList(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
@@ -102,25 +101,11 @@ export default function ProfileSetup() {
       </div>
     </div>,
 
-    // Step 2: Symptoms
+    // Step 2: Symptoms (full list as toggle chips)
     <div key="symptoms" className="space-y-6 animate-fade-in">
       <h2 className="text-xl font-semibold text-foreground">Vos symptômes principaux</h2>
       <p className="text-muted-foreground text-sm">Sélectionnez ceux qui vous concernent</p>
-      <div className="space-y-3">
-        {SYMPTOMS.map((s) => (
-          <button
-            key={s.value}
-            onClick={() => toggleItem(symptoms, setSymptoms, s.value)}
-            className={`w-full p-4 rounded-lg text-left font-medium transition-all border ${
-              symptoms.includes(s.value)
-                ? "bg-primary/20 border-primary text-foreground"
-                : "bg-card border-border text-foreground hover:border-primary/50"
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
+      <SymptomChips selected={symptoms} onToggle={toggleSymptom} />
     </div>,
 
     // Step 3: Diet
