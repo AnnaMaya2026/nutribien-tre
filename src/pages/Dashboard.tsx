@@ -1,5 +1,6 @@
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { DAILY_TARGETS } from "@/lib/mockData";
 import { useState } from "react";
@@ -24,7 +25,24 @@ function ProgressBar({ value, max, label, unit }: { value: number; max: number; 
   );
 }
 
+function formatFrenchDate(): string {
+  const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+  const months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+  const now = new Date();
+  return `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+}
+
+function getUserFirstName(email?: string): string {
+  if (!email) return "";
+  const local = email.split("@")[0];
+  const name = local.replace(/[._-]/g, " ").split(" ")[0];
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+const MACRO_GOALS = { proteins: 100, carbs: 200, fats: 65 };
+
 export default function Dashboard() {
+  const { user } = useAuth();
   const { profile } = useProfile();
   const { logs, weekLogs } = useFoodLogs();
   const { todayLog, upsertLog } = useSymptomLogs();
@@ -34,6 +52,8 @@ export default function Dashboard() {
   );
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
+  const firstName = getUserFirstName(user?.email);
+
   const totals = logs.reduce(
     (acc, log) => ({
       calories: acc.calories + (log.calories || 0),
@@ -51,7 +71,6 @@ export default function Dashboard() {
     { calories: 0, proteins: 0, carbs: 0, fats: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0 }
   );
 
-  // 7-day chart data
   const chartData = (() => {
     const days: Record<string, number> = {};
     const labels = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
@@ -86,30 +105,40 @@ export default function Dashboard() {
 
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
+      {/* Greeting */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Bonjour 👋</h1>
-        <p className="text-muted-foreground text-sm">Votre suivi du jour</p>
+        <h1 className="text-2xl font-bold text-foreground">
+          Bonjour {firstName ? firstName : ""} 👋
+        </h1>
+        <p className="text-muted-foreground text-sm">{formatFrenchDate()}</p>
       </div>
 
       {/* Calorie ring + macro bars */}
       <div className="bg-card rounded-2xl p-6 card-soft mb-4 animate-fade-in">
-        {/* Circular progress ring */}
-        <div className="flex flex-col items-center mb-5">
-          <div className="relative w-32 h-32">
-            <svg className="w-32 h-32 -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--muted))" strokeWidth="7" />
+        {/* Large circular progress ring with gradient */}
+        <div className="flex flex-col items-center mb-6">
+          <div className="relative w-44 h-44">
+            <svg className="w-44 h-44 -rotate-90" viewBox="0 0 100 100">
+              <defs>
+                <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" />
+                  <stop offset="100%" stopColor="hsl(340, 80%, 75%)" />
+                </linearGradient>
+              </defs>
+              <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
               <circle
                 cx="50" cy="50" r="42" fill="none"
-                stroke={calPct < 50 ? "hsl(var(--progress-low))" : calPct < 80 ? "hsl(var(--progress-mid))" : "hsl(var(--progress-high))"}
-                strokeWidth="7"
+                stroke="url(#ring-gradient)"
+                strokeWidth="6"
                 strokeLinecap="round"
                 strokeDasharray={`${calPct * 2.64} 264`}
                 className="transition-all duration-700"
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-bold text-foreground">{Math.round(totals.calories)}</span>
-              <span className="text-xs text-muted-foreground">/ {calorieGoal} kcal</span>
+              <span className="text-3xl font-bold text-foreground">{Math.round(totals.calories)}</span>
+              <span className="text-xs text-muted-foreground">kcal consommées</span>
+              <span className="text-[10px] text-muted-foreground mt-0.5">/ {calorieGoal} kcal</span>
             </div>
           </div>
         </div>
@@ -117,9 +146,9 @@ export default function Dashboard() {
         {/* 3 macro bars side by side */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Protéines", value: totals.proteins, max: DAILY_TARGETS.proteins, color: "bg-progress-high" },
-            { label: "Glucides", value: totals.carbs, max: DAILY_TARGETS.carbs, color: "bg-progress-mid" },
-            { label: "Lipides", value: totals.fats, max: DAILY_TARGETS.fats, color: "bg-primary" },
+            { label: "Protéines", value: totals.proteins, max: MACRO_GOALS.proteins, color: "bg-progress-high" },
+            { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs, color: "bg-progress-mid" },
+            { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats, color: "bg-primary" },
           ].map((m) => {
             const pct = Math.min((m.value / m.max) * 100, 100);
             return (
