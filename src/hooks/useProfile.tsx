@@ -22,7 +22,7 @@ export function useProfile() {
   });
 
   const updateProfile = useMutation({
-    mutationFn: async (updates: Record<string, unknown>) => {
+    mutationFn: async (updates: Partial<Omit<import("@/integrations/supabase/types").Tables<"profiles">, "id" | "created_at" | "user_id">>) => {
       if (!user) throw new Error("Not authenticated");
       const { error } = await supabase
         .from("profiles")
