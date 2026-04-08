@@ -96,7 +96,11 @@ export default function JournalPage() {
               Recherche en cours...
             </div>
           )}
-          {results.length > 0 && !selectedFood && !searching && (
+          {!searching && searchError && results.length === 0 && search.length >= 2 && !selectedFood && (
+            <div className="absolute z-10 top-14 left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
+              {searchError}
+            </div>
+          )}
             <div className="absolute z-10 top-14 left-0 right-0 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {results.map((f, i) => (
                 <button
