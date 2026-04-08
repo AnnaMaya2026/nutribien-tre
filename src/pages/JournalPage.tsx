@@ -27,7 +27,7 @@ export default function JournalPage() {
 
   // Debounced search
   useEffect(() => {
-    if (search.length < 2 || selectedFood) {
+    if (search.length < 3 || selectedFood) {
       setResults([]);
       setSearchError(null);
       return;
@@ -46,7 +46,7 @@ export default function JournalPage() {
       } finally {
         setSearching(false);
       }
-    }, 400);
+    }, 500);
     return () => clearTimeout(debounceRef.current);
   }, [search, selectedFood]);
 
@@ -92,7 +92,8 @@ export default function JournalPage() {
             className="pl-10 h-12 bg-card rounded-lg"
           />
           {searching && (
-            <div className="absolute z-10 top-14 left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
+            <div className="absolute z-10 top-14 left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               Recherche en cours...
             </div>
           )}
@@ -111,7 +112,7 @@ export default function JournalPage() {
                 >
                   <div className="font-medium text-sm text-foreground line-clamp-1">{f.name}</div>
                   <div className="text-xs text-muted-foreground">
-                    {f.calories_100g} kcal/100g · P {f.proteins_100g}g · G {f.carbs_100g}g · L {f.fats_100g}g
+                    {f.calories_100g || "N/A"} kcal/100g · P {f.proteins_100g || "N/A"}g · G {f.carbs_100g || "N/A"}g · L {f.fats_100g || "N/A"}g
                   </div>
                 </button>
               ))}
