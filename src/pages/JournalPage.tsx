@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
-import { FOOD_DATABASE, FoodItem } from "@/lib/mockData";
-import { Search, Plus, Trash2, X } from "lucide-react";
+import { searchFoods, scaleNutrients, ParsedFood } from "@/lib/openFoodFacts";
+import { Search, Plus, Trash2, X, Minus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -16,36 +16,53 @@ export default function JournalPage() {
   const { logs, addLog, deleteLog } = useFoodLogs();
   const { user } = useAuth();
   const [search, setSearch] = useState("");
-  const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
-  const [portion, setPortion] = useState(1);
+  const [results, setResults] = useState<ParsedFood[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedFood, setSelectedFood] = useState<ParsedFood | null>(null);
+  const [grams, setGrams] = useState(100);
   const [mealType, setMealType] = useState("dejeuner");
   const [showSearch, setShowSearch] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const filtered = search.length > 1
-    ? FOOD_DATABASE.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()))
-    : [];
+  // Debounced search
+  useEffect(() => {
+    if (search.length < 2 || selectedFood) {
+      setResults([]);
+      return;
+    }
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      const res = await searchFoods(search);
+      setResults(res);
+      setSearching(false);
+    }, 400);
+    return () => clearTimeout(debounceRef.current);
+  }, [search, selectedFood]);
+
+  const scaled = selectedFood ? scaleNutrients(selectedFood, grams) : null;
 
   const handleAdd = () => {
-    if (!selectedFood || !user) return;
+    if (!selectedFood || !scaled || !user) return;
     addLog.mutate({
       food_name: selectedFood.name,
-      portion_size: portion,
-      calories: Math.round(selectedFood.calories * portion),
-      proteins: Math.round(selectedFood.proteins * portion),
-      carbs: Math.round(selectedFood.carbs * portion),
-      fats: Math.round(selectedFood.fats * portion),
-      calcium: Math.round(selectedFood.calcium * portion),
-      vitamin_d: +(selectedFood.vitamin_d * portion).toFixed(1),
-      magnesium: Math.round(selectedFood.magnesium * portion),
-      iron: +(selectedFood.iron * portion).toFixed(1),
-      omega3: +(selectedFood.omega3 * portion).toFixed(1),
-      phytoestrogens: +(selectedFood.phytoestrogens * portion).toFixed(1),
-      vitamin_b12: +(selectedFood.vitamin_b12 * portion).toFixed(1),
+      portion_size: grams,
+      calories: scaled.calories,
+      proteins: scaled.proteins,
+      carbs: scaled.carbs,
+      fats: scaled.fats,
+      calcium: scaled.calcium,
+      vitamin_d: scaled.vitamin_d,
+      magnesium: scaled.magnesium,
+      iron: scaled.iron,
+      omega3: scaled.omega3,
+      phytoestrogens: scaled.phytoestrogens,
+      vitamin_b12: scaled.vitamin_b12,
       meal_type: mealType,
     });
     setSelectedFood(null);
     setSearch("");
-    setPortion(1);
+    setGrams(100);
     setShowSearch(false);
   };
 
@@ -61,19 +78,26 @@ export default function JournalPage() {
           <Input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setSelectedFood(null); }}
-            placeholder="Rechercher un aliment..."
+            placeholder="Rechercher un aliment (Open Food Facts)..."
             className="pl-10 h-12 bg-card rounded-lg"
           />
-          {filtered.length > 0 && !selectedFood && (
+          {searching && (
+            <div className="absolute z-10 top-14 left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
+              Recherche en cours...
+            </div>
+          )}
+          {results.length > 0 && !selectedFood && !searching && (
             <div className="absolute z-10 top-14 left-0 right-0 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {filtered.map((f) => (
+              {results.map((f, i) => (
                 <button
-                  key={f.name}
-                  onClick={() => { setSelectedFood(f); setSearch(f.name); }}
+                  key={`${f.name}-${i}`}
+                  onClick={() => { setSelectedFood(f); setSearch(f.name); setGrams(100); }}
                   className="w-full text-left px-4 py-3 hover:bg-muted/50 border-b border-border last:border-0"
                 >
-                  <div className="font-medium text-sm text-foreground">{f.name}</div>
-                  <div className="text-xs text-muted-foreground">{f.calories} kcal · {f.portion}</div>
+                  <div className="font-medium text-sm text-foreground line-clamp-1">{f.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {f.calories_100g} kcal/100g · P {f.proteins_100g}g · G {f.carbs_100g}g · L {f.fats_100g}g
+                  </div>
                 </button>
               ))}
             </div>
@@ -82,31 +106,58 @@ export default function JournalPage() {
       )}
 
       {/* Selected food detail */}
-      {selectedFood && (
+      {selectedFood && scaled && (
         <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
           <div className="flex justify-between items-start mb-3">
-            <div>
-              <h3 className="font-semibold text-foreground">{selectedFood.name}</h3>
-              <p className="text-xs text-muted-foreground">{selectedFood.portion}</p>
+            <div className="flex-1 mr-2">
+              <h3 className="font-semibold text-foreground line-clamp-2">{selectedFood.name}</h3>
+              <p className="text-xs text-muted-foreground">Valeurs pour {grams}g</p>
             </div>
             <button onClick={() => { setSelectedFood(null); setSearch(""); }}>
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
 
-          {/* Portion */}
+          {/* Portion (grams) */}
           <div className="mb-3">
-            <label className="text-xs text-muted-foreground block mb-1">Portions</label>
-            <div className="flex gap-2">
-              {[0.5, 1, 1.5, 2].map((p) => (
+            <label className="text-xs text-muted-foreground block mb-1">Quantité (grammes)</label>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setGrams((g) => Math.max(10, g - 10))}
+                className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
+              <Input
+                type="number"
+                value={grams}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value);
+                  if (!isNaN(v) && v >= 10 && v <= 2000) setGrams(v);
+                }}
+                className="w-20 text-center h-9 bg-muted"
+                min={10}
+                max={2000}
+              />
+              <span className="text-sm text-muted-foreground">g</span>
+              <button
+                onClick={() => setGrams((g) => Math.min(2000, g + 10))}
+                className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+            {/* Quick presets */}
+            <div className="flex gap-2 mt-2">
+              {[50, 100, 150, 200, 300].map((g) => (
                 <button
-                  key={p}
-                  onClick={() => setPortion(p)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                    portion === p ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  key={g}
+                  onClick={() => setGrams(g)}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {p}×
+                  {g}g
                 </button>
               ))}
             </div>
@@ -131,19 +182,40 @@ export default function JournalPage() {
           </div>
 
           {/* Nutritional breakdown */}
-          <div className="grid grid-cols-3 gap-2 text-center mb-4">
+          <div className="grid grid-cols-4 gap-2 text-center mb-3">
             <div className="bg-muted/50 rounded-lg p-2">
-              <div className="text-lg font-bold text-foreground">{Math.round(selectedFood.calories * portion)}</div>
+              <div className="text-lg font-bold text-foreground">{scaled.calories}</div>
               <div className="text-[10px] text-muted-foreground">kcal</div>
             </div>
             <div className="bg-muted/50 rounded-lg p-2">
-              <div className="text-lg font-bold text-foreground">{Math.round(selectedFood.proteins * portion)}g</div>
+              <div className="text-lg font-bold text-foreground">{scaled.proteins}g</div>
               <div className="text-[10px] text-muted-foreground">Protéines</div>
             </div>
             <div className="bg-muted/50 rounded-lg p-2">
-              <div className="text-lg font-bold text-foreground">{Math.round(selectedFood.carbs * portion)}g</div>
+              <div className="text-lg font-bold text-foreground">{scaled.carbs}g</div>
               <div className="text-[10px] text-muted-foreground">Glucides</div>
             </div>
+            <div className="bg-muted/50 rounded-lg p-2">
+              <div className="text-lg font-bold text-foreground">{scaled.fats}g</div>
+              <div className="text-[10px] text-muted-foreground">Lipides</div>
+            </div>
+          </div>
+
+          {/* Micronutrients */}
+          <div className="grid grid-cols-3 gap-1.5 text-center mb-4">
+            {[
+              { label: "Calcium", value: scaled.calcium, unit: "mg" },
+              { label: "Vit. D", value: scaled.vitamin_d, unit: "µg" },
+              { label: "Magnésium", value: scaled.magnesium, unit: "mg" },
+              { label: "Fer", value: scaled.iron, unit: "mg" },
+              { label: "Oméga-3", value: scaled.omega3, unit: "g" },
+              { label: "Vit. B12", value: scaled.vitamin_b12, unit: "µg" },
+            ].map((n) => (
+              <div key={n.label} className="bg-muted/30 rounded-lg py-1.5 px-1">
+                <div className="text-xs font-semibold text-foreground">{n.value}{n.unit}</div>
+                <div className="text-[9px] text-muted-foreground">{n.label}</div>
+              </div>
+            ))}
           </div>
 
           <button
@@ -176,9 +248,9 @@ export default function JournalPage() {
           {logs.map((log) => (
             <div key={log.id} className="bg-card rounded-xl p-4 flex items-center gap-3 card-soft">
               <div className="flex-1">
-                <div className="font-medium text-sm text-foreground">{log.food_name}</div>
+                <div className="font-medium text-sm text-foreground line-clamp-1">{log.food_name}</div>
                 <div className="text-xs text-muted-foreground">
-                  {log.calories} kcal · {log.proteins}g prot · {log.portion_size}×
+                  {log.calories} kcal · {log.proteins}g prot · {log.portion_size}g
                 </div>
               </div>
               <button onClick={() => deleteLog.mutate(log.id)} className="text-muted-foreground hover:text-destructive transition-colors">
