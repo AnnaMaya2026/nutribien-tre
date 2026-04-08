@@ -27,7 +27,7 @@ export default function JournalPage() {
 
   // Debounced search
   useEffect(() => {
-    if (search.length < 2 || selectedFood) {
+    if (search.length < 3 || selectedFood) {
       setResults([]);
       setSearchError(null);
       return;
@@ -46,7 +46,7 @@ export default function JournalPage() {
       } finally {
         setSearching(false);
       }
-    }, 400);
+    }, 500);
     return () => clearTimeout(debounceRef.current);
   }, [search, selectedFood]);
 

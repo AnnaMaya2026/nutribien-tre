@@ -54,32 +54,39 @@ function parseProduct(p: OFFProduct): ParsedFood | null {
   };
 }
 
-export async function searchFoods(query: string): Promise<ParsedFood[]> {
-  const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&fields=product_name,nutriments,serving_size&lc=fr&cc=fr&page_size=15`;
-  console.log("[OFF] Searching:", url);
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeout);
-    if (!res.ok) {
-      console.error("[OFF] HTTP error:", res.status);
-      throw new Error("API_ERROR");
+async function fetchWithRetry(url: string, retries = 3, timeout = 10000): Promise<Response> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    try {
+      console.log(`[OFF] Attempt ${attempt}/${retries}`);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res;
+    } catch (err) {
+      clearTimeout(timer);
+      console.warn(`[OFF] Attempt ${attempt} failed:`, err);
+      if (attempt === retries) throw err;
+      await new Promise(r => setTimeout(r, 300));
     }
-    const data = await res.json();
-    console.log("[OFF] Results count:", data.products?.length ?? 0);
-    const products: OFFProduct[] = data.products || [];
-    const parsed = products
-      .map(parseProduct)
-      .filter((p): p is ParsedFood => p !== null && p.calories_100g > 0)
-      .slice(0, 10);
-    console.log("[OFF] Parsed foods:", parsed.length);
-    return parsed;
-  } catch (err) {
-    clearTimeout(timeout);
-    console.error("[OFF] Fetch error:", err);
-    throw err;
   }
+  throw new Error("Unreachable");
+}
+
+export async function searchFoods(query: string): Promise<ParsedFood[]> {
+  const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&fields=product_name,nutriments,serving_size&lc=fr&cc=fr&page_size=25`;
+  console.log("[OFF] Searching:", url);
+  const res = await fetchWithRetry(url);
+  const data = await res.json();
+  console.log("[OFF] Raw results:", data.products?.length ?? 0);
+  const products: OFFProduct[] = data.products || [];
+  const parsed = products
+    .map(parseProduct)
+    .filter((p): p is ParsedFood => p !== null && p.calories_100g > 0)
+    .slice(0, 10);
+  console.log("[OFF] Parsed foods:", parsed.length);
+  return parsed;
 }
 
 export function scaleNutrients(food: ParsedFood, grams: number) {
