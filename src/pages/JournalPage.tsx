@@ -18,6 +18,7 @@ export default function JournalPage() {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<ParsedFood[]>([]);
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [selectedFood, setSelectedFood] = useState<ParsedFood | null>(null);
   const [grams, setGrams] = useState(100);
   const [mealType, setMealType] = useState("dejeuner");
@@ -28,14 +29,23 @@ export default function JournalPage() {
   useEffect(() => {
     if (search.length < 2 || selectedFood) {
       setResults([]);
+      setSearchError(null);
       return;
     }
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
-      const res = await searchFoods(search);
-      setResults(res);
-      setSearching(false);
+      setSearchError(null);
+      try {
+        const res = await searchFoods(search);
+        setResults(res);
+        if (res.length === 0) setSearchError("Aucun résultat trouvé");
+      } catch {
+        setResults([]);
+        setSearchError("Erreur de connexion, réessayez");
+      } finally {
+        setSearching(false);
+      }
     }, 400);
     return () => clearTimeout(debounceRef.current);
   }, [search, selectedFood]);

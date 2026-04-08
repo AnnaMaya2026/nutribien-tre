@@ -55,15 +55,31 @@ function parseProduct(p: OFFProduct): ParsedFood | null {
 }
 
 export async function searchFoods(query: string): Promise<ParsedFood[]> {
-  const url = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(query)}&fields=product_name,nutriments,serving_size&countries_tags_en=france&page_size=15&json=true`;
-  const res = await fetch(url);
-  if (!res.ok) return [];
-  const data = await res.json();
-  const products: OFFProduct[] = data.products || [];
-  return products
-    .map(parseProduct)
-    .filter((p): p is ParsedFood => p !== null && p.calories_100g > 0)
-    .slice(0, 10);
+  const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&fields=product_name,nutriments,serving_size&lc=fr&cc=fr&page_size=15`;
+  console.log("[OFF] Searching:", url);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) {
+      console.error("[OFF] HTTP error:", res.status);
+      throw new Error("API_ERROR");
+    }
+    const data = await res.json();
+    console.log("[OFF] Results count:", data.products?.length ?? 0);
+    const products: OFFProduct[] = data.products || [];
+    const parsed = products
+      .map(parseProduct)
+      .filter((p): p is ParsedFood => p !== null && p.calories_100g > 0)
+      .slice(0, 10);
+    console.log("[OFF] Parsed foods:", parsed.length);
+    return parsed;
+  } catch (err) {
+    clearTimeout(timeout);
+    console.error("[OFF] Fetch error:", err);
+    throw err;
+  }
 }
 
 export function scaleNutrients(food: ParsedFood, grams: number) {
