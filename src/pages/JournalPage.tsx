@@ -101,6 +101,7 @@ export default function JournalPage() {
               {searchError}
             </div>
           )}
+          {results.length > 0 && !selectedFood && !searching && (
             <div className="absolute z-10 top-14 left-0 right-0 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {results.map((f, i) => (
                 <button
