@@ -88,11 +88,29 @@ export default function JournalPage() {
       {/* Search */}
       {(showSearch || logs.length > 0) && (
         <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={() => { setSearchMode("nom"); setSearch(""); setResults([]); }}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                searchMode === "nom" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              Par nom
+            </button>
+            <button
+              onClick={() => { setSearchMode("groupe"); setSearch(""); setResults([]); }}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                searchMode === "groupe" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              Par catégorie
+            </button>
+          </div>
+          <Search className="absolute left-3 top-[calc(2rem+50%)] -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setSelectedFood(null); }}
-            placeholder="Rechercher un aliment (base CIQUAL)..."
+            placeholder={searchMode === "nom" ? "Rechercher un aliment (ex: oeuf, poulet)..." : "Rechercher une catégorie (ex: fruits, viandes)..."}
             className="pl-10 h-12 bg-card rounded-lg"
           />
           {searching && (
