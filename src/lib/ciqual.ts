@@ -55,6 +55,7 @@ export function scaleCiqual(food: CiqualFood, grams: number) {
     proteins: Math.round(food.proteines_100g * r),
     carbs: Math.round(food.glucides_100g * r),
     fats: Math.round(food.lipides_100g * r),
+    fibres: Math.round(food.fibres_100g * r),
     calcium: Math.round(food.calcium_100g * r),
     vitamin_d: +(food.vitamine_d_100g * r).toFixed(1),
     magnesium: Math.round(food.magnesium_100g * r),
