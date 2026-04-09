@@ -1,0 +1,1 @@
+ALTER TABLE public.aliments_ciqual ENABLE ROW LEVEL SECURITY;
