@@ -61,6 +61,7 @@ export default function JournalPage() {
       proteins: scaled.proteins,
       carbs: scaled.carbs,
       fats: scaled.fats,
+      fibres: scaled.fibres,
       calcium: scaled.calcium,
       vitamin_d: scaled.vitamin_d,
       magnesium: scaled.magnesium,
@@ -112,7 +113,7 @@ export default function JournalPage() {
                 >
                   <div className="font-medium text-sm text-foreground line-clamp-1">{f.nom}</div>
                   <div className="text-xs text-muted-foreground">
-                    {f.calories_100g} kcal/100g · P {f.proteines_100g}g · G {f.glucides_100g}g · L {f.lipides_100g}g
+                    {f.calories_100g} kcal/100g · P {f.proteines_100g}g · G {f.glucides_100g}g · L {f.lipides_100g}g · F {f.fibres_100g}g
                   </div>
                 </button>
               ))}
@@ -198,7 +199,7 @@ export default function JournalPage() {
           </div>
 
           {/* Nutritional breakdown */}
-          <div className="grid grid-cols-4 gap-2 text-center mb-3">
+          <div className="grid grid-cols-5 gap-2 text-center mb-3">
             <div className="bg-muted/50 rounded-lg p-2">
               <div className="text-lg font-bold text-foreground">{scaled.calories}</div>
               <div className="text-[10px] text-muted-foreground">kcal</div>
@@ -214,6 +215,10 @@ export default function JournalPage() {
             <div className="bg-muted/50 rounded-lg p-2">
               <div className="text-lg font-bold text-foreground">{scaled.fats}g</div>
               <div className="text-[10px] text-muted-foreground">Lipides</div>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-2">
+              <div className="text-lg font-bold text-foreground">{scaled.fibres}g</div>
+              <div className="text-[10px] text-muted-foreground">Fibres</div>
             </div>
           </div>
 
