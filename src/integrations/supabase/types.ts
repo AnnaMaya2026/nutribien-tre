@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      aliments_ciqual: {
+        Row: {
+          calcium_100g: number | null
+          calories_100g: number | null
+          fer_100g: number | null
+          fibres_100g: number | null
+          glucides_100g: number | null
+          groupe: string | null
+          id: number
+          lipides_100g: number | null
+          magnesium_100g: number | null
+          nom: string | null
+          omega3_total_100g: number | null
+          proteines_100g: number | null
+          vitamine_b12_100g: number | null
+          vitamine_d_100g: number | null
+        }
+        Insert: {
+          calcium_100g?: number | null
+          calories_100g?: number | null
+          fer_100g?: number | null
+          fibres_100g?: number | null
+          glucides_100g?: number | null
+          groupe?: string | null
+          id?: number
+          lipides_100g?: number | null
+          magnesium_100g?: number | null
+          nom?: string | null
+          omega3_total_100g?: number | null
+          proteines_100g?: number | null
+          vitamine_b12_100g?: number | null
+          vitamine_d_100g?: number | null
+        }
+        Update: {
+          calcium_100g?: number | null
+          calories_100g?: number | null
+          fer_100g?: number | null
+          fibres_100g?: number | null
+          glucides_100g?: number | null
+          groupe?: string | null
+          id?: number
+          lipides_100g?: number | null
+          magnesium_100g?: number | null
+          nom?: string | null
+          omega3_total_100g?: number | null
+          proteines_100g?: number | null
+          vitamine_b12_100g?: number | null
+          vitamine_d_100g?: number | null
+        }
+        Relationships: []
+      }
       food_logs: {
         Row: {
           calcium: number | null

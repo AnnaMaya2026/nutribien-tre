@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
-import { searchFoods, scaleNutrients, ParsedFood } from "@/lib/openFoodFacts";
+import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { Search, Plus, Trash2, X, Minus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,10 +16,10 @@ export default function JournalPage() {
   const { logs, addLog, deleteLog } = useFoodLogs();
   const { user } = useAuth();
   const [search, setSearch] = useState("");
-  const [results, setResults] = useState<ParsedFood[]>([]);
+  const [results, setResults] = useState<CiqualFood[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [selectedFood, setSelectedFood] = useState<ParsedFood | null>(null);
+  const [selectedFood, setSelectedFood] = useState<CiqualFood | null>(null);
   const [grams, setGrams] = useState(100);
   const [mealType, setMealType] = useState("dejeuner");
   const [showSearch, setShowSearch] = useState(false);
@@ -37,7 +37,7 @@ export default function JournalPage() {
       setSearching(true);
       setSearchError(null);
       try {
-        const res = await searchFoods(search);
+        const res = await searchCiqual(search);
         setResults(res);
         if (res.length === 0) setSearchError("Aucun résultat trouvé");
       } catch {
@@ -50,12 +50,12 @@ export default function JournalPage() {
     return () => clearTimeout(debounceRef.current);
   }, [search, selectedFood]);
 
-  const scaled = selectedFood ? scaleNutrients(selectedFood, grams) : null;
+  const scaled = selectedFood ? scaleCiqual(selectedFood, grams) : null;
 
   const handleAdd = () => {
     if (!selectedFood || !scaled || !user) return;
     addLog.mutate({
-      food_name: selectedFood.name,
+      food_name: selectedFood.nom,
       portion_size: grams,
       calories: scaled.calories,
       proteins: scaled.proteins,
@@ -88,7 +88,7 @@ export default function JournalPage() {
           <Input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setSelectedFood(null); }}
-            placeholder="Rechercher un aliment (Open Food Facts)..."
+            placeholder="Rechercher un aliment (base CIQUAL)..."
             className="pl-10 h-12 bg-card rounded-lg"
           />
           {searching && (
@@ -97,22 +97,22 @@ export default function JournalPage() {
               Recherche en cours...
             </div>
           )}
-          {!searching && searchError && results.length === 0 && search.length >= 2 && !selectedFood && (
+          {!searching && searchError && results.length === 0 && search.length >= 3 && !selectedFood && (
             <div className="absolute z-10 top-14 left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
               {searchError}
             </div>
           )}
           {results.length > 0 && !selectedFood && !searching && (
             <div className="absolute z-10 top-14 left-0 right-0 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {results.map((f, i) => (
+              {results.map((f) => (
                 <button
-                  key={`${f.name}-${i}`}
-                  onClick={() => { setSelectedFood(f); setSearch(f.name); setGrams(100); }}
+                  key={f.id}
+                  onClick={() => { setSelectedFood(f); setSearch(f.nom); setGrams(100); }}
                   className="w-full text-left px-4 py-3 hover:bg-muted/50 border-b border-border last:border-0"
                 >
-                  <div className="font-medium text-sm text-foreground line-clamp-1">{f.name}</div>
+                  <div className="font-medium text-sm text-foreground line-clamp-1">{f.nom}</div>
                   <div className="text-xs text-muted-foreground">
-                    {f.calories_100g || "N/A"} kcal/100g · P {f.proteins_100g || "N/A"}g · G {f.carbs_100g || "N/A"}g · L {f.fats_100g || "N/A"}g
+                    {f.calories_100g} kcal/100g · P {f.proteines_100g}g · G {f.glucides_100g}g · L {f.lipides_100g}g
                   </div>
                 </button>
               ))}
@@ -126,7 +126,7 @@ export default function JournalPage() {
         <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
           <div className="flex justify-between items-start mb-3">
             <div className="flex-1 mr-2">
-              <h3 className="font-semibold text-foreground line-clamp-2">{selectedFood.name}</h3>
+              <h3 className="font-semibold text-foreground line-clamp-2">{selectedFood.nom}</h3>
               <p className="text-xs text-muted-foreground">Valeurs pour {grams}g</p>
             </div>
             <button onClick={() => { setSelectedFood(null); setSearch(""); }}>
@@ -149,15 +149,15 @@ export default function JournalPage() {
                 value={grams}
                 onChange={(e) => {
                   const v = parseInt(e.target.value);
-                  if (!isNaN(v) && v >= 10 && v <= 2000) setGrams(v);
+                  if (!isNaN(v) && v >= 10 && v <= 1000) setGrams(v);
                 }}
                 className="w-20 text-center h-9 bg-muted"
                 min={10}
-                max={2000}
+                max={1000}
               />
               <span className="text-sm text-muted-foreground">g</span>
               <button
-                onClick={() => setGrams((g) => Math.min(2000, g + 10))}
+                onClick={() => setGrams((g) => Math.min(1000, g + 10))}
                 className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground"
               >
                 <Plus className="w-4 h-4" />
