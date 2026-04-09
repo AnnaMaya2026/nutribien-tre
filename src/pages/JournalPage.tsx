@@ -133,6 +133,7 @@ export default function JournalPage() {
                   className="w-full text-left px-4 py-3 hover:bg-muted/50 border-b border-border last:border-0"
                 >
                   <div className="font-medium text-sm text-foreground line-clamp-1">{f.nom}</div>
+                  {f.groupe && <div className="text-[10px] text-primary/70 line-clamp-1">{f.groupe}</div>}
                   <div className="text-xs text-muted-foreground">
                     {f.calories_100g} kcal/100g · P {f.proteines_100g}g · G {f.glucides_100g}g · L {f.lipides_100g}g · F {f.fibres_100g}g
                   </div>
