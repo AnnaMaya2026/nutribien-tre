@@ -21,15 +21,7 @@ function n(v: number | null): number {
   return v ?? 0;
 }
 
-export async function searchCiqual(query: string): Promise<CiqualFood[]> {
-  const { data, error } = await supabase
-    .from("aliments_ciqual")
-    .select("*")
-    .ilike("nom", `%${query}%`)
-    .limit(10);
-
-  if (error) throw error;
-
+function mapRows(data: any[]): CiqualFood[] {
   return (data || []).map((row) => ({
     id: row.id,
     nom: row.nom || "Sans nom",
@@ -46,6 +38,59 @@ export async function searchCiqual(query: string): Promise<CiqualFood[]> {
     vitamine_b12_100g: n(row.vitamine_b12_100g),
     omega3_total_100g: n(row.omega3_total_100g),
   }));
+}
+
+export async function searchCiqual(query: string): Promise<CiqualFood[]> {
+  const words = query.trim().split(/\s+/).filter((w) => w.length >= 2);
+  if (words.length === 0) return [];
+
+  // Build a filter where every word must appear in nom
+  // Supabase doesn't chain multiple ilikes easily, so we use textSearch workaround:
+  // We fetch candidates matching the first word, then filter client-side for remaining words.
+  let q = supabase.from("aliments_ciqual").select("*").ilike("nom", `%${words[0]}%`).limit(50);
+
+  const { data, error } = await q;
+  if (error) throw error;
+
+  let filtered = data || [];
+
+  // Client-side filter for additional words
+  if (words.length > 1) {
+    const extraWords = words.slice(1).map((w) => w.toLowerCase());
+    filtered = filtered.filter((row) => {
+      const nom = (row.nom || "").toLowerCase();
+      return extraWords.every((w) => nom.includes(w));
+    });
+  }
+
+  // Sort: exact query match first, then by name length (shorter = more relevant)
+  const lowerQuery = query.toLowerCase();
+  filtered.sort((a, b) => {
+    const aNom = (a.nom || "").toLowerCase();
+    const bNom = (b.nom || "").toLowerCase();
+    const aExact = aNom === lowerQuery ? 0 : 1;
+    const bExact = bNom === lowerQuery ? 0 : 1;
+    if (aExact !== bExact) return aExact - bExact;
+    // Starts-with gets priority
+    const aStarts = aNom.startsWith(lowerQuery) ? 0 : 1;
+    const bStarts = bNom.startsWith(lowerQuery) ? 0 : 1;
+    if (aStarts !== bStarts) return aStarts - bStarts;
+    return aNom.length - bNom.length;
+  });
+
+  return mapRows(filtered.slice(0, 10));
+}
+
+export async function searchCiqualByGroupe(groupe: string): Promise<CiqualFood[]> {
+  const { data, error } = await supabase
+    .from("aliments_ciqual")
+    .select("*")
+    .ilike("groupe", `%${groupe}%`)
+    .order("nom")
+    .limit(20);
+
+  if (error) throw error;
+  return mapRows(data || []);
 }
 
 export function scaleCiqual(food: CiqualFood, grams: number) {
