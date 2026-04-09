@@ -39,7 +39,7 @@ function getUserFirstName(email?: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-const MACRO_GOALS = { proteins: 100, carbs: 200, fats: 65 };
+const MACRO_GOALS = { proteins: 100, carbs: 200, fats: 65, fibres: 25 };
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -60,6 +60,7 @@ export default function Dashboard() {
       proteins: acc.proteins + (log.proteins || 0),
       carbs: acc.carbs + (log.carbs || 0),
       fats: acc.fats + (log.fats || 0),
+      fibres: acc.fibres + (log.fibres || 0),
       calcium: acc.calcium + (log.calcium || 0),
       vitamin_d: acc.vitamin_d + (log.vitamin_d || 0),
       magnesium: acc.magnesium + (log.magnesium || 0),
@@ -68,7 +69,7 @@ export default function Dashboard() {
       phytoestrogens: acc.phytoestrogens + (log.phytoestrogens || 0),
       vitamin_b12: acc.vitamin_b12 + (log.vitamin_b12 || 0),
     }),
-    { calories: 0, proteins: 0, carbs: 0, fats: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0 }
+    { calories: 0, proteins: 0, carbs: 0, fats: 0, fibres: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0 }
   );
 
   const chartData = (() => {
@@ -144,11 +145,12 @@ export default function Dashboard() {
         </div>
 
         {/* 3 macro bars side by side */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           {[
             { label: "Protéines", value: totals.proteins, max: MACRO_GOALS.proteins, color: "bg-progress-high" },
             { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs, color: "bg-progress-mid" },
             { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats, color: "bg-primary" },
+            { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres, color: "bg-progress-low" },
           ].map((m) => {
             const pct = Math.min((m.value / m.max) * 100, 100);
             return (

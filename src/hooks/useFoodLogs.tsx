@@ -49,6 +49,7 @@ export function useFoodLogs(date?: string) {
       proteins: number;
       carbs: number;
       fats: number;
+      fibres: number;
       calcium: number;
       vitamin_d: number;
       magnesium: number;
