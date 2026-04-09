@@ -106,7 +106,7 @@ export default function JournalPage() {
               Par catégorie
             </button>
           </div>
-          <Search className="absolute left-3 top-[calc(2rem+50%)] -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 bottom-[1.125rem] w-4 h-4 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setSelectedFood(null); }}
