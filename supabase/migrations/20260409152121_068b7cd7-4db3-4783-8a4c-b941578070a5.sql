@@ -1,0 +1,1 @@
+ALTER TABLE public.food_logs ADD COLUMN fibres numeric DEFAULT 0;

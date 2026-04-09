@@ -72,6 +72,7 @@ export type Database = {
           carbs: number | null
           created_at: string
           fats: number | null
+          fibres: number | null
           food_name: string
           id: string
           iron: number | null
@@ -92,6 +93,7 @@ export type Database = {
           carbs?: number | null
           created_at?: string
           fats?: number | null
+          fibres?: number | null
           food_name: string
           id?: string
           iron?: number | null
@@ -112,6 +114,7 @@ export type Database = {
           carbs?: number | null
           created_at?: string
           fats?: number | null
+          fibres?: number | null
           food_name?: string
           id?: string
           iron?: number | null
