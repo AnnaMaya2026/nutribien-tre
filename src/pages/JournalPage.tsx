@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
-import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
+import { searchCiqual, searchCiqualByGroupe, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { Search, Plus, Trash2, X, Minus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,6 +23,7 @@ export default function JournalPage() {
   const [grams, setGrams] = useState(100);
   const [mealType, setMealType] = useState("dejeuner");
   const [showSearch, setShowSearch] = useState(false);
+  const [searchMode, setSearchMode] = useState<"nom" | "groupe">("nom");
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search
@@ -37,7 +38,9 @@ export default function JournalPage() {
       setSearching(true);
       setSearchError(null);
       try {
-        const res = await searchCiqual(search);
+        const res = searchMode === "groupe"
+          ? await searchCiqualByGroupe(search)
+          : await searchCiqual(search);
         setResults(res);
         if (res.length === 0) setSearchError("Aucun résultat trouvé");
       } catch {
@@ -48,7 +51,7 @@ export default function JournalPage() {
       }
     }, 500);
     return () => clearTimeout(debounceRef.current);
-  }, [search, selectedFood]);
+  }, [search, selectedFood, searchMode]);
 
   const scaled = selectedFood ? scaleCiqual(selectedFood, grams) : null;
 
@@ -85,11 +88,29 @@ export default function JournalPage() {
       {/* Search */}
       {(showSearch || logs.length > 0) && (
         <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={() => { setSearchMode("nom"); setSearch(""); setResults([]); }}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                searchMode === "nom" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              Par nom
+            </button>
+            <button
+              onClick={() => { setSearchMode("groupe"); setSearch(""); setResults([]); }}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                searchMode === "groupe" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              Par catégorie
+            </button>
+          </div>
+          <Search className="absolute left-3 bottom-[1.125rem] w-4 h-4 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setSelectedFood(null); }}
-            placeholder="Rechercher un aliment (base CIQUAL)..."
+            placeholder={searchMode === "nom" ? "Rechercher un aliment (ex: oeuf, poulet)..." : "Rechercher une catégorie (ex: fruits, viandes)..."}
             className="pl-10 h-12 bg-card rounded-lg"
           />
           {searching && (
@@ -112,6 +133,7 @@ export default function JournalPage() {
                   className="w-full text-left px-4 py-3 hover:bg-muted/50 border-b border-border last:border-0"
                 >
                   <div className="font-medium text-sm text-foreground line-clamp-1">{f.nom}</div>
+                  {f.groupe && <div className="text-[10px] text-primary/70 line-clamp-1">{f.groupe}</div>}
                   <div className="text-xs text-muted-foreground">
                     {f.calories_100g} kcal/100g · P {f.proteines_100g}g · G {f.glucides_100g}g · L {f.lipides_100g}g · F {f.fibres_100g}g
                   </div>
