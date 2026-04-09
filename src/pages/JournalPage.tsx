@@ -23,6 +23,7 @@ export default function JournalPage() {
   const [grams, setGrams] = useState(100);
   const [mealType, setMealType] = useState("dejeuner");
   const [showSearch, setShowSearch] = useState(false);
+  const [searchMode, setSearchMode] = useState<"nom" | "groupe">("nom");
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search
@@ -37,7 +38,9 @@ export default function JournalPage() {
       setSearching(true);
       setSearchError(null);
       try {
-        const res = await searchCiqual(search);
+        const res = searchMode === "groupe"
+          ? await searchCiqualByGroupe(search)
+          : await searchCiqual(search);
         setResults(res);
         if (res.length === 0) setSearchError("Aucun résultat trouvé");
       } catch {
@@ -48,7 +51,7 @@ export default function JournalPage() {
       }
     }, 500);
     return () => clearTimeout(debounceRef.current);
-  }, [search, selectedFood]);
+  }, [search, selectedFood, searchMode]);
 
   const scaled = selectedFood ? scaleCiqual(selectedFood, grams) : null;
 
