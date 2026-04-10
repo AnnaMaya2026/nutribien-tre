@@ -41,44 +41,34 @@ function mapRows(data: any[]): CiqualFood[] {
 }
 
 export async function searchCiqual(query: string): Promise<CiqualFood[]> {
-  const words = query.trim().split(/\s+/).filter((w) => w.length >= 2);
-  if (words.length === 0) return [];
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
 
-  // Build a filter where every word must appear in nom
-  // Supabase doesn't chain multiple ilikes easily, so we use textSearch workaround:
-  // We fetch candidates matching the first word, then filter client-side for remaining words.
-  let q = supabase.from("aliments_ciqual").select("*").ilike("nom", `%${words[0]}%`).limit(50);
+  const { data, error } = await supabase
+    .from("aliments_ciqual")
+    .select("*")
+    .ilike("nom", `%${trimmed}%`)
+    .limit(15);
 
-  const { data, error } = await q;
   if (error) throw error;
 
   let filtered = data || [];
 
-  // Client-side filter for additional words
-  if (words.length > 1) {
-    const extraWords = words.slice(1).map((w) => w.toLowerCase());
-    filtered = filtered.filter((row) => {
-      const nom = (row.nom || "").toLowerCase();
-      return extraWords.every((w) => nom.includes(w));
-    });
-  }
-
-  // Sort: exact query match first, then by name length (shorter = more relevant)
-  const lowerQuery = query.toLowerCase();
+  // Sort: exact match first, then starts-with, then by name length
+  const lower = trimmed.toLowerCase();
   filtered.sort((a, b) => {
     const aNom = (a.nom || "").toLowerCase();
     const bNom = (b.nom || "").toLowerCase();
-    const aExact = aNom === lowerQuery ? 0 : 1;
-    const bExact = bNom === lowerQuery ? 0 : 1;
+    const aExact = aNom === lower ? 0 : 1;
+    const bExact = bNom === lower ? 0 : 1;
     if (aExact !== bExact) return aExact - bExact;
-    // Starts-with gets priority
-    const aStarts = aNom.startsWith(lowerQuery) ? 0 : 1;
-    const bStarts = bNom.startsWith(lowerQuery) ? 0 : 1;
+    const aStarts = aNom.startsWith(lower) ? 0 : 1;
+    const bStarts = bNom.startsWith(lower) ? 0 : 1;
     if (aStarts !== bStarts) return aStarts - bStarts;
     return aNom.length - bNom.length;
   });
 
-  return mapRows(filtered.slice(0, 10));
+  return mapRows(filtered);
 }
 
 export async function searchCiqualByGroupe(groupe: string): Promise<CiqualFood[]> {
