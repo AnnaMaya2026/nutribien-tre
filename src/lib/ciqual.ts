@@ -46,11 +46,14 @@ export async function searchCiqual(query: string): Promise<CiqualFood[]> {
 
   const { data, error } = await supabase
     .from("aliments_ciqual")
-    .select("*")
+    .select("id, nom, groupe, calories_100g, proteines_100g, glucides_100g, lipides_100g, fibres_100g, calcium_100g, fer_100g, magnesium_100g, vitamine_d_100g, vitamine_b12_100g, omega3_total_100g")
     .ilike("nom", `%${trimmed}%`)
-    .limit(15);
+    .limit(20);
 
-  if (error) throw error;
+  if (error) {
+    console.error("Search error:", error);
+    throw error;
+  }
 
   let filtered = data || [];
 
@@ -71,13 +74,18 @@ export async function searchCiqual(query: string): Promise<CiqualFood[]> {
   return mapRows(filtered);
 }
 
-export async function searchCiqualByGroupe(groupe: string): Promise<CiqualFood[]> {
+/** Search foods rich in a specific nutrient */
+export async function searchByNutrient(
+  nutrient: keyof CiqualFood,
+  limit = 10
+): Promise<CiqualFood[]> {
+  const col = nutrient as string;
   const { data, error } = await supabase
     .from("aliments_ciqual")
     .select("*")
-    .ilike("groupe", `%${groupe}%`)
-    .order("nom")
-    .limit(20);
+    .gt(col, 0)
+    .order(col, { ascending: false })
+    .limit(limit);
 
   if (error) throw error;
   return mapRows(data || []);

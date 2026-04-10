@@ -1,0 +1,1 @@
+ALTER TABLE public.symptom_logs ADD COLUMN IF NOT EXISTS symptom_scores jsonb DEFAULT '{}'::jsonb;
