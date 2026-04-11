@@ -7,6 +7,8 @@ import Dashboard from "@/pages/Dashboard";
 import JournalPage from "@/pages/JournalPage";
 import RepasPage from "@/pages/RepasPage";
 import ChatPage from "@/pages/ChatPage";
+import SymptomHistoryPage from "@/pages/SymptomHistoryPage";
+import PersonalJournalPage from "@/pages/PersonalJournalPage";
 import BottomNav from "@/components/BottomNav";
 import NotFound from "@/pages/NotFound";
 
@@ -32,6 +34,8 @@ function ProtectedLayout() {
         <Route path="/journal" element={<JournalPage />} />
         <Route path="/repas" element={<RepasPage />} />
         <Route path="/chat" element={<ChatPage />} />
+        <Route path="/symptomes" element={<SymptomHistoryPage />} />
+        <Route path="/notes" element={<PersonalJournalPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomNav />
