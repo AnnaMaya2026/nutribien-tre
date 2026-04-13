@@ -48,7 +48,7 @@ export async function searchCiqual(query: string): Promise<CiqualFood[]> {
     .from("aliments_ciqual")
     .select("*")
     .ilike("nom", `%${trimmed}%`)
-    .limit(100);
+    .limit(1000);
 
   if (error) {
     console.error("Search error:", error);
