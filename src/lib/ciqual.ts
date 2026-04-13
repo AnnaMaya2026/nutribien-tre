@@ -46,7 +46,7 @@ export async function searchCiqual(query: string): Promise<CiqualFood[]> {
 
   const { data, error } = await supabase
     .from("aliments_ciqual")
-    .select("id, nom, groupe, calories_100g, proteines_100g, glucides_100g, lipides_100g, fibres_100g, calcium_100g, fer_100g, magnesium_100g, vitamine_d_100g, vitamine_b12_100g, omega3_total_100g")
+    .select("*")
     .ilike("nom", `%${trimmed}%`)
     .limit(20);
 
@@ -55,23 +55,7 @@ export async function searchCiqual(query: string): Promise<CiqualFood[]> {
     throw error;
   }
 
-  let filtered = data || [];
-
-  // Sort: exact match first, then starts-with, then by name length
-  const lower = trimmed.toLowerCase();
-  filtered.sort((a, b) => {
-    const aNom = (a.nom || "").toLowerCase();
-    const bNom = (b.nom || "").toLowerCase();
-    const aExact = aNom === lower ? 0 : 1;
-    const bExact = bNom === lower ? 0 : 1;
-    if (aExact !== bExact) return aExact - bExact;
-    const aStarts = aNom.startsWith(lower) ? 0 : 1;
-    const bStarts = bNom.startsWith(lower) ? 0 : 1;
-    if (aStarts !== bStarts) return aStarts - bStarts;
-    return aNom.length - bNom.length;
-  });
-
-  return mapRows(filtered);
+  return mapRows(data || []);
 }
 
 /** Search foods rich in a specific nutrient */
