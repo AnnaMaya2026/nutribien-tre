@@ -48,14 +48,26 @@ export async function searchCiqual(query: string): Promise<CiqualFood[]> {
     .from("aliments_ciqual")
     .select("*")
     .ilike("nom", `%${trimmed}%`)
-    .limit(20);
+    .limit(100);
 
   if (error) {
     console.error("Search error:", error);
     throw error;
   }
 
-  return mapRows(data || []);
+  const lower = trimmed.toLowerCase();
+  const sorted = (data || []).sort((a, b) => {
+    const aNom = (a.nom || "").toLowerCase();
+    const bNom = (b.nom || "").toLowerCase();
+    const aScore = aNom.startsWith(lower) ? 0 : aNom.includes(` ${lower}`) ? 1 : 2;
+    const bScore = bNom.startsWith(lower) ? 0 : bNom.includes(` ${lower}`) ? 1 : 2;
+
+    if (aScore !== bScore) return aScore - bScore;
+    if (aNom.length !== bNom.length) return aNom.length - bNom.length;
+    return aNom.localeCompare(bNom);
+  });
+
+  return mapRows(sorted.slice(0, 20));
 }
 
 /** Search foods rich in a specific nutrient */
