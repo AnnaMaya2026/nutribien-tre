@@ -4,8 +4,9 @@ import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
-import VoiceInput, { type VoiceMatch } from "@/components/VoiceInput";
+import VoiceInput, { type VoiceMatch, type VoiceCandidate } from "@/components/VoiceInput";
 import VoiceResults from "@/components/VoiceResults";
+import VoiceCandidatePicker from "@/components/VoiceCandidatePicker";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },

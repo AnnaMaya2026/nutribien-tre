@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
+import { scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { toast } from "sonner";
 
 export interface VoiceMatch {
@@ -10,13 +10,20 @@ export interface VoiceMatch {
   scaled: ReturnType<typeof scaleCiqual>;
 }
 
+export interface VoiceCandidate {
+  name: string;
+  grams: number;
+  candidates: CiqualFood[];
+}
+
 interface VoiceInputProps {
   onResults: (matches: VoiceMatch[]) => void;
+  onCandidates?: (candidates: VoiceCandidate[]) => void;
 }
 
 type VoiceState = "idle" | "listening" | "processing";
 
-export default function VoiceInput({ onResults }: VoiceInputProps) {
+export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps) {
   const [state, setState] = useState<VoiceState>("idle");
   const recognitionRef = useRef<any>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
@@ -54,31 +61,78 @@ export default function VoiceInput({ onResults }: VoiceInputProps) {
         return;
       }
 
-      // Search each food in ciqual
-      const matches: VoiceMatch[] = [];
+      // Search each food in ciqual with limit 8
+      const allCandidates: VoiceCandidate[] = [];
+      const directMatches: VoiceMatch[] = [];
+
       for (const item of data.foods) {
         try {
-          const results = await searchCiqual(item.name);
-          if (results.length > 0) {
-            const food = results[0];
-            const grams = Math.max(10, Math.min(1000, item.grams || 100));
-            matches.push({ food, grams, scaled: scaleCiqual(food, grams) });
-          } else {
+          const { data: results, error: searchError } = await supabase
+            .from("aliments_ciqual")
+            .select("id, nom, groupe, calories_100g, proteines_100g, glucides_100g, lipides_100g, fibres_100g, calcium_100g, fer_100g, magnesium_100g, vitamine_d_100g, vitamine_b12_100g, omega3_total_100g")
+            .ilike("nom", `%${item.name}%`)
+            .limit(8);
+
+          console.log(`[Voice] Search "${item.name}":`, results?.length, "results", results);
+
+          if (searchError) {
+            console.error(`[Voice] Search error for "${item.name}":`, searchError);
+            toast.error(`Erreur pour "${item.name}"`);
+            continue;
+          }
+
+          if (!results || results.length === 0) {
             toast.error(`"${item.name}" non trouvé, recherchez manuellement`);
+            continue;
+          }
+
+          const mapped: CiqualFood[] = results.map((row) => ({
+            id: row.id,
+            nom: row.nom || "Sans nom",
+            groupe: row.groupe,
+            calories_100g: row.calories_100g ?? 0,
+            proteines_100g: row.proteines_100g ?? 0,
+            glucides_100g: row.glucides_100g ?? 0,
+            lipides_100g: row.lipides_100g ?? 0,
+            fibres_100g: row.fibres_100g ?? 0,
+            calcium_100g: row.calcium_100g ?? 0,
+            fer_100g: row.fer_100g ?? 0,
+            magnesium_100g: row.magnesium_100g ?? 0,
+            vitamine_d_100g: row.vitamine_d_100g ?? 0,
+            vitamine_b12_100g: row.vitamine_b12_100g ?? 0,
+            omega3_total_100g: row.omega3_total_100g ?? 0,
+          }));
+
+          const grams = Math.max(10, Math.min(1000, item.grams || 100));
+
+          // Always show picker if more than 1 result
+          if (mapped.length > 1 && onCandidates) {
+            allCandidates.push({ name: item.name, grams, candidates: mapped });
+          } else {
+            // Only 1 result — add directly
+            const food = mapped[0];
+            directMatches.push({ food, grams, scaled: scaleCiqual(food, grams) });
           }
         } catch {
           toast.error(`Erreur pour "${item.name}"`);
         }
       }
 
-      if (matches.length > 0) {
-        onResults(matches);
+      // If we have candidates to pick from, use the picker flow
+      if (allCandidates.length > 0 && onCandidates) {
+        onCandidates(allCandidates);
+        // Also send any single-result matches
+        if (directMatches.length > 0) {
+          onResults(directMatches);
+        }
+      } else if (directMatches.length > 0) {
+        onResults(directMatches);
       }
     } catch {
       toast.error("Erreur de connexion");
     }
     setState("idle");
-  }, [onResults]);
+  }, [onResults, onCandidates]);
 
   const toggleRecording = useCallback(() => {
     if (state === "listening") {
@@ -121,7 +175,6 @@ export default function VoiceInput({ onResults }: VoiceInputProps) {
     recognition.start();
     setState("listening");
 
-    // Auto-stop after 10 seconds
     timeoutRef.current = setTimeout(() => {
       stopRecording();
     }, 10000);
