@@ -4,6 +4,8 @@ import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
+import VoiceInput, { type VoiceMatch } from "@/components/VoiceInput";
+import VoiceResults from "@/components/VoiceResults";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -26,6 +28,7 @@ export default function JournalPage() {
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({
     "petit-dejeuner": true, dejeuner: true, diner: true, collation: true,
   });
+  const [voiceMatches, setVoiceMatches] = useState<VoiceMatch[] | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search - min 2 chars
@@ -80,6 +83,30 @@ export default function JournalPage() {
     setShowSearch(false);
   };
 
+  const handleVoiceConfirm = (items: VoiceMatch[]) => {
+    if (!user) return;
+    items.forEach((item) => {
+      addLog.mutate({
+        food_name: item.food.nom,
+        portion_size: item.grams,
+        calories: item.scaled.calories,
+        proteins: item.scaled.proteins,
+        carbs: item.scaled.carbs,
+        fats: item.scaled.fats,
+        fibres: item.scaled.fibres,
+        calcium: item.scaled.calcium,
+        vitamin_d: item.scaled.vitamin_d,
+        magnesium: item.scaled.magnesium,
+        iron: item.scaled.iron,
+        omega3: item.scaled.omega3,
+        phytoestrogens: item.scaled.phytoestrogens,
+        vitamin_b12: item.scaled.vitamin_b12,
+        meal_type: mealType,
+      });
+    });
+    setVoiceMatches(null);
+  };
+
   const toggleMeal = (value: string) => {
     setExpandedMeals((prev) => ({ ...prev, [value]: !prev[value] }));
   };
@@ -98,12 +125,15 @@ export default function JournalPage() {
 
       {/* Add food button */}
       {!showSearch && (
-        <button
-          onClick={() => setShowSearch(true)}
-          className="w-full mb-4 py-3 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 shadow-md"
-        >
-          <Plus className="w-4 h-4" /> Ajouter un aliment
-        </button>
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setShowSearch(true)}
+            className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 shadow-md"
+          >
+            <Plus className="w-4 h-4" /> Ajouter un aliment
+          </button>
+          <VoiceInput onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }} />
+        </div>
       )}
 
       {/* Search */}
@@ -116,13 +146,16 @@ export default function JournalPage() {
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
-          <Input
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setSelectedFood(null); }}
-            placeholder="Ex: oeuf, pomme, fromage, poulet..."
-            className="h-12 bg-card rounded-lg"
-            autoFocus
-          />
+          <div className="flex gap-2">
+            <Input
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setSelectedFood(null); }}
+              placeholder="Ex: oeuf, pomme, fromage, poulet..."
+              className="h-12 bg-card rounded-lg flex-1"
+              autoFocus
+            />
+            <VoiceInput onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }} />
+          </div>
           {searching && (
             <div className="absolute z-10 top-[5.5rem] left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -238,6 +271,16 @@ export default function JournalPage() {
             <Plus className="w-4 h-4" /> Ajouter
           </button>
         </div>
+      )}
+
+      {/* Voice results */}
+      {voiceMatches && (
+        <VoiceResults
+          matches={voiceMatches}
+          mealType={mealType}
+          onConfirm={handleVoiceConfirm}
+          onCancel={() => setVoiceMatches(null)}
+        />
       )}
 
       {/* Meal-based logs */}
