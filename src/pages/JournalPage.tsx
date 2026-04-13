@@ -4,8 +4,8 @@ import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
-import VoiceInput, { type VoiceMatch } from "@/components/VoiceInput";
-import VoiceResults from "@/components/VoiceResults";
+import VoiceInput, { type VoiceMatch, type VoiceParsedItem } from "@/components/VoiceInput";
+import VoiceResults, { VoiceCandidatePicker } from "@/components/VoiceResults";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -29,6 +29,7 @@ export default function JournalPage() {
     "petit-dejeuner": true, dejeuner: true, diner: true, collation: true,
   });
   const [voiceMatches, setVoiceMatches] = useState<VoiceMatch[] | null>(null);
+  const [voiceCandidates, setVoiceCandidates] = useState<VoiceParsedItem[] | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search - min 2 chars
@@ -132,7 +133,10 @@ export default function JournalPage() {
           >
             <Plus className="w-4 h-4" /> Ajouter un aliment
           </button>
-          <VoiceInput onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }} />
+          <VoiceInput
+            onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }}
+            onCandidates={(c) => { setVoiceCandidates(c); setVoiceMatches(null); setShowSearch(false); }}
+          />
         </div>
       )}
 
@@ -154,7 +158,10 @@ export default function JournalPage() {
               className="h-12 bg-card rounded-lg flex-1"
               autoFocus
             />
-            <VoiceInput onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }} />
+            <VoiceInput
+              onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }}
+              onCandidates={(c) => { setVoiceCandidates(c); setVoiceMatches(null); setShowSearch(false); }}
+            />
           </div>
           {searching && (
             <div className="absolute z-10 top-[5.5rem] left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -271,6 +278,18 @@ export default function JournalPage() {
             <Plus className="w-4 h-4" /> Ajouter
           </button>
         </div>
+      )}
+
+      {/* Voice candidate picker */}
+      {voiceCandidates && (
+        <VoiceCandidatePicker
+          parsedItems={voiceCandidates}
+          onDone={(matches) => {
+            setVoiceCandidates(null);
+            setVoiceMatches(matches);
+          }}
+          onCancel={() => setVoiceCandidates(null)}
+        />
       )}
 
       {/* Voice results */}
