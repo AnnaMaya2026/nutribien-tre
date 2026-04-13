@@ -31,8 +31,8 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Tu es un assistant nutritionnel. Analyse cette phrase et identifie les aliments mentionnés avec leurs quantités estimées en grammes. Si aucune quantité n'est précisée, estime une portion standard. Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
-{"foods": [{"name": "nom de l'aliment en français", "grams": nombre}]}
+            content: `Tu es un assistant nutritionnel français. Analyse cette phrase et identifie les aliments avec leurs quantités en grammes. Si aucune quantité n'est précisée, estime une portion standard. Pour chaque aliment, donne le nom le plus précis possible. Exemple: 'poulet rôti' plutôt que 'poulet', 'oeuf dur' plutôt que 'oeuf'. Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
+{"foods": [{"name": "nom précis de l'aliment en français", "grams": nombre}]}
 Exemples de portions standards: un oeuf = 60g, une pomme = 150g, un verre de lait = 200g, une tranche de pain = 30g, un yaourt = 125g.`,
           },
           { role: "user", content: transcript },

@@ -67,11 +67,20 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
 
       for (const item of data.foods) {
         try {
-          const { data: results, error: searchError } = await supabase
-            .from("aliments_ciqual")
-            .select("id, nom, groupe, calories_100g, proteines_100g, glucides_100g, lipides_100g, fibres_100g, calcium_100g, fer_100g, magnesium_100g, vitamine_d_100g, vitamine_b12_100g, omega3_total_100g")
-            .ilike("nom", `%${item.name}%`)
-            .limit(8);
+          const cols = "id, nom, groupe, calories_100g, proteines_100g, glucides_100g, lipides_100g, fibres_100g, calcium_100g, fer_100g, magnesium_100g, vitamine_d_100g, vitamine_b12_100g, omega3_total_100g";
+          const [startsWith, contains] = await Promise.all([
+            supabase.from("aliments_ciqual").select(cols).ilike("nom", `${item.name}%`).limit(8),
+            supabase.from("aliments_ciqual").select(cols).ilike("nom", `%${item.name}%`).limit(8),
+          ]);
+          const searchError = startsWith.error || contains.error;
+          const seen = new Set<number>();
+          const results: any[] = [];
+          for (const row of [...(startsWith.data || []), ...(contains.data || [])]) {
+            if (!seen.has(row.id) && results.length < 8) {
+              seen.add(row.id);
+              results.push(row);
+            }
+          }
 
           console.log(`[Voice] Search "${item.name}":`, results?.length, "results", results);
 
