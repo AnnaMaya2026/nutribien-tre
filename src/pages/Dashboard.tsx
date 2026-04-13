@@ -169,7 +169,9 @@ export default function Dashboard() {
       .filter((key) => SYMPTOM_FOOD_MAP[key]);
   }, [symptomScores]);
 
-  const calPct = Math.min((totals.calories / calorieGoal) * 100, 100);
+  const calPct = (totals.calories / calorieGoal) * 100;
+  const calColor = getCalorieColor(calPct);
+  const calRingPct = Math.min(calPct, 100);
 
   const toggleSymptom = (value: string) => {
     setSelectedSymptoms((prev) => {
@@ -204,17 +206,11 @@ export default function Dashboard() {
         <div className="flex flex-col items-center mb-6">
           <div className="relative w-44 h-44">
             <svg className="w-44 h-44 -rotate-90" viewBox="0 0 100 100">
-              <defs>
-                <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" />
-                  <stop offset="100%" stopColor="hsl(340, 80%, 75%)" />
-                </linearGradient>
-              </defs>
               <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
-              <circle cx="50" cy="50" r="42" fill="none" stroke="url(#ring-gradient)" strokeWidth="6" strokeLinecap="round" strokeDasharray={`${calPct * 2.64} 264`} className="transition-all duration-700" />
+              <circle cx="50" cy="50" r="42" fill="none" stroke={calColor.stroke} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${calRingPct * 2.64} 264`} className="transition-all duration-700" />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold text-foreground">{Math.round(totals.calories)}</span>
+              <span className={`text-3xl font-bold ${calColor.text}`}>{calColor.emoji} {Math.round(totals.calories)}</span>
               <span className="text-xs text-muted-foreground">kcal consommées</span>
               <span className="text-[10px] text-muted-foreground mt-0.5">/ {calorieGoal} kcal</span>
             </div>
@@ -224,19 +220,21 @@ export default function Dashboard() {
         {/* Macro bars */}
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: "Protéines", value: totals.proteins, max: MACRO_GOALS.proteins, color: "bg-progress-high" },
-            { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs, color: "bg-progress-mid" },
-            { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats, color: "bg-primary" },
-            { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres, color: "bg-progress-low" },
+            { label: "Protéines", value: totals.proteins, max: MACRO_GOALS.proteins },
+            { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs },
+            { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats },
+            { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres },
           ].map((m) => {
-            const pct = Math.min((m.value / m.max) * 100, 100);
+            const rawPct = (m.value / m.max) * 100;
+            const barPct = Math.min(rawPct, 100);
+            const { bg, text, emoji } = getNutrientColor(rawPct);
             return (
               <div key={m.label} className="text-center">
                 <div className="text-xs text-muted-foreground mb-1">{m.label}</div>
-                <div className="text-sm font-bold text-foreground">{Math.round(m.value)}g</div>
+                <div className={`text-sm font-bold ${text}`}>{emoji} {Math.round(m.value)}g</div>
                 <div className="text-[10px] text-muted-foreground mb-1">/ {m.max}g</div>
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all duration-500 ${m.color}`} style={{ width: `${pct}%` }} />
+                  <div className={`h-full rounded-full transition-all duration-500 ${bg}`} style={{ width: `${barPct}%` }} />
                 </div>
               </div>
             );
@@ -267,13 +265,13 @@ export default function Dashboard() {
       <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
         <h3 className="text-sm font-semibold text-foreground mb-3">Micronutriments clés</h3>
         <div className="space-y-2">
-          <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" />
-          <ProgressBar value={totals.vitamin_d} max={DAILY_TARGETS.vitamin_d} label="Vitamine D" unit="µg" />
-          <ProgressBar value={totals.magnesium} max={DAILY_TARGETS.magnesium} label="Magnésium" unit="mg" />
-          <ProgressBar value={totals.iron} max={DAILY_TARGETS.iron} label="Fer" unit="mg" />
-          <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" />
-          <ProgressBar value={totals.phytoestrogens} max={DAILY_TARGETS.phytoestrogens} label="Phytoestrogènes" unit="mg" />
-          <ProgressBar value={totals.vitamin_b12} max={DAILY_TARGETS.vitamin_b12} label="Vitamine B12" unit="µg" />
+          <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" isMicro />
+          <ProgressBar value={totals.vitamin_d} max={DAILY_TARGETS.vitamin_d} label="Vitamine D" unit="µg" isMicro />
+          <ProgressBar value={totals.magnesium} max={DAILY_TARGETS.magnesium} label="Magnésium" unit="mg" isMicro />
+          <ProgressBar value={totals.iron} max={DAILY_TARGETS.iron} label="Fer" unit="mg" isMicro />
+          <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro />
+          <ProgressBar value={totals.phytoestrogens} max={DAILY_TARGETS.phytoestrogens} label="Phytoestrogènes" unit="mg" isMicro />
+          <ProgressBar value={totals.vitamin_b12} max={DAILY_TARGETS.vitamin_b12} label="Vitamine B12" unit="µg" isMicro />
         </div>
       </div>
 
