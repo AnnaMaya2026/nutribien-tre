@@ -125,12 +125,15 @@ export default function JournalPage() {
 
       {/* Add food button */}
       {!showSearch && (
-        <button
-          onClick={() => setShowSearch(true)}
-          className="w-full mb-4 py-3 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 shadow-md"
-        >
-          <Plus className="w-4 h-4" /> Ajouter un aliment
-        </button>
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setShowSearch(true)}
+            className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 shadow-md"
+          >
+            <Plus className="w-4 h-4" /> Ajouter un aliment
+          </button>
+          <VoiceInput onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }} />
+        </div>
       )}
 
       {/* Search */}
