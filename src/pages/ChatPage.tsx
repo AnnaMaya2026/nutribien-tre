@@ -11,7 +11,7 @@ interface Message {
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([
-    { id: 0, text: AI_RESPONSES.default, from: "ai" },
+    { id: 0, text: "Bonjour ! Je suis votre nutritionniste IA, spécialisée dans la nutrition pour la ménopause. Comment puis-je vous aider ?", from: "ai" },
   ]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);

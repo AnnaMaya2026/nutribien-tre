@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 const tabs = [
   { path: "/", label: "Accueil", icon: LayoutDashboard },
   { path: "/journal", label: "Repas", icon: BookOpen },
+  { path: "/chat", label: "Nutritionniste", icon: Bot },
   { path: "/symptomes", label: "Symptômes", icon: Activity },
   { path: "/notes", label: "Notes", icon: NotebookPen },
   { path: "/repas", label: "Idées", icon: ChefHat },

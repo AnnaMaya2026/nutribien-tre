@@ -106,7 +106,7 @@ export const MEAL_SUGGESTIONS: MealSuggestion[] = [
 
 // Mock AI chat responses
 export const AI_RESPONSES: Record<string, string> = {
-  default: "Bonjour ! Je suis votre nutritionniste IA. Je peux vous aider avec des conseils nutritionnels adaptés à la ménopause. Que souhaitez-vous savoir ?",
+  default: "Bonjour ! Je suis votre nutritionniste IA, spécialisée dans la nutrition pour la ménopause. Comment puis-je vous aider ?",
   calcium: "Pour la ménopause, un apport de 1200mg de calcium par jour est recommandé. Les sardines, le tofu, les amandes et les produits laitiers sont d'excellentes sources. Pensez aussi aux légumes verts comme le brocoli et les épinards !",
   vitamine: "La vitamine D est essentielle pendant la ménopause pour l'absorption du calcium. Visez 20µg par jour. Le saumon, les sardines et les œufs sont vos alliés. N'oubliez pas l'exposition solaire modérée !",
   poids: "Pendant la ménopause, le métabolisme ralentit. Privilégiez les protéines maigres, les fibres et les bons gras. Évitez les sucres rapides et mangez à heures régulières. L'activité physique reste votre meilleur allié !",
