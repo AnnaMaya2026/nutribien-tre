@@ -4,6 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { toast } from "sonner";
 
+export interface VoiceCandidate {
+  food: CiqualFood;
+}
+
+export interface VoiceParsedItem {
+  originalName: string;
+  grams: number;
+  candidates: VoiceCandidate[];
+}
+
 export interface VoiceMatch {
   food: CiqualFood;
   grams: number;
@@ -12,11 +22,12 @@ export interface VoiceMatch {
 
 interface VoiceInputProps {
   onResults: (matches: VoiceMatch[]) => void;
+  onCandidates?: (items: VoiceParsedItem[]) => void;
 }
 
 type VoiceState = "idle" | "listening" | "processing";
 
-export default function VoiceInput({ onResults }: VoiceInputProps) {
+export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps) {
   const [state, setState] = useState<VoiceState>("idle");
   const recognitionRef = useRef<any>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
@@ -54,31 +65,48 @@ export default function VoiceInput({ onResults }: VoiceInputProps) {
         return;
       }
 
-      // Search each food in ciqual
-      const matches: VoiceMatch[] = [];
-      for (const item of data.foods) {
-        try {
-          const results = await searchCiqual(item.name);
-          if (results.length > 0) {
-            const food = results[0];
-            const grams = Math.max(10, Math.min(1000, item.grams || 100));
-            matches.push({ food, grams, scaled: scaleCiqual(food, grams) });
-          } else {
-            toast.error(`"${item.name}" non trouvé, recherchez manuellement`);
+      // If onCandidates is provided, return top 8 candidates per food for selection
+      if (onCandidates) {
+        const parsedItems: VoiceParsedItem[] = [];
+        for (const item of data.foods) {
+          try {
+            const results = await searchCiqual(item.name);
+            if (results.length > 0) {
+              parsedItems.push({
+                originalName: item.name,
+                grams: Math.max(10, Math.min(1000, item.grams || 100)),
+                candidates: results.slice(0, 8).map((food) => ({ food })),
+              });
+            } else {
+              toast.error(`"${item.name}" non trouvé, recherchez manuellement`);
+            }
+          } catch {
+            toast.error(`Erreur pour "${item.name}"`);
           }
-        } catch {
-          toast.error(`Erreur pour "${item.name}"`);
         }
-      }
-
-      if (matches.length > 0) {
-        onResults(matches);
+        if (parsedItems.length > 0) {
+          onCandidates(parsedItems);
+        }
+      } else {
+        // Fallback: pick first result (legacy)
+        const matches: VoiceMatch[] = [];
+        for (const item of data.foods) {
+          try {
+            const results = await searchCiqual(item.name);
+            if (results.length > 0) {
+              const food = results[0];
+              const grams = Math.max(10, Math.min(1000, item.grams || 100));
+              matches.push({ food, grams, scaled: scaleCiqual(food, grams) });
+            }
+          } catch {}
+        }
+        if (matches.length > 0) onResults(matches);
       }
     } catch {
       toast.error("Erreur de connexion");
     }
     setState("idle");
-  }, [onResults]);
+  }, [onResults, onCandidates]);
 
   const toggleRecording = useCallback(() => {
     if (state === "listening") {
@@ -121,7 +149,6 @@ export default function VoiceInput({ onResults }: VoiceInputProps) {
     recognition.start();
     setState("listening");
 
-    // Auto-stop after 10 seconds
     timeoutRef.current = setTimeout(() => {
       stopRecording();
     }, 10000);
