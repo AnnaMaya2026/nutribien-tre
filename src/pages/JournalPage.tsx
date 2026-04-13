@@ -4,8 +4,9 @@ import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
-import VoiceInput, { type VoiceMatch, type VoiceParsedItem } from "@/components/VoiceInput";
-import VoiceResults, { VoiceCandidatePicker } from "@/components/VoiceResults";
+import VoiceInput, { type VoiceMatch, type VoiceCandidate } from "@/components/VoiceInput";
+import VoiceResults from "@/components/VoiceResults";
+import VoiceCandidatePicker from "@/components/VoiceCandidatePicker";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -29,7 +30,7 @@ export default function JournalPage() {
     "petit-dejeuner": true, dejeuner: true, diner: true, collation: true,
   });
   const [voiceMatches, setVoiceMatches] = useState<VoiceMatch[] | null>(null);
-  const [voiceCandidates, setVoiceCandidates] = useState<VoiceParsedItem[] | null>(null);
+  const [voiceCandidates, setVoiceCandidates] = useState<VoiceCandidate[] | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search - min 2 chars
@@ -135,7 +136,7 @@ export default function JournalPage() {
           </button>
           <VoiceInput
             onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }}
-            onCandidates={(c) => { setVoiceCandidates(c); setVoiceMatches(null); setShowSearch(false); }}
+            onCandidates={(c) => { setVoiceCandidates(c); setShowSearch(false); }}
           />
         </div>
       )}
@@ -160,7 +161,7 @@ export default function JournalPage() {
             />
             <VoiceInput
               onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }}
-              onCandidates={(c) => { setVoiceCandidates(c); setVoiceMatches(null); setShowSearch(false); }}
+              onCandidates={(c) => { setVoiceCandidates(c); setShowSearch(false); }}
             />
           </div>
           {searching && (
@@ -280,18 +281,6 @@ export default function JournalPage() {
         </div>
       )}
 
-      {/* Voice candidate picker */}
-      {voiceCandidates && (
-        <VoiceCandidatePicker
-          parsedItems={voiceCandidates}
-          onDone={(matches) => {
-            setVoiceCandidates(null);
-            setVoiceMatches(matches);
-          }}
-          onCancel={() => setVoiceCandidates(null)}
-        />
-      )}
-
       {/* Voice results */}
       {voiceMatches && (
         <VoiceResults
@@ -302,7 +291,21 @@ export default function JournalPage() {
         />
       )}
 
-      {/* Meal-based logs */}
+      {/* Voice candidate picker */}
+      {voiceCandidates && (
+        <VoiceCandidatePicker
+          candidates={voiceCandidates}
+          onDone={(matches) => {
+            setVoiceCandidates(null);
+            if (matches.length > 0) {
+              setVoiceMatches((prev) => prev ? [...prev, ...matches] : matches);
+            }
+          }}
+          onCancel={() => setVoiceCandidates(null)}
+        />
+      )}
+
+
       {hasAnyLogs ? (
         <div className="space-y-3">
           {logsByMeal.map((meal) => (
