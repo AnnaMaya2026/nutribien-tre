@@ -2,7 +2,9 @@ import { useState, useMemo, useEffect } from "react";
 import { DAILY_TARGETS } from "@/lib/mockData";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { searchCiqual, searchByNutrient, scaleCiqual, CiqualFood } from "@/lib/ciqual";
-import { ChefHat, Leaf, AlertTriangle, Search, Loader2 } from "lucide-react";
+import { searchRecipes, Recipe } from "@/lib/recipes";
+import { RecipeCard } from "@/components/RecipeCard";
+import { ChefHat, Leaf, AlertTriangle, Search, Loader2, UtensilsCrossed } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
@@ -101,6 +103,8 @@ export default function RepasPage() {
   const [searching, setSearching] = useState(false);
   const [gapFoods, setGapFoods] = useState<{ food: CiqualFood; covers: string[] }[]>([]);
   const [loadingGaps, setLoadingGaps] = useState(false);
+  const [recipeQuery, setRecipeQuery] = useState("");
+  const [recipeResults, setRecipeResults] = useState<Recipe[]>([]);
   const { logs } = useFoodLogs();
 
   // Debounced ingredient search
@@ -122,6 +126,11 @@ export default function RepasPage() {
     }, 400);
     return () => clearTimeout(timer);
   }, [ingredients]);
+
+  // Recipe search
+  useEffect(() => {
+    setRecipeResults(searchRecipes(recipeQuery));
+  }, [recipeQuery]);
 
   // Today's totals
   const todayTotals = useMemo(() => {
@@ -212,8 +221,9 @@ export default function RepasPage() {
 
       <Tabs defaultValue="ingredients" className="w-full">
         <TabsList className="w-full mb-4">
-          <TabsTrigger value="ingredients" className="flex-1 text-xs">Par ingrédients</TabsTrigger>
-          <TabsTrigger value="gaps" className="flex-1 text-xs">Combler mes manques</TabsTrigger>
+          <TabsTrigger value="ingredients" className="flex-1 text-[10px] px-1">Par ingrédients</TabsTrigger>
+          <TabsTrigger value="recipes" className="flex-1 text-[10px] px-1">Par recette</TabsTrigger>
+          <TabsTrigger value="gaps" className="flex-1 text-[10px] px-1">Combler mes manques</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ingredients">
@@ -250,6 +260,37 @@ export default function RepasPage() {
           <div className="space-y-3">
             {searchResults.map((food) => (
               <FoodCard key={food.id} food={food} />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="recipes">
+          <div className="relative mb-4">
+            <UtensilsCrossed className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={recipeQuery}
+              onChange={(e) => setRecipeQuery(e.target.value)}
+              placeholder="Rechercher : pâtes, salade, soupe..."
+              className="pl-10 h-12 bg-card rounded-lg"
+            />
+          </div>
+
+          {recipeResults.length === 0 && recipeQuery.trim().length >= 2 && (
+            <div className="flex flex-col items-center py-8 text-center">
+              <Search className="w-8 h-8 text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">Aucune recette trouvée pour "{recipeQuery}"</p>
+            </div>
+          )}
+
+          {recipeQuery.trim().length < 2 && (
+            <p className="text-xs text-muted-foreground mb-3 italic">
+              💡 Tapez un mot-clé ou parcourez nos recettes adaptées à la ménopause
+            </p>
+          )}
+
+          <div className="space-y-3">
+            {recipeResults.map((recipe) => (
+              <RecipeCard key={recipe.id} recipe={recipe} />
             ))}
           </div>
         </TabsContent>
