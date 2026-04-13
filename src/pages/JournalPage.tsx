@@ -28,6 +28,7 @@ export default function JournalPage() {
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({
     "petit-dejeuner": true, dejeuner: true, diner: true, collation: true,
   });
+  const [voiceMatches, setVoiceMatches] = useState<VoiceMatch[] | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search - min 2 chars
