@@ -70,21 +70,78 @@ export async function searchCiqual(query: string): Promise<CiqualFood[]> {
   return mapRows(sorted.slice(0, 20));
 }
 
-/** Search foods rich in a specific nutrient */
+// Exclude exotic/uncommon foods from suggestions
+const EXCLUDED_TERMS = [
+  "foie de morue", "huile de foie", "abats", "rognon", "cervelle",
+  "tripes", "ris de veau", "langue de boeuf", "museau", "pied de",
+  "tête de veau", "coeur de", "gésier",
+];
+
+function isExcludedFood(nom: string): boolean {
+  const lower = nom.toLowerCase();
+  return EXCLUDED_TERMS.some((term) => lower.includes(term));
+}
+
+// Preferred everyday foods per nutrient gap
+const PREFERRED_FOODS: Record<string, string[]> = {
+  vitamine_d_100g: ["saumon", "sardine", "oeuf", "champignon", "thon", "maquereau"],
+  calcium_100g: ["yaourt", "fromage", "lait", "amande", "brocoli", "épinard"],
+  magnesium_100g: ["chocolat noir", "banane", "épinard", "noix", "amande", "lentille"],
+  fer_100g: ["lentille", "épinard", "boeuf", "haricot", "tofu", "quinoa"],
+  omega3_total_100g: ["saumon", "noix", "colza", "sardine", "maquereau", "lin"],
+  proteines_100g: ["poulet", "oeuf", "thon", "lentille", "yaourt", "boeuf"],
+  vitamine_b12_100g: ["oeuf", "saumon", "fromage", "boeuf", "thon", "lait"],
+};
+
+/** Search preferred everyday foods for a nutrient, then fill with top DB results */
 export async function searchByNutrient(
   nutrient: keyof CiqualFood,
   limit = 10
 ): Promise<CiqualFood[]> {
   const col = nutrient as string;
-  const { data, error } = await supabase
-    .from("aliments_ciqual")
-    .select("*")
-    .gt(col, 0)
-    .order(col, { ascending: false })
-    .limit(limit);
+  const preferred = PREFERRED_FOODS[col] || [];
 
-  if (error) throw error;
-  return mapRows(data || []);
+  // Search preferred foods first
+  const preferredResults: CiqualFood[] = [];
+  if (preferred.length > 0) {
+    const promises = preferred.map(async (term) => {
+      const { data } = await supabase
+        .from("aliments_ciqual")
+        .select("*")
+        .ilike("nom", `${term}%`)
+        .gt(col, 0)
+        .order(col, { ascending: false })
+        .limit(2);
+      return data || [];
+    });
+    const results = await Promise.all(promises);
+    const seen = new Set<number>();
+    results.flat().forEach((row) => {
+      if (!seen.has(row.id) && !isExcludedFood(row.nom || "")) {
+        seen.add(row.id);
+        preferredResults.push(...mapRows([row]));
+      }
+    });
+  }
+
+  // Fill remaining slots from top DB results
+  const remaining = limit - preferredResults.length;
+  if (remaining > 0) {
+    const { data } = await supabase
+      .from("aliments_ciqual")
+      .select("*")
+      .gt(col, 0)
+      .order(col, { ascending: false })
+      .limit(limit * 3);
+
+    const existingIds = new Set(preferredResults.map((f) => f.id));
+    const filtered = (data || [])
+      .filter((row) => !existingIds.has(row.id) && !isExcludedFood(row.nom || ""))
+      .slice(0, remaining);
+    preferredResults.push(...mapRows(filtered));
+  }
+
+  return preferredResults.slice(0, limit);
 }
 
 export function scaleCiqual(food: CiqualFood, grams: number) {
