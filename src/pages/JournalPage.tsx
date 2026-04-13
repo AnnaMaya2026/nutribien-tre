@@ -146,13 +146,16 @@ export default function JournalPage() {
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
-          <Input
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setSelectedFood(null); }}
-            placeholder="Ex: oeuf, pomme, fromage, poulet..."
-            className="h-12 bg-card rounded-lg"
-            autoFocus
-          />
+          <div className="flex gap-2">
+            <Input
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setSelectedFood(null); }}
+              placeholder="Ex: oeuf, pomme, fromage, poulet..."
+              className="h-12 bg-card rounded-lg flex-1"
+              autoFocus
+            />
+            <VoiceInput onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }} />
+          </div>
           {searching && (
             <div className="absolute z-10 top-[5.5rem] left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
