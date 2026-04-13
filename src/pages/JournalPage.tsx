@@ -123,7 +123,13 @@ export default function JournalPage() {
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
       <h1 className="text-2xl font-bold text-foreground mb-1">Journal alimentaire</h1>
-      <p className="text-muted-foreground text-sm mb-4">Ajoutez vos repas du jour</p>
+      <p className="text-muted-foreground text-sm mb-1">Ajoutez vos repas du jour</p>
+      {!showSearch && !selectedFood && !voiceMatches && !voiceCandidates && (
+        <p className="text-xs text-primary/60 italic mb-4">
+          🎤 Dites par exemple : « J'ai mangé du poulet rôti et des haricots verts »
+        </p>
+      )}
+      {(showSearch || selectedFood || voiceMatches || voiceCandidates) && <div className="mb-3" />}
 
       {/* Add food button */}
       {!showSearch && (

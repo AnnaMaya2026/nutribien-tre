@@ -60,24 +60,13 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
 
       {!pickedFood ? (
         <>
-          {/* Instruction + restart */}
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-primary font-medium">
-              👆 Appuyez sur l'aliment correspondant
-            </p>
-            {onRestart && (
-              <button
-                onClick={onRestart}
-                className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <RotateCcw className="w-3 h-3" />
-                Recommencer
-              </button>
-            )}
-          </div>
+          {/* Instruction */}
+          <p className="text-xs text-primary font-medium mb-3">
+            👆 Appuyez sur l'aliment correspondant
+          </p>
 
           {/* Candidates list */}
-          <div className="space-y-1.5 max-h-72 overflow-y-auto">
+          <div className="space-y-1.5 max-h-60 overflow-y-auto mb-3">
             {current.candidates.map((food) => (
               <button
                 key={food.id}
@@ -97,6 +86,22 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
               </button>
             ))}
           </div>
+
+          {/* Restart button at bottom */}
+          {onRestart && (
+            <div className="space-y-1">
+              <button
+                onClick={onRestart}
+                className="w-full py-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm flex items-center justify-center gap-2 transition-all border border-primary/20"
+              >
+                <RotateCcw className="w-4 h-4" />
+                🎤 Recommencer la recherche vocale
+              </button>
+              <p className="text-[10px] text-muted-foreground text-center italic">
+                Si votre aliment n'est pas dans la liste
+              </p>
+            </div>
+          )}
         </>
       ) : (
         <>
