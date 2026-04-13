@@ -83,6 +83,30 @@ export default function JournalPage() {
     setShowSearch(false);
   };
 
+  const handleVoiceConfirm = (items: VoiceMatch[]) => {
+    if (!user) return;
+    items.forEach((item) => {
+      addLog.mutate({
+        food_name: item.food.nom,
+        portion_size: item.grams,
+        calories: item.scaled.calories,
+        proteins: item.scaled.proteins,
+        carbs: item.scaled.carbs,
+        fats: item.scaled.fats,
+        fibres: item.scaled.fibres,
+        calcium: item.scaled.calcium,
+        vitamin_d: item.scaled.vitamin_d,
+        magnesium: item.scaled.magnesium,
+        iron: item.scaled.iron,
+        omega3: item.scaled.omega3,
+        phytoestrogens: item.scaled.phytoestrogens,
+        vitamin_b12: item.scaled.vitamin_b12,
+        meal_type: mealType,
+      });
+    });
+    setVoiceMatches(null);
+  };
+
   const toggleMeal = (value: string) => {
     setExpandedMeals((prev) => ({ ...prev, [value]: !prev[value] }));
   };
