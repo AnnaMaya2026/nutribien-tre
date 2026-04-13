@@ -293,7 +293,7 @@ export default function JournalPage() {
 
       {/* Voice candidate picker */}
       {voiceCandidates && (
-        <VoiceCandidatePicker
+      <VoiceCandidatePicker
           candidates={voiceCandidates}
           onDone={(matches) => {
             setVoiceCandidates(null);
@@ -302,6 +302,10 @@ export default function JournalPage() {
             }
           }}
           onCancel={() => setVoiceCandidates(null)}
+          onRestart={() => {
+            setVoiceCandidates(null);
+            setShowSearch(false);
+          }}
         />
       )}
 
