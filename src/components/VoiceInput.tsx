@@ -115,9 +115,6 @@ export default function VoiceInput({ onResults }: VoiceInputProps) {
 
     recognition.onend = () => {
       clearTimeout(timeoutRef.current);
-      if (state === "listening") {
-        // If no result came through onresult
-      }
     };
 
     recognitionRef.current = recognition;
