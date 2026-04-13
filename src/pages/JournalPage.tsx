@@ -273,6 +273,16 @@ export default function JournalPage() {
         </div>
       )}
 
+      {/* Voice results */}
+      {voiceMatches && (
+        <VoiceResults
+          matches={voiceMatches}
+          mealType={mealType}
+          onConfirm={handleVoiceConfirm}
+          onCancel={() => setVoiceMatches(null)}
+        />
+      )}
+
       {/* Meal-based logs */}
       {hasAnyLogs ? (
         <div className="space-y-3">
