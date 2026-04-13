@@ -264,6 +264,37 @@ export default function RepasPage() {
           </div>
         </TabsContent>
 
+        <TabsContent value="recipes">
+          <div className="relative mb-4">
+            <UtensilsCrossed className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={recipeQuery}
+              onChange={(e) => setRecipeQuery(e.target.value)}
+              placeholder="Rechercher : pâtes, salade, soupe..."
+              className="pl-10 h-12 bg-card rounded-lg"
+            />
+          </div>
+
+          {recipeResults.length === 0 && recipeQuery.trim().length >= 2 && (
+            <div className="flex flex-col items-center py-8 text-center">
+              <Search className="w-8 h-8 text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">Aucune recette trouvée pour "{recipeQuery}"</p>
+            </div>
+          )}
+
+          {recipeQuery.trim().length < 2 && (
+            <p className="text-xs text-muted-foreground mb-3 italic">
+              💡 Tapez un mot-clé ou parcourez nos recettes adaptées à la ménopause
+            </p>
+          )}
+
+          <div className="space-y-3">
+            {recipeResults.map((recipe) => (
+              <RecipeCard key={recipe.id} recipe={recipe} />
+            ))}
+          </div>
+        </TabsContent>
+
         <TabsContent value="gaps">
           {gaps.length > 0 ? (
             <>
