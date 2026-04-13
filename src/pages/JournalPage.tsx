@@ -133,7 +133,10 @@ export default function JournalPage() {
           >
             <Plus className="w-4 h-4" /> Ajouter un aliment
           </button>
-          <VoiceInput onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }} />
+          <VoiceInput
+            onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }}
+            onCandidates={(c) => { setVoiceCandidates(c); setVoiceMatches(null); setShowSearch(false); }}
+          />
         </div>
       )}
 
@@ -155,7 +158,10 @@ export default function JournalPage() {
               className="h-12 bg-card rounded-lg flex-1"
               autoFocus
             />
-            <VoiceInput onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }} />
+            <VoiceInput
+              onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }}
+              onCandidates={(c) => { setVoiceCandidates(c); setVoiceMatches(null); setShowSearch(false); }}
+            />
           </div>
           {searching && (
             <div className="absolute z-10 top-[5.5rem] left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
