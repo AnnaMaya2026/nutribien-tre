@@ -127,6 +127,11 @@ export default function RepasPage() {
     return () => clearTimeout(timer);
   }, [ingredients]);
 
+  // Recipe search
+  useEffect(() => {
+    setRecipeResults(searchRecipes(recipeQuery));
+  }, [recipeQuery]);
+
   // Today's totals
   const todayTotals = useMemo(() => {
     return logs.reduce(
