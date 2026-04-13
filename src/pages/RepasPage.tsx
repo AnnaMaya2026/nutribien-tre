@@ -103,6 +103,8 @@ export default function RepasPage() {
   const [searching, setSearching] = useState(false);
   const [gapFoods, setGapFoods] = useState<{ food: CiqualFood; covers: string[] }[]>([]);
   const [loadingGaps, setLoadingGaps] = useState(false);
+  const [recipeQuery, setRecipeQuery] = useState("");
+  const [recipeResults, setRecipeResults] = useState<Recipe[]>([]);
   const { logs } = useFoodLogs();
 
   // Debounced ingredient search
