@@ -9,17 +9,40 @@ import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
 import { SYMPTOM_FOOD_MAP } from "@/lib/symptomFoods";
 import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 
-function ProgressBar({ value, max, label, unit }: { value: number; max: number; label: string; unit: string }) {
-  const pct = Math.min((value / max) * 100, 100);
-  const color = pct < 50 ? "bg-progress-low" : pct < 80 ? "bg-progress-mid" : "bg-progress-high";
+function getNutrientColor(pct: number, isMicro = false) {
+  if (isMicro) {
+    if (pct > 100) return { bg: "bg-blue-500", text: "text-blue-500", emoji: "💧" };
+    if (pct >= 80) return { bg: "bg-green-500", text: "text-green-500", emoji: "🟢" };
+    if (pct >= 50) return { bg: "bg-orange-500", text: "text-orange-500", emoji: "🟠" };
+    return { bg: "bg-red-500", text: "text-red-500", emoji: "🔴" };
+  }
+  // Macros
+  if (pct > 120) return { bg: "bg-red-500", text: "text-red-500", emoji: "🔴" };
+  if (pct > 100) return { bg: "bg-orange-500", text: "text-orange-500", emoji: "🟠" };
+  if (pct >= 80) return { bg: "bg-green-500", text: "text-green-500", emoji: "🟢" };
+  if (pct >= 50) return { bg: "bg-orange-500", text: "text-orange-500", emoji: "🟠" };
+  return { bg: "bg-red-500", text: "text-red-500", emoji: "🔴" };
+}
+
+function getCalorieColor(pct: number) {
+  if (pct > 110) return { stroke: "hsl(0, 70%, 55%)", text: "text-red-500", emoji: "🔴" };
+  if (pct > 100) return { stroke: "hsl(35, 80%, 55%)", text: "text-orange-500", emoji: "🟠" };
+  if (pct >= 80) return { stroke: "hsl(145, 60%, 45%)", text: "text-green-500", emoji: "🟢" };
+  return { stroke: "hsl(var(--primary))", text: "text-primary", emoji: "" };
+}
+
+function ProgressBar({ value, max, label, unit, isMicro = false }: { value: number; max: number; label: string; unit: string; isMicro?: boolean }) {
+  const rawPct = (value / max) * 100;
+  const barPct = Math.min(rawPct, 100);
+  const { bg, text, emoji } = getNutrientColor(rawPct, isMicro);
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-xs">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium text-foreground">{Math.round(value)}/{max}{unit}</span>
+        <span className={`font-medium ${text}`}>{emoji} {Math.round(value)}/{max}{unit}</span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
-        <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${pct}%` }} />
+        <div className={`h-full rounded-full transition-all duration-500 ${bg}`} style={{ width: `${barPct}%` }} />
       </div>
     </div>
   );
