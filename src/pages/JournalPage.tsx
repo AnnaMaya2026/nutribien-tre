@@ -291,7 +291,21 @@ export default function JournalPage() {
         />
       )}
 
-      {/* Meal-based logs */}
+      {/* Voice candidate picker */}
+      {voiceCandidates && (
+        <VoiceCandidatePicker
+          candidates={voiceCandidates}
+          onDone={(matches) => {
+            setVoiceCandidates(null);
+            if (matches.length > 0) {
+              setVoiceMatches((prev) => prev ? [...prev, ...matches] : matches);
+            }
+          }}
+          onCancel={() => setVoiceCandidates(null)}
+        />
+      )}
+
+
       {hasAnyLogs ? (
         <div className="space-y-3">
           {logsByMeal.map((meal) => (
