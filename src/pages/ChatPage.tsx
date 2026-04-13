@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Send, Bot, User, Loader2, Volume2, Pause, VolumeX } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 
@@ -20,11 +21,86 @@ export default function ChatPage() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [playingId, setPlayingId] = useState<number | null>(null);
+  const [loadingTtsId, setLoadingTtsId] = useState<number | null>(null);
+  const [autoRead, setAutoRead] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const autoReadRef = useRef(autoRead);
+
+  useEffect(() => {
+    autoReadRef.current = autoRead;
+  }, [autoRead]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      URL.revokeObjectURL(audioRef.current.src);
+      audioRef.current = null;
+    }
+    setPlayingId(null);
+  }, []);
+
+  const playTts = useCallback(async (msgId: number, text: string) => {
+    // If already playing this message, stop it
+    if (playingId === msgId) {
+      stopAudio();
+      return;
+    }
+
+    // Stop any current playback
+    stopAudio();
+    setLoadingTtsId(msgId);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts-sophie`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text }),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.text();
+        console.error("TTS error:", err);
+        return;
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onplay = () => setPlayingId(msgId);
+      audio.onended = () => {
+        setPlayingId(null);
+        URL.revokeObjectURL(audioUrl);
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        setPlayingId(null);
+        URL.revokeObjectURL(audioUrl);
+        audioRef.current = null;
+      };
+
+      await audio.play();
+    } catch (e) {
+      console.error("TTS playback error:", e);
+    } finally {
+      setLoadingTtsId(null);
+    }
+  }, [playingId, stopAudio]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -62,6 +138,11 @@ export default function ChatPage() {
         from: "ai",
       };
       setMessages((prev) => [...prev, aiMsg]);
+
+      // Auto-read if enabled
+      if (autoReadRef.current) {
+        setTimeout(() => playTts(aiMsg.id, aiMsg.text), 300);
+      }
     } catch (e) {
       console.error("Erreur réelle du chat nutritionniste:", e, { userMessage: trimmedInput });
       const errorMsg: Message = {
@@ -79,10 +160,22 @@ export default function ChatPage() {
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
       <div className="px-4 pt-6 pb-3 border-b border-border">
-        <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
-          <Bot className="w-5 h-5" /> Sophie — Nutritionniste IA
-        </h1>
-        <p className="text-xs text-muted-foreground">Conseils personnalisés pour la ménopause</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <Bot className="w-5 h-5" /> Sophie — Nutritionniste IA
+            </h1>
+            <p className="text-xs text-muted-foreground">Conseils personnalisés pour la ménopause</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">🔊 Lecture auto</span>
+            <Switch
+              checked={autoRead}
+              onCheckedChange={setAutoRead}
+              className="data-[state=checked]:bg-primary"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Messages */}
@@ -94,19 +187,39 @@ export default function ChatPage() {
                 <Bot className="w-3.5 h-3.5 text-primary-foreground" />
               </div>
             )}
-            <div
-              className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                msg.from === "user"
-                  ? "bg-primary text-primary-foreground rounded-br-md"
-                  : "bg-card text-card-foreground rounded-bl-md card-soft"
-              }`}
-            >
-              {msg.from === "ai" ? (
-                <div className="prose prose-sm prose-pink max-w-none [&>p]:m-0">
-                  <ReactMarkdown>{msg.text}</ReactMarkdown>
-                </div>
-              ) : (
-                msg.text
+            <div className="flex flex-col gap-1 max-w-[80%]">
+              <div
+                className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                  msg.from === "user"
+                    ? "bg-primary text-primary-foreground rounded-br-md"
+                    : "bg-card text-card-foreground rounded-bl-md card-soft"
+                }`}
+              >
+                {msg.from === "ai" ? (
+                  <div className="prose prose-sm prose-pink max-w-none [&>p]:m-0">
+                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  </div>
+                ) : (
+                  msg.text
+                )}
+              </div>
+              {/* TTS button for AI messages */}
+              {msg.from === "ai" && (
+                <button
+                  onClick={() => playTts(msg.id, msg.text)}
+                  disabled={loadingTtsId === msg.id}
+                  className="self-start flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors px-1 py-0.5 rounded disabled:opacity-50"
+                  title={playingId === msg.id ? "Mettre en pause" : "Écouter"}
+                >
+                  {loadingTtsId === msg.id ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : playingId === msg.id ? (
+                    <Pause className="w-3.5 h-3.5" />
+                  ) : (
+                    <Volume2 className="w-3.5 h-3.5" />
+                  )}
+                  <span>{loadingTtsId === msg.id ? "Chargement..." : playingId === msg.id ? "Pause" : "Écouter"}</span>
+                </button>
               )}
             </div>
             {msg.from === "user" && (
