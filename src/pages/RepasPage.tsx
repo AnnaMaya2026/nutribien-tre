@@ -221,8 +221,9 @@ export default function RepasPage() {
 
       <Tabs defaultValue="ingredients" className="w-full">
         <TabsList className="w-full mb-4">
-          <TabsTrigger value="ingredients" className="flex-1 text-xs">Par ingrédients</TabsTrigger>
-          <TabsTrigger value="gaps" className="flex-1 text-xs">Combler mes manques</TabsTrigger>
+          <TabsTrigger value="ingredients" className="flex-1 text-[10px] px-1">Par ingrédients</TabsTrigger>
+          <TabsTrigger value="recipes" className="flex-1 text-[10px] px-1">Par recette</TabsTrigger>
+          <TabsTrigger value="gaps" className="flex-1 text-[10px] px-1">Combler mes manques</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ingredients">
