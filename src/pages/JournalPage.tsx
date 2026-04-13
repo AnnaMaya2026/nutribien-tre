@@ -280,6 +280,18 @@ export default function JournalPage() {
         </div>
       )}
 
+      {/* Voice candidate picker */}
+      {voiceCandidates && (
+        <VoiceCandidatePicker
+          parsedItems={voiceCandidates}
+          onDone={(matches) => {
+            setVoiceCandidates(null);
+            setVoiceMatches(matches);
+          }}
+          onCancel={() => setVoiceCandidates(null)}
+        />
+      )}
+
       {/* Voice results */}
       {voiceMatches && (
         <VoiceResults
