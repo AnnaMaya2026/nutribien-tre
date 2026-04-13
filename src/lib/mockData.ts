@@ -104,23 +104,3 @@ export const MEAL_SUGGESTIONS: MealSuggestion[] = [
   },
 ];
 
-// Mock AI chat responses
-export const AI_RESPONSES: Record<string, string> = {
-  default: "Bonjour ! Je suis votre nutritionniste IA, spécialisée dans la nutrition pour la ménopause. Comment puis-je vous aider ?",
-  calcium: "Pour la ménopause, un apport de 1200mg de calcium par jour est recommandé. Les sardines, le tofu, les amandes et les produits laitiers sont d'excellentes sources. Pensez aussi aux légumes verts comme le brocoli et les épinards !",
-  vitamine: "La vitamine D est essentielle pendant la ménopause pour l'absorption du calcium. Visez 20µg par jour. Le saumon, les sardines et les œufs sont vos alliés. N'oubliez pas l'exposition solaire modérée !",
-  poids: "Pendant la ménopause, le métabolisme ralentit. Privilégiez les protéines maigres, les fibres et les bons gras. Évitez les sucres rapides et mangez à heures régulières. L'activité physique reste votre meilleur allié !",
-  symptomes: "Pour réduire les bouffées de chaleur, essayez d'augmenter votre consommation de phytoestrogènes : soja, graines de lin, lentilles. Évitez les aliments épicés, la caféine et l'alcool qui peuvent aggraver les symptômes.",
-  sommeil: "Pour améliorer le sommeil, privilégiez le magnésium (amandes, épinards, quinoa) et les aliments riches en tryptophane (banane, produits laitiers). Évitez la caféine après 14h et dînez léger au moins 2h avant le coucher.",
-  fallback: "C'est une excellente question ! Les besoins nutritionnels pendant la ménopause sont spécifiques. Je vous recommande de consulter votre médecin pour un suivi personnalisé. En attendant, concentrez-vous sur le calcium, la vitamine D et les phytoestrogènes.",
-};
-
-export function getAIResponse(message: string): string {
-  const lower = message.toLowerCase();
-  if (lower.includes("calcium")) return AI_RESPONSES.calcium;
-  if (lower.includes("vitamine")) return AI_RESPONSES.vitamine;
-  if (lower.includes("poids") || lower.includes("maigrir")) return AI_RESPONSES.poids;
-  if (lower.includes("bouffée") || lower.includes("symptôme") || lower.includes("chaleur")) return AI_RESPONSES.symptomes;
-  if (lower.includes("sommeil") || lower.includes("dormir") || lower.includes("insomnie")) return AI_RESPONSES.sommeil;
-  return AI_RESPONSES.fallback;
-}

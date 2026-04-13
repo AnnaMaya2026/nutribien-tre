@@ -28,13 +28,14 @@ export default function ChatPage() {
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
-    const userMsg: Message = { id: Date.now(), text: input, from: "user" };
+
+    const trimmedInput = input.trim();
+    const userMsg: Message = { id: Date.now(), text: trimmedInput, from: "user" };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
 
     try {
-      // Build conversation history (exclude welcome message)
       const history = [...messages.filter((m) => m.id !== 0), userMsg].map((m) => ({
         role: m.from === "user" ? "user" : "assistant",
         content: m.text,
@@ -44,16 +45,25 @@ export default function ChatPage() {
         body: { messages: history },
       });
 
-      if (error) throw error;
+      console.log("Réponse API Sophie:", data);
+
+      if (error) {
+        console.error("Erreur API Sophie:", error);
+        throw error;
+      }
+
+      if (!data?.reply || typeof data.reply !== "string") {
+        throw new Error("Réponse IA invalide ou vide");
+      }
 
       const aiMsg: Message = {
         id: Date.now() + 1,
-        text: data?.reply || "Désolée, je n'ai pas pu formuler de réponse.",
+        text: data.reply,
         from: "ai",
       };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (e) {
-      console.error("Chat error:", e);
+      console.error("Erreur réelle du chat nutritionniste:", e, { userMessage: trimmedInput });
       const errorMsg: Message = {
         id: Date.now() + 1,
         text: "Désolée, je suis momentanément indisponible. Réessayez dans quelques instants.",

@@ -104,22 +104,32 @@ Règles:
           ...messages,
         ],
         temperature: 0.7,
-        max_tokens: 500,
+        max_tokens: 300,
       }),
     });
 
     if (!response.ok) {
-      const t = await response.text();
-      console.error("OpenAI error:", response.status, t);
-      return new Response(JSON.stringify({ error: "Erreur IA" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      const errorText = await response.text();
+      console.error("OpenAI error:", response.status, errorText);
+      return new Response(JSON.stringify({ error: `OpenAI ${response.status}: ${errorText}` }), {
+        status: response.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const result = await response.json();
+    console.log("OpenAI response:", JSON.stringify(result));
     const content = result.choices?.[0]?.message?.content?.trim();
 
-    return new Response(JSON.stringify({ reply: content || "Je n'ai pas pu formuler de réponse." }), {
+    if (!content) {
+      console.error("OpenAI empty response:", JSON.stringify(result));
+      return new Response(JSON.stringify({ error: "Réponse OpenAI vide" }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ reply: content }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
