@@ -394,6 +394,39 @@ export default function JournalPage() {
           </p>
         </div>
       ) : null}
+
+      {/* Move modal */}
+      {moveTarget && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setMoveTarget(null)}>
+          <div className="bg-card rounded-t-2xl w-full max-w-lg p-5 pb-8 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold text-foreground mb-1">Déplacer vers quel repas ?</h3>
+            <p className="text-xs text-muted-foreground mb-4 line-clamp-1">{moveTarget.foodName}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {MEAL_TYPES.map((m) => {
+                const isCurrent = m.value === moveTarget.currentMeal;
+                return (
+                  <button
+                    key={m.value}
+                    onClick={() => !isCurrent && handleMove(m.value)}
+                    disabled={isCurrent}
+                    className={`py-3 rounded-xl text-sm font-medium transition-all ${
+                      isCurrent
+                        ? "bg-muted text-muted-foreground opacity-40 cursor-not-allowed"
+                        : "bg-primary/10 text-foreground hover:bg-primary hover:text-primary-foreground"
+                    }`}
+                  >
+                    {m.label}
+                    {isCurrent && " (actuel)"}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={() => setMoveTarget(null)} className="w-full mt-3 py-2 text-xs text-muted-foreground">
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
