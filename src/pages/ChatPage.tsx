@@ -28,6 +28,7 @@ export default function ChatPage() {
   const [autoSendTimer, setAutoSendTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const recognitionRef = useRef<any>(null);
   const autoReadRef = useRef(autoRead);
 
   useEffect(() => {
