@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Bot, User, Loader2, Volume2, Pause, VolumeX } from "lucide-react";
+import { Send, Bot, User, Loader2, Volume2, Pause, Mic, MicOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 
 interface Message {
   id: number;
@@ -23,9 +24,12 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [playingId, setPlayingId] = useState<number | null>(null);
   const [loadingTtsId, setLoadingTtsId] = useState<number | null>(null);
-  const [autoRead, setAutoRead] = useState(false);
+  const [autoRead, setAutoRead] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const [autoSendTimer, setAutoSendTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const recognitionRef = useRef<any>(null);
   const autoReadRef = useRef(autoRead);
 
   useEffect(() => {
@@ -155,6 +159,62 @@ export default function ChatPage() {
       setIsLoading(false);
     }
   };
+  const toggleRecording = useCallback(() => {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+      setIsRecording(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast("Reconnaissance vocale non supportée par ce navigateur");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "fr-FR";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join("");
+      setInput(transcript);
+
+      // Auto-send 1.5s after final result
+      if (event.results[event.results.length - 1].isFinal) {
+        setIsRecording(false);
+        const timer = setTimeout(() => {
+          // We need to trigger send via a ref-based approach
+          const sendBtn = document.getElementById("chat-send-btn");
+          sendBtn?.click();
+        }, 1500);
+        setAutoSendTimer(timer);
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsRecording(false);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+  }, [isRecording]);
+
+  const cancelAutoSend = useCallback(() => {
+    if (autoSendTimer) {
+      clearTimeout(autoSendTimer);
+      setAutoSendTimer(null);
+    }
+  }, [autoSendTimer]);
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -168,7 +228,7 @@ export default function ChatPage() {
             <p className="text-xs text-muted-foreground">Conseils personnalisés pour la ménopause</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">🔊 Lecture auto</span>
+            <span className="text-xs text-muted-foreground">🔊 Réponse vocale auto</span>
             <Switch
               checked={autoRead}
               onCheckedChange={setAutoRead}
@@ -248,17 +308,41 @@ export default function ChatPage() {
 
       {/* Input */}
       <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 bg-background border-t border-border">
+        {isRecording && (
+          <div className="text-center text-xs text-primary animate-pulse pt-2 pb-1">
+            🎤 J'écoute... parlez maintenant
+          </div>
+        )}
+        {autoSendTimer && (
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2 pb-1">
+            <span>Envoi automatique...</span>
+            <button onClick={cancelAutoSend} className="text-primary underline">Annuler</button>
+          </div>
+        )}
         <div className="flex gap-2 pt-3">
+          <button
+            onClick={toggleRecording}
+            disabled={isLoading}
+            className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all ${
+              isRecording
+                ? "bg-primary text-primary-foreground animate-pulse shadow-lg"
+                : "bg-primary/10 text-primary hover:bg-primary/20"
+            }`}
+            title={isRecording ? "Arrêter" : "Parler à Sophie"}
+          >
+            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </button>
           <Input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            onChange={(e) => { setInput(e.target.value); cancelAutoSend(); }}
+            onKeyDown={(e) => { if (e.key === "Enter") { cancelAutoSend(); handleSend(); } }}
             placeholder="Posez votre question à Sophie..."
             className="h-11 bg-card rounded-lg flex-1"
             disabled={isLoading}
           />
           <button
-            onClick={handleSend}
+            id="chat-send-btn"
+            onClick={() => { cancelAutoSend(); handleSend(); }}
             disabled={!input.trim() || isLoading}
             className="w-11 h-11 rounded-lg bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40"
           >
