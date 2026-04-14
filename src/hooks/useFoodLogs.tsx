@@ -73,6 +73,17 @@ export function useFoodLogs(date?: string) {
     },
   });
 
+  const updateLog = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Record<string, any> }) => {
+      const { error } = await supabase.from("food_logs").update(updates).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["food_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["food_logs_week"] });
+    },
+  });
+
   const deleteLog = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("food_logs").delete().eq("id", id);
@@ -84,5 +95,5 @@ export function useFoodLogs(date?: string) {
     },
   });
 
-  return { logs, isLoading, addLog, deleteLog, weekLogs: weekLogs.data || [] };
+  return { logs, isLoading, addLog, updateLog, deleteLog, weekLogs: weekLogs.data || [] };
 }
