@@ -228,7 +228,7 @@ export default function ChatPage() {
             <p className="text-xs text-muted-foreground">Conseils personnalisés pour la ménopause</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">🔊 Lecture auto</span>
+            <span className="text-xs text-muted-foreground">🔊 Réponse vocale auto</span>
             <Switch
               checked={autoRead}
               onCheckedChange={setAutoRead}
