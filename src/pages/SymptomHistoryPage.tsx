@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useJournalEntries, JOURNAL_CATEGORIES } from "@/hooks/useJournalEntries";
@@ -7,13 +7,16 @@ import { SymptomScores } from "@/hooks/useSymptomLogs";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
 import { SYMPTOM_FOOD_MAP } from "@/lib/symptomFoods";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-import { AlertTriangle, TrendingUp } from "lucide-react";
+import { AlertTriangle, TrendingUp, TrendingDown, ArrowRight, Check } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { toast } from "sonner";
 
 const PERIODS = [
   { value: 7, label: "7 jours" },
   { value: 30, label: "30 jours" },
   { value: 90, label: "3 mois" },
   { value: 180, label: "6 mois" },
+  { value: 9999, label: "Tout" },
 ];
 
 const CHART_COLORS = [
@@ -21,17 +24,244 @@ const CHART_COLORS = [
   "hsl(35, 80%, 55%)", "hsl(270, 50%, 60%)", "hsl(10, 70%, 55%)",
 ];
 
+// ── Daily Rating Component ──
+function DailyRating({
+  scores,
+  onScoresChange,
+  onSubmit,
+  isSubmitting,
+  alreadySaved,
+}: {
+  scores: SymptomScores;
+  onScoresChange: (s: SymptomScores) => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  alreadySaved: boolean;
+}) {
+  const activeSymptoms = FULL_SYMPTOMS_LIST.filter((s) => (scores[s.value] ?? 0) > 0);
+  const inactiveSymptoms = FULL_SYMPTOMS_LIST.filter((s) => !scores[s.value] || scores[s.value] === 0);
+
+  const setScore = (key: string, val: number) => {
+    onScoresChange({ ...scores, [key]: val });
+  };
+
+  const highSymptoms = Object.entries(scores).filter(([, v]) => v >= 7);
+
+  return (
+    <div className="bg-card rounded-2xl p-4 card-soft mb-4 animate-fade-in">
+      <h3 className="text-sm font-semibold text-foreground mb-1">🩺 Bilan du jour</h3>
+      <p className="text-[10px] text-muted-foreground mb-3">
+        Évaluez chaque symptôme de 1 (léger) à 10 (très intense)
+      </p>
+
+      {/* Active symptoms with sliders */}
+      {activeSymptoms.map((s) => {
+        const val = scores[s.value] || 0;
+        const color = val >= 7 ? "text-destructive" : val >= 4 ? "text-warning" : "text-progress-high";
+        return (
+          <div key={s.value} className="mb-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium text-foreground">{s.label}</span>
+              <span className={`text-xs font-bold ${color}`}>{val}/10</span>
+            </div>
+            <Slider
+              value={[val]}
+              onValueChange={([v]) => setScore(s.value, v)}
+              min={0}
+              max={10}
+              step={1}
+              className="w-full"
+            />
+            {/* Smart alert for high symptoms */}
+            {val >= 7 && SYMPTOM_FOOD_MAP[s.value] && (
+              <div className="mt-2 bg-destructive/10 rounded-xl p-3 border border-destructive/20">
+                <div className="flex items-start gap-2 mb-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-destructive flex-shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-foreground font-medium">
+                    Score élevé — aliments recommandés :
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {SYMPTOM_FOOD_MAP[s.value].foods.slice(0, 3).map((food) => (
+                    <span key={food} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary font-medium">
+                      {food}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Add more symptoms */}
+      {inactiveSymptoms.length > 0 && (
+        <div className="mt-2">
+          <p className="text-[10px] text-muted-foreground mb-1.5">Ajouter un symptôme :</p>
+          <div className="flex flex-wrap gap-1.5">
+            {inactiveSymptoms.map((s) => (
+              <button
+                key={s.value}
+                onClick={() => setScore(s.value, 3)}
+                className="text-[10px] px-2.5 py-1 rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
+              >
+                + {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={onSubmit}
+        disabled={isSubmitting || activeSymptoms.length === 0}
+        className="w-full mt-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-40 flex items-center justify-center gap-2"
+      >
+        {isSubmitting ? (
+          <span className="animate-pulse">Enregistrement...</span>
+        ) : alreadySaved ? (
+          <><Check className="w-4 h-4" /> Mettre à jour mon bilan</>
+        ) : (
+          "✅ Valider mon bilan du jour"
+        )}
+      </button>
+    </div>
+  );
+}
+
+// ── Weekly Summary Component ──
+function WeeklySummary({ logs, period }: { logs: any[]; period: number }) {
+  const summary = useMemo(() => {
+    if (logs.length === 0) return null;
+
+    // Aggregate all scores
+    const totals: Record<string, { sum: number; count: number }> = {};
+    logs.forEach((log) => {
+      const scores = (log.symptom_scores && typeof log.symptom_scores === "object" && !Array.isArray(log.symptom_scores))
+        ? log.symptom_scores as SymptomScores : {};
+      Object.entries(scores).forEach(([k, v]) => {
+        if (v > 0) {
+          if (!totals[k]) totals[k] = { sum: 0, count: 0 };
+          totals[k].sum += v;
+          totals[k].count++;
+        }
+      });
+    });
+
+    const ranked = Object.entries(totals)
+      .map(([key, { sum, count }]) => ({ key, avg: sum / count }))
+      .sort((a, b) => b.avg - a.avg)
+      .slice(0, 3);
+
+    // Trend: compare first half vs second half
+    const mid = Math.floor(logs.length / 2);
+    if (logs.length < 2) return { top3: ranked, trend: "stable" as const };
+
+    const firstHalf = logs.slice(0, mid);
+    const secondHalf = logs.slice(mid);
+    const avgHalf = (half: any[]) => {
+      let total = 0, count = 0;
+      half.forEach((log) => {
+        const scores = (log.symptom_scores && typeof log.symptom_scores === "object" && !Array.isArray(log.symptom_scores))
+          ? log.symptom_scores as SymptomScores : {};
+        Object.values(scores).forEach((v) => { if (v > 0) { total += v; count++; } });
+      });
+      return count > 0 ? total / count : 0;
+    };
+
+    const avgFirst = avgHalf(firstHalf);
+    const avgSecond = avgHalf(secondHalf);
+    const diff = avgSecond - avgFirst;
+    const trend = diff < -0.5 ? "improving" as const : diff > 0.5 ? "worsening" as const : "stable" as const;
+
+    return { top3: ranked, trend };
+  }, [logs]);
+
+  if (!summary || summary.top3.length === 0) return null;
+
+  const trendConfig = {
+    improving: { icon: TrendingDown, label: "En amélioration", color: "text-progress-high", emoji: "↓" },
+    stable: { icon: ArrowRight, label: "Stable", color: "text-warning", emoji: "→" },
+    worsening: { icon: TrendingUp, label: "En hausse", color: "text-destructive", emoji: "↑" },
+  };
+  const t = trendConfig[summary.trend];
+
+  return (
+    <div className="bg-card rounded-2xl p-4 card-soft mb-4 animate-fade-in">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-foreground">
+          📊 Bilan {period <= 7 ? "de la semaine" : period <= 30 ? "du mois" : "de la période"}
+        </h3>
+        <span className={`text-xs font-bold flex items-center gap-1 ${t.color}`}>
+          {t.emoji} {t.label}
+        </span>
+      </div>
+      <div className="space-y-2">
+        {summary.top3.map(({ key, avg }, i) => {
+          const label = FULL_SYMPTOMS_LIST.find((s) => s.value === key)?.label || key;
+          const pct = (avg / 10) * 100;
+          const barColor = avg >= 7 ? "bg-destructive" : avg >= 4 ? "bg-warning" : "bg-progress-high";
+          return (
+            <div key={key} className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground w-4">{i + 1}.</span>
+              <span className="text-xs font-medium text-foreground flex-1 truncate">{label}</span>
+              <div className="w-20 h-2 rounded-full bg-muted overflow-hidden">
+                <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+              </div>
+              <span className="text-xs font-bold text-foreground w-8 text-right">{avg.toFixed(1)}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page ──
 export default function SymptomHistoryPage() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [period, setPeriod] = useState(7);
   const { entries: journalEntries } = useJournalEntries();
+  const today = new Date().toISOString().split("T")[0];
+
+  // Daily scores state
+  const [dailyScores, setDailyScores] = useState<SymptomScores>({});
+  const [scoresLoaded, setScoresLoaded] = useState(false);
 
   const startDate = useMemo(() => {
+    if (period >= 9999) return "2000-01-01";
     const d = new Date();
     d.setDate(d.getDate() - (period - 1));
     return d.toISOString().split("T")[0];
   }, [period]);
 
+  // Today's log
+  const { data: todayLog } = useQuery({
+    queryKey: ["symptom_log_today", user?.id, today],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("symptom_logs")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("logged_at", today)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Initialize scores from today's log
+  if (todayLog && !scoresLoaded) {
+    const existing = (todayLog.symptom_scores && typeof todayLog.symptom_scores === "object" && !Array.isArray(todayLog.symptom_scores))
+      ? todayLog.symptom_scores as SymptomScores : {};
+    setDailyScores(existing);
+    setScoresLoaded(true);
+  }
+
+  // History logs
   const { data: symptomLogs = [] } = useQuery({
     queryKey: ["symptom_logs_history", user?.id, startDate],
     queryFn: async () => {
@@ -48,7 +278,44 @@ export default function SymptomHistoryPage() {
     enabled: !!user,
   });
 
-  // Collect all active symptom keys across the period
+  // Save mutation
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Not authenticated");
+      const activeScores: SymptomScores = {};
+      const selectedSymptoms: string[] = [];
+      Object.entries(dailyScores).forEach(([k, v]) => {
+        if (v > 0) { activeScores[k] = v; selectedSymptoms.push(k); }
+      });
+
+      const payload = {
+        selected_symptoms: selectedSymptoms,
+        symptom_scores: activeScores,
+      };
+
+      if (todayLog) {
+        const { error } = await supabase.from("symptom_logs").update(payload).eq("id", todayLog.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("symptom_logs").insert({
+          ...payload,
+          user_id: user.id,
+          logged_at: today,
+        });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["symptom_log"] });
+      queryClient.invalidateQueries({ queryKey: ["symptom_logs_history"] });
+      queryClient.invalidateQueries({ queryKey: ["symptom_log_today"] });
+      queryClient.invalidateQueries({ queryKey: ["symptom_logs_week"] });
+      toast.success("Bilan du jour enregistré !");
+    },
+    onError: () => toast.error("Erreur lors de l'enregistrement"),
+  });
+
+  // Chart data
   const activeSymptomKeys = useMemo(() => {
     const keys = new Set<string>();
     symptomLogs.forEach((log) => {
@@ -59,23 +326,14 @@ export default function SymptomHistoryPage() {
     return Array.from(keys);
   }, [symptomLogs]);
 
-  // Build chart data
   const chartData = useMemo(() => {
+    const effectivePeriod = period >= 9999 ? Math.max(symptomLogs.length, 30) : period;
     const days: string[] = [];
-    for (let i = period - 1; i >= 0; i--) {
+    for (let i = effectivePeriod - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       days.push(d.toISOString().split("T")[0]);
     }
-
-    // Journal entries by date for markers
-    const journalByDate = new Map<string, string[]>();
-    journalEntries.forEach((e) => {
-      const notes = journalByDate.get(e.entry_date) || [];
-      const catLabel = JOURNAL_CATEGORIES.find((c) => c.value === e.category)?.label || e.category;
-      notes.push(`${catLabel}: ${e.content}`);
-      journalByDate.set(e.entry_date, notes);
-    });
 
     return days.map((date) => {
       const log = symptomLogs.find((l) => l.logged_at === date);
@@ -83,43 +341,27 @@ export default function SymptomHistoryPage() {
         ? log.symptom_scores as SymptomScores : {};
 
       const d = new Date(date);
-      const label = period <= 30
-        ? `${d.getDate()}/${d.getMonth() + 1}`
-        : `${d.getDate()}/${d.getMonth() + 1}`;
+      const label = `${d.getDate()}/${d.getMonth() + 1}`;
 
-      const journalNotes = journalByDate.get(date);
-
-      return { date, label, ...scores, _hasJournal: !!journalNotes, _journalNotes: journalNotes };
+      // Only include actual data points, leave undefined for gaps
+      const point: any = { date, label };
+      activeSymptomKeys.forEach((key) => {
+        if (scores[key] !== undefined && scores[key] > 0) {
+          point[key] = scores[key];
+        }
+      });
+      return point;
     });
-  }, [symptomLogs, journalEntries, period]);
+  }, [symptomLogs, period, activeSymptomKeys]);
 
-  // Latest scores for high-symptom alerts
-  const latestScores = useMemo(() => {
-    if (symptomLogs.length === 0) return {} as SymptomScores;
-    const last = symptomLogs[symptomLogs.length - 1];
-    const scores = (last?.symptom_scores && typeof last.symptom_scores === "object" && !Array.isArray(last.symptom_scores))
-      ? last.symptom_scores as SymptomScores : {};
-    return scores;
-  }, [symptomLogs]);
-
-  const highSymptoms = useMemo(() => {
-    return Object.entries(latestScores)
-      .filter(([, score]) => score >= 7)
-      .map(([key]) => key)
-      .filter((key) => SYMPTOM_FOOD_MAP[key]);
-  }, [latestScores]);
-
-  // Journal entry dates for reference lines
   const journalDates = useMemo(() => {
     const dates = new Set<string>();
     journalEntries.forEach((e) => dates.add(e.entry_date));
     return Array.from(dates);
   }, [journalEntries]);
 
-  // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload) return null;
-    const dataPoint = chartData.find((d) => d.label === label);
     return (
       <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs max-w-[220px]">
         <p className="font-semibold text-foreground mb-1">{label}</p>
@@ -129,22 +371,26 @@ export default function SymptomHistoryPage() {
             <span className="font-bold text-foreground">{p.value}/10</span>
           </div>
         ))}
-        {dataPoint?._hasJournal && dataPoint._journalNotes && (
-          <div className="mt-2 pt-2 border-t border-border">
-            <p className="font-semibold text-primary mb-0.5">📝 Journal :</p>
-            {dataPoint._journalNotes.map((n: string, i: number) => (
-              <p key={i} className="text-muted-foreground text-[10px]">{n}</p>
-            ))}
-          </div>
-        )}
       </div>
     );
   };
 
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
-      <h1 className="text-2xl font-bold text-foreground mb-1">Historique symptômes</h1>
-      <p className="text-muted-foreground text-sm mb-4">Suivez l'évolution de vos symptômes</p>
+      <h1 className="text-2xl font-bold text-foreground mb-1">Symptômes</h1>
+      <p className="text-muted-foreground text-sm mb-4">Suivez et évaluez vos symptômes au quotidien</p>
+
+      {/* Daily Rating */}
+      <DailyRating
+        scores={dailyScores}
+        onScoresChange={setDailyScores}
+        onSubmit={() => saveMutation.mutate()}
+        isSubmitting={saveMutation.isPending}
+        alreadySaved={!!todayLog}
+      />
+
+      {/* Weekly Summary */}
+      <WeeklySummary logs={symptomLogs} period={period} />
 
       {/* Period selector */}
       <div className="flex gap-2 mb-4">
@@ -160,38 +406,6 @@ export default function SymptomHistoryPage() {
           </button>
         ))}
       </div>
-
-      {/* High symptom alerts */}
-      {highSymptoms.length > 0 && (
-        <div className="space-y-3 mb-4">
-          {highSymptoms.map((sKey) => {
-            const rec = SYMPTOM_FOOD_MAP[sKey];
-            if (!rec) return null;
-            return (
-              <div key={sKey} className="bg-card rounded-2xl p-4 card-soft animate-fade-in border border-warning/30">
-                <div className="flex items-start gap-2 mb-2">
-                  <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">
-                      Votre score de {rec.label} est élevé ({latestScores[sKey]}/10)
-                    </p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      Voici les aliments qui peuvent aider :
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {rec.foods.map((food) => (
-                    <span key={food} className="text-[10px] px-2 py-0.5 rounded-full bg-progress-high/15 text-progress-high font-medium">
-                      {food}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {/* Chart */}
       {activeSymptomKeys.length > 0 ? (
@@ -211,7 +425,6 @@ export default function SymptomHistoryPage() {
               />
               <YAxis domain={[0, 10]} hide />
               <Tooltip content={<CustomTooltip />} />
-              {/* Journal entry reference lines */}
               {journalDates.map((date) => {
                 const idx = chartData.findIndex((d) => d.date === date);
                 if (idx === -1) return null;
@@ -236,7 +449,7 @@ export default function SymptomHistoryPage() {
                     stroke={CHART_COLORS[i % CHART_COLORS.length]}
                     strokeWidth={2}
                     dot={{ r: 2 }}
-                    connectNulls
+                    connectNulls={false}
                   />
                 );
               })}
@@ -254,19 +467,16 @@ export default function SymptomHistoryPage() {
                 </span>
               );
             })}
-            <span className="text-[10px] flex items-center gap-1 text-muted-foreground">
-              <span className="w-3 border-t border-dashed border-primary" /> Journal
-            </span>
           </div>
         </div>
       ) : (
         <div className="bg-card rounded-2xl p-8 card-soft mb-4 text-center animate-fade-in">
           <div className="text-5xl mb-3">📊</div>
           <p className="text-sm text-muted-foreground">
-            Aucune donnée de symptômes pour cette période.
+            Aucune donnée pour cette période.
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Remplissez le check-in symptômes sur le dashboard pour voir les tendances.
+            Remplissez le bilan du jour ci-dessus pour voir les tendances.
           </p>
         </div>
       )}
