@@ -357,13 +357,20 @@ export default function JournalPage() {
               {expandedMeals[meal.value] && meal.items.length > 0 && (
                 <div className="px-4 pb-3 space-y-2">
                   {meal.items.map((log) => (
-                    <div key={log.id} className="bg-muted/30 rounded-xl p-3 flex items-center gap-3">
+                    <div key={log.id} className="bg-muted/30 rounded-xl p-3 flex items-center gap-3 animate-fade-in">
                       <div className="flex-1">
                         <div className="font-medium text-sm text-foreground line-clamp-1">{log.food_name}</div>
                         <div className="text-xs text-muted-foreground">
                           {log.calories} kcal · {log.proteins}g prot · {log.portion_size}g
                         </div>
                       </div>
+                      <button
+                        onClick={() => setMoveTarget({ id: log.id, currentMeal: meal.value, foodName: log.food_name })}
+                        className="text-muted-foreground hover:text-primary transition-colors"
+                        title="Déplacer"
+                      >
+                        <ArrowRightLeft className="w-4 h-4" />
+                      </button>
                       <button onClick={() => deleteLog.mutate(log.id)} className="text-muted-foreground hover:text-destructive transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
