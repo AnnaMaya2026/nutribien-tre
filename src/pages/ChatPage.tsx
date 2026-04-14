@@ -308,17 +308,41 @@ export default function ChatPage() {
 
       {/* Input */}
       <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 bg-background border-t border-border">
+        {isRecording && (
+          <div className="text-center text-xs text-primary animate-pulse pt-2 pb-1">
+            🎤 J'écoute... parlez maintenant
+          </div>
+        )}
+        {autoSendTimer && (
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2 pb-1">
+            <span>Envoi automatique...</span>
+            <button onClick={cancelAutoSend} className="text-primary underline">Annuler</button>
+          </div>
+        )}
         <div className="flex gap-2 pt-3">
+          <button
+            onClick={toggleRecording}
+            disabled={isLoading}
+            className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all ${
+              isRecording
+                ? "bg-primary text-primary-foreground animate-pulse shadow-lg"
+                : "bg-primary/10 text-primary hover:bg-primary/20"
+            }`}
+            title={isRecording ? "Arrêter" : "Parler à Sophie"}
+          >
+            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </button>
           <Input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            onChange={(e) => { setInput(e.target.value); cancelAutoSend(); }}
+            onKeyDown={(e) => { if (e.key === "Enter") { cancelAutoSend(); handleSend(); } }}
             placeholder="Posez votre question à Sophie..."
             className="h-11 bg-card rounded-lg flex-1"
             disabled={isLoading}
           />
           <button
-            onClick={handleSend}
+            id="chat-send-btn"
+            onClick={() => { cancelAutoSend(); handleSend(); }}
             disabled={!input.trim() || isLoading}
             className="w-11 h-11 rounded-lg bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40"
           >
