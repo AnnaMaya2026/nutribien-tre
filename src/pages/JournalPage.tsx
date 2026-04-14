@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
-import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, MoreVertical, ArrowRightLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import VoiceInput, { type VoiceMatch, type VoiceCandidate } from "@/components/VoiceInput";
 import VoiceResults from "@/components/VoiceResults";
 import VoiceCandidatePicker from "@/components/VoiceCandidatePicker";
+import { toast } from "sonner";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
