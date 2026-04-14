@@ -134,33 +134,6 @@ export default function Dashboard() {
     });
   })();
 
-  // Symptom trend data
-  const symptomTrendData = useMemo(() => {
-    const dayLabels = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-    const days: string[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      days.push(d.toISOString().split("T")[0]);
-    }
-    return days.map((date) => {
-      const log = symptomWeekLogs.find((l) => l.logged_at === date);
-      const scores = (log?.symptom_scores && typeof log.symptom_scores === "object" && !Array.isArray(log.symptom_scores)) ? log.symptom_scores as SymptomScores : {};
-      const d = new Date(date);
-      return { name: dayLabels[d.getDay()], date, ...scores };
-    });
-  }, [symptomWeekLogs]);
-
-  // Active symptom keys from scores
-  const activeSymptomKeys = useMemo(() => {
-    const keys = new Set<string>();
-    symptomWeekLogs.forEach((log) => {
-      const scores = (log?.symptom_scores && typeof log.symptom_scores === "object" && !Array.isArray(log.symptom_scores)) ? log.symptom_scores as SymptomScores : {};
-      Object.keys(scores).forEach((k) => { if (scores[k] > 0) keys.add(k); });
-    });
-    Object.keys(symptomScores).forEach((k) => { if (symptomScores[k] > 0) keys.add(k); });
-    return Array.from(keys);
-  }, [symptomWeekLogs, symptomScores]);
-
   // High symptoms (score ≥ 7) for food recommendations
   const highSymptoms = useMemo(() => {
     return Object.entries(symptomScores)
@@ -176,7 +149,6 @@ export default function Dashboard() {
   const toggleSymptom = (value: string) => {
     setSelectedSymptoms((prev) => {
       const next = prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value];
-      // Remove score if symptom is deselected
       if (!next.includes(value)) {
         setSymptomScores((s) => { const copy = { ...s }; delete copy[value]; return copy; });
       } else if (!symptomScores[value]) {
@@ -190,8 +162,6 @@ export default function Dashboard() {
     upsertLog.mutate({ selected_symptoms: selectedSymptoms, symptom_scores: symptomScores });
     setShowSymptoms(false);
   };
-
-  const TREND_COLORS = ["hsl(330, 60%, 65%)", "hsl(200, 60%, 55%)", "hsl(145, 50%, 45%)", "hsl(35, 80%, 55%)", "hsl(270, 50%, 60%)"];
 
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
