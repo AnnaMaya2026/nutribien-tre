@@ -75,7 +75,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { logs, weekLogs } = useFoodLogs();
-  const { todayLog, upsertLog, weekLogs: symptomWeekLogs } = useSymptomLogs();
+  const { todayLog, upsertLog } = useSymptomLogs();
   const [showSymptoms, setShowSymptoms] = useState(false);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(todayLog?.selected_symptoms || []);
   const [symptomScores, setSymptomScores] = useState<SymptomScores>(() => {
