@@ -17,7 +17,7 @@ const MEAL_TYPES = [
 ];
 
 export default function JournalPage() {
-  const { logs, addLog, deleteLog } = useFoodLogs();
+  const { logs, addLog, updateLog, deleteLog } = useFoodLogs();
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<CiqualFood[]>([]);
