@@ -393,43 +393,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Symptom trends */}
-      {activeSymptomKeys.length > 0 && (
-        <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
-          <button onClick={() => setShowSymptomTrends(!showSymptomTrends)} className="flex items-center justify-between w-full">
-            <h3 className="text-sm font-semibold text-foreground">Tendances symptômes 7j</h3>
-            {showSymptomTrends ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-          </button>
-          {showSymptomTrends && (
-            <div className="mt-3">
-              <ResponsiveContainer width="100%" height={160}>
-                <LineChart data={symptomTrendData}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis domain={[0, 10]} hide />
-                  <Tooltip
-                    contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "11px" }}
-                  />
-                  {activeSymptomKeys.slice(0, 5).map((key, i) => {
-                    const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key;
-                    return <Line key={key} type="monotone" dataKey={key} name={label} stroke={TREND_COLORS[i % TREND_COLORS.length]} strokeWidth={2} dot={{ r: 3 }} connectNulls />;
-                  })}
-                </LineChart>
-              </ResponsiveContainer>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {activeSymptomKeys.slice(0, 5).map((key, i) => {
-                  const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key;
-                  return (
-                    <span key={key} className="text-[10px] flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full" style={{ background: TREND_COLORS[i % TREND_COLORS.length] }} />
-                      {label}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* 7-day chart */}
       <div className="bg-card rounded-2xl p-5 card-soft animate-fade-in">
