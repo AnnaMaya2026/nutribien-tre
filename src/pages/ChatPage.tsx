@@ -158,8 +158,64 @@ export default function ChatPage() {
       setIsLoading(false);
     }
   };
+  const toggleRecording = useCallback(() => {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+      setIsRecording(false);
+      return;
+    }
 
-  return (
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast("Reconnaissance vocale non supportée par ce navigateur");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "fr-FR";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join("");
+      setInput(transcript);
+
+      // Auto-send 1.5s after final result
+      if (event.results[event.results.length - 1].isFinal) {
+        setIsRecording(false);
+        const timer = setTimeout(() => {
+          // We need to trigger send via a ref-based approach
+          const sendBtn = document.getElementById("chat-send-btn");
+          sendBtn?.click();
+        }, 1500);
+        setAutoSendTimer(timer);
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsRecording(false);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+  }, [isRecording]);
+
+  const cancelAutoSend = useCallback(() => {
+    if (autoSendTimer) {
+      clearTimeout(autoSendTimer);
+      setAutoSendTimer(null);
+    }
+  }, [autoSendTimer]);
+
+
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
       <div className="px-4 pt-6 pb-3 border-b border-border">
