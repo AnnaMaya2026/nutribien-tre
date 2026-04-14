@@ -215,7 +215,7 @@ export default function ChatPage() {
     }
   }, [autoSendTimer]);
 
-
+  return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
       <div className="px-4 pt-6 pb-3 border-b border-border">
