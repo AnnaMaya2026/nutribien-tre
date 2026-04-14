@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSymptomLogs, SymptomScores } from "@/hooks/useSymptomLogs";
 import { DAILY_TARGETS } from "@/lib/mockData";
 import { useState, useMemo } from "react";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, LineChart, Line } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
 import { SYMPTOM_FOOD_MAP } from "@/lib/symptomFoods";
 import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
@@ -84,7 +84,7 @@ export default function Dashboard() {
     return {};
   });
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
-  const [showSymptomTrends, setShowSymptomTrends] = useState(false);
+  
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
   const firstName = getUserFirstName(user?.email);
