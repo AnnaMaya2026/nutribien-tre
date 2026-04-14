@@ -232,8 +232,10 @@ export default function Dashboard() {
         )}
       </div>
 
+      {/* Micronutrient trend chart */}
+      <MicronutrientTrendChart />
+
       {/* Micronutrients */}
-      <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
         <h3 className="text-sm font-semibold text-foreground mb-3">Micronutriments clés</h3>
         <div className="space-y-2">
           <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" isMicro />
