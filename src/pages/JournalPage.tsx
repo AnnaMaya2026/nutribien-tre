@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
-import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, MoreVertical, ArrowRightLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import VoiceInput, { type VoiceMatch, type VoiceCandidate } from "@/components/VoiceInput";
 import VoiceResults from "@/components/VoiceResults";
 import VoiceCandidatePicker from "@/components/VoiceCandidatePicker";
+import { toast } from "sonner";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -16,7 +17,7 @@ const MEAL_TYPES = [
 ];
 
 export default function JournalPage() {
-  const { logs, addLog, deleteLog } = useFoodLogs();
+  const { logs, addLog, updateLog, deleteLog } = useFoodLogs();
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<CiqualFood[]>([]);
@@ -31,6 +32,7 @@ export default function JournalPage() {
   });
   const [voiceMatches, setVoiceMatches] = useState<VoiceMatch[] | null>(null);
   const [voiceCandidates, setVoiceCandidates] = useState<VoiceCandidate[] | null>(null);
+  const [moveTarget, setMoveTarget] = useState<{ id: string; currentMeal: string; foodName: string } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search - min 2 chars
@@ -111,6 +113,21 @@ export default function JournalPage() {
 
   const toggleMeal = (value: string) => {
     setExpandedMeals((prev) => ({ ...prev, [value]: !prev[value] }));
+  };
+
+  const handleMove = (destMeal: string) => {
+    if (!moveTarget) return;
+    const label = MEAL_TYPES.find((m) => m.value === destMeal)?.label || destMeal;
+    updateLog.mutate(
+      { id: moveTarget.id, meal_type: destMeal },
+      {
+        onSuccess: () => {
+          toast.success(`Aliment déplacé vers ${label} ✓`);
+          setExpandedMeals((prev) => ({ ...prev, [destMeal]: true }));
+        },
+      }
+    );
+    setMoveTarget(null);
   };
 
   const logsByMeal = MEAL_TYPES.map((m) => ({
@@ -340,13 +357,20 @@ export default function JournalPage() {
               {expandedMeals[meal.value] && meal.items.length > 0 && (
                 <div className="px-4 pb-3 space-y-2">
                   {meal.items.map((log) => (
-                    <div key={log.id} className="bg-muted/30 rounded-xl p-3 flex items-center gap-3">
+                    <div key={log.id} className="bg-muted/30 rounded-xl p-3 flex items-center gap-3 animate-fade-in">
                       <div className="flex-1">
                         <div className="font-medium text-sm text-foreground line-clamp-1">{log.food_name}</div>
                         <div className="text-xs text-muted-foreground">
                           {log.calories} kcal · {log.proteins}g prot · {log.portion_size}g
                         </div>
                       </div>
+                      <button
+                        onClick={() => setMoveTarget({ id: log.id, currentMeal: meal.value, foodName: log.food_name })}
+                        className="text-muted-foreground hover:text-primary transition-colors"
+                        title="Déplacer"
+                      >
+                        <ArrowRightLeft className="w-4 h-4" />
+                      </button>
                       <button onClick={() => deleteLog.mutate(log.id)} className="text-muted-foreground hover:text-destructive transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -370,6 +394,39 @@ export default function JournalPage() {
           </p>
         </div>
       ) : null}
+
+      {/* Move modal */}
+      {moveTarget && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setMoveTarget(null)}>
+          <div className="bg-card rounded-t-2xl w-full max-w-lg p-5 pb-8 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold text-foreground mb-1">Déplacer vers quel repas ?</h3>
+            <p className="text-xs text-muted-foreground mb-4 line-clamp-1">{moveTarget.foodName}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {MEAL_TYPES.map((m) => {
+                const isCurrent = m.value === moveTarget.currentMeal;
+                return (
+                  <button
+                    key={m.value}
+                    onClick={() => !isCurrent && handleMove(m.value)}
+                    disabled={isCurrent}
+                    className={`py-3 rounded-xl text-sm font-medium transition-all ${
+                      isCurrent
+                        ? "bg-muted text-muted-foreground opacity-40 cursor-not-allowed"
+                        : "bg-primary/10 text-foreground hover:bg-primary hover:text-primary-foreground"
+                    }`}
+                  >
+                    {m.label}
+                    {isCurrent && " (actuel)"}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={() => setMoveTarget(null)} className="w-full mt-3 py-2 text-xs text-muted-foreground">
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
