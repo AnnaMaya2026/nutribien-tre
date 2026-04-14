@@ -5,6 +5,7 @@ import { useSymptomLogs, SymptomScores } from "@/hooks/useSymptomLogs";
 import { DAILY_TARGETS } from "@/lib/mockData";
 import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
 import { SYMPTOM_FOOD_MAP } from "@/lib/symptomFoods";
 import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
@@ -230,6 +231,9 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Micronutrient trend chart */}
+      <MicronutrientTrendChart />
 
       {/* Micronutrients */}
       <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
