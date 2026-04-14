@@ -115,6 +115,21 @@ export default function JournalPage() {
     setExpandedMeals((prev) => ({ ...prev, [value]: !prev[value] }));
   };
 
+  const handleMove = (destMeal: string) => {
+    if (!moveTarget) return;
+    const label = MEAL_TYPES.find((m) => m.value === destMeal)?.label || destMeal;
+    updateLog.mutate(
+      { id: moveTarget.id, meal_type: destMeal },
+      {
+        onSuccess: () => {
+          toast.success(`Aliment déplacé vers ${label} ✓`);
+          setExpandedMeals((prev) => ({ ...prev, [destMeal]: true }));
+        },
+      }
+    );
+    setMoveTarget(null);
+  };
+
   const logsByMeal = MEAL_TYPES.map((m) => ({
     ...m,
     items: logs.filter((l) => l.meal_type === m.value),
