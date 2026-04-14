@@ -23,7 +23,9 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [playingId, setPlayingId] = useState<number | null>(null);
   const [loadingTtsId, setLoadingTtsId] = useState<number | null>(null);
-  const [autoRead, setAutoRead] = useState(false);
+  const [autoRead, setAutoRead] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const [autoSendTimer, setAutoSendTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const autoReadRef = useRef(autoRead);
