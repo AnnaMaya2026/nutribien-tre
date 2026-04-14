@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSymptomLogs, SymptomScores } from "@/hooks/useSymptomLogs";
 import { DAILY_TARGETS } from "@/lib/mockData";
 import { useState, useMemo } from "react";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, LineChart, Line } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
 import { SYMPTOM_FOOD_MAP } from "@/lib/symptomFoods";
 import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
@@ -75,7 +75,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { logs, weekLogs } = useFoodLogs();
-  const { todayLog, upsertLog, weekLogs: symptomWeekLogs } = useSymptomLogs();
+  const { todayLog, upsertLog } = useSymptomLogs();
   const [showSymptoms, setShowSymptoms] = useState(false);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(todayLog?.selected_symptoms || []);
   const [symptomScores, setSymptomScores] = useState<SymptomScores>(() => {
@@ -84,7 +84,7 @@ export default function Dashboard() {
     return {};
   });
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
-  const [showSymptomTrends, setShowSymptomTrends] = useState(false);
+  
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
   const firstName = getUserFirstName(user?.email);
@@ -134,33 +134,6 @@ export default function Dashboard() {
     });
   })();
 
-  // Symptom trend data
-  const symptomTrendData = useMemo(() => {
-    const dayLabels = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-    const days: string[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      days.push(d.toISOString().split("T")[0]);
-    }
-    return days.map((date) => {
-      const log = symptomWeekLogs.find((l) => l.logged_at === date);
-      const scores = (log?.symptom_scores && typeof log.symptom_scores === "object" && !Array.isArray(log.symptom_scores)) ? log.symptom_scores as SymptomScores : {};
-      const d = new Date(date);
-      return { name: dayLabels[d.getDay()], date, ...scores };
-    });
-  }, [symptomWeekLogs]);
-
-  // Active symptom keys from scores
-  const activeSymptomKeys = useMemo(() => {
-    const keys = new Set<string>();
-    symptomWeekLogs.forEach((log) => {
-      const scores = (log?.symptom_scores && typeof log.symptom_scores === "object" && !Array.isArray(log.symptom_scores)) ? log.symptom_scores as SymptomScores : {};
-      Object.keys(scores).forEach((k) => { if (scores[k] > 0) keys.add(k); });
-    });
-    Object.keys(symptomScores).forEach((k) => { if (symptomScores[k] > 0) keys.add(k); });
-    return Array.from(keys);
-  }, [symptomWeekLogs, symptomScores]);
-
   // High symptoms (score ≥ 7) for food recommendations
   const highSymptoms = useMemo(() => {
     return Object.entries(symptomScores)
@@ -176,7 +149,6 @@ export default function Dashboard() {
   const toggleSymptom = (value: string) => {
     setSelectedSymptoms((prev) => {
       const next = prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value];
-      // Remove score if symptom is deselected
       if (!next.includes(value)) {
         setSymptomScores((s) => { const copy = { ...s }; delete copy[value]; return copy; });
       } else if (!symptomScores[value]) {
@@ -190,8 +162,6 @@ export default function Dashboard() {
     upsertLog.mutate({ selected_symptoms: selectedSymptoms, symptom_scores: symptomScores });
     setShowSymptoms(false);
   };
-
-  const TREND_COLORS = ["hsl(330, 60%, 65%)", "hsl(200, 60%, 55%)", "hsl(145, 50%, 45%)", "hsl(35, 80%, 55%)", "hsl(270, 50%, 60%)"];
 
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
@@ -393,43 +363,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Symptom trends */}
-      {activeSymptomKeys.length > 0 && (
-        <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
-          <button onClick={() => setShowSymptomTrends(!showSymptomTrends)} className="flex items-center justify-between w-full">
-            <h3 className="text-sm font-semibold text-foreground">Tendances symptômes 7j</h3>
-            {showSymptomTrends ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-          </button>
-          {showSymptomTrends && (
-            <div className="mt-3">
-              <ResponsiveContainer width="100%" height={160}>
-                <LineChart data={symptomTrendData}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis domain={[0, 10]} hide />
-                  <Tooltip
-                    contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "11px" }}
-                  />
-                  {activeSymptomKeys.slice(0, 5).map((key, i) => {
-                    const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key;
-                    return <Line key={key} type="monotone" dataKey={key} name={label} stroke={TREND_COLORS[i % TREND_COLORS.length]} strokeWidth={2} dot={{ r: 3 }} connectNulls />;
-                  })}
-                </LineChart>
-              </ResponsiveContainer>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {activeSymptomKeys.slice(0, 5).map((key, i) => {
-                  const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key;
-                  return (
-                    <span key={key} className="text-[10px] flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full" style={{ background: TREND_COLORS[i % TREND_COLORS.length] }} />
-                      {label}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* 7-day chart */}
       <div className="bg-card rounded-2xl p-5 card-soft animate-fade-in">
