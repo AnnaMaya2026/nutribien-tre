@@ -24,6 +24,14 @@ const CHART_COLORS = [
   "hsl(35, 80%, 55%)", "hsl(270, 50%, 60%)", "hsl(10, 70%, 55%)",
 ];
 
+const JOURNAL_CATEGORY_COLORS: Record<string, string> = {
+  complement: "hsl(270, 50%, 60%)",
+  sport: "hsl(145, 50%, 45%)",
+  alimentation: "hsl(330, 60%, 65%)",
+  medecin: "hsl(200, 60%, 55%)",
+  autre: "hsl(0, 0%, 60%)",
+};
+
 // ── Daily Rating Component ──
 function DailyRating({
   scores,
@@ -354,16 +362,23 @@ export default function SymptomHistoryPage() {
     });
   }, [symptomLogs, period, activeSymptomKeys]);
 
-  const journalDates = useMemo(() => {
-    const dates = new Set<string>();
-    journalEntries.forEach((e) => dates.add(e.entry_date));
-    return Array.from(dates);
+  const journalByDate = useMemo(() => {
+    const map: Record<string, typeof journalEntries> = {};
+    journalEntries.forEach((e) => {
+      if (!map[e.entry_date]) map[e.entry_date] = [];
+      map[e.entry_date].push(e);
+    });
+    return map;
   }, [journalEntries]);
+
+  const journalDates = useMemo(() => Object.keys(journalByDate), [journalByDate]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload) return null;
+    const dateStr = payload[0]?.payload?.date;
+    const dayEntries = dateStr ? (journalByDate[dateStr] || []) : [];
     return (
-      <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs max-w-[220px]">
+      <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs max-w-[250px]">
         <p className="font-semibold text-foreground mb-1">{label}</p>
         {payload.map((p: any) => (
           <div key={p.name} className="flex justify-between gap-3">
@@ -371,6 +386,25 @@ export default function SymptomHistoryPage() {
             <span className="font-bold text-foreground">{p.value}/10</span>
           </div>
         ))}
+        {dayEntries.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-border space-y-1">
+            {dayEntries.map((e) => {
+              const cat = JOURNAL_CATEGORIES.find((c) => c.value === e.category);
+              return (
+                <div key={e.id} className="flex items-start gap-1.5">
+                  <span
+                    className="w-2 h-2 rounded-full mt-1 flex-shrink-0"
+                    style={{ background: JOURNAL_CATEGORY_COLORS[e.category] || JOURNAL_CATEGORY_COLORS.autre }}
+                  />
+                  <span className="text-muted-foreground">
+                    <span className="font-medium">{cat?.label || "📝 Autre"}</span>{" "}
+                    {e.content}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   };
@@ -428,13 +462,23 @@ export default function SymptomHistoryPage() {
               {journalDates.map((date) => {
                 const idx = chartData.findIndex((d) => d.date === date);
                 if (idx === -1) return null;
+                const entries = journalByDate[date] || [];
+                const topCategory = entries[0]?.category || "autre";
+                const color = JOURNAL_CATEGORY_COLORS[topCategory] || JOURNAL_CATEGORY_COLORS.autre;
                 return (
                   <ReferenceLine
                     key={date}
                     x={chartData[idx].label}
-                    stroke="hsl(var(--primary))"
+                    stroke={color}
                     strokeDasharray="3 3"
-                    strokeOpacity={0.5}
+                    strokeOpacity={0.6}
+                    label={{
+                      value: "●",
+                      position: "insideBottomLeft",
+                      fill: color,
+                      fontSize: 10,
+                      offset: -2,
+                    }}
                   />
                 );
               })}
@@ -468,6 +512,20 @@ export default function SymptomHistoryPage() {
               );
             })}
           </div>
+          {journalDates.length > 0 && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5">
+              <span className="text-[10px] text-muted-foreground">Notes :</span>
+              {Object.entries(JOURNAL_CATEGORY_COLORS).map(([cat, color]) => {
+                const catLabel = JOURNAL_CATEGORIES.find((c) => c.value === cat)?.label || cat;
+                return (
+                  <span key={cat} className="text-[10px] flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full" style={{ background: color }} />
+                    {catLabel}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
       ) : (
         <div className="bg-card rounded-2xl p-8 card-soft mb-4 text-center animate-fade-in">
