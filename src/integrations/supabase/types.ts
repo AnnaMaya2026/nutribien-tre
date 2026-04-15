@@ -250,6 +250,39 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrient_reports: {
+        Row: {
+          aliment_nom: string
+          comment: string | null
+          created_at: string
+          current_value: number | null
+          id: string
+          nutrient_name: string
+          suggested_value: number | null
+          user_id: string
+        }
+        Insert: {
+          aliment_nom: string
+          comment?: string | null
+          created_at?: string
+          current_value?: number | null
+          id?: string
+          nutrient_name: string
+          suggested_value?: number | null
+          user_id: string
+        }
+        Update: {
+          aliment_nom?: string
+          comment?: string | null
+          created_at?: string
+          current_value?: number | null
+          id?: string
+          nutrient_name?: string
+          suggested_value?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
