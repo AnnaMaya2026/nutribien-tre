@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Html5Qrcode } from "html5-qrcode";
-import { X, ScanBarcode, Loader2 } from "lucide-react";
+import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from "@zxing/library";
+import { X, ScanBarcode, Loader2, Plus, Minus, Keyboard } from "lucide-react";
 import { toast } from "sonner";
-import { scaleNutrients, type ParsedFood } from "@/lib/openFoodFacts";
-import { Plus, Minus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
@@ -64,18 +62,15 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
   const [product, setProduct] = useState<ScannedProduct | null>(null);
   const [grams, setGrams] = useState(100);
   const [selectedMeal, setSelectedMeal] = useState(mealType);
-  const scannerRef = useRef<Html5Qrcode | null>(null);
-  const readerRef = useRef<HTMLDivElement>(null);
+  const [manualMode, setManualMode] = useState(false);
+  const [manualCode, setManualCode] = useState("");
+  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const stopScanner = useCallback(async () => {
-    if (scannerRef.current) {
-      try {
-        const state = scannerRef.current.getState();
-        if (state === 2) { // SCANNING
-          await scannerRef.current.stop();
-        }
-      } catch { /* ignore */ }
-      scannerRef.current = null;
+  const stopScanner = useCallback(() => {
+    if (codeReaderRef.current) {
+      codeReaderRef.current.reset();
+      codeReaderRef.current = null;
     }
   }, []);
 
@@ -116,28 +111,44 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
   };
 
   const startScanner = useCallback(async () => {
-    if (!readerRef.current) return;
+    if (!videoRef.current) return;
     setScanning(true);
     try {
-      const scanner = new Html5Qrcode("barcode-reader");
-      scannerRef.current = scanner;
-      await scanner.start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 150 },
-          aspectRatio: 1.5,
-        },
-        async (decodedText) => {
-          await stopScanner();
-          setScanning(false);
-          lookupBarcode(decodedText);
-        },
-        () => { /* ignore scan failures */ }
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.QR_CODE,
+      ]);
+      hints.set(DecodeHintType.TRY_HARDER, true);
+
+      const codeReader = new BrowserMultiFormatReader(hints);
+      codeReaderRef.current = codeReader;
+
+      const devices = await codeReader.listVideoInputDevices();
+      // Prefer rear camera
+      const rearDevice = devices.find(
+        (d) => /back|rear|environment/i.test(d.label)
+      );
+      const deviceId = rearDevice?.deviceId || undefined;
+
+      await codeReader.decodeFromVideoDevice(
+        deviceId ?? null,
+        videoRef.current,
+        (result, err) => {
+          if (result) {
+            const text = result.getText();
+            stopScanner();
+            setScanning(false);
+            lookupBarcode(text);
+          }
+          // Silently ignore scan failures
+        }
       );
     } catch (err: any) {
       setScanning(false);
-      if (err?.toString().includes("NotAllowedError") || err?.toString().includes("Permission")) {
+      const msg = err?.toString() || "";
+      if (msg.includes("NotAllowedError") || msg.includes("Permission")) {
         toast.error("Caméra non disponible sur cet appareil");
       } else {
         toast.error("Code-barres non reconnu, réessayez");
@@ -147,35 +158,52 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
   }, [stopScanner]);
 
   useEffect(() => {
-    if (showScanner && !product && !loading) {
-      const timer = setTimeout(startScanner, 300);
-      return () => clearTimeout(timer);
+    if (showScanner && !product && !loading && !manualMode) {
+      const timer = setTimeout(startScanner, 400);
+      return () => {
+        clearTimeout(timer);
+        stopScanner();
+      };
     }
     return () => { stopScanner(); };
-  }, [showScanner, product, loading, startScanner, stopScanner]);
+  }, [showScanner, product, loading, manualMode, startScanner, stopScanner]);
 
-  const handleClose = async () => {
-    await stopScanner();
+  const handleClose = () => {
+    stopScanner();
     setShowScanner(false);
     setProduct(null);
     setScanning(false);
     setLoading(false);
     setGrams(100);
+    setManualMode(false);
+    setManualCode("");
   };
 
-  const scaled = product ? {
-    calories: Math.round(product.calories_100g * grams / 100),
-    proteins: Math.round(product.proteins_100g * grams / 100),
-    carbs: Math.round(product.carbs_100g * grams / 100),
-    fats: Math.round(product.fats_100g * grams / 100),
-    fibres: Math.round(product.fiber_100g * grams / 100),
-    calcium: Math.round(product.calcium_100g * grams / 100),
-    vitamin_d: +(product.vitamin_d_100g * grams / 100).toFixed(1),
-    magnesium: Math.round(product.magnesium_100g * grams / 100),
-    iron: +(product.iron_100g * grams / 100).toFixed(1),
-    omega3: +(product.omega3_100g * grams / 100).toFixed(1),
-    vitamin_b12: +(product.vitamin_b12_100g * grams / 100).toFixed(1),
-  } : null;
+  const handleManualSubmit = () => {
+    const code = manualCode.trim();
+    if (!code || code.length < 8) {
+      toast.error("Veuillez saisir un code-barres valide (8-13 chiffres)");
+      return;
+    }
+    setManualMode(false);
+    lookupBarcode(code);
+  };
+
+  const scaled = product
+    ? {
+        calories: Math.round(product.calories_100g * grams / 100),
+        proteins: Math.round(product.proteins_100g * grams / 100),
+        carbs: Math.round(product.carbs_100g * grams / 100),
+        fats: Math.round(product.fats_100g * grams / 100),
+        fibres: Math.round(product.fiber_100g * grams / 100),
+        calcium: Math.round(product.calcium_100g * grams / 100),
+        vitamin_d: +(product.vitamin_d_100g * grams / 100).toFixed(1),
+        magnesium: Math.round(product.magnesium_100g * grams / 100),
+        iron: +(product.iron_100g * grams / 100).toFixed(1),
+        omega3: +(product.omega3_100g * grams / 100).toFixed(1),
+        vitamin_b12: +(product.vitamin_b12_100g * grams / 100).toFixed(1),
+      }
+    : null;
 
   const handleAdd = () => {
     if (!product || !scaled) return;
@@ -213,24 +241,86 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       {showScanner && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={handleClose}>
           <div className="bg-card rounded-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h3 className="font-semibold text-foreground text-sm">
-                {product ? "Produit scanné" : "Scanner un code-barres"}
+                {product ? "Produit scanné" : manualMode ? "Saisie manuelle" : "Scanner un code-barres"}
               </h3>
               <button onClick={handleClose}><X className="w-4 h-4 text-muted-foreground" /></button>
             </div>
 
-            {!product && !loading && (
+            {/* Scanner view */}
+            {!product && !loading && !manualMode && (
               <div className="p-4">
-                <div id="barcode-reader" ref={readerRef} className="rounded-xl overflow-hidden" />
+                <div className="relative rounded-xl overflow-hidden bg-black">
+                  <video
+                    ref={videoRef}
+                    className="w-full aspect-[4/3] object-cover"
+                    playsInline
+                    muted
+                  />
+                  {/* Scanning overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    {/* Corner guides */}
+                    <div className="w-[250px] h-[120px] relative">
+                      <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-primary rounded-tl" />
+                      <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-primary rounded-tr" />
+                      <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-primary rounded-bl" />
+                      <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-primary rounded-br" />
+                      {/* Animated scan line */}
+                      <div className="absolute left-2 right-2 h-0.5 bg-red-500/80 animate-scan-line" />
+                    </div>
+                  </div>
+                </div>
                 {scanning && (
                   <p className="text-xs text-muted-foreground text-center mt-3 animate-pulse">
                     📷 Placez le code-barres devant la caméra...
                   </p>
                 )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); stopScanner(); setManualMode(true); }}
+                  className="flex items-center justify-center gap-1.5 text-xs text-primary mt-3 mx-auto hover:underline"
+                >
+                  <Keyboard className="w-3.5 h-3.5" />
+                  Saisir le code manuellement
+                </button>
               </div>
             )}
 
+            {/* Manual input */}
+            {!product && !loading && manualMode && (
+              <div className="p-4 space-y-3">
+                <p className="text-xs text-muted-foreground">Entrez le code-barres (8 à 13 chiffres) :</p>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="3017620422003"
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value.replace(/\D/g, ""))}
+                  maxLength={13}
+                  className="text-center text-lg tracking-widest"
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setManualMode(false); setManualCode(""); }}
+                    className="flex-1 py-2.5 rounded-xl bg-muted text-muted-foreground text-sm font-medium"
+                  >
+                    Retour au scanner
+                  </button>
+                  <button
+                    onClick={handleManualSubmit}
+                    disabled={manualCode.length < 8}
+                    className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
+                  >
+                    Rechercher
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Loading */}
             {loading && (
               <div className="p-8 flex flex-col items-center gap-3">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -238,6 +328,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
               </div>
             )}
 
+            {/* Product result */}
             {product && scaled && (
               <div className="p-4 space-y-4">
                 <div>
@@ -283,10 +374,10 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                     { l: "Gluc", v: `${scaled.carbs}g` },
                     { l: "Lip", v: `${scaled.fats}g` },
                     { l: "Fibres", v: `${scaled.fibres}g` },
-                  ].map((n) => (
-                    <div key={n.l} className="bg-muted/50 rounded-lg p-2">
-                      <div className="text-lg font-bold text-foreground">{n.v}</div>
-                      <div className="text-[10px] text-muted-foreground">{n.l}</div>
+                  ].map((item) => (
+                    <div key={item.l} className="bg-muted/50 rounded-lg p-2">
+                      <div className="text-lg font-bold text-foreground">{item.v}</div>
+                      <div className="text-[10px] text-muted-foreground">{item.l}</div>
                     </div>
                   ))}
                 </div>
@@ -300,10 +391,10 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                     { label: "Fer", value: scaled.iron, unit: "mg" },
                     { label: "Oméga-3", value: scaled.omega3, unit: "g" },
                     { label: "Vit. B12", value: scaled.vitamin_b12, unit: "µg" },
-                  ].map((n) => (
-                    <div key={n.label} className="bg-muted/30 rounded-lg py-1.5 px-1">
-                      <div className="text-xs font-semibold text-foreground">{n.value}{n.unit}</div>
-                      <div className="text-[9px] text-muted-foreground">{n.label}</div>
+                  ].map((item) => (
+                    <div key={item.label} className="bg-muted/30 rounded-lg py-1.5 px-1">
+                      <div className="text-xs font-semibold text-foreground">{item.value}{item.unit}</div>
+                      <div className="text-[9px] text-muted-foreground">{item.label}</div>
                     </div>
                   ))}
                 </div>
