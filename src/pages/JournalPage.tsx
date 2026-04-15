@@ -506,6 +506,113 @@ export default function JournalPage() {
           </div>
         </div>
       )}
+
+      {/* Favorites section */}
+      <div className="mt-6">
+        <button
+          onClick={() => setShowFavorites(!showFavorites)}
+          className="flex items-center gap-2 mb-3"
+        >
+          <Heart className="w-4 h-4 text-primary" />
+          <span className="text-sm font-semibold text-foreground">Mes favoris</span>
+          <span className="text-xs text-muted-foreground">({favorites.length})</span>
+          {showFavorites ? <ChevronUp className="w-3 h-3 text-muted-foreground" /> : <ChevronDown className="w-3 h-3 text-muted-foreground" />}
+        </button>
+        {showFavorites && (
+          <div className="space-y-2">
+            {favorites.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">Aucun repas favori sauvegardé. Cliquez sur ⭐ pour en créer.</p>
+            ) : (
+              favorites.map((fav) => {
+                const totalCal = fav.items.reduce((s, i) => s + (i.calories || 0), 0);
+                return (
+                  <div key={fav.id} className="bg-card rounded-2xl card-soft p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <div className="font-medium text-sm text-foreground">{fav.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {fav.items.length} aliment{fav.items.length !== 1 ? "s" : ""} · {Math.round(totalCal)} kcal
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => deleteFavorite.mutate(fav.id, { onSuccess: () => toast.success("Favori supprimé") })}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground mb-2 space-y-0.5">
+                      {fav.items.map((item, i) => (
+                        <div key={i}>{item.food_name} ({item.portion_size}g)</div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setAddFavTarget({ favoriteId: fav.id })}
+                      className="w-full py-2 bg-primary/10 text-primary rounded-lg text-xs font-medium hover:bg-primary hover:text-primary-foreground transition-all"
+                    >
+                      <Plus className="w-3 h-3 inline mr-1" />
+                      Ajouter au journal
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Save favorite modal */}
+      {saveFavModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setSaveFavModal(null)}>
+          <div className="bg-card rounded-t-2xl w-full max-w-lg p-5 pb-8 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold text-foreground mb-1">⭐ Nommer ce repas favori</h3>
+            <p className="text-xs text-muted-foreground mb-3">{saveFavModal.items.length} aliment(s)</p>
+            <Input
+              value={favName}
+              onChange={(e) => setFavName(e.target.value)}
+              className="mb-4 h-12 bg-muted"
+              placeholder="Ex: Mon petit-déjeuner du 14 avril"
+              autoFocus
+            />
+            <button
+              onClick={handleSaveFavorite}
+              disabled={!favName.trim() || saveFavorite.isPending}
+              className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold disabled:opacity-50"
+            >
+              Sauvegarder
+            </button>
+            <button onClick={() => setSaveFavModal(null)} className="w-full mt-2 py-2 text-xs text-muted-foreground">
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add favorite to journal modal */}
+      {addFavTarget && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setAddFavTarget(null)}>
+          <div className="bg-card rounded-t-2xl w-full max-w-lg p-5 pb-8 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold text-foreground mb-1">Ajouter à quel repas ?</h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              {favorites.find((f) => f.id === addFavTarget.favoriteId)?.name}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {MEAL_TYPES.map((m) => (
+                <button
+                  key={m.value}
+                  onClick={() => handleAddFavoriteToJournal(m.value)}
+                  className="py-3 rounded-xl text-sm font-medium bg-primary/10 text-foreground hover:bg-primary hover:text-primary-foreground transition-all"
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setAddFavTarget(null)} className="w-full mt-3 py-2 text-xs text-muted-foreground">
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
