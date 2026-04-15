@@ -16,7 +16,7 @@ export const JOURNAL_CATEGORIES = [
   { value: "complement", label: "💊 Complément alimentaire" },
   { value: "sport", label: "🏃 Sport" },
   { value: "alimentation", label: "🥗 Alimentation" },
-  { value: "medecin", label: "🩺 Médecin" },
+  { value: "medecin", label: "👩‍⚕️ Médecin / Santé" },
   { value: "autre", label: "📝 Autre" },
 ] as const;
 
