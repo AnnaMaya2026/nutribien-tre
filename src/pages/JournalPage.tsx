@@ -3,6 +3,8 @@ import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart } from "lucide-react";
+import BarcodeScanner from "@/components/BarcodeScanner";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import VoiceInput, { type VoiceMatch, type VoiceCandidate } from "@/components/VoiceInput";
@@ -229,6 +231,11 @@ export default function JournalPage() {
             onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }}
             onCandidates={(c) => { setVoiceCandidates(c); setShowSearch(false); }}
           />
+          <BarcodeScanner
+            mealType={mealType}
+            onAdd={(log) => { if (user) addLog.mutate(log); }}
+            isPending={addLog.isPending}
+          />
         </div>
       )}
 
@@ -438,7 +445,14 @@ export default function JournalPage() {
                   {meal.items.map((log) => (
                     <div key={log.id} className="bg-muted/30 rounded-xl p-3 flex items-center gap-3 animate-fade-in">
                       <div className="flex-1">
-                        <div className="font-medium text-sm text-foreground line-clamp-1">{log.food_name}</div>
+                        <div className="font-medium text-sm text-foreground line-clamp-1 flex items-center gap-1.5">
+                          {log.food_name.replace(" 📦", "")}
+                          {log.food_name.includes("📦") && (
+                            <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[8px] px-1.5 py-0">
+                              Industriel
+                            </Badge>
+                          )}
+                        </div>
                         <div className="text-xs text-muted-foreground">
                           {log.calories} kcal · {log.proteins}g prot · {log.portion_size}g
                         </div>
