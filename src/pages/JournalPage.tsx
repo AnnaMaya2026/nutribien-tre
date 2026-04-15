@@ -10,6 +10,8 @@ import { useAuth } from "@/hooks/useAuth";
 import VoiceInput, { type VoiceMatch, type VoiceCandidate } from "@/components/VoiceInput";
 import VoiceResults from "@/components/VoiceResults";
 import VoiceCandidatePicker from "@/components/VoiceCandidatePicker";
+import NutrientDetailSections from "@/components/NutrientDetailSections";
+import NutrientReportModal from "@/components/NutrientReportModal";
 import { toast } from "sonner";
 
 const MEAL_TYPES = [
