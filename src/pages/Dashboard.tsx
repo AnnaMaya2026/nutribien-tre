@@ -6,6 +6,7 @@ import { DAILY_TARGETS } from "@/lib/mockData";
 import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
+import WeightTracker from "@/components/WeightTracker";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
 import { SYMPTOM_FOOD_MAP } from "@/lib/symptomFoods";
 import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
@@ -367,6 +368,9 @@ export default function Dashboard() {
         </div>
       )}
 
+
+      {/* Weight tracker */}
+      <WeightTracker />
 
       {/* 7-day chart */}
       <div className="bg-card rounded-2xl p-5 card-soft animate-fade-in">
