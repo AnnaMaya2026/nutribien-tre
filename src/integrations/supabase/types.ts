@@ -259,6 +259,7 @@ export type Database = {
           height: number | null
           id: string
           menopause_stage: string | null
+          onboarding_completed: boolean | null
           profile_completed: boolean | null
           symptoms: string[] | null
           updated_at: string
@@ -273,6 +274,7 @@ export type Database = {
           height?: number | null
           id?: string
           menopause_stage?: string | null
+          onboarding_completed?: boolean | null
           profile_completed?: boolean | null
           symptoms?: string[] | null
           updated_at?: string
@@ -287,6 +289,7 @@ export type Database = {
           height?: number | null
           id?: string
           menopause_stage?: string | null
+          onboarding_completed?: boolean | null
           profile_completed?: boolean | null
           symptoms?: string[] | null
           updated_at?: string
