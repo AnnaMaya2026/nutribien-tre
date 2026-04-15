@@ -35,6 +35,7 @@
         "@radix-ui/react-tooltip": "^1.2.7",
         "@supabase/supabase-js": "^2.101.1",
         "@tanstack/react-query": "^5.83.0",
+        "@zxing/browser": "^0.1.5",
         "@zxing/library": "^0.21.3",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -491,6 +492,8 @@
     "@vitest/spy": ["@vitest/spy@3.2.4", "", { "dependencies": { "tinyspy": "^4.0.3" } }, "sha512-vAfasCOe6AIK70iP5UD11Ac4siNUNJ9i/9PZ3NKx07sG6sUxeag1LWdNrMWeKKYBLlzuK+Gn65Yd5nyL6ds+nw=="],
 
     "@vitest/utils": ["@vitest/utils@3.2.4", "", { "dependencies": { "@vitest/pretty-format": "3.2.4", "loupe": "^3.1.4", "tinyrainbow": "^2.0.0" } }, "sha512-fB2V0JFrQSMsCo9HiSq3Ezpdv4iYaXRG1Sx8edX3MwxfyNn83mKiGzOcH+Fkxt4MHxr3y42fQi1oeAInqgX2QA=="],
+
+    "@zxing/browser": ["@zxing/browser@0.1.5", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@zxing/browser/-/browser-0.1.5.tgz", { "optionalDependencies": { "@zxing/text-encoding": "^0.9.0" }, "peerDependencies": { "@zxing/library": "^0.21.0" } }, "sha512-4Lmrn/il4+UNb87Gk8h1iWnhj39TASEHpd91CwwSJtY5u+wa0iH9qS0wNLAWbNVYXR66WmT5uiMhZ7oVTrKfxw=="],
 
     "@zxing/library": ["@zxing/library@0.21.3", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@zxing/library/-/library-0.21.3.tgz", { "dependencies": { "ts-custom-error": "^3.2.1" }, "optionalDependencies": { "@zxing/text-encoding": "~0.9.0" } }, "sha512-hZHqFe2JyH/ZxviJZosZjV+2s6EDSY0O24R+FQmlWZBZXP9IqMo7S3nb3+2LBWxodJQkSurdQGnqE7KXqrYgow=="],
 
