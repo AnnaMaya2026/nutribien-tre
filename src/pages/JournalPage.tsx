@@ -405,23 +405,34 @@ export default function JournalPage() {
         <div className="space-y-3">
           {logsByMeal.map((meal) => (
             <div key={meal.value} className="bg-card rounded-2xl card-soft overflow-hidden">
-              <button
-                onClick={() => toggleMeal(meal.value)}
-                className="w-full flex items-center justify-between px-4 py-3"
-              >
-                <div className="flex items-center gap-2">
+              <div className="w-full flex items-center justify-between px-4 py-3">
+                <button
+                  onClick={() => toggleMeal(meal.value)}
+                  className="flex items-center gap-2 flex-1"
+                >
                   <span className="text-sm font-semibold text-foreground">{meal.label}</span>
                   <span className="text-xs text-muted-foreground">
                     ({meal.items.length} aliment{meal.items.length !== 1 ? "s" : ""})
                   </span>
-                </div>
+                </button>
                 <div className="flex items-center gap-2">
+                  {meal.items.length > 0 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openSaveFavModal(meal.value); }}
+                      className="text-muted-foreground hover:text-yellow-500 transition-colors"
+                      title="Sauvegarder en favori"
+                    >
+                      <Star className="w-4 h-4" />
+                    </button>
+                  )}
                   <span className="text-xs font-medium text-primary-foreground bg-primary/20 px-2 py-0.5 rounded-full">
                     {meal.items.reduce((s, l) => s + (l.calories || 0), 0)} kcal
                   </span>
-                  {expandedMeals[meal.value] ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  <button onClick={() => toggleMeal(meal.value)}>
+                    {expandedMeals[meal.value] ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  </button>
                 </div>
-              </button>
+              </div>
               {expandedMeals[meal.value] && meal.items.length > 0 && (
                 <div className="px-4 pb-3 space-y-2">
                   {meal.items.map((log) => (
