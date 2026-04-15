@@ -36,6 +36,7 @@ export default function JournalPage() {
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({
     "petit-dejeuner": true, dejeuner: true, diner: true, collation: true,
   });
+  const [expandedLogs, setExpandedLogs] = useState<Record<string, boolean>>({});
   const [voiceMatches, setVoiceMatches] = useState<VoiceMatch[] | null>(null);
   const [voiceCandidates, setVoiceCandidates] = useState<VoiceCandidate[] | null>(null);
   const [moveTarget, setMoveTarget] = useState<{ id: string; currentMeal: string; foodName: string } | null>(null);
@@ -426,30 +427,64 @@ export default function JournalPage() {
               {expandedMeals[meal.value] && meal.items.length > 0 && (
                 <div className="px-4 pb-3 space-y-2">
                   {meal.items.map((log) => (
-                    <div key={log.id} className="bg-muted/30 rounded-xl p-3 flex items-center gap-3 animate-fade-in">
-                      <div className="flex-1">
-                        <div className="font-medium text-sm text-foreground line-clamp-1 flex items-center gap-1.5">
-                          {log.food_name.replace(" 📦", "")}
-                          {log.food_name.includes("📦") && (
-                            <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[8px] px-1.5 py-0">
-                              Industriel
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {log.calories} kcal · {log.proteins}g prot · {log.portion_size}g
-                        </div>
+                    <div key={log.id} className="bg-muted/30 rounded-xl overflow-hidden animate-fade-in">
+                      <div className="p-3 flex items-center gap-3">
+                        <button
+                          onClick={() => setExpandedLogs((prev) => ({ ...prev, [log.id]: !prev[log.id] }))}
+                          className="flex-1 text-left"
+                        >
+                          <div className="font-medium text-sm text-foreground line-clamp-1 flex items-center gap-1.5">
+                            {log.food_name.replace(" 📦", "")}
+                            {log.food_name.includes("📦") && (
+                              <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[8px] px-1.5 py-0">
+                                Industriel
+                              </Badge>
+                            )}
+                            <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${expandedLogs[log.id] ? "rotate-180" : ""}`} />
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {log.calories} kcal · {log.proteins}g prot · {log.portion_size}g
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => setMoveTarget({ id: log.id, currentMeal: meal.value, foodName: log.food_name })}
+                          className="text-muted-foreground hover:text-primary transition-colors"
+                          title="Déplacer"
+                        >
+                          <ArrowRightLeft className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => deleteLog.mutate(log.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => setMoveTarget({ id: log.id, currentMeal: meal.value, foodName: log.food_name })}
-                        className="text-muted-foreground hover:text-primary transition-colors"
-                        title="Déplacer"
-                      >
-                        <ArrowRightLeft className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => deleteLog.mutate(log.id)} className="text-muted-foreground hover:text-destructive transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {expandedLogs[log.id] && (
+                        <div className="px-3 pb-3">
+                          <NutrientDetailSections
+                            scaled={{
+                              calories: log.calories || 0,
+                              proteins: log.proteins || 0,
+                              carbs: log.carbs || 0,
+                              fats: log.fats || 0,
+                              fibres: log.fibres || 0,
+                              calcium: log.calcium || 0,
+                              vitamin_d: log.vitamin_d || 0,
+                              magnesium: log.magnesium || 0,
+                              iron: log.iron || 0,
+                              omega3: log.omega3 || 0,
+                              vitamin_b12: log.vitamin_b12 || 0,
+                              phytoestrogens: log.phytoestrogens || 0,
+                            }}
+                          />
+                          <div className="text-center">
+                            <button
+                              onClick={() => setReportFood(log.food_name)}
+                              className="text-xs text-muted-foreground hover:text-primary transition-colors underline"
+                            >
+                              ⚠️ Signaler une valeur incorrecte
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
