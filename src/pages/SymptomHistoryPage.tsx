@@ -414,10 +414,7 @@ export default function SymptomHistoryPage() {
       <h1 className="text-2xl font-bold text-foreground mb-1">Symptômes</h1>
       <p className="text-muted-foreground text-sm mb-4">Suivez et évaluez vos symptômes au quotidien</p>
 
-      {/* Weekly Summary */}
-      <WeeklySummary logs={symptomLogs} period={period} />
-
-      {/* Daily Rating */}
+      {/* Daily Rating — moved here as first element */}
       <DailyRating
         scores={dailyScores}
         onScoresChange={setDailyScores}
