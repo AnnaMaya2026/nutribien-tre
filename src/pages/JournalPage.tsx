@@ -19,6 +19,7 @@ const MEAL_TYPES = [
 
 export default function JournalPage() {
   const { logs, addLog, updateLog, deleteLog } = useFoodLogs();
+  const { favorites, saveFavorite, deleteFavorite } = useFavoriteMeals();
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<CiqualFood[]>([]);
@@ -34,6 +35,10 @@ export default function JournalPage() {
   const [voiceMatches, setVoiceMatches] = useState<VoiceMatch[] | null>(null);
   const [voiceCandidates, setVoiceCandidates] = useState<VoiceCandidate[] | null>(null);
   const [moveTarget, setMoveTarget] = useState<{ id: string; currentMeal: string; foodName: string } | null>(null);
+  const [saveFavModal, setSaveFavModal] = useState<{ mealType: string; items: any[] } | null>(null);
+  const [favName, setFavName] = useState("");
+  const [addFavTarget, setAddFavTarget] = useState<{ favoriteId: string } | null>(null);
+  const [showFavorites, setShowFavorites] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search - min 2 chars
