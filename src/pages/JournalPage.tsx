@@ -36,6 +36,7 @@ export default function JournalPage() {
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({
     "petit-dejeuner": true, dejeuner: true, diner: true, collation: true,
   });
+  const [expandedLogs, setExpandedLogs] = useState<Record<string, boolean>>({});
   const [voiceMatches, setVoiceMatches] = useState<VoiceMatch[] | null>(null);
   const [voiceCandidates, setVoiceCandidates] = useState<VoiceCandidate[] | null>(null);
   const [moveTarget, setMoveTarget] = useState<{ id: string; currentMeal: string; foodName: string } | null>(null);
