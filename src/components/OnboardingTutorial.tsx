@@ -25,6 +25,13 @@ const STEPS = [
   },
   {
     type: "highlight" as const,
+    title: "Idées repas",
+    tooltip: "Découvrez des recettes adaptées à la ménopause et à vos préférences alimentaires",
+    targetNav: "/repas",
+    position: "top" as const,
+  },
+  {
+    type: "highlight" as const,
     title: "Sophie, votre nutritionniste",
     tooltip: "Posez vos questions à Sophie, votre nutritionniste IA spécialisée ménopause",
     targetNav: "/chat",
@@ -246,6 +253,7 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
 function getNavLabel(path: string): string {
   const map: Record<string, string> = {
     "/journal": "Repas",
+    "/repas": "Idées",
     "/chat": "Nutritionniste",
     "/symptomes": "Symptômes",
   };
