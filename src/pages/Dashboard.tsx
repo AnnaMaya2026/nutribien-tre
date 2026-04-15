@@ -135,7 +135,7 @@ export default function Dashboard() {
       </div>
 
       {/* Calorie ring + macro bars */}
-      <div className="bg-card rounded-2xl p-6 card-soft mb-4 animate-fade-in">
+      <div className="calorie-ring-section bg-card rounded-2xl p-6 card-soft mb-4 animate-fade-in">
         <div className="flex flex-col items-center mb-6">
           <div className="relative w-44 h-44">
             <svg className="w-44 h-44 -rotate-90" viewBox="0 0 100 100">
