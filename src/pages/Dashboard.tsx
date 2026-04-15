@@ -194,9 +194,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Micronutrient trend chart */}
-      <MicronutrientTrendChart />
-
       {/* Micronutrients */}
       <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
         <h3 className="text-sm font-semibold text-foreground mb-3">Micronutriments clés</h3>
@@ -211,11 +208,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Weight tracker */}
-      <WeightTracker />
+      {/* Micronutrient trend chart */}
+      <MicronutrientTrendChart />
 
       {/* 7-day chart */}
-      <div className="bg-card rounded-2xl p-5 card-soft animate-fade-in">
+      <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
         <h3 className="text-sm font-semibold text-foreground mb-3">Tendances calories 7 jours</h3>
         <ResponsiveContainer width="100%" height={140}>
           <BarChart data={chartData}>
@@ -229,6 +226,9 @@ export default function Dashboard() {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Weight tracker */}
+      <WeightTracker />
     </div>
   );
 }
