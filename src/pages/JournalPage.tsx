@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
+import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
-import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, MoreVertical, ArrowRightLeft } from "lucide-react";
+import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import VoiceInput, { type VoiceMatch, type VoiceCandidate } from "@/components/VoiceInput";
@@ -18,6 +19,7 @@ const MEAL_TYPES = [
 
 export default function JournalPage() {
   const { logs, addLog, updateLog, deleteLog } = useFoodLogs();
+  const { favorites, saveFavorite, deleteFavorite } = useFavoriteMeals();
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<CiqualFood[]>([]);
@@ -33,6 +35,10 @@ export default function JournalPage() {
   const [voiceMatches, setVoiceMatches] = useState<VoiceMatch[] | null>(null);
   const [voiceCandidates, setVoiceCandidates] = useState<VoiceCandidate[] | null>(null);
   const [moveTarget, setMoveTarget] = useState<{ id: string; currentMeal: string; foodName: string } | null>(null);
+  const [saveFavModal, setSaveFavModal] = useState<{ mealType: string; items: any[] } | null>(null);
+  const [favName, setFavName] = useState("");
+  const [addFavTarget, setAddFavTarget] = useState<{ favoriteId: string } | null>(null);
+  const [showFavorites, setShowFavorites] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search - min 2 chars
@@ -128,6 +134,68 @@ export default function JournalPage() {
       }
     );
     setMoveTarget(null);
+  };
+
+  const handleSaveFavorite = () => {
+    if (!saveFavModal || !favName.trim()) return;
+    const items = saveFavModal.items.map((l: any) => ({
+      food_name: l.food_name,
+      portion_size: l.portion_size || 1,
+      calories: l.calories || 0,
+      proteins: l.proteins || 0,
+      carbs: l.carbs || 0,
+      fats: l.fats || 0,
+      fibres: l.fibres || 0,
+      calcium: l.calcium || 0,
+      vitamin_d: l.vitamin_d || 0,
+      magnesium: l.magnesium || 0,
+      iron: l.iron || 0,
+      omega3: l.omega3 || 0,
+      phytoestrogens: l.phytoestrogens || 0,
+      vitamin_b12: l.vitamin_b12 || 0,
+    }));
+    saveFavorite.mutate(
+      { name: favName.trim(), meal_type: saveFavModal.mealType, items },
+      { onSuccess: () => { toast.success("Repas favori sauvegardé ⭐"); setSaveFavModal(null); setFavName(""); } }
+    );
+  };
+
+  const handleAddFavoriteToJournal = (destMeal: string) => {
+    if (!addFavTarget || !user) return;
+    const fav = favorites.find((f) => f.id === addFavTarget.favoriteId);
+    if (!fav) return;
+    fav.items.forEach((item) => {
+      addLog.mutate({
+        food_name: item.food_name,
+        portion_size: item.portion_size,
+        calories: item.calories,
+        proteins: item.proteins,
+        carbs: item.carbs,
+        fats: item.fats,
+        fibres: item.fibres,
+        calcium: item.calcium,
+        vitamin_d: item.vitamin_d,
+        magnesium: item.magnesium,
+        iron: item.iron,
+        omega3: item.omega3,
+        phytoestrogens: item.phytoestrogens,
+        vitamin_b12: item.vitamin_b12,
+        meal_type: destMeal,
+      });
+    });
+    const label = MEAL_TYPES.find((m) => m.value === destMeal)?.label || destMeal;
+    toast.success(`${fav.items.length} aliment(s) ajouté(s) à ${label} ✓`);
+    setExpandedMeals((prev) => ({ ...prev, [destMeal]: true }));
+    setAddFavTarget(null);
+  };
+
+  const openSaveFavModal = (mealValue: string) => {
+    const items = logs.filter((l) => l.meal_type === mealValue);
+    if (items.length === 0) { toast.error("Aucun aliment dans ce repas"); return; }
+    const label = MEAL_TYPES.find((m) => m.value === mealValue)?.label?.replace(/^.+\s/, "") || mealValue;
+    const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+    setFavName(`Mon ${label.toLowerCase()} du ${today}`);
+    setSaveFavModal({ mealType: mealValue, items });
   };
 
   const logsByMeal = MEAL_TYPES.map((m) => ({
@@ -337,23 +405,34 @@ export default function JournalPage() {
         <div className="space-y-3">
           {logsByMeal.map((meal) => (
             <div key={meal.value} className="bg-card rounded-2xl card-soft overflow-hidden">
-              <button
-                onClick={() => toggleMeal(meal.value)}
-                className="w-full flex items-center justify-between px-4 py-3"
-              >
-                <div className="flex items-center gap-2">
+              <div className="w-full flex items-center justify-between px-4 py-3">
+                <button
+                  onClick={() => toggleMeal(meal.value)}
+                  className="flex items-center gap-2 flex-1"
+                >
                   <span className="text-sm font-semibold text-foreground">{meal.label}</span>
                   <span className="text-xs text-muted-foreground">
                     ({meal.items.length} aliment{meal.items.length !== 1 ? "s" : ""})
                   </span>
-                </div>
+                </button>
                 <div className="flex items-center gap-2">
+                  {meal.items.length > 0 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openSaveFavModal(meal.value); }}
+                      className="text-muted-foreground hover:text-yellow-500 transition-colors"
+                      title="Sauvegarder en favori"
+                    >
+                      <Star className="w-4 h-4" />
+                    </button>
+                  )}
                   <span className="text-xs font-medium text-primary-foreground bg-primary/20 px-2 py-0.5 rounded-full">
                     {meal.items.reduce((s, l) => s + (l.calories || 0), 0)} kcal
                   </span>
-                  {expandedMeals[meal.value] ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  <button onClick={() => toggleMeal(meal.value)}>
+                    {expandedMeals[meal.value] ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  </button>
                 </div>
-              </button>
+              </div>
               {expandedMeals[meal.value] && meal.items.length > 0 && (
                 <div className="px-4 pb-3 space-y-2">
                   {meal.items.map((log) => (
@@ -422,6 +501,113 @@ export default function JournalPage() {
               })}
             </div>
             <button onClick={() => setMoveTarget(null)} className="w-full mt-3 py-2 text-xs text-muted-foreground">
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Favorites section */}
+      <div className="mt-6">
+        <button
+          onClick={() => setShowFavorites(!showFavorites)}
+          className="flex items-center gap-2 mb-3"
+        >
+          <Heart className="w-4 h-4 text-primary" />
+          <span className="text-sm font-semibold text-foreground">Mes favoris</span>
+          <span className="text-xs text-muted-foreground">({favorites.length})</span>
+          {showFavorites ? <ChevronUp className="w-3 h-3 text-muted-foreground" /> : <ChevronDown className="w-3 h-3 text-muted-foreground" />}
+        </button>
+        {showFavorites && (
+          <div className="space-y-2">
+            {favorites.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">Aucun repas favori sauvegardé. Cliquez sur ⭐ pour en créer.</p>
+            ) : (
+              favorites.map((fav) => {
+                const totalCal = fav.items.reduce((s, i) => s + (i.calories || 0), 0);
+                return (
+                  <div key={fav.id} className="bg-card rounded-2xl card-soft p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <div className="font-medium text-sm text-foreground">{fav.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {fav.items.length} aliment{fav.items.length !== 1 ? "s" : ""} · {Math.round(totalCal)} kcal
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => deleteFavorite.mutate(fav.id, { onSuccess: () => toast.success("Favori supprimé") })}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground mb-2 space-y-0.5">
+                      {fav.items.map((item, i) => (
+                        <div key={i}>{item.food_name} ({item.portion_size}g)</div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setAddFavTarget({ favoriteId: fav.id })}
+                      className="w-full py-2 bg-primary/10 text-primary rounded-lg text-xs font-medium hover:bg-primary hover:text-primary-foreground transition-all"
+                    >
+                      <Plus className="w-3 h-3 inline mr-1" />
+                      Ajouter au journal
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Save favorite modal */}
+      {saveFavModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setSaveFavModal(null)}>
+          <div className="bg-card rounded-t-2xl w-full max-w-lg p-5 pb-8 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold text-foreground mb-1">⭐ Nommer ce repas favori</h3>
+            <p className="text-xs text-muted-foreground mb-3">{saveFavModal.items.length} aliment(s)</p>
+            <Input
+              value={favName}
+              onChange={(e) => setFavName(e.target.value)}
+              className="mb-4 h-12 bg-muted"
+              placeholder="Ex: Mon petit-déjeuner du 14 avril"
+              autoFocus
+            />
+            <button
+              onClick={handleSaveFavorite}
+              disabled={!favName.trim() || saveFavorite.isPending}
+              className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold disabled:opacity-50"
+            >
+              Sauvegarder
+            </button>
+            <button onClick={() => setSaveFavModal(null)} className="w-full mt-2 py-2 text-xs text-muted-foreground">
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add favorite to journal modal */}
+      {addFavTarget && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setAddFavTarget(null)}>
+          <div className="bg-card rounded-t-2xl w-full max-w-lg p-5 pb-8 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold text-foreground mb-1">Ajouter à quel repas ?</h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              {favorites.find((f) => f.id === addFavTarget.favoriteId)?.name}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {MEAL_TYPES.map((m) => (
+                <button
+                  key={m.value}
+                  onClick={() => handleAddFavoriteToJournal(m.value)}
+                  className="py-3 rounded-xl text-sm font-medium bg-primary/10 text-foreground hover:bg-primary hover:text-primary-foreground transition-all"
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setAddFavTarget(null)} className="w-full mt-3 py-2 text-xs text-muted-foreground">
               Annuler
             </button>
           </div>

@@ -65,6 +65,95 @@ export type Database = {
         }
         Relationships: []
       }
+      favorite_meal_items: {
+        Row: {
+          calcium: number | null
+          calories: number | null
+          carbs: number | null
+          fats: number | null
+          favorite_meal_id: string
+          fibres: number | null
+          food_name: string
+          id: string
+          iron: number | null
+          magnesium: number | null
+          omega3: number | null
+          phytoestrogens: number | null
+          portion_size: number | null
+          proteins: number | null
+          vitamin_b12: number | null
+          vitamin_d: number | null
+        }
+        Insert: {
+          calcium?: number | null
+          calories?: number | null
+          carbs?: number | null
+          fats?: number | null
+          favorite_meal_id: string
+          fibres?: number | null
+          food_name: string
+          id?: string
+          iron?: number | null
+          magnesium?: number | null
+          omega3?: number | null
+          phytoestrogens?: number | null
+          portion_size?: number | null
+          proteins?: number | null
+          vitamin_b12?: number | null
+          vitamin_d?: number | null
+        }
+        Update: {
+          calcium?: number | null
+          calories?: number | null
+          carbs?: number | null
+          fats?: number | null
+          favorite_meal_id?: string
+          fibres?: number | null
+          food_name?: string
+          id?: string
+          iron?: number | null
+          magnesium?: number | null
+          omega3?: number | null
+          phytoestrogens?: number | null
+          portion_size?: number | null
+          proteins?: number | null
+          vitamin_b12?: number | null
+          vitamin_d?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_meal_items_favorite_meal_id_fkey"
+            columns: ["favorite_meal_id"]
+            isOneToOne: false
+            referencedRelation: "favorite_meals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      favorite_meals: {
+        Row: {
+          created_at: string
+          id: string
+          meal_type: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meal_type: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meal_type?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       food_logs: {
         Row: {
           calcium: number | null
