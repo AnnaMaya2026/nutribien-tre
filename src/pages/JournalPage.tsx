@@ -10,6 +10,8 @@ import { useAuth } from "@/hooks/useAuth";
 import VoiceInput, { type VoiceMatch, type VoiceCandidate } from "@/components/VoiceInput";
 import VoiceResults from "@/components/VoiceResults";
 import VoiceCandidatePicker from "@/components/VoiceCandidatePicker";
+import NutrientDetailSections from "@/components/NutrientDetailSections";
+import NutrientReportModal from "@/components/NutrientReportModal";
 import { toast } from "sonner";
 
 const MEAL_TYPES = [
@@ -41,6 +43,7 @@ export default function JournalPage() {
   const [favName, setFavName] = useState("");
   const [addFavTarget, setAddFavTarget] = useState<{ favoriteId: string } | null>(null);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [reportFood, setReportFood] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search - min 2 chars
@@ -340,37 +343,17 @@ export default function JournalPage() {
             </div>
           </div>
 
-          {/* Nutritional breakdown */}
-          <div className="grid grid-cols-5 gap-2 text-center mb-3">
-            {[
-              { l: "kcal", v: scaled.calories },
-              { l: "Prot", v: `${scaled.proteins}g` },
-              { l: "Gluc", v: `${scaled.carbs}g` },
-              { l: "Lip", v: `${scaled.fats}g` },
-              { l: "Fibres", v: `${scaled.fibres}g` },
-            ].map((n) => (
-              <div key={n.l} className="bg-muted/50 rounded-lg p-2">
-                <div className="text-lg font-bold text-foreground">{n.v}</div>
-                <div className="text-[10px] text-muted-foreground">{n.l}</div>
-              </div>
-            ))}
-          </div>
+          {/* Detailed nutritional sections */}
+          <NutrientDetailSections scaled={scaled} />
 
-          {/* Micronutrients */}
-          <div className="grid grid-cols-3 gap-1.5 text-center mb-4">
-            {[
-              { label: "Calcium", value: scaled.calcium, unit: "mg" },
-              { label: "Vit. D", value: scaled.vitamin_d, unit: "µg" },
-              { label: "Magnésium", value: scaled.magnesium, unit: "mg" },
-              { label: "Fer", value: scaled.iron, unit: "mg" },
-              { label: "Oméga-3", value: scaled.omega3, unit: "g" },
-              { label: "Vit. B12", value: scaled.vitamin_b12, unit: "µg" },
-            ].map((n) => (
-              <div key={n.label} className="bg-muted/30 rounded-lg py-1.5 px-1">
-                <div className="text-xs font-semibold text-foreground">{n.value}{n.unit}</div>
-                <div className="text-[9px] text-muted-foreground">{n.label}</div>
-              </div>
-            ))}
+          {/* Report incorrect value */}
+          <div className="text-center mb-4">
+            <button
+              onClick={() => setReportFood(selectedFood.nom)}
+              className="text-xs text-muted-foreground hover:text-primary transition-colors underline"
+            >
+              ⚠️ Signaler une valeur incorrecte
+            </button>
           </div>
 
           <button onClick={handleAdd} disabled={addLog.isPending} className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold flex items-center justify-center gap-2">
@@ -626,6 +609,11 @@ export default function JournalPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Nutrient report modal */}
+      {reportFood && (
+        <NutrientReportModal foodName={reportFood} onClose={() => setReportFood(null)} />
       )}
     </div>
   );
