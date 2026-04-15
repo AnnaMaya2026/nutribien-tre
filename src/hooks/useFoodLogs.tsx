@@ -60,12 +60,15 @@ export function useFoodLogs(date?: string) {
       meal_type: string;
     }) => {
       if (!user) throw new Error("Not authenticated");
-      const { error } = await supabase.from("food_logs").insert({
+      const entry = {
         ...log,
         user_id: user.id,
         logged_at: today,
-      });
+      };
+      console.log("[FoodLog] Saving entry:", JSON.stringify(entry, null, 2));
+      const { error } = await supabase.from("food_logs").insert(entry);
       if (error) throw error;
+      console.log("[FoodLog] ✅ Entry saved successfully");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["food_logs"] });
