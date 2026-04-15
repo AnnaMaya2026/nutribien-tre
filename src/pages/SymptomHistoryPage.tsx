@@ -512,6 +512,20 @@ export default function SymptomHistoryPage() {
               );
             })}
           </div>
+          {journalDates.length > 0 && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5">
+              <span className="text-[10px] text-muted-foreground">Notes :</span>
+              {Object.entries(JOURNAL_CATEGORY_COLORS).map(([cat, color]) => {
+                const catLabel = JOURNAL_CATEGORIES.find((c) => c.value === cat)?.label || cat;
+                return (
+                  <span key={cat} className="text-[10px] flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full" style={{ background: color }} />
+                    {catLabel}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
       ) : (
         <div className="bg-card rounded-2xl p-8 card-soft mb-4 text-center animate-fade-in">
