@@ -423,6 +423,9 @@ export default function SymptomHistoryPage() {
         alreadySaved={!!todayLog}
       />
 
+      {/* Weekly Summary */}
+      <WeeklySummary logs={symptomLogs} period={period} />
+
       {/* Period selector */}
       <div className="flex gap-2 mb-4">
         {PERIODS.map((p) => (
