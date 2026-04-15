@@ -136,6 +136,68 @@ export default function JournalPage() {
     setMoveTarget(null);
   };
 
+  const handleSaveFavorite = () => {
+    if (!saveFavModal || !favName.trim()) return;
+    const items = saveFavModal.items.map((l: any) => ({
+      food_name: l.food_name,
+      portion_size: l.portion_size || 1,
+      calories: l.calories || 0,
+      proteins: l.proteins || 0,
+      carbs: l.carbs || 0,
+      fats: l.fats || 0,
+      fibres: l.fibres || 0,
+      calcium: l.calcium || 0,
+      vitamin_d: l.vitamin_d || 0,
+      magnesium: l.magnesium || 0,
+      iron: l.iron || 0,
+      omega3: l.omega3 || 0,
+      phytoestrogens: l.phytoestrogens || 0,
+      vitamin_b12: l.vitamin_b12 || 0,
+    }));
+    saveFavorite.mutate(
+      { name: favName.trim(), meal_type: saveFavModal.mealType, items },
+      { onSuccess: () => { toast.success("Repas favori sauvegardé ⭐"); setSaveFavModal(null); setFavName(""); } }
+    );
+  };
+
+  const handleAddFavoriteToJournal = (destMeal: string) => {
+    if (!addFavTarget || !user) return;
+    const fav = favorites.find((f) => f.id === addFavTarget.favoriteId);
+    if (!fav) return;
+    fav.items.forEach((item) => {
+      addLog.mutate({
+        food_name: item.food_name,
+        portion_size: item.portion_size,
+        calories: item.calories,
+        proteins: item.proteins,
+        carbs: item.carbs,
+        fats: item.fats,
+        fibres: item.fibres,
+        calcium: item.calcium,
+        vitamin_d: item.vitamin_d,
+        magnesium: item.magnesium,
+        iron: item.iron,
+        omega3: item.omega3,
+        phytoestrogens: item.phytoestrogens,
+        vitamin_b12: item.vitamin_b12,
+        meal_type: destMeal,
+      });
+    });
+    const label = MEAL_TYPES.find((m) => m.value === destMeal)?.label || destMeal;
+    toast.success(`${fav.items.length} aliment(s) ajouté(s) à ${label} ✓`);
+    setExpandedMeals((prev) => ({ ...prev, [destMeal]: true }));
+    setAddFavTarget(null);
+  };
+
+  const openSaveFavModal = (mealValue: string) => {
+    const items = logs.filter((l) => l.meal_type === mealValue);
+    if (items.length === 0) { toast.error("Aucun aliment dans ce repas"); return; }
+    const label = MEAL_TYPES.find((m) => m.value === mealValue)?.label?.replace(/^.+\s/, "") || mealValue;
+    const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+    setFavName(`Mon ${label.toLowerCase()} du ${today}`);
+    setSaveFavModal({ mealType: mealValue, items });
+  };
+
   const logsByMeal = MEAL_TYPES.map((m) => ({
     ...m,
     items: logs.filter((l) => l.meal_type === m.value),
