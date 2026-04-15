@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import AuthPage from "@/pages/AuthPage";
@@ -10,10 +11,21 @@ import ChatPage from "@/pages/ChatPage";
 import SymptomHistoryPage from "@/pages/SymptomHistoryPage";
 import PersonalJournalPage from "@/pages/PersonalJournalPage";
 import BottomNav from "@/components/BottomNav";
+import OnboardingTutorial from "@/components/OnboardingTutorial";
 import NotFound from "@/pages/NotFound";
 
 function ProtectedLayout() {
   const { profile, isLoading } = useProfile();
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
+
+  // Determine onboarding state once profile loads
+  if (!isLoading && showOnboarding === null && profile) {
+    if (!profile.onboarding_completed) {
+      setTimeout(() => setShowOnboarding(true), 500);
+    } else {
+      setShowOnboarding(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -39,6 +51,9 @@ function ProtectedLayout() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomNav />
+      {showOnboarding && (
+        <OnboardingTutorial onComplete={() => setShowOnboarding(false)} />
+      )}
     </>
   );
 }
