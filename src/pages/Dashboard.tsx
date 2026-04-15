@@ -1,15 +1,12 @@
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
-import { useSymptomLogs, SymptomScores } from "@/hooks/useSymptomLogs";
 import { DAILY_TARGETS } from "@/lib/mockData";
 import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import WeightTracker from "@/components/WeightTracker";
-import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
-import { SYMPTOM_FOOD_MAP } from "@/lib/symptomFoods";
-import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 function getNutrientColor(pct: number, isMicro = false) {
   if (isMicro) {
@@ -18,7 +15,6 @@ function getNutrientColor(pct: number, isMicro = false) {
     if (pct >= 50) return { bg: "bg-orange-500", text: "text-orange-500", emoji: "🟠" };
     return { bg: "bg-red-500", text: "text-red-500", emoji: "🔴" };
   }
-  // Macros
   if (pct > 120) return { bg: "bg-red-500", text: "text-red-500", emoji: "🔴" };
   if (pct > 100) return { bg: "bg-orange-500", text: "text-orange-500", emoji: "🟠" };
   if (pct >= 80) return { bg: "bg-green-500", text: "text-green-500", emoji: "🟢" };
@@ -77,16 +73,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { logs, weekLogs } = useFoodLogs();
-  const { todayLog, upsertLog } = useSymptomLogs();
-  const [showSymptoms, setShowSymptoms] = useState(false);
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(todayLog?.selected_symptoms || []);
-  const [symptomScores, setSymptomScores] = useState<SymptomScores>(() => {
-    const raw = todayLog?.symptom_scores;
-    if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw as SymptomScores;
-    return {};
-  });
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
-  
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
   const firstName = getUserFirstName(user?.email);
@@ -109,7 +96,6 @@ export default function Dashboard() {
     { calories: 0, proteins: 0, carbs: 0, fats: 0, fibres: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0 }
   );
 
-  // Meal breakdown
   const mealBreakdown = useMemo(() => {
     const meals: Record<string, number> = {};
     logs.forEach((log) => {
@@ -136,34 +122,9 @@ export default function Dashboard() {
     });
   })();
 
-  // High symptoms (score ≥ 7) for food recommendations
-  const highSymptoms = useMemo(() => {
-    return Object.entries(symptomScores)
-      .filter(([, score]) => score >= 7)
-      .map(([key]) => key)
-      .filter((key) => SYMPTOM_FOOD_MAP[key]);
-  }, [symptomScores]);
-
   const calPct = (totals.calories / calorieGoal) * 100;
   const calColor = getCalorieColor(calPct);
   const calRingPct = Math.min(calPct, 100);
-
-  const toggleSymptom = (value: string) => {
-    setSelectedSymptoms((prev) => {
-      const next = prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value];
-      if (!next.includes(value)) {
-        setSymptomScores((s) => { const copy = { ...s }; delete copy[value]; return copy; });
-      } else if (!symptomScores[value]) {
-        setSymptomScores((s) => ({ ...s, [value]: 5 }));
-      }
-      return next;
-    });
-  };
-
-  const handleSymptomSave = () => {
-    upsertLog.mutate({ selected_symptoms: selectedSymptoms, symptom_scores: symptomScores });
-    setShowSymptoms(false);
-  };
 
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
@@ -249,125 +210,6 @@ export default function Dashboard() {
           <ProgressBar value={totals.vitamin_b12} max={DAILY_TARGETS.vitamin_b12} label="Vitamine B12" unit="µg" isMicro />
         </div>
       </div>
-
-      {/* Symptom check-in with 1-10 scale */}
-      <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-sm font-semibold text-foreground">Check-in symptômes</h3>
-          {!showSymptoms && (
-            <button onClick={() => {
-              setShowSymptoms(true);
-              setSelectedSymptoms(todayLog?.selected_symptoms || []);
-              const raw = todayLog?.symptom_scores;
-              if (raw && typeof raw === "object" && !Array.isArray(raw)) setSymptomScores(raw as SymptomScores);
-            }} className="text-xs font-medium text-primary-foreground bg-primary/30 px-3 py-1 rounded-full">
-              {todayLog ? "Modifier" : "Remplir"}
-            </button>
-          )}
-        </div>
-
-        {showSymptoms ? (
-          <div className="space-y-3">
-            {/* Symptom selection */}
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-              {FULL_SYMPTOMS_LIST.map((s) => {
-                const isSelected = selectedSymptoms.includes(s.value);
-                return (
-                  <button
-                    key={s.value}
-                    onClick={() => toggleSymptom(s.value)}
-                    className={`px-3 py-2 rounded-full text-xs font-medium transition-all text-left truncate ${
-                      isSelected ? "bg-primary/30 text-foreground border border-primary" : "bg-muted text-muted-foreground border border-transparent"
-                    }`}
-                  >
-                    {isSelected && "✓ "}{s.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Score sliders for selected symptoms */}
-            {selectedSymptoms.length > 0 && (
-              <div className="space-y-3 mt-3 pt-3 border-t border-border">
-                <p className="text-xs text-muted-foreground font-medium">Intensité (1 = léger, 10 = très intense)</p>
-                {selectedSymptoms.map((sKey) => {
-                  const label = FULL_SYMPTOMS_LIST.find((x) => x.value === sKey)?.label || sKey;
-                  const score = symptomScores[sKey] || 5;
-                  return (
-                    <div key={sKey}>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-foreground">{label}</span>
-                        <span className={`font-bold ${score >= 7 ? "text-destructive" : score >= 4 ? "text-warning" : "text-progress-high"}`}>{score}/10</span>
-                      </div>
-                      <input
-                        type="range"
-                        min={1}
-                        max={10}
-                        value={score}
-                        onChange={(e) => setSymptomScores((s) => ({ ...s, [sKey]: parseInt(e.target.value) }))}
-                        className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer accent-primary"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            <button onClick={handleSymptomSave} className="w-full mt-2 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium">
-              Enregistrer
-            </button>
-          </div>
-        ) : todayLog?.selected_symptoms && todayLog.selected_symptoms.length > 0 ? (
-          <div>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {todayLog.selected_symptoms.map((s) => {
-                const label = FULL_SYMPTOMS_LIST.find((x) => x.value === s)?.label || s;
-                const score = symptomScores[s];
-                return (
-                  <span key={s} className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                    score && score >= 7 ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-foreground"
-                  }`}>
-                    {label}{score ? ` ${score}/10` : ""}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">Aucun check-in aujourd'hui</p>
-        )}
-      </div>
-
-      {/* Food recommendations for high symptoms */}
-      {highSymptoms.length > 0 && (
-        <div className="space-y-3 mb-4">
-          {highSymptoms.map((sKey) => {
-            const rec = SYMPTOM_FOOD_MAP[sKey];
-            if (!rec) return null;
-            return (
-              <div key={sKey} className="bg-card rounded-2xl p-4 card-soft animate-fade-in border border-warning/30">
-                <div className="flex items-start gap-2 mb-2">
-                  <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">
-                      Votre score de {rec.label} est élevé ({symptomScores[sKey]}/10)
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">{rec.description}</p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {rec.foods.map((food) => (
-                    <span key={food} className="text-[10px] px-2 py-0.5 rounded-full bg-progress-high/15 text-progress-high font-medium">
-                      {food}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
 
       {/* Weight tracker */}
       <WeightTracker />
