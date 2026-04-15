@@ -610,6 +610,11 @@ export default function JournalPage() {
           </div>
         </div>
       )}
+
+      {/* Nutrient report modal */}
+      {reportFood && (
+        <NutrientReportModal foodName={reportFood} onClose={() => setReportFood(null)} />
+      )}
     </div>
   );
 }
