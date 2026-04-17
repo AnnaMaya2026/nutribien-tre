@@ -1,9 +1,21 @@
 import { useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronRight, ChevronLeft, Heart } from "lucide-react";
+import { ChevronRight, ChevronLeft, Heart, LogOut } from "lucide-react";
 import { SymptomChips } from "@/components/SymptomChips";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const MENOPAUSE_STAGES = [
   { value: "perimenopause", label: "Périménopause" },
@@ -24,6 +36,7 @@ function calculateCalories(age: number, weight: number, height: number): number 
 
 export default function ProfileSetup() {
   const { updateProfile } = useProfile();
+  const { signOut } = useAuth();
   const [step, setStep] = useState(0);
   const [displayName, setDisplayName] = useState("");
   const [age, setAge] = useState("");
@@ -185,9 +198,36 @@ export default function ProfileSetup() {
 
   return (
     <div className="min-h-screen flex flex-col px-6 py-8 bg-background">
-      <div className="flex items-center gap-2 mb-2">
-        <Heart className="w-5 h-5 text-primary-foreground" />
-        <span className="font-semibold text-foreground">NutriMéno</span>
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-2">
+          <Heart className="w-5 h-5 text-primary-foreground" />
+          <span className="font-semibold text-foreground">NutriMéno</span>
+        </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
+              <LogOut className="w-4 h-4 mr-1" />
+              Se déconnecter
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Êtes-vous sûre de vouloir vous déconnecter ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Vous devrez vous reconnecter pour accéder à votre profil et à vos données.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => signOut()}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Se déconnecter
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* Progress */}

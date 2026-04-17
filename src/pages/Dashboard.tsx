@@ -6,8 +6,20 @@ import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import WeightTracker from "@/components/WeightTracker";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, LogOut } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function getNutrientColor(pct: number, isMicro = false) {
   if (isMicro) {
@@ -65,7 +77,7 @@ const MEAL_LABELS: Record<string, string> = {
 };
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const { logs, weekLogs } = useFoodLogs();
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
@@ -124,9 +136,41 @@ export default function Dashboard() {
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
       {/* Greeting */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Bonjour {firstName ? firstName : ""} 👋</h1>
-        <p className="text-muted-foreground text-sm">{formatFrenchDate()}</p>
+      <div className="mb-6 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Bonjour {firstName ? firstName : ""} 👋</h1>
+          <p className="text-muted-foreground text-sm">{formatFrenchDate()}</p>
+        </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive shrink-0"
+              aria-label="Se déconnecter"
+            >
+              <LogOut className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Se déconnecter</span>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Êtes-vous sûre de vouloir vous déconnecter ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Vous devrez vous reconnecter pour accéder à votre profil et à vos données.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => signOut()}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Se déconnecter
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* Calorie ring + macro bars */}
