@@ -20,7 +20,7 @@ function ProtectedLayout() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
   if (!isLoading && showOnboarding === null && profile) {
-    if (!profile.onboarding_completed) {
+    if (!(profile as any).feature_tour_completed) {
       setTimeout(() => setShowOnboarding(true), 500);
     } else {
       setShowOnboarding(false);

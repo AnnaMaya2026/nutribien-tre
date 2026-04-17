@@ -9,47 +9,47 @@ const buildSteps = (name: string) => [
   {
     type: "welcome" as const,
     title: name ? `Bienvenue ${name} ! 💗` : "Bienvenue dans NutriMéno ! 💗",
-    subtitle: "Votre nutritionniste personnalisée pour la ménopause",
+    subtitle: "Découvrez en 30 secondes comment NutriMéno va vous accompagner",
   },
   {
     type: "highlight" as const,
     title: "Votre tableau de bord",
-    tooltip: "Suivez vos calories et nutriments en temps réel",
+    tooltip: "Suivez vos calories et nutriments clés en temps réel 📊",
     targetSelector: ".calorie-ring-section",
     position: "bottom" as const,
   },
   {
     type: "highlight" as const,
     title: "Journal alimentaire",
-    tooltip: "Loggez vos repas par la voix 🎤, le scanner 📷 ou la recherche",
+    tooltip: "Loggez vos repas par la voix 🎤, le scanner 📷 ou la recherche manuelle",
     targetNav: "/journal",
     position: "top" as const,
   },
   {
     type: "highlight" as const,
     title: "Idées repas 🍽️",
-    tooltip: "Découvrez des idées de repas personnalisées : par ingrédients disponibles, par recette, pour combler vos manques en nutriments, ou pour atténuer vos symptômes de ménopause.",
+    tooltip: "Trouvez des idées de repas par ingrédients, par recette, pour combler vos manques ou atténuer vos symptômes ✨",
     targetNav: "/repas",
     position: "top" as const,
   },
   {
     type: "highlight" as const,
     title: "Sophie, votre nutritionniste",
-    tooltip: "Posez vos questions à Sophie, votre nutritionniste IA spécialisée ménopause",
+    tooltip: "Posez vos questions à Sophie, votre nutritionniste IA spécialisée en ménopause — elle vous répond et vous parle 🎙️",
     targetNav: "/chat",
     position: "top" as const,
   },
   {
     type: "highlight" as const,
     title: "Suivi des symptômes",
-    tooltip: "Suivez vos symptômes chaque jour et observez votre évolution",
+    tooltip: "Suivez vos symptômes chaque jour et observez leur évolution dans le temps 📈",
     targetNav: "/symptomes",
     position: "top" as const,
   },
   {
     type: "final" as const,
     title: "Vous êtes prête ! 🎉",
-    subtitle: "NutriMéno va vous aider à mieux vivre votre ménopause grâce à la nutrition",
+    subtitle: "NutriMéno va vous accompagner chaque jour pour mieux vivre votre ménopause grâce à la nutrition 💗",
   },
 ];
 
@@ -103,7 +103,7 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
 
   const completeOnboarding = async () => {
     try {
-      await updateProfile.mutateAsync({ onboarding_completed: true } as any);
+      await updateProfile.mutateAsync({ feature_tour_completed: true, onboarding_completed: true } as any);
     } catch {}
     onComplete();
   };

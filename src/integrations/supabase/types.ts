@@ -291,6 +291,7 @@ export type Database = {
           dietary_preferences: string[] | null
           display_name: string | null
           duration_of_changes: string | null
+          feature_tour_completed: boolean | null
           height: number | null
           id: string
           main_symptom: string | null
@@ -310,6 +311,7 @@ export type Database = {
           dietary_preferences?: string[] | null
           display_name?: string | null
           duration_of_changes?: string | null
+          feature_tour_completed?: boolean | null
           height?: number | null
           id?: string
           main_symptom?: string | null
@@ -329,6 +331,7 @@ export type Database = {
           dietary_preferences?: string[] | null
           display_name?: string | null
           duration_of_changes?: string | null
+          feature_tour_completed?: boolean | null
           height?: number | null
           id?: string
           main_symptom?: string | null
