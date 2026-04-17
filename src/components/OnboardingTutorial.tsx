@@ -25,8 +25,8 @@ const STEPS = [
   },
   {
     type: "highlight" as const,
-    title: "Idées repas",
-    tooltip: "Découvrez des recettes adaptées à la ménopause et à vos préférences alimentaires",
+    title: "Idées repas 🍽️",
+    tooltip: "Découvrez des idées de repas personnalisées : par ingrédients disponibles, par recette, pour combler vos manques en nutriments, ou pour atténuer vos symptômes de ménopause.",
     targetNav: "/repas",
     position: "top" as const,
   },

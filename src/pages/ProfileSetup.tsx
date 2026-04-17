@@ -176,10 +176,11 @@ export default function ProfileSetup() {
   ];
 
   const canNext =
-    step === 0 ? age && weight && height :
-    step === 1 ? stage :
-    step === 2 ? true :
+    step === 0 ? displayName.trim().length > 0 :
+    step === 1 ? age && weight && height :
+    step === 2 ? stage :
     step === 3 ? true :
+    step === 4 ? true :
     true;
 
   return (
@@ -191,7 +192,7 @@ export default function ProfileSetup() {
 
       {/* Progress */}
       <div className="flex gap-1.5 mb-8">
-        {[0, 1, 2, 3, 4].map((i) => (
+        {[0, 1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
             className={`h-1 flex-1 rounded-full transition-all ${
@@ -209,7 +210,7 @@ export default function ProfileSetup() {
             <ChevronLeft className="w-4 h-4 mr-1" /> Retour
           </Button>
         )}
-        {step < 4 ? (
+        {step < 5 ? (
           <Button
             onClick={() => setStep(step + 1)}
             disabled={!canNext}
