@@ -239,7 +239,7 @@ export default function ChatPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-32">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-56">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex gap-2 ${msg.from === "user" ? "justify-end" : ""} animate-fade-in`}>
             {msg.from === "ai" && (
