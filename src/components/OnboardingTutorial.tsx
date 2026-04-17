@@ -3,10 +3,10 @@ import { useProfile } from "@/hooks/useProfile";
 import { Heart, ChevronLeft, ChevronRight, X } from "lucide-react";
 import confetti from "canvas-confetti";
 
-const STEPS = [
+const buildSteps = (name: string) => [
   {
     type: "welcome" as const,
-    title: "Bienvenue dans NutriMéno ! 💗",
+    title: name ? `Bienvenue ${name} ! 💗` : "Bienvenue dans NutriMéno ! 💗",
     subtitle: "Votre nutritionniste personnalisée pour la ménopause",
   },
   {
