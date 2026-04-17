@@ -25,6 +25,7 @@ function calculateCalories(age: number, weight: number, height: number): number 
 export default function ProfileSetup() {
   const { updateProfile } = useProfile();
   const [step, setStep] = useState(0);
+  const [displayName, setDisplayName] = useState("");
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
@@ -47,6 +48,7 @@ export default function ProfileSetup() {
     setSaving(true);
     const cal = calculateCalories(Number(age), Number(weight), Number(height));
     await updateProfile.mutateAsync({
+      display_name: displayName.trim() || null,
       age: Number(age),
       weight: Number(weight),
       height: Number(height),
@@ -55,12 +57,28 @@ export default function ProfileSetup() {
       dietary_preferences: dietPrefs,
       daily_calorie_goal: cal,
       profile_completed: true,
-    });
+    } as any);
     setSaving(false);
   };
 
   const steps = [
-    // Step 0: Body info
+    // Step 0: Display name
+    <div key="name" className="space-y-6 animate-fade-in">
+      <h2 className="text-xl font-semibold text-foreground">Comment souhaitez-vous être appelée ?</h2>
+      <p className="text-muted-foreground text-sm">Votre prénom sera utilisé dans toute l'application</p>
+      <div>
+        <label className="text-sm font-medium text-foreground mb-1 block">Prénom affiché</label>
+        <Input
+          type="text"
+          placeholder="Ex: Anna, Sophie, Marie..."
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          className="h-12 bg-card"
+        />
+      </div>
+    </div>,
+
+    // Step 1: Body info
     <div key="body" className="space-y-6 animate-fade-in">
       <h2 className="text-xl font-semibold text-foreground">Vos informations</h2>
       <p className="text-muted-foreground text-sm">Pour calculer vos besoins nutritionnels</p>
