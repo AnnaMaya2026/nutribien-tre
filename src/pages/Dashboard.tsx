@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recha
 import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import WeightTracker from "@/components/WeightTracker";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { getDisplayName } from "@/lib/displayName";
 
 function getNutrientColor(pct: number, isMicro = false) {
   if (isMicro) {
@@ -53,12 +54,6 @@ function formatFrenchDate(): string {
   return `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
 }
 
-function getUserFirstName(email?: string): string {
-  if (!email) return "";
-  const local = email.split("@")[0];
-  const name = local.replace(/[._-]/g, " ").split(" ")[0];
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
 
 const MACRO_GOALS = { proteins: 100, carbs: 200, fats: 65, fibres: 25 };
 
@@ -76,7 +71,7 @@ export default function Dashboard() {
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
-  const firstName = getUserFirstName(user?.email);
+  const firstName = getDisplayName((profile as any)?.display_name, user?.email);
 
   const totals = logs.reduce(
     (acc, log) => ({
