@@ -31,9 +31,29 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Tu es un assistant nutritionnel français. Analyse cette phrase et identifie les aliments avec leurs quantités en grammes. Si aucune quantité n'est précisée, estime une portion standard. Retourne UNIQUEMENT le mot clé principal de chaque aliment, sans adjectif ni mode de cuisson. Exemples: 'poulet' pas 'poulet rôti', 'oeuf' pas 'oeuf dur', 'pomme' pas 'pomme verte', 'riz' pas 'riz basmati'. Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
+            content: `Tu es un assistant nutritionnel français. Analyse cette phrase et identifie les aliments avec leurs quantités en grammes. Si aucune quantité n'est précisée, estime une portion standard. Retourne UNIQUEMENT le mot clé principal de chaque aliment, sans adjectif ni mode de cuisson. Exemples: 'poulet' pas 'poulet rôti', 'oeuf' pas 'oeuf dur', 'pomme' pas 'pomme verte', 'riz' pas 'riz basmati'.
+
+Si l'utilisatrice mentionne des mesures courantes, convertis-les en grammes:
+- 1 cuillère à café (cc) = 5g (liquides) ou 3g (poudres)
+- 1 cuillère à soupe (cs) = 15g (liquides) ou 10g (poudres)
+- 1 verre = 200ml/200g
+- 1 bol = 300g
+- 1 tasse = 250ml/250g
+- 1 poignée = 30g
+- 1 tranche = 30g (pain) ou 50g (viande/fromage)
+- 1 portion = 150g (viande/poisson) ou 100g (légumes)
+- 1 filet = 150g
+Multiplie par la quantité indiquée (ex: "2 cuillères à soupe d'huile" = 30g). Retourne toujours le poids en grammes dans le JSON.
+
+Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
 {"foods": [{"name": "mot clé principal", "grams": nombre}]}
-Exemples de portions standards: un oeuf = 60g, une pomme = 150g, un verre de lait = 200g, une tranche de pain = 30g, un yaourt = 125g.`,
+Exemples de portions standards: un oeuf = 60g, une pomme = 150g, un verre de lait = 200g, une tranche de pain = 30g, un yaourt = 125g.
+
+Exemples de conversion:
+- "2 cuillères à soupe d'huile d'olive" → {"name": "huile olive", "grams": 30}
+- "1 bol de flocons d'avoine" → {"name": "flocons avoine", "grams": 300}
+- "1 verre de lait" → {"name": "lait", "grams": 200}
+- "une poignée de noix" → {"name": "noix", "grams": 30}`,
           },
           { role: "user", content: transcript },
         ],
