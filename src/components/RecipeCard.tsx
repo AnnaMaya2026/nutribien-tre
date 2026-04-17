@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { Recipe } from "@/lib/recipes";
-import { ChefHat, Leaf, ChevronDown, ChevronUp } from "lucide-react";
+import { ChefHat, Leaf, ChevronDown, ChevronUp, Clock, Flame, UtensilsCrossed } from "lucide-react";
 
 interface ResolvedIngredient {
   name: string;
@@ -75,6 +75,12 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-foreground">{recipe.name}</h3>
           <p className="text-[10px] text-muted-foreground">{recipe.description}</p>
+          <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Préparation : {recipe.prepTime} min</span>
+            {recipe.cookTime > 0 && (
+              <span className="flex items-center gap-1"><Flame className="w-3 h-3" /> Cuisson : {recipe.cookTime} min</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -166,6 +172,25 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
               </span>
             </div>
           ))}
+
+          {recipe.steps && recipe.steps.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <div className="flex items-center gap-1.5 mb-2">
+                <UtensilsCrossed className="w-3.5 h-3.5 text-primary" />
+                <h4 className="text-xs font-semibold text-foreground">Préparation</h4>
+              </div>
+              <ol className="space-y-1.5">
+                {recipe.steps.map((step, i) => (
+                  <li key={i} className="flex gap-2 text-[11px] text-foreground">
+                    <span className="flex-shrink-0 w-4 h-4 rounded-full bg-primary/15 text-primary font-semibold flex items-center justify-center text-[10px]">
+                      {i + 1}
+                    </span>
+                    <span className="leading-relaxed">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
         </div>
       )}
     </div>

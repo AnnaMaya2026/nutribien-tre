@@ -4,6 +4,7 @@ import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { searchCiqual, searchByNutrient, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { searchRecipes, Recipe } from "@/lib/recipes";
 import { RecipeCard } from "@/components/RecipeCard";
+import { SymptomReliefTab } from "@/components/SymptomReliefTab";
 import { ChefHat, Leaf, AlertTriangle, Search, Loader2, UtensilsCrossed } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -220,10 +221,11 @@ export default function RepasPage() {
       <p className="text-muted-foreground text-sm mb-4">Trouvez des aliments adaptés à vos besoins</p>
 
       <Tabs defaultValue="ingredients" className="w-full">
-        <TabsList className="w-full mb-4">
+        <TabsList className="w-full mb-4 h-auto flex-wrap">
           <TabsTrigger value="ingredients" className="flex-1 text-[10px] px-1">Par ingrédients</TabsTrigger>
           <TabsTrigger value="recipes" className="flex-1 text-[10px] px-1">Par recette</TabsTrigger>
           <TabsTrigger value="gaps" className="flex-1 text-[10px] px-1">Combler mes manques</TabsTrigger>
+          <TabsTrigger value="symptoms" className="flex-1 text-[10px] px-1">Atténuer mes symptômes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ingredients">
@@ -339,6 +341,10 @@ export default function RepasPage() {
               <p className="text-xs text-muted-foreground">Vos apports nutritionnels sont bons aujourd'hui</p>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="symptoms">
+          <SymptomReliefTab />
         </TabsContent>
       </Tabs>
     </div>
