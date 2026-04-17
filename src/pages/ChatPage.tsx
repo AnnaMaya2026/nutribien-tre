@@ -240,23 +240,33 @@ export default function ChatPage() {
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
       <div className="px-4 pt-6 pb-3 border-b border-border">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
             <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
               <Bot className="w-5 h-5" /> Sophie — Nutritionniste IA
             </h1>
             <p className="text-xs text-muted-foreground">Conseils personnalisés pour la ménopause</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">🔊 Réponse vocale auto</span>
-            <Switch
-              checked={autoRead}
-              onCheckedChange={setAutoRead}
-              className="data-[state=checked]:bg-primary"
-            />
-          </div>
+          <button
+            onClick={() => setHistoryOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium transition-colors min-h-[40px]"
+            title="Voir l'historique"
+          >
+            <Clock className="w-4 h-4" />
+            <span className="hidden sm:inline">Historique</span>
+          </button>
+        </div>
+        <div className="flex items-center justify-end gap-2 mt-2">
+          <span className="text-xs text-muted-foreground">🔊 Réponse vocale auto</span>
+          <Switch
+            checked={autoRead}
+            onCheckedChange={setAutoRead}
+            className="data-[state=checked]:bg-primary"
+          />
         </div>
       </div>
+
+      <SophieHistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-56">
