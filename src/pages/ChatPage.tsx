@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Bot, User, Loader2, Volume2, Pause, Mic, MicOff } from "lucide-react";
+import { Send, Bot, User, Loader2, Volume2, Pause, Mic, MicOff, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
+import SophieHistoryDrawer from "@/components/SophieHistoryDrawer";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Message {
   id: number;
