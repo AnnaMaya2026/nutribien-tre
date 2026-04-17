@@ -289,6 +289,7 @@ export type Database = {
           created_at: string
           daily_calorie_goal: number | null
           dietary_preferences: string[] | null
+          display_name: string | null
           height: number | null
           id: string
           menopause_stage: string | null
@@ -304,6 +305,7 @@ export type Database = {
           created_at?: string
           daily_calorie_goal?: number | null
           dietary_preferences?: string[] | null
+          display_name?: string | null
           height?: number | null
           id?: string
           menopause_stage?: string | null
@@ -319,6 +321,7 @@ export type Database = {
           created_at?: string
           daily_calorie_goal?: number | null
           dietary_preferences?: string[] | null
+          display_name?: string | null
           height?: number | null
           id?: string
           menopause_stage?: string | null
