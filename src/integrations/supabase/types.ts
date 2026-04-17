@@ -331,6 +331,36 @@ export type Database = {
         }
         Relationships: []
       }
+      sophie_conversations: {
+        Row: {
+          conversation_date: string
+          created_at: string
+          id: string
+          message: string
+          pinned: boolean
+          role: string
+          user_id: string
+        }
+        Insert: {
+          conversation_date?: string
+          created_at?: string
+          id?: string
+          message: string
+          pinned?: boolean
+          role: string
+          user_id: string
+        }
+        Update: {
+          conversation_date?: string
+          created_at?: string
+          id?: string
+          message?: string
+          pinned?: boolean
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       symptom_logs: {
         Row: {
           bouffees_chaleur: number | null
