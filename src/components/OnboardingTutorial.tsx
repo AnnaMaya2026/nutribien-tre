@@ -52,7 +52,10 @@ const buildSteps = (name: string) => [
 ];
 
 export default function OnboardingTutorial({ onComplete }: { onComplete: () => void }) {
-  const { updateProfile } = useProfile();
+  const { updateProfile, profile } = useProfile() as any;
+  const { user } = (require("@/hooks/useAuth") as typeof import("@/hooks/useAuth")).useAuth();
+  const displayName = (require("@/lib/displayName") as typeof import("@/lib/displayName")).getDisplayName(profile?.display_name, user?.email);
+  const STEPS = buildSteps(displayName);
   const [step, setStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [slideDirection, setSlideDirection] = useState<"left" | "right">("right");
