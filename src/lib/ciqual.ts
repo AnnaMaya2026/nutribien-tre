@@ -44,21 +44,23 @@ export async function searchCiqual(query: string): Promise<CiqualFood[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
 
-  const { data, error } = await supabase
-    .from("aliments_ciqual")
-    .select("*")
-    .ilike("nom", `%${trimmed}%`)
-    .limit(1000);
+  const { data, error } = await supabase.rpc("search_aliments_unaccent" as any, {
+    search_term: trimmed,
+    max_results: 1000,
+  });
 
   if (error) {
     console.error("Search error:", error);
     throw error;
   }
 
-  const lower = trimmed.toLowerCase();
-  const sorted = (data || []).sort((a, b) => {
-    const aNom = (a.nom || "").toLowerCase();
-    const bNom = (b.nom || "").toLowerCase();
+  // Normalize for accent-insensitive sorting
+  const stripAccents = (s: string) =>
+    s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const lower = stripAccents(trimmed);
+  const sorted = ((data as any[]) || []).sort((a, b) => {
+    const aNom = stripAccents(a.nom || "");
+    const bNom = stripAccents(b.nom || "");
     const aScore = aNom.startsWith(lower) ? 0 : aNom.includes(` ${lower}`) ? 1 : 2;
     const bScore = bNom.startsWith(lower) ? 0 : bNom.includes(` ${lower}`) ? 1 : 2;
 
