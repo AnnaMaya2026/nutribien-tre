@@ -110,6 +110,16 @@ export default function ChatPage() {
     }
   }, [playingId, stopAudio]);
 
+  const persistMessage = useCallback(async (role: "user" | "sophie", message: string) => {
+    if (!user) return;
+    const { error } = await supabase.from("sophie_conversations" as any).insert({
+      user_id: user.id,
+      role,
+      message,
+    });
+    if (error) console.error("Erreur sauvegarde conversation:", error);
+  }, [user]);
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -118,6 +128,9 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
+
+    // Save user message
+    persistMessage("user", trimmedInput);
 
     try {
       const history = [...messages.filter((m) => m.id !== 0), userMsg].map((m) => ({
@@ -146,6 +159,9 @@ export default function ChatPage() {
         from: "ai",
       };
       setMessages((prev) => [...prev, aiMsg]);
+
+      // Save Sophie message
+      persistMessage("sophie", data.reply);
 
       // Auto-read if enabled
       if (autoReadRef.current) {
