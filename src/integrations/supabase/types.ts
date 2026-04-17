@@ -448,6 +448,31 @@ export type Database = {
     }
     Functions: {
       f_unaccent: { Args: { "": string }; Returns: string }
+      search_aliments_unaccent: {
+        Args: { max_results?: number; search_term: string }
+        Returns: {
+          calcium_100g: number | null
+          calories_100g: number | null
+          fer_100g: number | null
+          fibres_100g: number | null
+          glucides_100g: number | null
+          groupe: string | null
+          id: number
+          lipides_100g: number | null
+          magnesium_100g: number | null
+          nom: string | null
+          omega3_total_100g: number | null
+          proteines_100g: number | null
+          vitamine_b12_100g: number | null
+          vitamine_d_100g: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "aliments_ciqual"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       unaccent: { Args: { "": string }; Returns: string }
