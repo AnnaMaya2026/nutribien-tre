@@ -220,51 +220,12 @@ export default function RepasPage() {
       <h1 className="text-2xl font-bold text-foreground mb-1">Suggestions de repas</h1>
       <p className="text-muted-foreground text-sm mb-4">Trouvez des aliments adaptés à vos besoins</p>
 
-      <Tabs defaultValue="ingredients" className="w-full">
+      <Tabs defaultValue="recipes" className="w-full">
         <TabsList className="w-full mb-4 h-auto flex-wrap">
-          <TabsTrigger value="ingredients" className="flex-1 text-[10px] px-1">Par ingrédients</TabsTrigger>
           <TabsTrigger value="recipes" className="flex-1 text-[10px] px-1">Par recette</TabsTrigger>
           <TabsTrigger value="gaps" className="flex-1 text-[10px] px-1">Combler mes manques</TabsTrigger>
           <TabsTrigger value="symptoms" className="flex-1 text-[10px] px-1">Atténuer mes symptômes</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="ingredients">
-          <div className="relative mb-4">
-            <ChefHat className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              value={ingredients}
-              onChange={(e) => setIngredients(e.target.value)}
-              placeholder="Rechercher : saumon, quinoa, tofu..."
-              className="pl-10 h-12 bg-card rounded-lg"
-            />
-          </div>
-
-          {searching && (
-            <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" /> Recherche en cours...
-            </div>
-          )}
-
-          {!searching && ingredients.trim().length >= 2 && searchResults.length === 0 && (
-            <div className="flex flex-col items-center py-8 text-center">
-              <Search className="w-8 h-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">Aucun aliment trouvé pour "{ingredients}"</p>
-            </div>
-          )}
-
-          {!searching && ingredients.trim().length < 2 && (
-            <div className="flex flex-col items-center py-8 text-center">
-              <ChefHat className="w-10 h-10 text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground">Tapez au moins 2 caractères pour rechercher des aliments</p>
-            </div>
-          )}
-
-          <div className="space-y-3">
-            {searchResults.map((food) => (
-              <FoodCard key={food.id} food={food} />
-            ))}
-          </div>
-        </TabsContent>
 
         <TabsContent value="recipes">
           <div className="relative mb-4">
