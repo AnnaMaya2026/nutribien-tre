@@ -123,10 +123,12 @@ export function SymptomReliefTab() {
 
   if (activeSymptoms.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="text-5xl mb-4">😊</div>
-        <p className="text-sm text-foreground font-medium mb-1">Aucun symptôme à atténuer aujourd'hui</p>
-        <p className="text-xs text-muted-foreground">Notez vos symptômes du jour dans l'onglet Symptômes pour obtenir des suggestions ciblées.</p>
+      <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+        <div className="text-5xl mb-4">🎉</div>
+        <p className="text-sm text-foreground font-medium mb-1">Aucun symptôme élevé aujourd'hui</p>
+        <p className="text-xs text-muted-foreground max-w-xs">
+          Revenez après avoir rempli votre bilan de symptômes pour obtenir des suggestions ciblées.
+        </p>
       </div>
     );
   }
