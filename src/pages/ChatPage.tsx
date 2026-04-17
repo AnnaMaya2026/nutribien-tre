@@ -319,34 +319,37 @@ export default function ChatPage() {
             <button onClick={cancelAutoSend} className="text-primary underline">Annuler</button>
           </div>
         )}
-        <div className="flex gap-2 pt-3">
-          <button
-            onClick={toggleRecording}
-            disabled={isLoading}
-            className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all ${
-              isRecording
-                ? "bg-primary text-primary-foreground animate-pulse shadow-lg"
-                : "bg-primary/10 text-primary hover:bg-primary/20"
-            }`}
-            title={isRecording ? "Arrêter" : "Parler à Sophie"}
-          >
-            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-          </button>
+        <div className="flex gap-2 pt-3 items-end">
+          <div className="flex flex-col items-center gap-1">
+            <button
+              onClick={toggleRecording}
+              disabled={isLoading}
+              className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all ${
+                isRecording
+                  ? "bg-primary text-primary-foreground animate-pulse shadow-lg"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
+              }`}
+              title={isRecording ? "Arrêter" : "Parler à Sophie"}
+            >
+              {isRecording ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+            </button>
+            <span className="text-[10px] text-muted-foreground font-medium">Parler</span>
+          </div>
           <Input
             value={input}
             onChange={(e) => { setInput(e.target.value); cancelAutoSend(); }}
             onKeyDown={(e) => { if (e.key === "Enter") { cancelAutoSend(); handleSend(); } }}
-            placeholder="Posez votre question à Sophie..."
-            className="h-11 bg-card rounded-lg flex-1"
+            placeholder="Posez votre question à Sophie ou dites-lui ce que vous avez dans le frigo 🥦"
+            className="h-14 bg-card rounded-lg flex-1"
             disabled={isLoading}
           />
           <button
             id="chat-send-btn"
             onClick={() => { cancelAutoSend(); handleSend(); }}
             disabled={!input.trim() || isLoading}
-            className="w-11 h-11 rounded-lg bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40"
+            className="w-14 h-14 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 shadow-md"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-5 h-5" />
           </button>
         </div>
       </div>
