@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
+import { getDisplayName } from "@/lib/displayName";
 import { Heart, ChevronLeft, ChevronRight, X } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -53,8 +55,8 @@ const buildSteps = (name: string) => [
 
 export default function OnboardingTutorial({ onComplete }: { onComplete: () => void }) {
   const { updateProfile, profile } = useProfile() as any;
-  const { user } = (require("@/hooks/useAuth") as typeof import("@/hooks/useAuth")).useAuth();
-  const displayName = (require("@/lib/displayName") as typeof import("@/lib/displayName")).getDisplayName(profile?.display_name, user?.email);
+  const { user } = useAuth();
+  const displayName = getDisplayName(profile?.display_name, user?.email);
   const STEPS = buildSteps(displayName);
   const [step, setStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
