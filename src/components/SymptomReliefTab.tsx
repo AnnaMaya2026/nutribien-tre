@@ -42,40 +42,54 @@ export function SymptomReliefTab() {
 
   const scores = (todayLog?.symptom_scores as Record<string, number>) || {};
   const selected = todayLog?.selected_symptoms || [];
-  const activeSymptoms = (Object.keys(SYMPTOM_RELIEF_FOODS).filter((k) => {
-    const s = scores[k];
-    if (typeof s === "number") return s >= 5;
-    return selected.includes(k);
-  }));
 
-  activeSymptoms.sort((a, b) => (scores[b] || 0) - (scores[a] || 0));
+  // Collect ALL symptom keys that are active today (score >= 5 OR selected)
+  // We union keys from scores + selected_symptoms so we never miss any.
+  const allCandidateKeys = Array.from(
+    new Set<string>([...Object.keys(scores), ...selected])
+  );
+  const activeSymptoms = allCandidateKeys
+    .filter((k) => {
+      if (!SYMPTOM_RELIEF_FOODS[k]) return false;
+      const s = scores[k];
+      if (typeof s === "number") return s >= 5;
+      return selected.includes(k);
+    })
+    .sort((a, b) => (scores[b] || 0) - (scores[a] || 0));
+
+  // Stable signature for effect deps
+  const activeKey = activeSymptoms.join("|");
 
   useEffect(() => {
     if (activeSymptoms.length === 0) {
       setResolved({});
+      setLoading(false);
       return;
     }
     let cancelled = false;
     setLoading(true);
 
     (async () => {
-      const map: Record<string, ResolvedSuggestion[]> = {};
-      for (const symptomKey of activeSymptoms) {
-        const cfg = SYMPTOM_RELIEF_FOODS[symptomKey];
-        if (!cfg) continue;
-        const items = await Promise.all(
-          cfg.foods.map(async (f) => {
-            try {
-              const res = await searchCiqual(f.ciqualSearch);
-              return { name: f.name, nutrient: f.nutrient, food: res[0] || null };
-            } catch {
-              return { name: f.name, nutrient: f.nutrient, food: null };
-            }
-          })
-        );
-        map[symptomKey] = items;
-      }
+      // Resolve ALL symptoms in parallel so one slow lookup doesn't block others
+      const entries = await Promise.all(
+        activeSymptoms.map(async (symptomKey) => {
+          const cfg = SYMPTOM_RELIEF_FOODS[symptomKey];
+          const items: ResolvedSuggestion[] = await Promise.all(
+            cfg.foods.map(async (f) => {
+              try {
+                const res = await searchCiqual(f.ciqualSearch);
+                return { name: f.name, nutrient: f.nutrient, food: res[0] || null };
+              } catch {
+                return { name: f.name, nutrient: f.nutrient, food: null };
+              }
+            })
+          );
+          return [symptomKey, items] as const;
+        })
+      );
       if (!cancelled) {
+        const map: Record<string, ResolvedSuggestion[]> = {};
+        for (const [k, v] of entries) map[k] = v;
         setResolved(map);
         setLoading(false);
       }
@@ -83,7 +97,7 @@ export function SymptomReliefTab() {
 
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSymptoms.join(",")]);
+  }, [activeKey]);
 
   const openRecipeIdeas = async (suggestion: ResolvedSuggestion) => {
     setActiveIngredient(suggestion);
