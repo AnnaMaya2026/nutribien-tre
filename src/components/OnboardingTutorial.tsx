@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
+import { getDisplayName } from "@/lib/displayName";
 import { Heart, ChevronLeft, ChevronRight, X } from "lucide-react";
 import confetti from "canvas-confetti";
 
-const STEPS = [
+const buildSteps = (name: string) => [
   {
     type: "welcome" as const,
-    title: "Bienvenue dans NutriMéno ! 💗",
+    title: name ? `Bienvenue ${name} ! 💗` : "Bienvenue dans NutriMéno ! 💗",
     subtitle: "Votre nutritionniste personnalisée pour la ménopause",
   },
   {
@@ -25,8 +27,8 @@ const STEPS = [
   },
   {
     type: "highlight" as const,
-    title: "Idées repas",
-    tooltip: "Découvrez des recettes adaptées à la ménopause et à vos préférences alimentaires",
+    title: "Idées repas 🍽️",
+    tooltip: "Découvrez des idées de repas personnalisées : par ingrédients disponibles, par recette, pour combler vos manques en nutriments, ou pour atténuer vos symptômes de ménopause.",
     targetNav: "/repas",
     position: "top" as const,
   },
@@ -52,7 +54,10 @@ const STEPS = [
 ];
 
 export default function OnboardingTutorial({ onComplete }: { onComplete: () => void }) {
-  const { updateProfile } = useProfile();
+  const { updateProfile, profile } = useProfile() as any;
+  const { user } = useAuth();
+  const displayName = getDisplayName(profile?.display_name, user?.email);
+  const STEPS = buildSteps(displayName);
   const [step, setStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [slideDirection, setSlideDirection] = useState<"left" | "right">("right");

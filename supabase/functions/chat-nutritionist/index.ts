@@ -48,6 +48,7 @@ serve(async (req) => {
         const p = profileRes.data;
         profileContext = `
 Profil utilisatrice:
+- Prénom: ${p.display_name || "Non renseigné"}
 - Stade: ${p.menopause_stage || "Non renseigné"}
 - Symptômes principaux: ${(p.symptoms || []).join(", ") || "Aucun renseigné"}
 - Objectif calorique: ${p.daily_calorie_goal || 1800} kcal`;
@@ -85,6 +86,7 @@ ${nutritionContext}
 
 Règles:
 - Réponds toujours en français
+- Si tu connais le prénom de l'utilisatrice (champ "Prénom" du profil), utilise-le naturellement dans tes réponses (ex: "Bonjour Anna,...")
 - Sois chaleureuse, encourageante et bienveillante
 - Donne des conseils pratiques et accessibles
 - Base tes conseils sur les données nutritionnelles du jour de l'utilisatrice
