@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import AuthPage from "@/pages/AuthPage";
+import OnboardingFlow from "@/pages/OnboardingFlow";
 import ProfileSetup from "@/pages/ProfileSetup";
 import Dashboard from "@/pages/Dashboard";
 import JournalPage from "@/pages/JournalPage";
@@ -18,7 +19,6 @@ function ProtectedLayout() {
   const { profile, isLoading } = useProfile();
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
-  // Determine onboarding state once profile loads
   if (!isLoading && showOnboarding === null && profile) {
     if (!profile.onboarding_completed) {
       setTimeout(() => setShowOnboarding(true), 500);
@@ -48,6 +48,8 @@ function ProtectedLayout() {
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/symptomes" element={<SymptomHistoryPage />} />
         <Route path="/notes" element={<PersonalJournalPage />} />
+        <Route path="/auth" element={<Navigate to="/" replace />} />
+        <Route path="/onboarding" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomNav />
@@ -72,7 +74,9 @@ export default function AppRoutes() {
   if (!user) {
     return (
       <Routes>
-        <Route path="*" element={<AuthPage />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/onboarding" element={<OnboardingFlow />} />
+        <Route path="*" element={<OnboardingFlow />} />
       </Routes>
     );
   }
