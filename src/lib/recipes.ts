@@ -12,6 +12,9 @@ export interface Recipe {
   ingredients: RecipeIngredient[];
   menopauseNutrients: string[];
   description: string;
+  prepTime: number; // minutes
+  cookTime: number; // minutes
+  steps: string[];
 }
 
 export const RECIPES: Recipe[] = [
@@ -29,6 +32,15 @@ export const RECIPES: Recipe[] = [
     ],
     menopauseNutrients: ["Oméga-3", "Vitamine D", "Magnésium"],
     description: "Riche en oméga-3 et vitamine D, idéale pour la santé osseuse.",
+    prepTime: 10,
+    cookTime: 8,
+    steps: [
+      "Cuire le saumon à la poêle 3-4 min de chaque côté avec un filet d'huile d'olive.",
+      "Laver les épinards et couper les tomates cerises en deux.",
+      "Couper l'avocat en tranches fines.",
+      "Émietter le saumon tiède sur le lit d'épinards.",
+      "Ajouter avocat et tomates, arroser d'huile d'olive et de jus de citron.",
+    ],
   },
   {
     id: "pates-legumes",
@@ -44,6 +56,16 @@ export const RECIPES: Recipe[] = [
     ],
     menopauseNutrients: ["Calcium", "Magnésium", "Fibres"],
     description: "Source de calcium et magnésium grâce au brocoli et au parmesan.",
+    prepTime: 5,
+    cookTime: 12,
+    steps: [
+      "Faire bouillir une grande casserole d'eau salée.",
+      "Cuire les pâtes complètes selon les indications du paquet (env. 10-12 min).",
+      "Pendant ce temps, faire revenir les champignons émincés à l'huile d'olive.",
+      "Ajouter le brocoli en bouquets et cuire 5 min à couvert.",
+      "Mélanger les pâtes égouttées aux légumes.",
+      "Parsemer de parmesan râpé et servir aussitôt.",
+    ],
   },
   {
     id: "soupe-lentilles",
@@ -59,6 +81,16 @@ export const RECIPES: Recipe[] = [
     ],
     menopauseNutrients: ["Fer", "Protéines", "Magnésium"],
     description: "Riche en fer et protéines végétales, parfaite pour l'énergie.",
+    prepTime: 10,
+    cookTime: 20,
+    steps: [
+      "Émincer l'oignon et les carottes en petits dés.",
+      "Faire revenir l'oignon dans l'huile de colza 2-3 min.",
+      "Ajouter les carottes, les lentilles rincées et 1 L d'eau.",
+      "Porter à ébullition puis laisser mijoter 15-20 min.",
+      "Incorporer les épinards en fin de cuisson, mixer si désiré.",
+      "Saler, poivrer et servir bien chaud.",
+    ],
   },
   {
     id: "poulet-quinoa",
@@ -74,6 +106,15 @@ export const RECIPES: Recipe[] = [
     ],
     menopauseNutrients: ["Protéines", "Fer", "Oméga-3"],
     description: "Bowl protéiné avec des oméga-3 des graines de lin.",
+    prepTime: 10,
+    cookTime: 15,
+    steps: [
+      "Rincer le quinoa et le cuire 15 min dans 2x son volume d'eau salée.",
+      "Griller le poulet à la poêle 4-5 min de chaque côté, puis le découper en lamelles.",
+      "Couper l'avocat en tranches.",
+      "Disposer dans un bol : quinoa, épinards, poulet et avocat.",
+      "Parsemer de graines de lin et arroser d'un filet d'huile d'olive.",
+    ],
   },
   {
     id: "omelette-champignons",
@@ -89,6 +130,16 @@ export const RECIPES: Recipe[] = [
     ],
     menopauseNutrients: ["Vitamine D", "Calcium", "Vitamine B12"],
     description: "Source de vitamine D et B12, riche en calcium avec le gruyère.",
+    prepTime: 5,
+    cookTime: 8,
+    steps: [
+      "Émincer les champignons et les faire sauter au beurre 4-5 min.",
+      "Ajouter les épinards et laisser tomber 1 min.",
+      "Battre les œufs avec une pincée de sel et de poivre.",
+      "Verser les œufs dans la poêle sur les légumes.",
+      "Parsemer de gruyère râpé et cuire 2-3 min jusqu'à ce que l'omelette soit prise.",
+      "Plier en deux et servir aussitôt.",
+    ],
   },
   {
     id: "sardines-tomates",
@@ -104,6 +155,15 @@ export const RECIPES: Recipe[] = [
     ],
     menopauseNutrients: ["Oméga-3", "Calcium", "Vitamine D"],
     description: "Les sardines sont riches en calcium, oméga-3 et vitamine D.",
+    prepTime: 5,
+    cookTime: 5,
+    steps: [
+      "Toaster les tranches de pain complet.",
+      "Couper les tomates en rondelles fines.",
+      "Disposer les tomates sur le pain, ajouter les sardines.",
+      "Arroser d'huile d'olive et d'un filet de jus de citron.",
+      "Poivrer et servir immédiatement.",
+    ],
   },
   {
     id: "yaourt-granola",
@@ -119,6 +179,15 @@ export const RECIPES: Recipe[] = [
     ],
     menopauseNutrients: ["Calcium", "Magnésium", "Protéines"],
     description: "Petit-déjeuner riche en calcium et magnésium.",
+    prepTime: 5,
+    cookTime: 0,
+    steps: [
+      "Verser le yaourt grec dans un bol.",
+      "Couper la banane en rondelles et l'ajouter sur le yaourt.",
+      "Concasser grossièrement les noix et les amandes.",
+      "Parsemer les fruits secs sur le yaourt.",
+      "Arroser d'un filet de miel et déguster.",
+    ],
   },
   {
     id: "salade-lentilles",
@@ -134,6 +203,15 @@ export const RECIPES: Recipe[] = [
     ],
     menopauseNutrients: ["Fer", "Calcium", "Oméga-3"],
     description: "Riche en fer végétal et calcium du fromage de chèvre.",
+    prepTime: 10,
+    cookTime: 20,
+    steps: [
+      "Cuire les lentilles vertes 20 min dans de l'eau salée, puis égoutter.",
+      "Couper la betterave cuite en petits dés.",
+      "Émietter le fromage de chèvre et concasser les noix.",
+      "Mélanger lentilles tièdes, betterave et noix.",
+      "Parsemer de chèvre, arroser d'huile de noix et servir.",
+    ],
   },
   {
     id: "soupe-legumes",
@@ -149,6 +227,16 @@ export const RECIPES: Recipe[] = [
     ],
     menopauseNutrients: ["Calcium", "Magnésium", "Fer"],
     description: "Soupe anti-inflammatoire riche en minéraux essentiels.",
+    prepTime: 10,
+    cookTime: 25,
+    steps: [
+      "Couper la pomme de terre, la courgette et le brocoli en morceaux.",
+      "Faire revenir 1 min dans l'huile de colza avec une pincée de curcuma.",
+      "Couvrir d'eau (1 L) et porter à ébullition.",
+      "Laisser mijoter 20-25 min jusqu'à ce que les légumes soient tendres.",
+      "Ajouter les épinards en fin de cuisson, puis mixer le tout.",
+      "Saler, poivrer et servir bien chaud.",
+    ],
   },
   {
     id: "thon-riz",
@@ -164,6 +252,15 @@ export const RECIPES: Recipe[] = [
     ],
     menopauseNutrients: ["Protéines", "Oméga-3", "Vitamine B12"],
     description: "Plat complet riche en protéines et vitamine B12.",
+    prepTime: 10,
+    cookTime: 25,
+    steps: [
+      "Cuire le riz complet 20-25 min dans de l'eau salée.",
+      "Faire bouillir les haricots verts 8-10 min, puis égoutter.",
+      "Couper les tomates en dés et égoutter le thon.",
+      "Mélanger riz, haricots, tomates et thon dans un saladier.",
+      "Arroser d'huile d'olive, saler, poivrer et servir tiède.",
+    ],
   },
 ];
 
