@@ -221,12 +221,17 @@ export default function RepasPage() {
       <h1 className="text-2xl font-bold text-foreground mb-1">Suggestions de repas</h1>
       <p className="text-muted-foreground text-sm mb-4">Trouvez des aliments adaptés à vos besoins</p>
 
-      <Tabs defaultValue="recipes" className="w-full">
-        <TabsList className="w-full mb-4 h-auto flex-wrap">
-          <TabsTrigger value="recipes" className="flex-1 text-[10px] px-1">Par recette</TabsTrigger>
-          <TabsTrigger value="gaps" className="flex-1 text-[10px] px-1">Combler mes manques</TabsTrigger>
-          <TabsTrigger value="symptoms" className="flex-1 text-[10px] px-1">Atténuer mes symptômes</TabsTrigger>
+      <Tabs defaultValue="nutrients" className="w-full">
+        <TabsList className="w-full mb-4 h-auto flex-wrap min-h-12 p-1">
+          <TabsTrigger value="nutrients" className="flex-1 text-[11px] px-1 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🥕 Par nutriment manquant</TabsTrigger>
+          <TabsTrigger value="recipes" className="flex-1 text-[11px] px-1 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🍽️ Par recette</TabsTrigger>
+          <TabsTrigger value="symptoms" className="flex-1 text-[11px] px-1 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">✨ Atténuer mes symptômes</TabsTrigger>
+          <TabsTrigger value="gaps" className="flex-1 text-[11px] px-1 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🎯 Combler mes manques</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="nutrients">
+          <NutrientGapTab />
+        </TabsContent>
 
         <TabsContent value="recipes">
           <div className="relative mb-4">
