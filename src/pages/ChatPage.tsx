@@ -29,6 +29,8 @@ export default function ChatPage() {
   const [autoRead, setAutoRead] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [autoSendTimer, setAutoSendTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const { user } = useAuth();
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recognitionRef = useRef<any>(null);
