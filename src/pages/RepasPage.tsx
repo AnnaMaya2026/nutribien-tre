@@ -342,6 +342,10 @@ export default function RepasPage() {
             </div>
           )}
         </TabsContent>
+
+        <TabsContent value="symptoms">
+          <SymptomReliefTab />
+        </TabsContent>
       </Tabs>
     </div>
   );
