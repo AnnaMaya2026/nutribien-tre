@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { SYMPTOM_RELIEF_FOODS } from "@/lib/symptomReliefFoods";
-import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
-import { Activity, Plus, Loader2, Sparkles } from "lucide-react";
+import { searchCiqual, CiqualFood } from "@/lib/ciqual";
+import { supabase } from "@/integrations/supabase/client";
+import { Activity, Loader2, Sparkles, ChefHat, Clock, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 
 interface ResolvedSuggestion {
   name: string;
@@ -20,21 +20,25 @@ interface ResolvedSuggestion {
   food: CiqualFood | null;
 }
 
-const MEAL_OPTIONS: { value: string; label: string; emoji: string }[] = [
-  { value: "breakfast", label: "Petit-déjeuner", emoji: "🌅" },
-  { value: "lunch", label: "Déjeuner", emoji: "🥗" },
-  { value: "dinner", label: "Dîner", emoji: "🍽️" },
-  { value: "snack", label: "Collation", emoji: "🍎" },
-];
+interface RecipeIdea {
+  name: string;
+  prep_time: string;
+  description: string;
+  ingredients: string[];
+  steps: string[];
+}
 
 export function SymptomReliefTab() {
   const { user } = useAuth();
   const { todayLog } = useSymptomLogs();
-  const { addLog } = useFoodLogs();
   const [resolved, setResolved] = useState<Record<string, ResolvedSuggestion[]>>({});
   const [loading, setLoading] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [pendingFood, setPendingFood] = useState<ResolvedSuggestion | null>(null);
+
+  // Recipe ideas panel state
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [activeIngredient, setActiveIngredient] = useState<ResolvedSuggestion | null>(null);
+  const [recipes, setRecipes] = useState<RecipeIdea[]>([]);
+  const [recipesLoading, setRecipesLoading] = useState(false);
 
   const scores = (todayLog?.symptom_scores as Record<string, number>) || {};
   const selected = todayLog?.selected_symptoms || [];
@@ -81,29 +85,21 @@ export function SymptomReliefTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSymptoms.join(",")]);
 
-  const openPicker = (suggestion: ResolvedSuggestion) => {
-    if (!suggestion.food) return;
-    setPendingFood(suggestion);
-    setPickerOpen(true);
-  };
-
-  const handleSelectMeal = async (mealValue: string, mealLabel: string) => {
-    if (!user || !pendingFood?.food) return;
-    setPickerOpen(false);
-    const grams = 100;
-    const scaled = scaleCiqual(pendingFood.food, grams);
+  const openRecipeIdeas = async (suggestion: ResolvedSuggestion) => {
+    setActiveIngredient(suggestion);
+    setSheetOpen(true);
+    setRecipes([]);
+    setRecipesLoading(true);
     try {
-      await addLog.mutateAsync({
-        food_name: pendingFood.food.nom,
-        portion_size: grams,
-        meal_type: mealValue,
-        ...scaled,
+      const { data, error } = await supabase.functions.invoke("recipe-ideas", {
+        body: { ingredient: suggestion.name, nutrient: suggestion.nutrient },
       });
-      toast({ title: `Ajouté au ${mealLabel} ✓`, description: `${pendingFood.food.nom} (${grams}g)` });
+      if (error) throw error;
+      setRecipes(data?.recipes || []);
     } catch (e: any) {
-      toast({ title: "Erreur", description: e.message, variant: "destructive" });
+      toast({ title: "Erreur", description: e.message || "Impossible de charger les recettes", variant: "destructive" });
     } finally {
-      setPendingFood(null);
+      setRecipesLoading(false);
     }
   };
 
@@ -129,7 +125,7 @@ export function SymptomReliefTab() {
           <h3 className="text-sm font-semibold text-foreground">Suggestions personnalisées</h3>
         </div>
         <p className="text-[11px] text-muted-foreground">
-          Aliments adaptés à vos symptômes du jour pour vous aider à vous sentir mieux.
+          Aliments inspirants adaptés à vos symptômes. Cliquez pour découvrir des idées de recettes ✨
         </p>
       </div>
 
@@ -168,12 +164,10 @@ export function SymptomReliefTab() {
                     </p>
                   </div>
                   <button
-                    onClick={() => openPicker(it)}
-                    disabled={!it.food || addLog.isPending}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground text-[10px] font-medium disabled:opacity-50 hover:bg-primary/90 transition whitespace-nowrap"
+                    onClick={() => openRecipeIdeas(it)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground text-[10px] font-medium hover:bg-primary/90 transition whitespace-nowrap"
                   >
-                    <Plus className="w-3 h-3" />
-                    Ajouter
+                    🍽️ Idées recettes
                   </button>
                 </div>
               ))}
@@ -182,28 +176,82 @@ export function SymptomReliefTab() {
         );
       })}
 
-      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-base">Ajouter à quel repas ?</DialogTitle>
-            <DialogDescription className="text-xs">
-              {pendingFood?.food ? `${pendingFood.food.nom} · 100g` : ""}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {MEAL_OPTIONS.map((m) => (
-              <button
-                key={m.value}
-                onClick={() => handleSelectMeal(m.value, m.label)}
-                className="flex flex-col items-center gap-1 px-3 py-4 rounded-xl bg-muted/40 hover:bg-primary hover:text-primary-foreground transition border border-border"
-              >
-                <span className="text-2xl">{m.emoji}</span>
-                <span className="text-xs font-medium">{m.label}</span>
-              </button>
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle className="flex items-center gap-2 text-base">
+              <ChefHat className="w-4 h-4 text-primary" />
+              Idées recettes avec {activeIngredient?.name}
+            </SheetTitle>
+            <SheetDescription className="text-xs">
+              {activeIngredient?.nutrient && (
+                <span className="text-primary/80">Riche en {activeIngredient.nutrient}</span>
+              )}
+              {" · "}Inspirations pour vos repas — à logger ensuite dans le Journal.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-4 space-y-3">
+            {recipesLoading && (
+              <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" /> Génération des idées recettes...
+              </div>
+            )}
+
+            {!recipesLoading && recipes.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-8">
+                Aucune recette générée pour le moment.
+              </p>
+            )}
+
+            {!recipesLoading && recipes.map((r, i) => (
+              <div key={i} className="bg-muted/30 rounded-2xl p-4 border border-border">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h4 className="text-sm font-semibold text-foreground flex-1">{r.name}</h4>
+                  {r.prep_time && (
+                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap">
+                      <Clock className="w-3 h-3" /> {r.prep_time}
+                    </span>
+                  )}
+                </div>
+                {r.description && (
+                  <p className="text-xs text-muted-foreground mb-3 italic">{r.description}</p>
+                )}
+
+                {r.ingredients?.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-1">Ingrédients</p>
+                    <ul className="text-xs text-foreground space-y-0.5 list-disc list-inside">
+                      {r.ingredients.map((ing, j) => (
+                        <li key={j}>{ing}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {r.steps?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-1">Préparation</p>
+                    <ol className="text-xs text-foreground space-y-1 list-decimal list-inside">
+                      {r.steps.map((s, j) => (
+                        <li key={j}>{s}</li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </div>
             ))}
+
+            {!recipesLoading && recipes.length > 0 && (
+              <div className="bg-primary/10 rounded-xl p-3 text-center">
+                <p className="text-[11px] text-foreground">
+                  💡 Une fois cuisinée, n'oubliez pas de logger votre repas dans le <span className="font-semibold text-primary">Journal</span>.
+                </p>
+              </div>
+            )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
