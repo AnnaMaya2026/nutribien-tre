@@ -239,7 +239,7 @@ export default function ChatPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-32">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-56">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex gap-2 ${msg.from === "user" ? "justify-end" : ""} animate-fade-in`}>
             {msg.from === "ai" && (
@@ -268,15 +268,15 @@ export default function ChatPage() {
                 <button
                   onClick={() => playTts(msg.id, msg.text)}
                   disabled={loadingTtsId === msg.id}
-                  className="self-start flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors px-1 py-0.5 rounded disabled:opacity-50"
+                  className="self-start flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors px-3 py-2 min-h-[44px] min-w-[44px] rounded-lg bg-primary/10 hover:bg-primary/15 disabled:opacity-50"
                   title={playingId === msg.id ? "Mettre en pause" : "Écouter"}
                 >
                   {loadingTtsId === msg.id ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : playingId === msg.id ? (
-                    <Pause className="w-3.5 h-3.5" />
+                    <Pause className="w-4 h-4" />
                   ) : (
-                    <Volume2 className="w-3.5 h-3.5" />
+                    <Volume2 className="w-4 h-4" />
                   )}
                   <span>{loadingTtsId === msg.id ? "Chargement..." : playingId === msg.id ? "Pause" : "Écouter"}</span>
                 </button>
@@ -319,34 +319,37 @@ export default function ChatPage() {
             <button onClick={cancelAutoSend} className="text-primary underline">Annuler</button>
           </div>
         )}
-        <div className="flex gap-2 pt-3">
-          <button
-            onClick={toggleRecording}
-            disabled={isLoading}
-            className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all ${
-              isRecording
-                ? "bg-primary text-primary-foreground animate-pulse shadow-lg"
-                : "bg-primary/10 text-primary hover:bg-primary/20"
-            }`}
-            title={isRecording ? "Arrêter" : "Parler à Sophie"}
-          >
-            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-          </button>
+        <div className="flex gap-2 pt-3 items-end">
+          <div className="flex flex-col items-center gap-1">
+            <button
+              onClick={toggleRecording}
+              disabled={isLoading}
+              className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all ${
+                isRecording
+                  ? "bg-primary text-primary-foreground animate-pulse shadow-lg"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
+              }`}
+              title={isRecording ? "Arrêter" : "Parler à Sophie"}
+            >
+              {isRecording ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+            </button>
+            <span className="text-[10px] text-muted-foreground font-medium">Parler</span>
+          </div>
           <Input
             value={input}
             onChange={(e) => { setInput(e.target.value); cancelAutoSend(); }}
             onKeyDown={(e) => { if (e.key === "Enter") { cancelAutoSend(); handleSend(); } }}
-            placeholder="Posez votre question à Sophie..."
-            className="h-11 bg-card rounded-lg flex-1"
+            placeholder="Posez votre question à Sophie ou dites-lui ce que vous avez dans le frigo 🥦"
+            className="h-14 bg-card rounded-lg flex-1"
             disabled={isLoading}
           />
           <button
             id="chat-send-btn"
             onClick={() => { cancelAutoSend(); handleSend(); }}
             disabled={!input.trim() || isLoading}
-            className="w-11 h-11 rounded-lg bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40"
+            className="w-14 h-14 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 shadow-md"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-5 h-5" />
           </button>
         </div>
       </div>
