@@ -290,11 +290,14 @@ export type Database = {
           daily_calorie_goal: number | null
           dietary_preferences: string[] | null
           display_name: string | null
+          duration_of_changes: string | null
           height: number | null
           id: string
+          main_symptom: string | null
           menopause_stage: string | null
           onboarding_completed: boolean | null
           profile_completed: boolean | null
+          selected_statements: string[] | null
           symptoms: string[] | null
           updated_at: string
           user_id: string
@@ -306,11 +309,14 @@ export type Database = {
           daily_calorie_goal?: number | null
           dietary_preferences?: string[] | null
           display_name?: string | null
+          duration_of_changes?: string | null
           height?: number | null
           id?: string
+          main_symptom?: string | null
           menopause_stage?: string | null
           onboarding_completed?: boolean | null
           profile_completed?: boolean | null
+          selected_statements?: string[] | null
           symptoms?: string[] | null
           updated_at?: string
           user_id: string
@@ -322,11 +328,14 @@ export type Database = {
           daily_calorie_goal?: number | null
           dietary_preferences?: string[] | null
           display_name?: string | null
+          duration_of_changes?: string | null
           height?: number | null
           id?: string
+          main_symptom?: string | null
           menopause_stage?: string | null
           onboarding_completed?: boolean | null
           profile_completed?: boolean | null
+          selected_statements?: string[] | null
           symptoms?: string[] | null
           updated_at?: string
           user_id?: string
