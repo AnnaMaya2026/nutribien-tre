@@ -6,6 +6,13 @@ import { SYMPTOM_RELIEF_FOODS } from "@/lib/symptomReliefFoods";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { Activity, Plus, Loader2, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface ResolvedSuggestion {
   name: string;
@@ -13,14 +20,22 @@ interface ResolvedSuggestion {
   food: CiqualFood | null;
 }
 
+const MEAL_OPTIONS: { value: string; label: string; emoji: string }[] = [
+  { value: "breakfast", label: "Petit-déjeuner", emoji: "🌅" },
+  { value: "lunch", label: "Déjeuner", emoji: "🥗" },
+  { value: "dinner", label: "Dîner", emoji: "🍽️" },
+  { value: "snack", label: "Collation", emoji: "🍎" },
+];
+
 export function SymptomReliefTab() {
   const { user } = useAuth();
   const { todayLog } = useSymptomLogs();
   const { addLog } = useFoodLogs();
   const [resolved, setResolved] = useState<Record<string, ResolvedSuggestion[]>>({});
   const [loading, setLoading] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pendingFood, setPendingFood] = useState<ResolvedSuggestion | null>(null);
 
-  // Pick symptoms with score >= 5 (or all selected ones if no scores)
   const scores = (todayLog?.symptom_scores as Record<string, number>) || {};
   const selected = todayLog?.selected_symptoms || [];
   const activeSymptoms = (Object.keys(SYMPTOM_RELIEF_FOODS).filter((k) => {
@@ -29,7 +44,6 @@ export function SymptomReliefTab() {
     return selected.includes(k);
   }));
 
-  // Sort by score desc
   activeSymptoms.sort((a, b) => (scores[b] || 0) - (scores[a] || 0));
 
   useEffect(() => {
@@ -67,20 +81,29 @@ export function SymptomReliefTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSymptoms.join(",")]);
 
-  const handleAdd = async (suggestion: ResolvedSuggestion) => {
-    if (!user || !suggestion.food) return;
+  const openPicker = (suggestion: ResolvedSuggestion) => {
+    if (!suggestion.food) return;
+    setPendingFood(suggestion);
+    setPickerOpen(true);
+  };
+
+  const handleSelectMeal = async (mealValue: string, mealLabel: string) => {
+    if (!user || !pendingFood?.food) return;
+    setPickerOpen(false);
     const grams = 100;
-    const scaled = scaleCiqual(suggestion.food, grams);
+    const scaled = scaleCiqual(pendingFood.food, grams);
     try {
       await addLog.mutateAsync({
-        food_name: suggestion.food.nom,
+        food_name: pendingFood.food.nom,
         portion_size: grams,
-        meal_type: "snack",
+        meal_type: mealValue,
         ...scaled,
       });
-      toast({ title: "Ajouté au journal", description: `${suggestion.food.nom} (${grams}g)` });
+      toast({ title: `Ajouté au ${mealLabel} ✓`, description: `${pendingFood.food.nom} (${grams}g)` });
     } catch (e: any) {
       toast({ title: "Erreur", description: e.message, variant: "destructive" });
+    } finally {
+      setPendingFood(null);
     }
   };
 
@@ -145,9 +168,9 @@ export function SymptomReliefTab() {
                     </p>
                   </div>
                   <button
-                    onClick={() => handleAdd(it)}
+                    onClick={() => openPicker(it)}
                     disabled={!it.food || addLog.isPending}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground text-[10px] font-medium disabled:opacity-50 hover:bg-primary/90 transition"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground text-[10px] font-medium disabled:opacity-50 hover:bg-primary/90 transition whitespace-nowrap"
                   >
                     <Plus className="w-3 h-3" />
                     Ajouter
@@ -158,6 +181,29 @@ export function SymptomReliefTab() {
           </div>
         );
       })}
+
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-base">Ajouter à quel repas ?</DialogTitle>
+            <DialogDescription className="text-xs">
+              {pendingFood?.food ? `${pendingFood.food.nom} · 100g` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {MEAL_OPTIONS.map((m) => (
+              <button
+                key={m.value}
+                onClick={() => handleSelectMeal(m.value, m.label)}
+                className="flex flex-col items-center gap-1 px-3 py-4 rounded-xl bg-muted/40 hover:bg-primary hover:text-primary-foreground transition border border-border"
+              >
+                <span className="text-2xl">{m.emoji}</span>
+                <span className="text-xs font-medium">{m.label}</span>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
