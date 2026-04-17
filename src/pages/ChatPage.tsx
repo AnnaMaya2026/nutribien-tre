@@ -268,15 +268,15 @@ export default function ChatPage() {
                 <button
                   onClick={() => playTts(msg.id, msg.text)}
                   disabled={loadingTtsId === msg.id}
-                  className="self-start flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors px-1 py-0.5 rounded disabled:opacity-50"
+                  className="self-start flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors px-3 py-2 min-h-[44px] min-w-[44px] rounded-lg bg-primary/10 hover:bg-primary/15 disabled:opacity-50"
                   title={playingId === msg.id ? "Mettre en pause" : "Écouter"}
                 >
                   {loadingTtsId === msg.id ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : playingId === msg.id ? (
-                    <Pause className="w-3.5 h-3.5" />
+                    <Pause className="w-4 h-4" />
                   ) : (
-                    <Volume2 className="w-3.5 h-3.5" />
+                    <Volume2 className="w-4 h-4" />
                   )}
                   <span>{loadingTtsId === msg.id ? "Chargement..." : playingId === msg.id ? "Pause" : "Écouter"}</span>
                 </button>
