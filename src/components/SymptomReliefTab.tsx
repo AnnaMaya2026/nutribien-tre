@@ -43,19 +43,30 @@ export function SymptomReliefTab() {
   const scores = (todayLog?.symptom_scores as Record<string, number>) || {};
   const selected = todayLog?.selected_symptoms || [];
 
-  // Collect ALL symptom keys that are active today (score >= 5 OR selected)
-  // We union keys from scores + selected_symptoms so we never miss any.
+  // 🔍 Debug: compare DB symptom keys with code keys
+  console.log("[SymptomReliefTab] DB symptoms (todayLog):", todayLog);
+  console.log("[SymptomReliefTab] DB scores keys:", Object.keys(scores));
+  console.log("[SymptomReliefTab] DB selected_symptoms:", selected);
+  console.log("[SymptomReliefTab] Relief foods keys:", Object.keys(SYMPTOM_RELIEF_FOODS));
+
+  // Collect ALL symptom keys that are active today (score >= 5 OR present in selected_symptoms)
   const allCandidateKeys = Array.from(
     new Set<string>([...Object.keys(scores), ...selected])
   );
   const activeSymptoms = allCandidateKeys
     .filter((k) => {
-      if (!SYMPTOM_RELIEF_FOODS[k]) return false;
+      if (!SYMPTOM_RELIEF_FOODS[k]) {
+        console.warn(`[SymptomReliefTab] No relief foods mapping for symptom key: "${k}"`);
+        return false;
+      }
       const s = scores[k];
-      if (typeof s === "number") return s >= 5;
+      // Show if score >= 5, OR if symptom was selected today (even with lower score)
+      if (typeof s === "number" && s >= 5) return true;
       return selected.includes(k);
     })
     .sort((a, b) => (scores[b] || 0) - (scores[a] || 0));
+
+  console.log("[SymptomReliefTab] Active symptoms to display:", activeSymptoms);
 
   // Stable signature for effect deps
   const activeKey = activeSymptoms.join("|");
