@@ -3,10 +3,11 @@ import { useJournalEntries, JOURNAL_CATEGORIES } from "@/hooks/useJournalEntries
 import { Plus, Trash2, X, CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { HabitsTracker } from "@/components/HabitsTracker";
+import { RoutinesTracker } from "@/components/RoutinesTracker";
 
 export default function PersonalJournalPage() {
   const { entries, addEntry, deleteEntry } = useJournalEntries();
-  const [tab, setTab] = useState<"notes" | "habitudes">("notes");
+  const [tab, setTab] = useState<"notes" | "routines" | "habitudes">("notes");
   const [showForm, setShowForm] = useState(false);
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("autre");
@@ -54,11 +55,13 @@ export default function PersonalJournalPage() {
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
       <h1 className="text-2xl font-bold text-foreground mb-1">
-        {tab === "notes" ? "Journal personnel" : "Habitudes"}
+        {tab === "notes" ? "Journal personnel" : tab === "routines" ? "Mes routines" : "Habitudes"}
       </h1>
       <p className="text-muted-foreground text-sm mb-4">
         {tab === "notes"
           ? "Notez vos événements de vie et compléments"
+          : tab === "routines"
+          ? "Cochez vos routines quotidiennes"
           : "Suivez vos habitudes du quotidien"}
       </p>
 
@@ -75,6 +78,16 @@ export default function PersonalJournalPage() {
           📝 Notes
         </button>
         <button
+          onClick={() => setTab("routines")}
+          className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
+            tab === "routines"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground"
+          }`}
+        >
+          ✅ Routines
+        </button>
+        <button
           onClick={() => setTab("habitudes")}
           className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
             tab === "habitudes"
@@ -88,6 +101,8 @@ export default function PersonalJournalPage() {
 
       {tab === "habitudes" ? (
         <HabitsTracker />
+      ) : tab === "routines" ? (
+        <RoutinesTracker />
       ) : (
         <>
           {!showForm && (
