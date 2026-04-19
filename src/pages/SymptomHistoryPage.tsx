@@ -2,14 +2,17 @@ import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { useJournalEntries, JOURNAL_CATEGORIES } from "@/hooks/useJournalEntries";
 import { SymptomScores } from "@/hooks/useSymptomLogs";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
 import { SYMPTOM_FOOD_MAP } from "@/lib/symptomFoods";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-import { AlertTriangle, TrendingUp, TrendingDown, ArrowRight, Check } from "lucide-react";
+import { AlertTriangle, TrendingUp, TrendingDown, ArrowRight, Check, Settings } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
+import { SymptomTipsCollapsible } from "@/components/SymptomTipsCollapsible";
+import { CustomizeSymptomsModal } from "@/components/CustomizeSymptomsModal";
 
 const PERIODS = [
   { value: 7, label: "7 jours" },
@@ -39,15 +42,17 @@ function DailyRating({
   onSubmit,
   isSubmitting,
   alreadySaved,
+  symptomsList,
 }: {
   scores: SymptomScores;
   onScoresChange: (s: SymptomScores) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
   alreadySaved: boolean;
+  symptomsList: { value: string; label: string }[];
 }) {
-  const activeSymptoms = FULL_SYMPTOMS_LIST.filter((s) => (scores[s.value] ?? 0) > 0);
-  const inactiveSymptoms = FULL_SYMPTOMS_LIST.filter((s) => !scores[s.value] || scores[s.value] === 0);
+  const activeSymptoms = symptomsList.filter((s) => (scores[s.value] ?? 0) > 0);
+  const inactiveSymptoms = symptomsList.filter((s) => !scores[s.value] || scores[s.value] === 0);
 
   const setScore = (key: string, val: number) => {
     onScoresChange({ ...scores, [key]: val });
@@ -98,6 +103,8 @@ function DailyRating({
                 </div>
               </div>
             )}
+            {/* Tips collapsible when score >= 5 */}
+            {val >= 5 && <SymptomTipsCollapsible symptomKey={s.value} />}
           </div>
         );
       })}
@@ -228,10 +235,24 @@ function WeeklySummary({ logs, period }: { logs: any[]; period: number }) {
 // ── Main Page ──
 export default function SymptomHistoryPage() {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const queryClient = useQueryClient();
   const [period, setPeriod] = useState(7);
+  const [showCustomize, setShowCustomize] = useState(false);
   const { entries: journalEntries } = useJournalEntries();
   const today = new Date().toISOString().split("T")[0];
+
+  // Merged symptoms list = default minus disabled + custom user-added
+  const symptomsList = useMemo(() => {
+    const disabled: string[] = (profile as any)?.disabled_symptoms || [];
+    const custom: string[] = (profile as any)?.custom_symptoms || [];
+    const base = FULL_SYMPTOMS_LIST.filter((s) => !disabled.includes(s.value));
+    const customMapped = custom.map((name) => ({
+      value: `custom_${name}`,
+      label: name,
+    }));
+    return [...base, ...customMapped];
+  }, [profile]);
 
   // Daily scores state
   const [dailyScores, setDailyScores] = useState<SymptomScores>({});
@@ -411,8 +432,20 @@ export default function SymptomHistoryPage() {
 
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
-      <h1 className="text-2xl font-bold text-foreground mb-1">Symptômes</h1>
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <h1 className="text-2xl font-bold text-foreground">Symptômes</h1>
+        <button
+          onClick={() => setShowCustomize(true)}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted text-pink-deep text-[11px] font-semibold hover:bg-primary/10 transition"
+          aria-label="Personnaliser mes symptômes"
+        >
+          <Settings className="w-3.5 h-3.5" />
+          Personnaliser
+        </button>
+      </div>
       <p className="text-muted-foreground text-sm mb-4">Suivez et évaluez vos symptômes au quotidien</p>
+
+      <CustomizeSymptomsModal open={showCustomize} onOpenChange={setShowCustomize} />
 
       {/* Daily Rating — moved here as first element */}
       <DailyRating
@@ -421,6 +454,7 @@ export default function SymptomHistoryPage() {
         onSubmit={() => saveMutation.mutate()}
         isSubmitting={saveMutation.isPending}
         alreadySaved={!!todayLog}
+        symptomsList={symptomsList}
       />
 
       {/* Weekly Summary */}
