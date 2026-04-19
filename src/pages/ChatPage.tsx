@@ -71,6 +71,26 @@ export default function ChatPage() {
     })();
   }, [user, restored]);
 
+  // Load today's Sophie message count
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data } = await supabase
+        .from("profiles")
+        .select("daily_message_count, last_message_date")
+        .eq("user_id", user.id)
+        .single();
+      const used =
+        (data as any)?.last_message_date === today
+          ? Number((data as any).daily_message_count || 0)
+          : 0;
+      const left = Math.max(0, 20 - used);
+      setRemaining(left);
+      setLimitReached(left === 0);
+    })();
+  }, [user]);
+
   const newConversation = () => {
     if (!confirm("Démarrer une nouvelle conversation ? L'historique du jour reste consultable dans l'historique.")) return;
     setMessages([WELCOME]);
