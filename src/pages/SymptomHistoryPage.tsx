@@ -103,6 +103,8 @@ function DailyRating({
                 </div>
               </div>
             )}
+            {/* Tips collapsible when score >= 5 */}
+            {val >= 5 && <SymptomTipsCollapsible symptomKey={s.value} />}
           </div>
         );
       })}
@@ -233,10 +235,24 @@ function WeeklySummary({ logs, period }: { logs: any[]; period: number }) {
 // ── Main Page ──
 export default function SymptomHistoryPage() {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const queryClient = useQueryClient();
   const [period, setPeriod] = useState(7);
+  const [showCustomize, setShowCustomize] = useState(false);
   const { entries: journalEntries } = useJournalEntries();
   const today = new Date().toISOString().split("T")[0];
+
+  // Merged symptoms list = default minus disabled + custom user-added
+  const symptomsList = useMemo(() => {
+    const disabled: string[] = (profile as any)?.disabled_symptoms || [];
+    const custom: string[] = (profile as any)?.custom_symptoms || [];
+    const base = FULL_SYMPTOMS_LIST.filter((s) => !disabled.includes(s.value));
+    const customMapped = custom.map((name) => ({
+      value: `custom_${name}`,
+      label: name,
+    }));
+    return [...base, ...customMapped];
+  }, [profile]);
 
   // Daily scores state
   const [dailyScores, setDailyScores] = useState<SymptomScores>({});
