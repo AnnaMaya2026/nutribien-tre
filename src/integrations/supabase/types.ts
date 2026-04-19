@@ -27,6 +27,7 @@ export type Database = {
           magnesium_100g: number | null
           nom: string | null
           omega3_total_100g: number | null
+          phytoestrogenes_100mg: number | null
           proteines_100g: number | null
           vitamine_b12_100g: number | null
           vitamine_d_100g: number | null
@@ -43,6 +44,7 @@ export type Database = {
           magnesium_100g?: number | null
           nom?: string | null
           omega3_total_100g?: number | null
+          phytoestrogenes_100mg?: number | null
           proteines_100g?: number | null
           vitamine_b12_100g?: number | null
           vitamine_d_100g?: number | null
@@ -59,6 +61,7 @@ export type Database = {
           magnesium_100g?: number | null
           nom?: string | null
           omega3_total_100g?: number | null
+          phytoestrogenes_100mg?: number | null
           proteines_100g?: number | null
           vitamine_b12_100g?: number | null
           vitamine_d_100g?: number | null
@@ -465,6 +468,7 @@ export type Database = {
           magnesium_100g: number | null
           nom: string | null
           omega3_total_100g: number | null
+          phytoestrogenes_100mg: number | null
           proteines_100g: number | null
           vitamine_b12_100g: number | null
           vitamine_d_100g: number | null
