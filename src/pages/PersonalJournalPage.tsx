@@ -135,7 +135,7 @@ export default function PersonalJournalPage() {
         <div className="space-y-6">
           {Object.entries(grouped).map(([monthKey, monthEntries]) => (
             <div key={monthKey}>
-              <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">
+              <h3 className="text-xs font-semibold text-pink-deep uppercase tracking-wider mb-3">
                 {formatMonthLabel(monthKey)}
               </h3>
               <div className="relative">

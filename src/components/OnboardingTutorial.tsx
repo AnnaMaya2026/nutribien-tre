@@ -191,7 +191,7 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
         {currentStep.type === "welcome" && (
           <div className="bg-white rounded-3xl p-8 max-w-sm mx-auto text-center shadow-2xl">
             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-              <Heart className="w-8 h-8 text-primary" fill="hsl(var(--primary))" />
+              <Heart className="w-8 h-8 text-pink-deep" fill="hsl(var(--primary))" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-2">{currentStep.title}</h2>
             <p className="text-muted-foreground text-sm mb-6">{currentStep.subtitle}</p>

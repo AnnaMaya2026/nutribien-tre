@@ -200,7 +200,7 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
           ? "bg-primary text-primary-foreground animate-pulse shadow-lg"
           : state === "processing"
           ? "bg-muted text-muted-foreground"
-          : "bg-primary/10 text-primary hover:bg-primary/20"
+          : "bg-primary/10 text-pink-deep hover:bg-primary/20"
       }`}
       title={state === "listening" ? "Arrêter" : "Dicter un aliment"}
     >

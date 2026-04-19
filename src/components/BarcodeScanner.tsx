@@ -308,7 +308,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                     stopCamera();
                     setManualMode(true);
                   }}
-                  className="flex items-center justify-center gap-1.5 text-xs text-primary mt-3 mx-auto hover:underline"
+                  className="flex items-center justify-center gap-1.5 text-xs text-pink-deep mt-3 mx-auto hover:underline"
                 >
                   <Keyboard className="w-3.5 h-3.5" />
                   Saisir le code manuellement
@@ -355,7 +355,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
             {/* Loading */}
             {loading && (
               <div className="p-8 flex flex-col items-center gap-3">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <Loader2 className="w-8 h-8 text-pink-deep animate-spin" />
                 <p className="text-sm text-muted-foreground">Recherche du produit...</p>
               </div>
             )}

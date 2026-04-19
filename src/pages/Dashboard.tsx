@@ -39,7 +39,7 @@ function getCalorieColor(pct: number) {
   if (pct > 110) return { stroke: "hsl(0, 70%, 55%)", text: "text-red-500", emoji: "🔴" };
   if (pct > 100) return { stroke: "hsl(35, 80%, 55%)", text: "text-orange-500", emoji: "🟠" };
   if (pct >= 80) return { stroke: "hsl(145, 60%, 45%)", text: "text-green-500", emoji: "🟢" };
-  return { stroke: "hsl(var(--primary))", text: "text-primary", emoji: "" };
+  return { stroke: "hsl(var(--primary))", text: "text-pink-deep", emoji: "" };
 }
 
 function ProgressBar({ value, max, label, unit, isMicro = false }: { value: number; max: number; label: string; unit: string; isMicro?: boolean }) {

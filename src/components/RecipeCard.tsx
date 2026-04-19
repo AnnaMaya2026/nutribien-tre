@@ -87,7 +87,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
       {/* Menopause nutrient badges */}
       <div className="flex gap-1.5 mb-3 flex-wrap">
         {recipe.menopauseNutrients.map((n) => (
-          <span key={n} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary font-medium border border-primary/25">
+          <span key={n} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-pink-deep font-medium border border-primary/25">
             {n}
           </span>
         ))}
@@ -152,7 +152,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
       {/* Expandable ingredients */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-1 text-xs text-primary font-medium w-full justify-center py-1"
+        className="flex items-center gap-1 text-xs text-pink-deep font-medium w-full justify-center py-1"
       >
         {expanded ? "Masquer les ingrédients" : "Voir les ingrédients"}
         {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -163,7 +163,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
           {resolvedIngredients.map((ing, i) => (
             <div key={i} className="flex items-center justify-between px-2 py-1.5 bg-muted/30 rounded-lg">
               <div className="flex items-center gap-2">
-                <Leaf className="w-3 h-3 text-primary/60" />
+                <Leaf className="w-3 h-3 text-pink-deep/60" />
                 <span className="text-xs text-foreground">{ing.name}</span>
               </div>
               <span className="text-[10px] text-muted-foreground font-medium">
@@ -176,13 +176,13 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
           {recipe.steps && recipe.steps.length > 0 && (
             <div className="mt-3 pt-3 border-t border-border">
               <div className="flex items-center gap-1.5 mb-2">
-                <UtensilsCrossed className="w-3.5 h-3.5 text-primary" />
+                <UtensilsCrossed className="w-3.5 h-3.5 text-pink-deep" />
                 <h4 className="text-xs font-semibold text-foreground">Préparation</h4>
               </div>
               <ol className="space-y-1.5">
                 {recipe.steps.map((step, i) => (
                   <li key={i} className="flex gap-2 text-[11px] text-foreground">
-                    <span className="flex-shrink-0 w-4 h-4 rounded-full bg-primary/15 text-primary font-semibold flex items-center justify-center text-[10px]">
+                    <span className="flex-shrink-0 w-4 h-4 rounded-full bg-primary/15 text-pink-deep font-semibold flex items-center justify-center text-[10px]">
                       {i + 1}
                     </span>
                     <span className="leading-relaxed">{step}</span>

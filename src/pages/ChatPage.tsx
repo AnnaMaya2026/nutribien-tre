@@ -290,7 +290,7 @@ export default function ChatPage() {
             </button>
             <button
               onClick={() => setHistoryOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium transition-colors min-h-[40px]"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-pink-deep text-sm font-medium transition-colors min-h-[40px]"
               title="Voir l'historique"
             >
               <Clock className="w-4 h-4" />
@@ -336,7 +336,7 @@ export default function ChatPage() {
                 <button
                   onClick={() => playTts(msg.id, msg.text)}
                   disabled={loadingTtsId === msg.id}
-                  className="self-start flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors px-3 py-2 min-h-[44px] min-w-[44px] rounded-lg bg-primary/10 hover:bg-primary/15 disabled:opacity-50"
+                  className="self-start flex items-center gap-1.5 text-sm text-pink-deep hover:text-pink-deep/80 transition-colors px-3 py-2 min-h-[44px] min-w-[44px] rounded-lg bg-primary/10 hover:bg-primary/15 disabled:opacity-50"
                   title={playingId === msg.id ? "Mettre en pause" : "Écouter"}
                 >
                   {loadingTtsId === msg.id ? (
@@ -363,7 +363,7 @@ export default function ChatPage() {
           <div className="flex gap-2 animate-fade-in">
             <SophieAvatar size={28} thinking className="mt-1" />
             <div className="bg-card text-card-foreground rounded-2xl rounded-bl-md card-soft px-4 py-3 text-sm flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-pink-deep" />
               <span className="text-muted-foreground italic">Sophie réfléchit...</span>
             </div>
           </div>
@@ -375,14 +375,14 @@ export default function ChatPage() {
       {/* Input */}
       <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 bg-background border-t border-border">
         {isRecording && (
-          <div className="text-center text-xs text-primary animate-pulse pt-2 pb-1">
+          <div className="text-center text-xs text-pink-deep animate-pulse pt-2 pb-1">
             🎤 J'écoute... parlez maintenant
           </div>
         )}
         {autoSendTimer && (
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2 pb-1">
             <span>Envoi automatique...</span>
-            <button onClick={cancelAutoSend} className="text-primary underline">Annuler</button>
+            <button onClick={cancelAutoSend} className="text-pink-deep underline">Annuler</button>
           </div>
         )}
         <div className="flex gap-2 pt-3 items-end">
