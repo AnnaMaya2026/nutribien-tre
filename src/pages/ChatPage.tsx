@@ -450,6 +450,17 @@ export default function ChatPage() {
                   <span>{loadingTtsId === msg.id ? "Chargement..." : playingId === msg.id ? "Pause" : "Écouter"}</span>
                 </button>
               )}
+              {/* Save menu button if AI message looks like a meal plan */}
+              {msg.from === "ai" && containsMenu(msg.text) && (
+                <button
+                  onClick={() => saveMenu(msg.id, msg.text)}
+                  disabled={savedMenuIds.has(msg.id)}
+                  className="self-start flex items-center gap-1.5 text-sm text-primary-foreground bg-primary hover:bg-primary/90 transition-colors px-3 py-2 min-h-[40px] rounded-lg disabled:opacity-60 disabled:cursor-not-allowed font-medium"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{savedMenuIds.has(msg.id) ? "Menu sauvegardé ✓" : "💾 Sauvegarder ce menu"}</span>
+                </button>
+              )}
             </div>
             {msg.from === "user" && (
               <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center flex-shrink-0 mt-1">
