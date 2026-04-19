@@ -223,6 +223,48 @@ export type Database = {
         }
         Relationships: []
       }
+      habit_logs: {
+        Row: {
+          count: number
+          created_at: string
+          goal: number
+          habit_emoji: string | null
+          habit_key: string
+          habit_name: string
+          id: string
+          logged_at: string
+          unit: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          goal?: number
+          habit_emoji?: string | null
+          habit_key: string
+          habit_name: string
+          id?: string
+          logged_at?: string
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          goal?: number
+          habit_emoji?: string | null
+          habit_key?: string
+          habit_name?: string
+          id?: string
+          logged_at?: string
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       journal_entries: {
         Row: {
           category: string
@@ -290,8 +332,10 @@ export type Database = {
         Row: {
           age: number | null
           created_at: string
+          custom_symptoms: string[] | null
           daily_calorie_goal: number | null
           dietary_preferences: string[] | null
+          disabled_symptoms: string[] | null
           display_name: string | null
           duration_of_changes: string | null
           feature_tour_completed: boolean | null
@@ -310,8 +354,10 @@ export type Database = {
         Insert: {
           age?: number | null
           created_at?: string
+          custom_symptoms?: string[] | null
           daily_calorie_goal?: number | null
           dietary_preferences?: string[] | null
+          disabled_symptoms?: string[] | null
           display_name?: string | null
           duration_of_changes?: string | null
           feature_tour_completed?: boolean | null
@@ -330,8 +376,10 @@ export type Database = {
         Update: {
           age?: number | null
           created_at?: string
+          custom_symptoms?: string[] | null
           daily_calorie_goal?: number | null
           dietary_preferences?: string[] | null
+          disabled_symptoms?: string[] | null
           display_name?: string | null
           duration_of_changes?: string | null
           feature_tour_completed?: boolean | null
@@ -417,6 +465,48 @@ export type Database = {
           sautes_humeur?: number | null
           selected_symptoms?: string[] | null
           symptom_scores?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_habits: {
+        Row: {
+          active: boolean
+          created_at: string
+          goal: number
+          habit_emoji: string | null
+          habit_key: string
+          habit_name: string
+          id: string
+          sort_order: number
+          symptom_warning: string | null
+          unit: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          goal?: number
+          habit_emoji?: string | null
+          habit_key: string
+          habit_name: string
+          id?: string
+          sort_order?: number
+          symptom_warning?: string | null
+          unit?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          goal?: number
+          habit_emoji?: string | null
+          habit_key?: string
+          habit_name?: string
+          id?: string
+          sort_order?: number
+          symptom_warning?: string | null
+          unit?: string | null
           user_id?: string
         }
         Relationships: []
