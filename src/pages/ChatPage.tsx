@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Bot, User, Loader2, Volume2, Pause, Mic, MicOff, Clock } from "lucide-react";
+import { Send, User, Loader2, Volume2, Pause, Mic, MicOff, Clock, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import SophieHistoryDrawer from "@/components/SophieHistoryDrawer";
+import SophieAvatar from "@/components/SophieAvatar";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Message {
@@ -14,14 +15,14 @@ interface Message {
   from: "user" | "ai";
 }
 
+const WELCOME: Message = {
+  id: 0,
+  text: "Bonjour ! Je suis Sophie, votre nutritionniste spécialisée en ménopause. Je vois vos données nutritionnelles du jour — comment puis-je vous aider ?",
+  from: "ai",
+};
+
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 0,
-      text: "Bonjour ! Je suis Sophie, votre nutritionniste spécialisée en ménopause. Je vois vos données nutritionnelles du jour — comment puis-je vous aider ?",
-      from: "ai",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [playingId, setPlayingId] = useState<number | null>(null);
@@ -30,6 +31,7 @@ export default function ChatPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [autoSendTimer, setAutoSendTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [restored, setRestored] = useState(false);
   const { user } = useAuth();
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -43,6 +45,35 @@ export default function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Restore today's conversation on mount
+  useEffect(() => {
+    if (!user || restored) return;
+    (async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("sophie_conversations" as any)
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("conversation_date", today)
+        .order("created_at", { ascending: true });
+      if (!error && data && data.length > 0) {
+        const restoredMsgs: Message[] = (data as any[]).map((m, idx) => ({
+          id: idx + 1,
+          text: m.message,
+          from: m.role === "user" ? "user" : "ai",
+        }));
+        setMessages([WELCOME, ...restoredMsgs]);
+      }
+      setRestored(true);
+    })();
+  }, [user, restored]);
+
+  const newConversation = () => {
+    if (!confirm("Démarrer une nouvelle conversation ? L'historique du jour reste consultable dans l'historique.")) return;
+    setMessages([WELCOME]);
+    toast("Nouvelle conversation démarrée");
+  };
 
   const stopAudio = useCallback(() => {
     if (audioRef.current) {
