@@ -272,20 +272,31 @@ export default function ChatPage() {
       {/* Header */}
       <div className="px-4 pt-6 pb-3 border-b border-border">
         <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
-              <Bot className="w-5 h-5" /> Sophie — Nutritionniste IA
-            </h1>
-            <p className="text-xs text-muted-foreground">Conseils personnalisés pour la ménopause</p>
+          <div className="min-w-0 flex-1 flex items-center gap-2.5">
+            <SophieAvatar size={40} thinking={isLoading} />
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold text-foreground truncate">Sophie — Nutritionniste IA</h1>
+              <p className="text-xs text-muted-foreground">Conseils personnalisés pour la ménopause</p>
+            </div>
           </div>
-          <button
-            onClick={() => setHistoryOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium transition-colors min-h-[40px]"
-            title="Voir l'historique"
-          >
-            <Clock className="w-4 h-4" />
-            <span className="hidden sm:inline">Historique</span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={newConversation}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted hover:bg-muted/70 text-foreground text-sm font-medium transition-colors min-h-[40px]"
+              title="Nouvelle conversation"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Nouvelle</span>
+            </button>
+            <button
+              onClick={() => setHistoryOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium transition-colors min-h-[40px]"
+              title="Voir l'historique"
+            >
+              <Clock className="w-4 h-4" />
+              <span className="hidden sm:inline">Historique</span>
+            </button>
+          </div>
         </div>
         <div className="flex items-center justify-end gap-2 mt-2">
           <span className="text-xs text-muted-foreground">🔊 Réponse vocale auto</span>
@@ -303,11 +314,7 @@ export default function ChatPage() {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-56">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex gap-2 ${msg.from === "user" ? "justify-end" : ""} animate-fade-in`}>
-            {msg.from === "ai" && (
-              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
-                <Bot className="w-3.5 h-3.5 text-primary-foreground" />
-              </div>
-            )}
+            {msg.from === "ai" && <SophieAvatar size={28} className="mt-1" />}
             <div className="flex flex-col gap-1 max-w-[80%]">
               <div
                 className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
@@ -354,9 +361,13 @@ export default function ChatPage() {
         {/* Typing indicator */}
         {isLoading && (
           <div className="flex gap-2 animate-fade-in">
-            <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
-              <Bot className="w-3.5 h-3.5 text-primary-foreground" />
+            <SophieAvatar size={28} thinking className="mt-1" />
+            <div className="bg-card text-card-foreground rounded-2xl rounded-bl-md card-soft px-4 py-3 text-sm flex items-center gap-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+              <span className="text-muted-foreground italic">Sophie réfléchit...</span>
             </div>
+          </div>
+        )}
             <div className="bg-card text-card-foreground rounded-2xl rounded-bl-md card-soft px-4 py-3 text-sm flex items-center gap-2">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
               <span className="text-muted-foreground italic">Sophie réfléchit...</span>
