@@ -178,6 +178,8 @@ export default function JournalPage() {
       }
     );
   };
+
+  const handleSaveFavorite = () => {
     if (!saveFavModal || !favName.trim()) return;
     const items = saveFavModal.items.map((l: any) => ({
       food_name: l.food_name,
