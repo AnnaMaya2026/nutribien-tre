@@ -14,6 +14,7 @@ import PersonalJournalPage from "@/pages/PersonalJournalPage";
 import SavedMenusPage from "@/pages/SavedMenusPage";
 import BottomNav from "@/components/BottomNav";
 import OnboardingTutorial from "@/components/OnboardingTutorial";
+import FeedbackButton from "@/components/FeedbackButton";
 import NotFound from "@/pages/NotFound";
 
 function ProtectedLayout() {
