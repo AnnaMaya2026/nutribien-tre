@@ -439,6 +439,15 @@ export default function SymptomHistoryPage() {
             })}
           </div>
         )}
+        {dateStr && routineCompletionByDate[dateStr] > 0 && (
+          <div className="mt-2 pt-2 border-t border-border">
+            <span className="text-[11px] text-green-600 font-medium">
+              ✅ {routineCompletionByDate[dateStr]} routine
+              {routineCompletionByDate[dateStr] > 1 ? "s" : ""} complétée
+              {routineCompletionByDate[dateStr] > 1 ? "s" : ""}
+            </span>
+          </div>
+        )}
       </div>
     );
   };
