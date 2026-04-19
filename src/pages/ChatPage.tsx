@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, User, Loader2, Volume2, Pause, Mic, MicOff, Clock, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Send, User, Loader2, Volume2, Pause, Mic, MicOff, Clock, Trash2, Save, ClipboardList } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,13 @@ import { toast } from "sonner";
 import SophieHistoryDrawer from "@/components/SophieHistoryDrawer";
 import SophieAvatar from "@/components/SophieAvatar";
 import { useAuth } from "@/hooks/useAuth";
+
+const MENU_KEYWORDS = ["petit-déjeuner", "petit déjeuner", "déjeuner", "dîner", "diner", "menu", "repas", "collation", "goûter", "souper"];
+const containsMenu = (text: string) => {
+  const lower = text.toLowerCase();
+  const matches = MENU_KEYWORDS.filter((k) => lower.includes(k));
+  return matches.length >= 2; // at least 2 distinct meal markers to qualify as a menu
+};
 
 interface Message {
   id: number;
@@ -35,10 +43,12 @@ export default function ChatPage() {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [limitReached, setLimitReached] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recognitionRef = useRef<any>(null);
   const autoReadRef = useRef(autoRead);
+  const [savedMenuIds, setSavedMenuIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     autoReadRef.current = autoRead;
