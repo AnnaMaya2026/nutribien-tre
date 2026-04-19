@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { useJournalEntries, JOURNAL_CATEGORIES } from "@/hooks/useJournalEntries";
+import { useJournalEntries } from "@/hooks/useJournalEntries";
 import { useRoutines } from "@/hooks/useRoutines";
 import { SymptomScores } from "@/hooks/useSymptomLogs";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
