@@ -110,6 +110,7 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
             vitamine_d_100g: row.vitamine_d_100g ?? 0,
             vitamine_b12_100g: row.vitamine_b12_100g ?? 0,
             omega3_total_100g: row.omega3_total_100g ?? 0,
+            phytoestrogenes_100mg: (row as any).phytoestrogenes_100mg ?? 0,
           }));
 
           const grams = Math.max(10, Math.min(1000, item.grams || 100));
