@@ -12,14 +12,6 @@ export interface JournalEntry {
   updated_at: string;
 }
 
-export const JOURNAL_CATEGORIES = [
-  { value: "complement", label: "💊 Complément alimentaire" },
-  { value: "sport", label: "🏃 Sport" },
-  { value: "alimentation", label: "🥗 Alimentation" },
-  { value: "medecin", label: "👩‍⚕️ Médecin / Santé" },
-  { value: "autre", label: "📝 Autre" },
-] as const;
-
 export function useJournalEntries() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -41,7 +33,7 @@ export function useJournalEntries() {
   });
 
   const addEntry = useMutation({
-    mutationFn: async (entry: { category: string; content: string; entry_date: string }) => {
+    mutationFn: async (entry: { content: string; entry_date: string }) => {
       if (!user) throw new Error("Not authenticated");
       const { error } = await supabase
         .from("journal_entries" as any)
