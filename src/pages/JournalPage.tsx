@@ -484,6 +484,13 @@ export default function JournalPage() {
                           </div>
                         </button>
                         <button
+                          onClick={() => setEditPortion({ log, grams: log.portion_size || 100 })}
+                          className="text-muted-foreground hover:text-pink-deep transition-colors"
+                          title="Modifier la portion"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => setMoveTarget({ id: log.id, currentMeal: meal.value, foodName: log.food_name })}
                           className="text-muted-foreground hover:text-pink-deep transition-colors"
                           title="Déplacer"
