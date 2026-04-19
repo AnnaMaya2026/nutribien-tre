@@ -165,8 +165,7 @@ function WeeklySummary({ logs, period }: { logs: any[]; period: number }) {
 
     const ranked = Object.entries(totals)
       .map(([key, { sum, count }]) => ({ key, avg: sum / count }))
-      .sort((a, b) => b.avg - a.avg)
-      .slice(0, 3);
+      .sort((a, b) => b.avg - a.avg);
 
     // Trend: compare first half vs second half
     const mid = Math.floor(logs.length / 2);
