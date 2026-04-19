@@ -240,6 +240,7 @@ export default function SymptomHistoryPage() {
   const [period, setPeriod] = useState(7);
   const [showCustomize, setShowCustomize] = useState(false);
   const { entries: journalEntries } = useJournalEntries();
+  const { routines, logs: routineLogs } = useRoutines();
   const today = new Date().toISOString().split("T")[0];
 
   // Merged symptoms list = default minus disabled + custom user-added
