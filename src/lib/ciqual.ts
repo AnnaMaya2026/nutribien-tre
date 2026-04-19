@@ -15,6 +15,7 @@ export interface CiqualFood {
   vitamine_d_100g: number;
   vitamine_b12_100g: number;
   omega3_total_100g: number;
+  phytoestrogenes_100mg: number;
 }
 
 function n(v: number | null): number {
@@ -37,6 +38,7 @@ function mapRows(data: any[]): CiqualFood[] {
     vitamine_d_100g: n(row.vitamine_d_100g),
     vitamine_b12_100g: n(row.vitamine_b12_100g),
     omega3_total_100g: n(row.omega3_total_100g),
+    phytoestrogenes_100mg: n(row.phytoestrogenes_100mg),
   }));
 }
 
@@ -160,6 +162,6 @@ export function scaleCiqual(food: CiqualFood, grams: number) {
     iron: +(food.fer_100g * r).toFixed(1),
     omega3: +(food.omega3_total_100g * r).toFixed(1),
     vitamin_b12: +(food.vitamine_b12_100g * r).toFixed(1),
-    phytoestrogens: 0,
+    phytoestrogens: +(food.phytoestrogenes_100mg * r).toFixed(1),
   };
 }
