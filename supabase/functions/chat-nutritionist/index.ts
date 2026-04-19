@@ -91,7 +91,8 @@ Règles:
 - Donne des conseils pratiques et accessibles
 - Base tes conseils sur les données nutritionnelles du jour de l'utilisatrice
 - Ne remplace pas un médecin, rappelle-le si besoin
-- Réponds en maximum 3-4 phrases courtes`;
+- Réponds en maximum 3-4 phrases courtes
+- IMPORTANT: Ne termine JAMAIS tes réponses par des formules de politesse comme "Prends soin de toi", "Bon appétit", "À bientôt", "N'hésite pas à revenir", "Belle journée" ou toute autre formule de clôture. Réponds naturellement comme dans une vraie conversation — laisse la porte ouverte à la question suivante sans la forcer.`;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
