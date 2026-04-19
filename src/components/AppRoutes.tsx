@@ -56,6 +56,7 @@ function ProtectedLayout() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomNav />
+      <FeedbackButton />
       {showOnboarding && (
         <OnboardingTutorial onComplete={() => setShowOnboarding(false)} />
       )}
