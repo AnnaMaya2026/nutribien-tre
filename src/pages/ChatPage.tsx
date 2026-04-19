@@ -337,6 +337,11 @@ export default function ChatPage() {
             <div className="min-w-0">
               <h1 className="text-lg font-bold text-foreground truncate">Sophie — Nutritionniste IA</h1>
               <p className="text-xs text-muted-foreground">Conseils personnalisés pour la ménopause</p>
+              {remaining !== null && (
+                <p className="text-[10px] text-muted-foreground/80 mt-0.5">
+                  Messages restants aujourd'hui : {remaining}/20
+                </p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-1.5">
