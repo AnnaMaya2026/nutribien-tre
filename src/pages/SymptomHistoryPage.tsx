@@ -28,13 +28,7 @@ const CHART_COLORS = [
   "hsl(35, 80%, 55%)", "hsl(270, 50%, 60%)", "hsl(10, 70%, 55%)",
 ];
 
-const JOURNAL_CATEGORY_COLORS: Record<string, string> = {
-  complement: "hsl(270, 50%, 60%)",
-  sport: "hsl(145, 50%, 45%)",
-  alimentation: "hsl(330, 60%, 65%)",
-  medecin: "hsl(200, 60%, 55%)",
-  autre: "hsl(0, 0%, 60%)",
-};
+// Simplified journal entry - no categories
 
 // ── Daily Rating Component ──
 function DailyRating({
