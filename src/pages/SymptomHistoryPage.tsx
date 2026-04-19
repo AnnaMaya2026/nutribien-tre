@@ -2,14 +2,17 @@ import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { useJournalEntries, JOURNAL_CATEGORIES } from "@/hooks/useJournalEntries";
 import { SymptomScores } from "@/hooks/useSymptomLogs";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
 import { SYMPTOM_FOOD_MAP } from "@/lib/symptomFoods";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-import { AlertTriangle, TrendingUp, TrendingDown, ArrowRight, Check } from "lucide-react";
+import { AlertTriangle, TrendingUp, TrendingDown, ArrowRight, Check, Settings } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
+import { SymptomTipsCollapsible } from "@/components/SymptomTipsCollapsible";
+import { CustomizeSymptomsModal } from "@/components/CustomizeSymptomsModal";
 
 const PERIODS = [
   { value: 7, label: "7 jours" },
