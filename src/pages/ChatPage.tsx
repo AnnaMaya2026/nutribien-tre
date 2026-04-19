@@ -32,6 +32,8 @@ export default function ChatPage() {
   const [autoSendTimer, setAutoSendTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [restored, setRestored] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [limitReached, setLimitReached] = useState(false);
   const { user } = useAuth();
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
