@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
-import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart } from "lucide-react";
+import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil } from "lucide-react";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,7 @@ export default function JournalPage() {
   const [addFavTarget, setAddFavTarget] = useState<{ favoriteId: string } | null>(null);
   const [showFavorites, setShowFavorites] = useState(false);
   const [reportFood, setReportFood] = useState<string | null>(null);
+  const [editPortion, setEditPortion] = useState<{ log: any; grams: number } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search - min 2 chars
@@ -142,7 +143,41 @@ export default function JournalPage() {
     setMoveTarget(null);
   };
 
-  const handleSaveFavorite = () => {
+  const handlePortionUpdate = () => {
+    if (!editPortion) return;
+    const { log, grams: newGrams } = editPortion;
+    const oldGrams = log.portion_size || 100;
+    if (newGrams === oldGrams || newGrams < 1) {
+      setEditPortion(null);
+      return;
+    }
+    const r = newGrams / oldGrams;
+    updateLog.mutate(
+      {
+        id: log.id,
+        portion_size: newGrams,
+        calories: Math.round((log.calories || 0) * r),
+        proteins: Math.round((log.proteins || 0) * r),
+        carbs: Math.round((log.carbs || 0) * r),
+        fats: Math.round((log.fats || 0) * r),
+        fibres: Math.round((log.fibres || 0) * r),
+        calcium: Math.round((log.calcium || 0) * r),
+        vitamin_d: +((log.vitamin_d || 0) * r).toFixed(1),
+        magnesium: Math.round((log.magnesium || 0) * r),
+        iron: +((log.iron || 0) * r).toFixed(1),
+        omega3: +((log.omega3 || 0) * r).toFixed(1),
+        phytoestrogens: +((log.phytoestrogens || 0) * r).toFixed(1),
+        vitamin_b12: +((log.vitamin_b12 || 0) * r).toFixed(1),
+      },
+      {
+        onSuccess: () => {
+          toast.success("Portion mise à jour ✓");
+          setEditPortion(null);
+        },
+        onError: () => toast.error("Erreur lors de la mise à jour"),
+      }
+    );
+  };
     if (!saveFavModal || !favName.trim()) return;
     const items = saveFavModal.items.map((l: any) => ({
       food_name: l.food_name,
