@@ -77,8 +77,27 @@ export function useFoodLogs(date?: string) {
   });
 
   const updateLog = useMutation({
-    mutationFn: async ({ id, meal_type }: { id: string; meal_type: string }) => {
-      const { error } = await supabase.from("food_logs").update({ meal_type }).eq("id", id);
+    mutationFn: async ({
+      id,
+      ...updates
+    }: {
+      id: string;
+      meal_type?: string;
+      portion_size?: number;
+      calories?: number;
+      proteins?: number;
+      carbs?: number;
+      fats?: number;
+      fibres?: number;
+      calcium?: number;
+      vitamin_d?: number;
+      magnesium?: number;
+      iron?: number;
+      omega3?: number;
+      phytoestrogens?: number;
+      vitamin_b12?: number;
+    }) => {
+      const { error } = await supabase.from("food_logs").update(updates).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

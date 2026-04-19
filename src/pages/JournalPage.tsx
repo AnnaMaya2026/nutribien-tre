@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
-import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart } from "lucide-react";
+import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil } from "lucide-react";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,7 @@ export default function JournalPage() {
   const [addFavTarget, setAddFavTarget] = useState<{ favoriteId: string } | null>(null);
   const [showFavorites, setShowFavorites] = useState(false);
   const [reportFood, setReportFood] = useState<string | null>(null);
+  const [editPortion, setEditPortion] = useState<{ log: any; grams: number } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search - min 2 chars
@@ -140,6 +141,42 @@ export default function JournalPage() {
       }
     );
     setMoveTarget(null);
+  };
+
+  const handlePortionUpdate = () => {
+    if (!editPortion) return;
+    const { log, grams: newGrams } = editPortion;
+    const oldGrams = log.portion_size || 100;
+    if (newGrams === oldGrams || newGrams < 1) {
+      setEditPortion(null);
+      return;
+    }
+    const r = newGrams / oldGrams;
+    updateLog.mutate(
+      {
+        id: log.id,
+        portion_size: newGrams,
+        calories: Math.round((log.calories || 0) * r),
+        proteins: Math.round((log.proteins || 0) * r),
+        carbs: Math.round((log.carbs || 0) * r),
+        fats: Math.round((log.fats || 0) * r),
+        fibres: Math.round((log.fibres || 0) * r),
+        calcium: Math.round((log.calcium || 0) * r),
+        vitamin_d: +((log.vitamin_d || 0) * r).toFixed(1),
+        magnesium: Math.round((log.magnesium || 0) * r),
+        iron: +((log.iron || 0) * r).toFixed(1),
+        omega3: +((log.omega3 || 0) * r).toFixed(1),
+        phytoestrogens: +((log.phytoestrogens || 0) * r).toFixed(1),
+        vitamin_b12: +((log.vitamin_b12 || 0) * r).toFixed(1),
+      },
+      {
+        onSuccess: () => {
+          toast.success("Portion mise à jour ✓");
+          setEditPortion(null);
+        },
+        onError: () => toast.error("Erreur lors de la mise à jour"),
+      }
+    );
   };
 
   const handleSaveFavorite = () => {
@@ -447,6 +484,13 @@ export default function JournalPage() {
                           </div>
                         </button>
                         <button
+                          onClick={() => setEditPortion({ log, grams: log.portion_size || 100 })}
+                          className="text-muted-foreground hover:text-pink-deep transition-colors"
+                          title="Modifier la portion"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => setMoveTarget({ id: log.id, currentMeal: meal.value, foodName: log.food_name })}
                           className="text-muted-foreground hover:text-pink-deep transition-colors"
                           title="Déplacer"
@@ -649,6 +693,74 @@ export default function JournalPage() {
       {/* Nutrient report modal */}
       {reportFood && (
         <NutrientReportModal foodName={reportFood} onClose={() => setReportFood(null)} />
+      )}
+
+      {/* Edit portion modal */}
+      {editPortion && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setEditPortion(null)}>
+          <div className="bg-card rounded-t-2xl w-full max-w-lg p-5 pb-8 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold text-foreground mb-1">✏️ Modifier la portion</h3>
+            <p className="text-xs text-muted-foreground mb-4 line-clamp-1">{editPortion.log.food_name}</p>
+            <p className="text-[11px] text-muted-foreground mb-2">
+              Portion actuelle : <span className="font-medium text-foreground">{editPortion.log.portion_size}g</span>
+            </p>
+
+            <label className="text-xs text-muted-foreground block mb-1">Nouvelle quantité (grammes)</label>
+            <div className="flex items-center gap-3 mb-4">
+              <button
+                onClick={() => setEditPortion((p) => p && ({ ...p, grams: Math.max(10, p.grams - 10) }))}
+                className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-foreground"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
+              <Input
+                type="number"
+                value={editPortion.grams}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value);
+                  if (!isNaN(v) && v >= 1 && v <= 2000) {
+                    setEditPortion((p) => p && ({ ...p, grams: v }));
+                  }
+                }}
+                className="flex-1 text-center h-10 bg-muted"
+                min={1}
+                max={2000}
+              />
+              <span className="text-sm text-muted-foreground">g</span>
+              <button
+                onClick={() => setEditPortion((p) => p && ({ ...p, grams: Math.min(2000, p.grams + 10) }))}
+                className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-foreground"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex gap-2 mb-4">
+              {[50, 100, 150, 200, 300].map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setEditPortion((p) => p && ({ ...p, grams: g }))}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    editPortion.grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {g}g
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={handlePortionUpdate}
+              disabled={updateLog.isPending || editPortion.grams === editPortion.log.portion_size}
+              className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold disabled:opacity-50"
+            >
+              Mettre à jour
+            </button>
+            <button onClick={() => setEditPortion(null)} className="w-full mt-2 py-2 text-xs text-muted-foreground">
+              Annuler
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
