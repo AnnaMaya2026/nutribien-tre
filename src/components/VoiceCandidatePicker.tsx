@@ -61,7 +61,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
       {!pickedFood ? (
         <>
           {/* Instruction */}
-          <p className="text-xs text-primary font-medium mb-3">
+          <p className="text-xs text-pink-deep font-medium mb-3">
             👆 Appuyez sur l'aliment correspondant
           </p>
 
@@ -76,7 +76,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm text-foreground line-clamp-1">{food.nom}</div>
                   {food.groupe && (
-                    <div className="text-[10px] text-primary/70 line-clamp-1">{food.groupe}</div>
+                    <div className="text-[10px] text-pink-deep/70 line-clamp-1">{food.groupe}</div>
                   )}
                   <div className="text-xs text-muted-foreground">
                     {food.calories_100g} kcal / 100g
@@ -92,7 +92,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
             <div className="space-y-1">
               <button
                 onClick={onRestart}
-                className="w-full py-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm flex items-center justify-center gap-2 transition-all border border-primary/20"
+                className="w-full py-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-pink-deep font-semibold text-sm flex items-center justify-center gap-2 transition-all border border-primary/20"
               >
                 <RotateCcw className="w-4 h-4" />
                 🎤 Recommencer la recherche vocale
@@ -111,7 +111,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
               <div>
                 <div className="font-semibold text-sm text-foreground">{pickedFood.nom}</div>
                 {pickedFood.groupe && (
-                  <div className="text-[10px] text-primary/70">{pickedFood.groupe}</div>
+                  <div className="text-[10px] text-pink-deep/70">{pickedFood.groupe}</div>
                 )}
               </div>
               <button

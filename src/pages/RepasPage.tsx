@@ -32,7 +32,7 @@ function FoodCard({ food, gapsCovered }: { food: CiqualFood; gapsCovered?: strin
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-foreground line-clamp-2">{food.nom}</h3>
-          {food.groupe && <p className="text-[10px] text-primary/70 line-clamp-1">{food.groupe}</p>}
+          {food.groupe && <p className="text-[10px] text-pink-deep/70 line-clamp-1">{food.groupe}</p>}
         </div>
       </div>
 

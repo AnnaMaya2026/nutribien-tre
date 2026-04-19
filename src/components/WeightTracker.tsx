@@ -213,7 +213,7 @@ export default function WeightTracker() {
         className="w-full flex items-center justify-between p-5"
       >
         <div className="flex items-center gap-2">
-          <Scale className="w-4 h-4 text-primary" />
+          <Scale className="w-4 h-4 text-pink-deep" />
           <h3 className="text-sm font-semibold text-foreground">⚖️ Suivi de poids</h3>
         </div>
         {open ? (
@@ -271,7 +271,7 @@ export default function WeightTracker() {
                     setEditingGoal(true);
                     setGoalInput(goalWeight ? String(goalWeight) : "");
                   }}
-                  className="text-[10px] text-primary underline"
+                  className="text-[10px] text-pink-deep underline"
                 >
                   {goalWeight ? "Modifier" : "Définir un objectif"}
                 </button>
@@ -286,7 +286,7 @@ export default function WeightTracker() {
                   onChange={(e) => setGoalInput(e.target.value)}
                   className="h-8 w-28 rounded-lg border border-input bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                 />
-                <button onClick={handleGoalSave} className="text-xs text-primary font-medium">OK</button>
+                <button onClick={handleGoalSave} className="text-xs text-pink-deep font-medium">OK</button>
                 <button onClick={() => setEditingGoal(false)} className="text-xs text-muted-foreground">Annuler</button>
               </div>
             )}

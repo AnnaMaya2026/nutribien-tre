@@ -91,7 +91,7 @@ function DailyRating({
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {SYMPTOM_FOOD_MAP[s.value].foods.slice(0, 3).map((food) => (
-                    <span key={food} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary font-medium">
+                    <span key={food} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-pink-deep font-medium">
                       {food}
                     </span>
                   ))}
@@ -111,7 +111,7 @@ function DailyRating({
               <button
                 key={s.value}
                 onClick={() => setScore(s.value, 3)}
-                className="text-[10px] px-2.5 py-1 rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
+                className="text-[10px] px-2.5 py-1 rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-pink-deep transition-all"
               >
                 + {s.label}
               </button>
@@ -445,7 +445,7 @@ export default function SymptomHistoryPage() {
       {activeSymptomKeys.length > 0 ? (
         <div className="bg-card rounded-2xl p-4 card-soft mb-4 animate-fade-in">
           <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="w-4 h-4 text-primary" />
+            <TrendingUp className="w-4 h-4 text-pink-deep" />
             <h3 className="text-sm font-semibold text-foreground">Évolution</h3>
           </div>
           <ResponsiveContainer width="100%" height={220}>

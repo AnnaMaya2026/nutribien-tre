@@ -148,7 +148,7 @@ export function SymptomReliefTab() {
     <div className="space-y-4">
       <div className="bg-card rounded-2xl p-4 card-soft">
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-4 h-4 text-primary" />
+          <Sparkles className="w-4 h-4 text-pink-deep" />
           <h3 className="text-sm font-semibold text-foreground">Suggestions personnalisées</h3>
         </div>
         <p className="text-[11px] text-muted-foreground">
@@ -171,7 +171,7 @@ export function SymptomReliefTab() {
         return (
           <div key={symptomKey} className="bg-card rounded-2xl p-4 card-soft">
             <div className="flex items-center gap-2 mb-3">
-              <Activity className="w-4 h-4 text-primary" />
+              <Activity className="w-4 h-4 text-pink-deep" />
               <h3 className="text-sm font-semibold text-foreground">{cfg.label}</h3>
               {typeof score === "number" && (
                 <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-warning/20 text-warning font-medium border border-warning/30">
@@ -187,7 +187,7 @@ export function SymptomReliefTab() {
                     <p className="text-xs font-medium text-foreground truncate">{it.name}</p>
                     <p className="text-[10px] text-muted-foreground truncate">
                       {it.food ? `${Math.round(it.food.calories_100g)} kcal/100g · ` : ""}
-                      <span className="text-primary/80">{it.nutrient}</span>
+                      <span className="text-pink-deep/80">{it.nutrient}</span>
                     </p>
                   </div>
                   <button
@@ -207,12 +207,12 @@ export function SymptomReliefTab() {
         <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
           <SheetHeader className="text-left">
             <SheetTitle className="flex items-center gap-2 text-base">
-              <ChefHat className="w-4 h-4 text-primary" />
+              <ChefHat className="w-4 h-4 text-pink-deep" />
               Idées recettes avec {activeIngredient?.name}
             </SheetTitle>
             <SheetDescription className="text-xs">
               {activeIngredient?.nutrient && (
-                <span className="text-primary/80">Riche en {activeIngredient.nutrient}</span>
+                <span className="text-pink-deep/80">Riche en {activeIngredient.nutrient}</span>
               )}
               {" · "}Inspirations pour vos repas — à logger ensuite dans le Journal.
             </SheetDescription>
@@ -247,7 +247,7 @@ export function SymptomReliefTab() {
 
                 {r.ingredients?.length > 0 && (
                   <div className="mb-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-1">Ingrédients</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-pink-deep mb-1">Ingrédients</p>
                     <ul className="text-xs text-foreground space-y-0.5 list-disc list-inside">
                       {r.ingredients.map((ing, j) => (
                         <li key={j}>{ing}</li>
@@ -258,7 +258,7 @@ export function SymptomReliefTab() {
 
                 {r.steps?.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-primary mb-1">Préparation</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-pink-deep mb-1">Préparation</p>
                     <ol className="text-xs text-foreground space-y-1 list-decimal list-inside">
                       {r.steps.map((s, j) => (
                         <li key={j}>{s}</li>
@@ -272,7 +272,7 @@ export function SymptomReliefTab() {
             {!recipesLoading && recipes.length > 0 && (
               <div className="bg-primary/10 rounded-xl p-3 text-center">
                 <p className="text-[11px] text-foreground">
-                  💡 Une fois cuisinée, n'oubliez pas de logger votre repas dans le <span className="font-semibold text-primary">Journal</span>.
+                  💡 Une fois cuisinée, n'oubliez pas de logger votre repas dans le <span className="font-semibold text-pink-deep">Journal</span>.
                 </p>
               </div>
             )}

@@ -17,6 +17,7 @@
 
     --primary: 330 60% 85%;
     --primary-foreground: 340 30% 20%;
+    --primary-deep: 335 75% 35%;
 
     --secondary: 40 40% 90%;
     --secondary-foreground: 40 20% 25%;
@@ -72,6 +73,7 @@
 
     --primary: 330 50% 65%;
     --primary-foreground: 340 15% 8%;
+    --primary-deep: 330 70% 75%;
 
     --secondary: 40 30% 25%;
     --secondary-foreground: 40 20% 85%;

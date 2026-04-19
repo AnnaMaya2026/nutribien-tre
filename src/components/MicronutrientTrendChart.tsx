@@ -108,7 +108,7 @@ export default function MicronutrientTrendChart() {
     <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-primary" />
+          <TrendingUp className="w-4 h-4 text-pink-deep" />
           <h3 className="text-sm font-semibold text-foreground">Évolution de mes micronutriments</h3>
         </div>
       </div>

@@ -216,7 +216,7 @@ export default function JournalPage() {
       <h1 className="text-2xl font-bold text-foreground mb-1">Journal alimentaire</h1>
       <p className="text-muted-foreground text-sm mb-1">Ajoutez vos repas du jour</p>
       {!showSearch && !selectedFood && !voiceMatches && !voiceCandidates && (
-        <p className="text-xs text-primary/60 italic mb-4">
+        <p className="text-xs text-pink-deep/60 italic mb-4">
           🎤 Dites par exemple : « J'ai mangé du poulet rôti et des haricots verts »
         </p>
       )}
@@ -286,7 +286,7 @@ export default function JournalPage() {
                   className="w-full text-left px-4 py-3 hover:bg-muted/50 border-b border-border last:border-0"
                 >
                   <div className="font-medium text-sm text-foreground line-clamp-1">{f.nom}</div>
-                  {f.groupe && <div className="text-[10px] text-primary/70 line-clamp-1">{f.groupe}</div>}
+                  {f.groupe && <div className="text-[10px] text-pink-deep/70 line-clamp-1">{f.groupe}</div>}
                   <div className="text-xs text-muted-foreground">
                     {f.calories_100g} kcal · P {f.proteines_100g}g · G {f.glucides_100g}g · L {f.lipides_100g}g · F {f.fibres_100g}g
                   </div>
@@ -351,7 +351,7 @@ export default function JournalPage() {
           <div className="text-center mb-4">
             <button
               onClick={() => setReportFood(selectedFood.nom)}
-              className="text-xs text-muted-foreground hover:text-primary transition-colors underline"
+              className="text-xs text-muted-foreground hover:text-pink-deep transition-colors underline"
             >
               ⚠️ Signaler une valeur incorrecte
             </button>
@@ -448,7 +448,7 @@ export default function JournalPage() {
                         </button>
                         <button
                           onClick={() => setMoveTarget({ id: log.id, currentMeal: meal.value, foodName: log.food_name })}
-                          className="text-muted-foreground hover:text-primary transition-colors"
+                          className="text-muted-foreground hover:text-pink-deep transition-colors"
                           title="Déplacer"
                         >
                           <ArrowRightLeft className="w-4 h-4" />
@@ -478,7 +478,7 @@ export default function JournalPage() {
                           <div className="text-center">
                             <button
                               onClick={() => setReportFood(log.food_name)}
-                              className="text-xs text-muted-foreground hover:text-primary transition-colors underline"
+                              className="text-xs text-muted-foreground hover:text-pink-deep transition-colors underline"
                             >
                               ⚠️ Signaler une valeur incorrecte
                             </button>
@@ -545,7 +545,7 @@ export default function JournalPage() {
           onClick={() => setShowFavorites(!showFavorites)}
           className="flex items-center gap-2 mb-3"
         >
-          <Heart className="w-4 h-4 text-primary" />
+          <Heart className="w-4 h-4 text-pink-deep" />
           <span className="text-sm font-semibold text-foreground">Mes favoris</span>
           <span className="text-xs text-muted-foreground">({favorites.length})</span>
           {showFavorites ? <ChevronUp className="w-3 h-3 text-muted-foreground" /> : <ChevronDown className="w-3 h-3 text-muted-foreground" />}
@@ -580,7 +580,7 @@ export default function JournalPage() {
                     </div>
                     <button
                       onClick={() => setAddFavTarget({ favoriteId: fav.id })}
-                      className="w-full py-2 bg-primary/10 text-primary rounded-lg text-xs font-medium hover:bg-primary hover:text-primary-foreground transition-all"
+                      className="w-full py-2 bg-primary/10 text-pink-deep rounded-lg text-xs font-medium hover:bg-primary hover:text-primary-foreground transition-all"
                     >
                       <Plus className="w-3 h-3 inline mr-1" />
                       Ajouter au journal

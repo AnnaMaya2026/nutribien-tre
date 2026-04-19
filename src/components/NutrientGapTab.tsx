@@ -189,7 +189,7 @@ export function NutrientGapTab() {
                   <span>🔥 {r.calories} kcal</span>
                 </div>
                 {r.addresses && (
-                  <p className="text-[10px] text-primary/80 italic mb-2">{r.addresses}</p>
+                  <p className="text-[10px] text-pink-deep/80 italic mb-2">{r.addresses}</p>
                 )}
                 <div className="mb-2">
                   <p className="text-[11px] font-semibold text-foreground mb-1">Ingrédients :</p>

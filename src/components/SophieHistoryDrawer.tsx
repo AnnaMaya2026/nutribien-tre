@@ -115,7 +115,7 @@ export default function SophieHistoryDrawer({ open, onClose }: Props) {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
         {loading && (
           <div className="flex justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <Loader2 className="w-6 h-6 animate-spin text-pink-deep" />
           </div>
         )}
 
@@ -125,7 +125,7 @@ export default function SophieHistoryDrawer({ open, onClose }: Props) {
             {pinned.length > 0 && (
               <section className="space-y-2">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <Star className="w-4 h-4 text-primary fill-primary" /> Conseils importants
+                  <Star className="w-4 h-4 text-pink-deep fill-primary" /> Conseils importants
                 </h3>
                 <div className="space-y-2">
                   {pinned.map((m) => (
@@ -137,7 +137,7 @@ export default function SophieHistoryDrawer({ open, onClose }: Props) {
                         <span>{formatDateLabel(m.conversation_date)}</span>
                         <button
                           onClick={() => togglePin(m)}
-                          className="flex items-center gap-1 text-primary"
+                          className="flex items-center gap-1 text-pink-deep"
                         >
                           <Star className="w-3.5 h-3.5 fill-primary" /> Désépingler
                         </button>
@@ -165,7 +165,7 @@ export default function SophieHistoryDrawer({ open, onClose }: Props) {
                     className="w-full text-left bg-card card-soft rounded-2xl p-3 hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-primary">{formatDateLabel(d)}</span>
+                      <span className="text-sm font-semibold text-pink-deep">{formatDateLabel(d)}</span>
                       <span className="text-xs text-muted-foreground">
                         {grouped[d].length} message{grouped[d].length > 1 ? "s" : ""}
                       </span>
@@ -208,7 +208,7 @@ export default function SophieHistoryDrawer({ open, onClose }: Props) {
                   {msg.role === "sophie" && (
                     <button
                       onClick={() => togglePin(msg)}
-                      className="self-start flex items-center gap-1 text-xs text-primary hover:text-primary/80 px-2 py-1 rounded-md"
+                      className="self-start flex items-center gap-1 text-xs text-pink-deep hover:text-pink-deep/80 px-2 py-1 rounded-md"
                     >
                       <Star className={`w-3.5 h-3.5 ${msg.pinned ? "fill-primary" : ""}`} />
                       {msg.pinned ? "Épinglé" : "Épingler"}

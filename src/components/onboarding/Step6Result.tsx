@@ -27,7 +27,7 @@ export default function Step6Result({
       <div className="space-y-4 flex-1">
         <div className="bg-card rounded-2xl p-5 border border-border flex gap-4 items-center">
           <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-            <Flame className="w-6 h-6 text-primary" />
+            <Flame className="w-6 h-6 text-pink-deep" />
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
@@ -39,7 +39,7 @@ export default function Step6Result({
 
         <div className="bg-card rounded-2xl p-5 border border-border flex gap-4 items-center">
           <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-            <Sparkles className="w-6 h-6 text-primary" />
+            <Sparkles className="w-6 h-6 text-pink-deep" />
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
@@ -51,7 +51,7 @@ export default function Step6Result({
 
         <div className="bg-primary/10 rounded-2xl p-5 border border-primary/20 flex gap-4 items-center">
           <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-            <LineChart className="w-6 h-6 text-primary" />
+            <LineChart className="w-6 h-6 text-pink-deep" />
           </div>
           <p className="text-base font-medium text-foreground leading-snug">
             NutriMéno va suivre ces nutriments pour toi chaque jour 📊
