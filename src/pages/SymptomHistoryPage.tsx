@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useJournalEntries, JOURNAL_CATEGORIES } from "@/hooks/useJournalEntries";
+import { useRoutines } from "@/hooks/useRoutines";
 import { SymptomScores } from "@/hooks/useSymptomLogs";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
 import { SYMPTOM_FOOD_MAP } from "@/lib/symptomFoods";
@@ -239,6 +240,7 @@ export default function SymptomHistoryPage() {
   const [period, setPeriod] = useState(7);
   const [showCustomize, setShowCustomize] = useState(false);
   const { entries: journalEntries } = useJournalEntries();
+  const { routines, logs: routineLogs } = useRoutines();
   const today = new Date().toISOString().split("T")[0];
 
   // Merged symptoms list = default minus disabled + custom user-added
@@ -393,6 +395,18 @@ export default function SymptomHistoryPage() {
 
   const journalDates = useMemo(() => Object.keys(journalByDate), [journalByDate]);
 
+  const routineCompletionByDate = useMemo(() => {
+    const map: Record<string, number> = {};
+    routineLogs.forEach((l) => {
+      if (l.completed) map[l.logged_at] = (map[l.logged_at] || 0) + 1;
+    });
+    return map;
+  }, [routineLogs]);
+  const routineDates = useMemo(
+    () => Object.keys(routineCompletionByDate),
+    [routineCompletionByDate]
+  );
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload) return null;
     const dateStr = payload[0]?.payload?.date;
@@ -423,6 +437,15 @@ export default function SymptomHistoryPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+        {dateStr && routineCompletionByDate[dateStr] > 0 && (
+          <div className="mt-2 pt-2 border-t border-border">
+            <span className="text-[11px] text-green-600 font-medium">
+              ✅ {routineCompletionByDate[dateStr]} routine
+              {routineCompletionByDate[dateStr] > 1 ? "s" : ""} complétée
+              {routineCompletionByDate[dateStr] > 1 ? "s" : ""}
+            </span>
           </div>
         )}
       </div>
@@ -511,6 +534,24 @@ export default function SymptomHistoryPage() {
                       fill: color,
                       fontSize: 10,
                       offset: -2,
+                    }}
+                  />
+                );
+              })}
+              {routineDates.map((date) => {
+                const idx = chartData.findIndex((d) => d.date === date);
+                if (idx === -1) return null;
+                return (
+                  <ReferenceLine
+                    key={`r-${date}`}
+                    x={chartData[idx].label}
+                    stroke="hsl(145, 60%, 45%)"
+                    strokeOpacity={0}
+                    label={{
+                      value: "✅",
+                      position: "insideBottom",
+                      fontSize: 9,
+                      offset: 4,
                     }}
                   />
                 );
