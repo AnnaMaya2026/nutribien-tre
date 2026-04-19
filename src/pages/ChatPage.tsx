@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, User, Loader2, Volume2, Pause, Mic, MicOff, Clock, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Send, User, Loader2, Volume2, Pause, Mic, MicOff, Clock, Trash2, Save, ClipboardList } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,13 @@ import { toast } from "sonner";
 import SophieHistoryDrawer from "@/components/SophieHistoryDrawer";
 import SophieAvatar from "@/components/SophieAvatar";
 import { useAuth } from "@/hooks/useAuth";
+
+const MENU_KEYWORDS = ["petit-déjeuner", "petit déjeuner", "déjeuner", "dîner", "diner", "menu", "repas", "collation", "goûter", "souper"];
+const containsMenu = (text: string) => {
+  const lower = text.toLowerCase();
+  const matches = MENU_KEYWORDS.filter((k) => lower.includes(k));
+  return matches.length >= 2; // at least 2 distinct meal markers to qualify as a menu
+};
 
 interface Message {
   id: number;
@@ -35,10 +43,12 @@ export default function ChatPage() {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [limitReached, setLimitReached] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recognitionRef = useRef<any>(null);
   const autoReadRef = useRef(autoRead);
+  const [savedMenuIds, setSavedMenuIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     autoReadRef.current = autoRead;
@@ -171,6 +181,24 @@ export default function ChatPage() {
       message,
     });
     if (error) console.error("Erreur sauvegarde conversation:", error);
+  }, [user]);
+
+  const saveMenu = useCallback(async (msgId: number, text: string) => {
+    if (!user) return;
+    const today = new Date();
+    const title = `Menu du ${today.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`;
+    const { error } = await supabase.from("saved_menus" as any).insert({
+      user_id: user.id,
+      title,
+      content: text,
+    });
+    if (error) {
+      console.error("Erreur sauvegarde menu:", error);
+      toast.error("Erreur lors de la sauvegarde");
+      return;
+    }
+    setSavedMenuIds((prev) => new Set(prev).add(msgId));
+    toast.success("Menu sauvegardé ✓");
   }, [user]);
 
   const handleSend = async () => {
@@ -354,6 +382,14 @@ export default function ChatPage() {
               <span className="hidden sm:inline">Nouvelle</span>
             </button>
             <button
+              onClick={() => navigate("/menus")}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-pink-deep text-sm font-medium transition-colors min-h-[40px]"
+              title="Mes menus sauvegardés"
+            >
+              <ClipboardList className="w-4 h-4" />
+              <span className="hidden sm:inline">📋 Mes menus</span>
+            </button>
+            <button
               onClick={() => setHistoryOpen(true)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-pink-deep text-sm font-medium transition-colors min-h-[40px]"
               title="Voir l'historique"
@@ -412,6 +448,17 @@ export default function ChatPage() {
                     <Volume2 className="w-4 h-4" />
                   )}
                   <span>{loadingTtsId === msg.id ? "Chargement..." : playingId === msg.id ? "Pause" : "Écouter"}</span>
+                </button>
+              )}
+              {/* Save menu button if AI message looks like a meal plan */}
+              {msg.from === "ai" && containsMenu(msg.text) && (
+                <button
+                  onClick={() => saveMenu(msg.id, msg.text)}
+                  disabled={savedMenuIds.has(msg.id)}
+                  className="self-start flex items-center gap-1.5 text-sm text-primary-foreground bg-primary hover:bg-primary/90 transition-colors px-3 py-2 min-h-[40px] rounded-lg disabled:opacity-60 disabled:cursor-not-allowed font-medium"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{savedMenuIds.has(msg.id) ? "Menu sauvegardé ✓" : "💾 Sauvegarder ce menu"}</span>
                 </button>
               )}
             </div>

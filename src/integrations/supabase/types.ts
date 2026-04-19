@@ -433,6 +433,33 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_menus: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          menu_date: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          menu_date?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          menu_date?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sophie_conversations: {
         Row: {
           conversation_date: string
