@@ -368,12 +368,6 @@ export default function ChatPage() {
             </div>
           </div>
         )}
-            <div className="bg-card text-card-foreground rounded-2xl rounded-bl-md card-soft px-4 py-3 text-sm flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-              <span className="text-muted-foreground italic">Sophie réfléchit...</span>
-            </div>
-          </div>
-        )}
 
         <div ref={bottomRef} />
       </div>
