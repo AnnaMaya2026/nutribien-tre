@@ -538,7 +538,24 @@ export default function SymptomHistoryPage() {
                   />
                 );
               })}
-              {activeSymptomKeys.slice(0, 6).map((key, i) => {
+              {routineDates.map((date) => {
+                const idx = chartData.findIndex((d) => d.date === date);
+                if (idx === -1) return null;
+                return (
+                  <ReferenceLine
+                    key={`r-${date}`}
+                    x={chartData[idx].label}
+                    stroke="hsl(145, 60%, 45%)"
+                    strokeOpacity={0}
+                    label={{
+                      value: "✅",
+                      position: "insideBottom",
+                      fontSize: 9,
+                      offset: 4,
+                    }}
+                  />
+                );
+              })}
                 const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key;
                 return (
                   <Line
