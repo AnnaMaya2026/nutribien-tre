@@ -68,6 +68,30 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_recaps: {
+        Row: {
+          created_at: string
+          id: string
+          recap_date: string
+          recap_text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recap_date?: string
+          recap_text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recap_date?: string
+          recap_text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorite_meal_items: {
         Row: {
           calcium: number | null
@@ -334,13 +358,17 @@ export type Database = {
           created_at: string
           custom_symptoms: string[] | null
           daily_calorie_goal: number | null
+          daily_message_count: number
           dietary_preferences: string[] | null
           disabled_symptoms: string[] | null
           display_name: string | null
           duration_of_changes: string | null
           feature_tour_completed: boolean | null
+          health_conditions: string[] | null
+          health_other: string | null
           height: number | null
           id: string
+          last_message_date: string | null
           main_symptom: string | null
           menopause_stage: string | null
           onboarding_completed: boolean | null
@@ -356,13 +384,17 @@ export type Database = {
           created_at?: string
           custom_symptoms?: string[] | null
           daily_calorie_goal?: number | null
+          daily_message_count?: number
           dietary_preferences?: string[] | null
           disabled_symptoms?: string[] | null
           display_name?: string | null
           duration_of_changes?: string | null
           feature_tour_completed?: boolean | null
+          health_conditions?: string[] | null
+          health_other?: string | null
           height?: number | null
           id?: string
+          last_message_date?: string | null
           main_symptom?: string | null
           menopause_stage?: string | null
           onboarding_completed?: boolean | null
@@ -378,13 +410,17 @@ export type Database = {
           created_at?: string
           custom_symptoms?: string[] | null
           daily_calorie_goal?: number | null
+          daily_message_count?: number
           dietary_preferences?: string[] | null
           disabled_symptoms?: string[] | null
           display_name?: string | null
           duration_of_changes?: string | null
           feature_tour_completed?: boolean | null
+          health_conditions?: string[] | null
+          health_other?: string | null
           height?: number | null
           id?: string
+          last_message_date?: string | null
           main_symptom?: string | null
           menopause_stage?: string | null
           onboarding_completed?: boolean | null
