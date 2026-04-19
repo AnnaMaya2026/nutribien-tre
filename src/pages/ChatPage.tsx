@@ -176,6 +176,13 @@ export default function ChatPage() {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
+    if (limitReached) {
+      toast.error(
+        "Vous avez utilisé vos 20 messages gratuits aujourd'hui 💬 Revenez demain !"
+      );
+      return;
+    }
+
     const trimmedInput = input.trim();
     const userMsg: Message = { id: Date.now(), text: trimmedInput, from: "user" };
     setMessages((prev) => [...prev, userMsg]);
@@ -197,13 +204,44 @@ export default function ChatPage() {
 
       console.log("Réponse API Sophie:", data);
 
+      // Edge function returns 429 with structured payload when limit hit
       if (error) {
+        const ctx: any = (error as any).context;
+        if (ctx?.status === 429 || data?.error === "limit_reached") {
+          setLimitReached(true);
+          setRemaining(0);
+          const limitMsg: Message = {
+            id: Date.now() + 1,
+            text: "Vous avez utilisé vos 20 messages gratuits aujourd'hui 💬\n\nRevenez demain pour continuer à discuter avec Sophie !",
+            from: "ai",
+          };
+          setMessages((prev) => [...prev, limitMsg]);
+          return;
+        }
         console.error("Erreur API Sophie:", error);
         throw error;
       }
 
+      if (data?.error === "limit_reached") {
+        setLimitReached(true);
+        setRemaining(0);
+        const limitMsg: Message = {
+          id: Date.now() + 1,
+          text: "Vous avez utilisé vos 20 messages gratuits aujourd'hui 💬\n\nRevenez demain pour continuer à discuter avec Sophie !",
+          from: "ai",
+        };
+        setMessages((prev) => [...prev, limitMsg]);
+        return;
+      }
+
       if (!data?.reply || typeof data.reply !== "string") {
         throw new Error("Réponse IA invalide ou vide");
+      }
+
+      // Update remaining count from server response
+      if (typeof data.remaining === "number") {
+        setRemaining(data.remaining);
+        if (data.remaining === 0) setLimitReached(true);
       }
 
       const aiMsg: Message = {
