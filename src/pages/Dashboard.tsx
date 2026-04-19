@@ -175,6 +175,12 @@ export default function Dashboard() {
         </AlertDialog>
       </div>
 
+      {/* Daily evening recap (visible after 8pm) */}
+      <DailyRecapCard />
+
+      {/* Health profile (collapsible) */}
+      <HealthProfileCard />
+
       {/* Calorie ring + macro bars */}
       <div className="calorie-ring-section bg-card rounded-2xl p-6 card-soft mb-4 animate-fade-in">
         <div className="flex flex-col items-center mb-6">
