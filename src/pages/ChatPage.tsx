@@ -183,6 +183,24 @@ export default function ChatPage() {
     if (error) console.error("Erreur sauvegarde conversation:", error);
   }, [user]);
 
+  const saveMenu = useCallback(async (msgId: number, text: string) => {
+    if (!user) return;
+    const today = new Date();
+    const title = `Menu du ${today.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`;
+    const { error } = await supabase.from("saved_menus" as any).insert({
+      user_id: user.id,
+      title,
+      content: text,
+    });
+    if (error) {
+      console.error("Erreur sauvegarde menu:", error);
+      toast.error("Erreur lors de la sauvegarde");
+      return;
+    }
+    setSavedMenuIds((prev) => new Set(prev).add(msgId));
+    toast.success("Menu sauvegardé ✓");
+  }, [user]);
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -362,6 +380,14 @@ export default function ChatPage() {
             >
               <Trash2 className="w-4 h-4" />
               <span className="hidden sm:inline">Nouvelle</span>
+            </button>
+            <button
+              onClick={() => navigate("/menus")}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-pink-deep text-sm font-medium transition-colors min-h-[40px]"
+              title="Mes menus sauvegardés"
+            >
+              <ClipboardList className="w-4 h-4" />
+              <span className="hidden sm:inline">📋 Mes menus</span>
             </button>
             <button
               onClick={() => setHistoryOpen(true)}
