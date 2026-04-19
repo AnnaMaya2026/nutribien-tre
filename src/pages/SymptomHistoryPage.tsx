@@ -42,15 +42,17 @@ function DailyRating({
   onSubmit,
   isSubmitting,
   alreadySaved,
+  symptomsList,
 }: {
   scores: SymptomScores;
   onScoresChange: (s: SymptomScores) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
   alreadySaved: boolean;
+  symptomsList: { value: string; label: string }[];
 }) {
-  const activeSymptoms = FULL_SYMPTOMS_LIST.filter((s) => (scores[s.value] ?? 0) > 0);
-  const inactiveSymptoms = FULL_SYMPTOMS_LIST.filter((s) => !scores[s.value] || scores[s.value] === 0);
+  const activeSymptoms = symptomsList.filter((s) => (scores[s.value] ?? 0) > 0);
+  const inactiveSymptoms = symptomsList.filter((s) => !scores[s.value] || scores[s.value] === 0);
 
   const setScore = (key: string, val: number) => {
     onScoresChange({ ...scores, [key]: val });
