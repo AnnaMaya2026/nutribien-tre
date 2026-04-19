@@ -556,6 +556,7 @@ export default function SymptomHistoryPage() {
                   />
                 );
               })}
+              {activeSymptomKeys.slice(0, 6).map((key, i) => {
                 const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key;
                 return (
                   <Line
