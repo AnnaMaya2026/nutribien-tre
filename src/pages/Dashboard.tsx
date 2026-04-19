@@ -6,6 +6,8 @@ import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import WeightTracker from "@/components/WeightTracker";
+import DailyRecapCard from "@/components/DailyRecapCard";
+import HealthProfileCard from "@/components/HealthProfileCard";
 import { ChevronDown, ChevronUp, LogOut } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
@@ -172,6 +174,12 @@ export default function Dashboard() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+
+      {/* Daily evening recap (visible after 8pm) */}
+      <DailyRecapCard />
+
+      {/* Health profile (collapsible) */}
+      <HealthProfileCard />
 
       {/* Calorie ring + macro bars */}
       <div className="calorie-ring-section bg-card rounded-2xl p-6 card-soft mb-4 animate-fade-in">

@@ -32,6 +32,8 @@ export default function ChatPage() {
   const [autoSendTimer, setAutoSendTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [restored, setRestored] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [limitReached, setLimitReached] = useState(false);
   const { user } = useAuth();
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -68,6 +70,26 @@ export default function ChatPage() {
       setRestored(true);
     })();
   }, [user, restored]);
+
+  // Load today's Sophie message count
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data } = await supabase
+        .from("profiles")
+        .select("daily_message_count, last_message_date")
+        .eq("user_id", user.id)
+        .single();
+      const used =
+        (data as any)?.last_message_date === today
+          ? Number((data as any).daily_message_count || 0)
+          : 0;
+      const left = Math.max(0, 20 - used);
+      setRemaining(left);
+      setLimitReached(left === 0);
+    })();
+  }, [user]);
 
   const newConversation = () => {
     if (!confirm("Démarrer une nouvelle conversation ? L'historique du jour reste consultable dans l'historique.")) return;
@@ -154,6 +176,13 @@ export default function ChatPage() {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
+    if (limitReached) {
+      toast.error(
+        "Vous avez utilisé vos 20 messages gratuits aujourd'hui 💬 Revenez demain !"
+      );
+      return;
+    }
+
     const trimmedInput = input.trim();
     const userMsg: Message = { id: Date.now(), text: trimmedInput, from: "user" };
     setMessages((prev) => [...prev, userMsg]);
@@ -175,13 +204,44 @@ export default function ChatPage() {
 
       console.log("Réponse API Sophie:", data);
 
+      // Edge function returns 429 with structured payload when limit hit
       if (error) {
+        const ctx: any = (error as any).context;
+        if (ctx?.status === 429 || data?.error === "limit_reached") {
+          setLimitReached(true);
+          setRemaining(0);
+          const limitMsg: Message = {
+            id: Date.now() + 1,
+            text: "Vous avez utilisé vos 20 messages gratuits aujourd'hui 💬\n\nRevenez demain pour continuer à discuter avec Sophie !",
+            from: "ai",
+          };
+          setMessages((prev) => [...prev, limitMsg]);
+          return;
+        }
         console.error("Erreur API Sophie:", error);
         throw error;
       }
 
+      if (data?.error === "limit_reached") {
+        setLimitReached(true);
+        setRemaining(0);
+        const limitMsg: Message = {
+          id: Date.now() + 1,
+          text: "Vous avez utilisé vos 20 messages gratuits aujourd'hui 💬\n\nRevenez demain pour continuer à discuter avec Sophie !",
+          from: "ai",
+        };
+        setMessages((prev) => [...prev, limitMsg]);
+        return;
+      }
+
       if (!data?.reply || typeof data.reply !== "string") {
         throw new Error("Réponse IA invalide ou vide");
+      }
+
+      // Update remaining count from server response
+      if (typeof data.remaining === "number") {
+        setRemaining(data.remaining);
+        if (data.remaining === 0) setLimitReached(true);
       }
 
       const aiMsg: Message = {
@@ -277,6 +337,11 @@ export default function ChatPage() {
             <div className="min-w-0">
               <h1 className="text-lg font-bold text-foreground truncate">Sophie — Nutritionniste IA</h1>
               <p className="text-xs text-muted-foreground">Conseils personnalisés pour la ménopause</p>
+              {remaining !== null && (
+                <p className="text-[10px] text-muted-foreground/80 mt-0.5">
+                  Messages restants aujourd'hui : {remaining}/20
+                </p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-1.5">

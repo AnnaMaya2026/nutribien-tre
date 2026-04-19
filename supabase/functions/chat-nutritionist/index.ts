@@ -3,7 +3,20 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+const DAILY_LIMIT = 20;
+
+const HEALTH_LABELS: Record<string, string> = {
+  cholesterol: "Cholestérol élevé",
+  diabete: "Diabète ou prédiabète",
+  hypertension: "Hypertension",
+  osteoporose: "Ostéoporose ou ostéopénie",
+  surpoids: "Surpoids",
+  syndrome_metabolique: "Syndrome métabolique",
+  thyroide: "Troubles thyroïdiens",
 };
 
 serve(async (req) => {
@@ -18,7 +31,6 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user from JWT
     let userId: string | null = null;
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
@@ -33,9 +45,10 @@ serve(async (req) => {
       });
     }
 
-    // Fetch user context
     let profileContext = "";
     let nutritionContext = "";
+    let healthContext = "";
+    let remaining = DAILY_LIMIT;
     const today = new Date().toISOString().split("T")[0];
 
     if (userId) {
@@ -44,14 +57,65 @@ serve(async (req) => {
         supabase.from("food_logs").select("*").eq("user_id", userId).eq("logged_at", today),
       ]);
 
-      if (profileRes.data) {
-        const p = profileRes.data;
+      const profile = profileRes.data as any;
+
+      // ── Daily message limit enforcement ──
+      if (profile) {
+        const lastDate = profile.last_message_date;
+        const currentCount: number =
+          lastDate === today ? Number(profile.daily_message_count || 0) : 0;
+
+        if (currentCount >= DAILY_LIMIT) {
+          return new Response(
+            JSON.stringify({
+              error: "limit_reached",
+              message:
+                "Vous avez utilisé vos 20 messages gratuits aujourd'hui 💬 Revenez demain pour continuer à discuter avec Sophie !",
+              remaining: 0,
+              limit: DAILY_LIMIT,
+            }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+
+        // Increment counter (reset if new day)
+        const nextCount = currentCount + 1;
+        await supabase
+          .from("profiles")
+          .update({
+            daily_message_count: nextCount,
+            last_message_date: today,
+          })
+          .eq("user_id", userId);
+        remaining = Math.max(0, DAILY_LIMIT - nextCount);
+
         profileContext = `
 Profil utilisatrice:
-- Prénom: ${p.display_name || "Non renseigné"}
-- Stade: ${p.menopause_stage || "Non renseigné"}
-- Symptômes principaux: ${(p.symptoms || []).join(", ") || "Aucun renseigné"}
-- Objectif calorique: ${p.daily_calorie_goal || 1800} kcal`;
+- Prénom: ${profile.display_name || "Non renseigné"}
+- Stade: ${profile.menopause_stage || "Non renseigné"}
+- Symptômes principaux: ${(profile.symptoms || []).join(", ") || "Aucun renseigné"}
+- Objectif calorique: ${profile.daily_calorie_goal || 1800} kcal`;
+
+        // Health conditions
+        const healthCodes: string[] = profile.health_conditions || [];
+        const healthOther: string | null = profile.health_other || null;
+        const labels = healthCodes
+          .map((c) => HEALTH_LABELS[c] || c)
+          .concat(healthOther ? [healthOther] : []);
+        if (labels.length > 0) {
+          healthContext = `
+
+⚠️ Problèmes de santé déclarés par l'utilisatrice : ${labels.join(", ")}.
+Tiens compte de ces contraintes dans tes recommandations :
+- Cholestérol : limite les graisses saturées (charcuterie, fromages gras, beurre).
+- Diabète/prédiabète : privilégie les aliments à index glycémique bas, évite les sucres rapides.
+- Hypertension : limite le sel et les produits transformés.
+- Ostéoporose : recommande des aliments riches en calcium et vitamine D.
+- Surpoids : favorise les aliments rassasiants riches en protéines et fibres.
+- Syndrome métabolique : combine les conseils diabète + cholestérol + surpoids.
+- Troubles thyroïdiens : modère le soja cru et les crucifères crus, recommande iode et sélénium.
+Rappelle si pertinent : "Ces conseils ne remplacent pas un suivi médical."`;
+        }
       }
 
       if (logsRes.data && logsRes.data.length > 0) {
@@ -65,7 +129,7 @@ Profil utilisatrice:
           fibres: acc.fibres + (log.fibres || 0),
         }), { calories: 0, proteins: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, fibres: 0 });
 
-        const calorieGoal = profileRes.data?.daily_calorie_goal || 1800;
+        const calorieGoal = profile?.daily_calorie_goal || 1800;
         nutritionContext = `
 Données nutritionnelles du jour:
 - Calories consommées: ${Math.round(totals.calories)} kcal / ${calorieGoal} kcal
@@ -83,13 +147,14 @@ Données nutritionnelles du jour:
     const systemPrompt = `Tu es Sophie, une nutritionniste spécialisée dans la nutrition pour la ménopause. Tu as accès au profil de l'utilisatrice et à ses données nutritionnelles du jour.
 ${profileContext}
 ${nutritionContext}
+${healthContext}
 
 Règles:
 - Réponds toujours en français
-- Si tu connais le prénom de l'utilisatrice (champ "Prénom" du profil), utilise-le naturellement dans tes réponses (ex: "Bonjour Anna,...")
+- Si tu connais le prénom de l'utilisatrice, utilise-le naturellement (ex: "Bonjour Anna,...")
 - Sois chaleureuse, encourageante et bienveillante
 - Donne des conseils pratiques et accessibles
-- Base tes conseils sur les données nutritionnelles du jour de l'utilisatrice
+- Base tes conseils sur les données du jour et les contraintes santé éventuelles
 - Ne remplace pas un médecin, rappelle-le si besoin
 - Réponds en maximum 3-4 phrases courtes
 - IMPORTANT: Ne termine JAMAIS tes réponses par des formules de politesse comme "Prends soin de toi", "Bon appétit", "À bientôt", "N'hésite pas à revenir", "Belle journée" ou toute autre formule de clôture. Réponds naturellement comme dans une vraie conversation — laisse la porte ouverte à la question suivante sans la forcer.`;
@@ -121,20 +186,19 @@ Règles:
     }
 
     const result = await response.json();
-    console.log("OpenAI response:", JSON.stringify(result));
     const content = result.choices?.[0]?.message?.content?.trim();
 
     if (!content) {
-      console.error("OpenAI empty response:", JSON.stringify(result));
       return new Response(JSON.stringify({ error: "Réponse OpenAI vide" }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ reply: content }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ reply: content, remaining, limit: DAILY_LIMIT }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (e) {
     console.error("chat-nutritionist error:", e);
     return new Response(
