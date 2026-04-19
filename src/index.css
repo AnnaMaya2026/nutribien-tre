@@ -112,9 +112,29 @@
     @apply border-border;
   }
 
-  body {
+  html, body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Prevent iOS zoom on input focus — all form inputs at least 16px */
+  input, textarea, select {
+    font-size: 16px;
+  }
+
+  @media (min-width: 768px) {
+    input, textarea, select {
+      font-size: 14px;
+    }
+  }
+
+  /* Min text size on mobile body */
+  @media (max-width: 767px) {
+    body {
+      font-size: 14px;
+    }
   }
 }
 
@@ -127,6 +147,12 @@
     box-shadow: 0 2px 16px -4px hsl(330 20% 50% / 0.1);
   }
 
+  /* Tap target helper */
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
   @keyframes scan-line {
     0% { top: 10%; }
     50% { top: 85%; }
@@ -136,4 +162,14 @@
   .animate-scan-line {
     animation: scan-line 2s ease-in-out infinite;
   }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.25s ease-out;
+  }
 }
+
