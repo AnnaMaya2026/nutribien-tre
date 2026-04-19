@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { useJournalEntries, JOURNAL_CATEGORIES } from "@/hooks/useJournalEntries";
+import { useJournalEntries } from "@/hooks/useJournalEntries";
 import { useRoutines } from "@/hooks/useRoutines";
 import { SymptomScores } from "@/hooks/useSymptomLogs";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
@@ -28,13 +28,7 @@ const CHART_COLORS = [
   "hsl(35, 80%, 55%)", "hsl(270, 50%, 60%)", "hsl(10, 70%, 55%)",
 ];
 
-const JOURNAL_CATEGORY_COLORS: Record<string, string> = {
-  complement: "hsl(270, 50%, 60%)",
-  sport: "hsl(145, 50%, 45%)",
-  alimentation: "hsl(330, 60%, 65%)",
-  medecin: "hsl(200, 60%, 55%)",
-  autre: "hsl(0, 0%, 60%)",
-};
+// Simplified journal entry - no categories
 
 // ── Daily Rating Component ──
 function DailyRating({
@@ -422,21 +416,12 @@ export default function SymptomHistoryPage() {
         ))}
         {dayEntries.length > 0 && (
           <div className="mt-2 pt-2 border-t border-border space-y-1">
-            {dayEntries.map((e) => {
-              const cat = JOURNAL_CATEGORIES.find((c) => c.value === e.category);
-              return (
-                <div key={e.id} className="flex items-start gap-1.5">
-                  <span
-                    className="w-2 h-2 rounded-full mt-1 flex-shrink-0"
-                    style={{ background: JOURNAL_CATEGORY_COLORS[e.category] || JOURNAL_CATEGORY_COLORS.autre }}
-                  />
-                  <span className="text-muted-foreground">
-                    <span className="font-medium">{cat?.label || "📝 Autre"}</span>{" "}
-                    {e.content}
-                  </span>
-                </div>
-              );
-            })}
+            {dayEntries.map((e) => (
+              <div key={e.id} className="flex items-start gap-1.5">
+                <span className="w-2 h-2 rounded-full mt-1 flex-shrink-0 bg-primary" />
+                <span className="text-muted-foreground">{e.content}</span>
+              </div>
+            ))}
           </div>
         )}
         {dateStr && routineCompletionByDate[dateStr] > 0 && (
@@ -518,20 +503,17 @@ export default function SymptomHistoryPage() {
               {journalDates.map((date) => {
                 const idx = chartData.findIndex((d) => d.date === date);
                 if (idx === -1) return null;
-                const entries = journalByDate[date] || [];
-                const topCategory = entries[0]?.category || "autre";
-                const color = JOURNAL_CATEGORY_COLORS[topCategory] || JOURNAL_CATEGORY_COLORS.autre;
                 return (
                   <ReferenceLine
                     key={date}
                     x={chartData[idx].label}
-                    stroke={color}
+                    stroke="hsl(var(--primary))"
                     strokeDasharray="3 3"
                     strokeOpacity={0.6}
                     label={{
                       value: "●",
                       position: "insideBottomLeft",
-                      fill: color,
+                      fill: "hsl(var(--primary))",
                       fontSize: 10,
                       offset: -2,
                     }}
@@ -586,20 +568,6 @@ export default function SymptomHistoryPage() {
               );
             })}
           </div>
-          {journalDates.length > 0 && (
-            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5">
-              <span className="text-[10px] text-muted-foreground">Notes :</span>
-              {Object.entries(JOURNAL_CATEGORY_COLORS).map(([cat, color]) => {
-                const catLabel = JOURNAL_CATEGORIES.find((c) => c.value === cat)?.label || cat;
-                return (
-                  <span key={cat} className="text-[10px] flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full" style={{ background: color }} />
-                    {catLabel}
-                  </span>
-                );
-              })}
-            </div>
-          )}
         </div>
       ) : (
         <div className="bg-card rounded-2xl p-8 card-soft mb-4 text-center animate-fade-in">

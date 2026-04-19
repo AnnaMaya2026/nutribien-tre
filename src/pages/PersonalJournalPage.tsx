@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useJournalEntries, JOURNAL_CATEGORIES } from "@/hooks/useJournalEntries";
+import { useJournalEntries } from "@/hooks/useJournalEntries";
 import { Plus, Trash2, X, CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { HabitsTracker } from "@/components/HabitsTracker";
@@ -10,17 +10,15 @@ export default function PersonalJournalPage() {
   const [tab, setTab] = useState<"notes" | "routines" | "habitudes">("notes");
   const [showForm, setShowForm] = useState(false);
   const [content, setContent] = useState("");
-  const [category, setCategory] = useState("autre");
   const [entryDate, setEntryDate] = useState(new Date().toISOString().split("T")[0]);
 
   const handleAdd = () => {
     if (!content.trim()) return;
     addEntry.mutate(
-      { category, content: content.trim(), entry_date: entryDate },
+      { content: content.trim(), entry_date: entryDate },
       {
         onSuccess: () => {
           setContent("");
-          setCategory("autre");
           setEntryDate(new Date().toISOString().split("T")[0]);
           setShowForm(false);
         },
@@ -48,10 +46,6 @@ export default function PersonalJournalPage() {
     return `${d.getDate()} ${monthNames[d.getMonth()]}`;
   };
 
-  const getCategoryEmoji = (cat: string) => {
-    return JOURNAL_CATEGORIES.find((c) => c.value === cat)?.label || "📝 Autre";
-  };
-
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
       <h1 className="text-2xl font-bold text-foreground mb-1">
@@ -59,7 +53,7 @@ export default function PersonalJournalPage() {
       </h1>
       <p className="text-muted-foreground text-sm mb-4">
         {tab === "notes"
-          ? "Notez vos événements de vie et compléments"
+          ? "Notez vos événements de vie et observations"
           : tab === "routines"
           ? "Cochez vos routines quotidiennes"
           : "Suivez vos habitudes du quotidien"}
@@ -136,32 +130,13 @@ export default function PersonalJournalPage() {
                 </div>
               </div>
 
-              <div className="mb-3">
-                <label className="text-xs text-muted-foreground block mb-1">Catégorie</label>
-                <div className="flex gap-1.5 flex-wrap">
-                  {JOURNAL_CATEGORIES.map((c) => (
-                    <button
-                      key={c.value}
-                      onClick={() => setCategory(c.value)}
-                      className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all ${
-                        category === c.value
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {c.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <div className="mb-4">
                 <label className="text-xs text-muted-foreground block mb-1">Note</label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Ex: Commencé magnésium 300mg, Yoga 3x/semaine..."
-                  className="w-full h-20 bg-muted rounded-lg p-3 text-sm text-foreground placeholder:text-muted-foreground resize-none border border-border focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  placeholder="Ex: Commencé magnésium 300mg, Yoga 3x/semaine, Consultation chez le médecin..."
+                  className="w-full h-24 bg-muted rounded-lg p-3 text-sm text-foreground placeholder:text-muted-foreground resize-none border border-border focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
 
@@ -198,9 +173,6 @@ export default function PersonalJournalPage() {
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-[10px] text-muted-foreground font-medium">
                                     {formatDay(entry.entry_date)}
-                                  </span>
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-foreground font-medium">
-                                    {getCategoryEmoji(entry.category)}
                                   </span>
                                 </div>
                                 <p className="text-sm text-foreground">{entry.content}</p>
