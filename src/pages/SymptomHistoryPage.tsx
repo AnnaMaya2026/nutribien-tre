@@ -395,6 +395,18 @@ export default function SymptomHistoryPage() {
 
   const journalDates = useMemo(() => Object.keys(journalByDate), [journalByDate]);
 
+  const routineCompletionByDate = useMemo(() => {
+    const map: Record<string, number> = {};
+    routineLogs.forEach((l) => {
+      if (l.completed) map[l.logged_at] = (map[l.logged_at] || 0) + 1;
+    });
+    return map;
+  }, [routineLogs]);
+  const routineDates = useMemo(
+    () => Object.keys(routineCompletionByDate),
+    [routineCompletionByDate]
+  );
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload) return null;
     const dateStr = payload[0]?.payload?.date;
