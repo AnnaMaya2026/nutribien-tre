@@ -79,9 +79,10 @@ export default function AppRoutes() {
   if (!user) {
     return (
       <Routes>
+        <Route path="/" element={<WelcomePage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/onboarding" element={<OnboardingFlow />} />
-        <Route path="*" element={<OnboardingFlow />} />
+        <Route path="*" element={<WelcomePage />} />
       </Routes>
     );
   }
