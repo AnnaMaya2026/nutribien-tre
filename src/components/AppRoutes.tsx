@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import AuthPage from "@/pages/AuthPage";
+import WelcomePage from "@/pages/WelcomePage";
 import OnboardingFlow from "@/pages/OnboardingFlow";
 import ProfileSetup from "@/pages/ProfileSetup";
 import Dashboard from "@/pages/Dashboard";
