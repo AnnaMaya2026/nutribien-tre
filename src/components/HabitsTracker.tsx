@@ -253,7 +253,7 @@ function HydrationCard({ habit }: { habit: UserHabit }) {
   );
 }
 
-
+function HabitCard({ habit }: { habit: UserHabit }) {
   const { logs, today, setCount, deleteHabit } = useHabits();
   const todayLog = logs.find(
     (l) => l.habit_key === habit.habit_key && l.logged_at === today
