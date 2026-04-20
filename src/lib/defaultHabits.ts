@@ -10,6 +10,15 @@ export type DefaultHabit = {
 
 export const DEFAULT_HABITS: DefaultHabit[] = [
   {
+    habit_key: "hydratation",
+    habit_name: "Hydratation",
+    habit_emoji: "💧",
+    goal: 8,
+    unit: "verre(s)",
+    symptom_warning:
+      "une bonne hydratation aide à réduire les bouffées de chaleur et la fatigue",
+  },
+  {
     habit_key: "cafe",
     habit_name: "Café",
     habit_emoji: "☕",

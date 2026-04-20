@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Plus, Trash2, X, Minus, AlertTriangle, Check, XCircle } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Plus, Trash2, X, Minus, AlertTriangle, Check, XCircle, Droplet } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useHabits, UserHabit } from "@/hooks/useHabits";
@@ -130,6 +130,125 @@ function BinaryHabitCard({ habit }: { habit: UserHabit }) {
         <span>il y a 7j</span>
         <span>aujourd'hui</span>
       </div>
+    </div>
+  );
+}
+
+// Hydration card — "good" habit: count UP toward goal (8 glasses)
+function HydrationCard({ habit }: { habit: UserHabit }) {
+  const { logs, today, setCount, deleteHabit } = useHabits();
+  const todayLog = logs.find(
+    (l) => l.habit_key === habit.habit_key && l.logged_at === today
+  );
+  const count = todayLog?.count ?? 0;
+  const goal = habit.goal || 8;
+
+  // Inverted color logic vs other habits
+  const color =
+    count >= goal ? "progress-high" : count >= 4 ? "warning" : "destructive";
+  const colorClass =
+    color === "destructive"
+      ? "text-destructive"
+      : color === "warning"
+      ? "text-warning"
+      : "text-progress-high";
+
+  // Hydration reminder after 8pm if < 6 glasses
+  useEffect(() => {
+    const now = new Date();
+    if (now.getHours() >= 20 && count < 6) {
+      const key = `hydration_alert_${today}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "1");
+        toast.warning(
+          "💧 Pensez à vous hydrater ! Une bonne hydratation aide à réduire les bouffées de chaleur et la fatigue.",
+          { duration: 6000 }
+        );
+      }
+    }
+  }, [count, today]);
+
+  const handleInc = () => {
+    const next = count + 1;
+    setCount.mutate({ habit, count: next });
+    if (next === goal) {
+      toast.success("🎉 Objectif hydratation atteint ! Bravo 💧");
+    }
+  };
+
+  return (
+    <div className="bg-card rounded-2xl p-4 card-soft">
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className="text-2xl">💧</span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">
+              {habit.habit_name}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              Objectif : {goal} verres/jour
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            if (confirm(`Supprimer "${habit.habit_name}" ?`)) {
+              deleteHabit.mutate(habit.id);
+            }
+          }}
+          className="text-muted-foreground hover:text-destructive flex-shrink-0"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Counter */}
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <button
+          onClick={() => setCount.mutate({ habit, count: count - 1 })}
+          disabled={count <= 0}
+          className="w-9 h-9 rounded-full bg-muted text-foreground flex items-center justify-center disabled:opacity-30"
+        >
+          <Minus className="w-4 h-4" />
+        </button>
+        <div className="flex-1 text-center">
+          <p className={`text-2xl font-bold ${colorClass}`}>
+            {count} / {goal}
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            verres aujourd'hui
+            {count >= goal && " ✅"}
+          </p>
+        </div>
+        <button
+          onClick={handleInc}
+          className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* 8 water drops */}
+      <div className="flex items-center justify-between gap-1 mb-1">
+        {Array.from({ length: goal }).map((_, i) => {
+          const filled = i < count;
+          return (
+            <Droplet
+              key={i}
+              className={`w-5 h-5 transition-all ${
+                filled
+                  ? "text-blue-500 fill-blue-500"
+                  : "text-muted-foreground/30"
+              }`}
+            />
+          );
+        })}
+      </div>
+      {count > goal && (
+        <p className="text-[10px] text-progress-high mt-2">
+          +{count - goal} verre(s) au-delà de l'objectif 💪
+        </p>
+      )}
     </div>
   );
 }
@@ -373,7 +492,9 @@ export function HabitsTracker() {
         <>
           <div className="space-y-3">
             {habits.map((h) =>
-              h.habit_key === "ecrans_lit" || h.goal === 0 ? (
+              h.habit_key === "hydratation" ? (
+                <HydrationCard key={h.id} habit={h} />
+              ) : h.habit_key === "ecrans_lit" || h.goal === 0 ? (
                 <BinaryHabitCard key={h.id} habit={h} />
               ) : (
                 <HabitCard key={h.id} habit={h} />
