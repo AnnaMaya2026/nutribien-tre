@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Plus, Trash2, X, Minus, AlertTriangle, Check, XCircle } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Plus, Trash2, X, Minus, AlertTriangle, Check, XCircle, Droplet } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useHabits, UserHabit } from "@/hooks/useHabits";
