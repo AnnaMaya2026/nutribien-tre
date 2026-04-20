@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import AuthPage from "@/pages/AuthPage";
+import WelcomePage from "@/pages/WelcomePage";
 import OnboardingFlow from "@/pages/OnboardingFlow";
 import ProfileSetup from "@/pages/ProfileSetup";
 import Dashboard from "@/pages/Dashboard";
@@ -78,9 +79,10 @@ export default function AppRoutes() {
   if (!user) {
     return (
       <Routes>
+        <Route path="/" element={<WelcomePage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/onboarding" element={<OnboardingFlow />} />
-        <Route path="*" element={<OnboardingFlow />} />
+        <Route path="*" element={<WelcomePage />} />
       </Routes>
     );
   }
