@@ -45,6 +45,12 @@ function mapRows(data: any[]): CiqualFood[] {
     vitamine_b12_100g: n(row.vitamine_b12_100g),
     omega3_total_100g: n(row.omega3_total_100g),
     phytoestrogenes_100mg: n(row.phytoestrogenes_100mg),
+    potassium_100g: n(row.potassium_100g),
+    zinc_100g: n(row.zinc_100g),
+    vitamine_k_100g: n(row.vitamine_k_100g),
+    vitamine_b6_100g: n(row.vitamine_b6_100g),
+    vitamine_b9_100g: n(row.vitamine_b9_100g),
+    vitamine_e_100g: n(row.vitamine_e_100g),
   }));
 }
 
@@ -169,5 +175,11 @@ export function scaleCiqual(food: CiqualFood, grams: number) {
     omega3: +(food.omega3_total_100g * r).toFixed(1),
     vitamin_b12: +(food.vitamine_b12_100g * r).toFixed(1),
     phytoestrogens: +(food.phytoestrogenes_100mg * r).toFixed(1),
+    potassium: Math.round(food.potassium_100g * r),
+    zinc: +(food.zinc_100g * r).toFixed(1),
+    vitamin_k: +(food.vitamine_k_100g * r).toFixed(1),
+    vitamin_b6: +(food.vitamine_b6_100g * r).toFixed(2),
+    vitamin_b9: Math.round(food.vitamine_b9_100g * r),
+    vitamin_e: +(food.vitamine_e_100g * r).toFixed(1),
   };
 }
