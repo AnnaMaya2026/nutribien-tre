@@ -28,9 +28,15 @@ export type Database = {
           nom: string | null
           omega3_total_100g: number | null
           phytoestrogenes_100mg: number | null
+          potassium_100g: number | null
           proteines_100g: number | null
           vitamine_b12_100g: number | null
+          vitamine_b6_100g: number | null
+          vitamine_b9_100g: number | null
           vitamine_d_100g: number | null
+          vitamine_e_100g: number | null
+          vitamine_k_100g: number | null
+          zinc_100g: number | null
         }
         Insert: {
           calcium_100g?: number | null
@@ -45,9 +51,15 @@ export type Database = {
           nom?: string | null
           omega3_total_100g?: number | null
           phytoestrogenes_100mg?: number | null
+          potassium_100g?: number | null
           proteines_100g?: number | null
           vitamine_b12_100g?: number | null
+          vitamine_b6_100g?: number | null
+          vitamine_b9_100g?: number | null
           vitamine_d_100g?: number | null
+          vitamine_e_100g?: number | null
+          vitamine_k_100g?: number | null
+          zinc_100g?: number | null
         }
         Update: {
           calcium_100g?: number | null
@@ -62,9 +74,15 @@ export type Database = {
           nom?: string | null
           omega3_total_100g?: number | null
           phytoestrogenes_100mg?: number | null
+          potassium_100g?: number | null
           proteines_100g?: number | null
           vitamine_b12_100g?: number | null
+          vitamine_b6_100g?: number | null
+          vitamine_b9_100g?: number | null
           vitamine_d_100g?: number | null
+          vitamine_e_100g?: number | null
+          vitamine_k_100g?: number | null
+          zinc_100g?: number | null
         }
         Relationships: []
       }
@@ -720,9 +738,15 @@ export type Database = {
           nom: string | null
           omega3_total_100g: number | null
           phytoestrogenes_100mg: number | null
+          potassium_100g: number | null
           proteines_100g: number | null
           vitamine_b12_100g: number | null
+          vitamine_b6_100g: number | null
+          vitamine_b9_100g: number | null
           vitamine_d_100g: number | null
+          vitamine_e_100g: number | null
+          vitamine_k_100g: number | null
+          zinc_100g: number | null
         }[]
         SetofOptions: {
           from: "*"
