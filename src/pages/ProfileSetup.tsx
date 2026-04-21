@@ -205,6 +205,10 @@ export default function ProfileSetup() {
           <span className="text-muted-foreground">Taille</span>
           <span className="font-medium text-foreground">{height} cm</span>
         </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">💧 Hydratation</span>
+          <span className="font-medium text-foreground">{hydrationGoal} verres / jour</span>
+        </div>
         <div className="border-t border-border pt-3">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Objectif calorique</span>
