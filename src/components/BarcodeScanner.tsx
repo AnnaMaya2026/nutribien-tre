@@ -45,6 +45,12 @@ interface BarcodeScannerProps {
     omega3: number;
     phytoestrogens: number;
     vitamin_b12: number;
+    potassium: number;
+    zinc: number;
+    vitamin_k: number;
+    vitamin_b6: number;
+    vitamin_b9: number;
+    vitamin_e: number;
     meal_type: string;
   }) => void;
   isPending?: boolean;
@@ -246,6 +252,12 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       omega3: scaled.omega3,
       phytoestrogens: 0,
       vitamin_b12: scaled.vitamin_b12,
+      potassium: 0,
+      zinc: 0,
+      vitamin_k: 0,
+      vitamin_b6: 0,
+      vitamin_b9: 0,
+      vitamin_e: 0,
       meal_type: selectedMeal,
     });
     toast.success("Produit ajouté au journal ✓");

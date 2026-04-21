@@ -92,6 +92,12 @@ export default function JournalPage() {
       omega3: scaled.omega3,
       phytoestrogens: scaled.phytoestrogens,
       vitamin_b12: scaled.vitamin_b12,
+      potassium: scaled.potassium,
+      zinc: scaled.zinc,
+      vitamin_k: scaled.vitamin_k,
+      vitamin_b6: scaled.vitamin_b6,
+      vitamin_b9: scaled.vitamin_b9,
+      vitamin_e: scaled.vitamin_e,
       meal_type: mealType,
     });
     setSelectedFood(null);
@@ -118,6 +124,12 @@ export default function JournalPage() {
         omega3: item.scaled.omega3,
         phytoestrogens: item.scaled.phytoestrogens,
         vitamin_b12: item.scaled.vitamin_b12,
+        potassium: item.scaled.potassium,
+        zinc: item.scaled.zinc,
+        vitamin_k: item.scaled.vitamin_k,
+        vitamin_b6: item.scaled.vitamin_b6,
+        vitamin_b9: item.scaled.vitamin_b9,
+        vitamin_e: item.scaled.vitamin_e,
         meal_type: mealType,
       });
     });
@@ -168,6 +180,12 @@ export default function JournalPage() {
         omega3: +((log.omega3 || 0) * r).toFixed(1),
         phytoestrogens: +((log.phytoestrogens || 0) * r).toFixed(1),
         vitamin_b12: +((log.vitamin_b12 || 0) * r).toFixed(1),
+        potassium: Math.round(((log as any).potassium || 0) * r),
+        zinc: +(((log as any).zinc || 0) * r).toFixed(1),
+        vitamin_k: +(((log as any).vitamin_k || 0) * r).toFixed(1),
+        vitamin_b6: +(((log as any).vitamin_b6 || 0) * r).toFixed(2),
+        vitamin_b9: Math.round(((log as any).vitamin_b9 || 0) * r),
+        vitamin_e: +(((log as any).vitamin_e || 0) * r).toFixed(1),
       },
       {
         onSuccess: () => {
@@ -196,6 +214,12 @@ export default function JournalPage() {
       omega3: l.omega3 || 0,
       phytoestrogens: l.phytoestrogens || 0,
       vitamin_b12: l.vitamin_b12 || 0,
+      potassium: l.potassium || 0,
+      zinc: l.zinc || 0,
+      vitamin_k: l.vitamin_k || 0,
+      vitamin_b6: l.vitamin_b6 || 0,
+      vitamin_b9: l.vitamin_b9 || 0,
+      vitamin_e: l.vitamin_e || 0,
     }));
     saveFavorite.mutate(
       { name: favName.trim(), meal_type: saveFavModal.mealType, items },
@@ -223,6 +247,12 @@ export default function JournalPage() {
         omega3: item.omega3,
         phytoestrogens: item.phytoestrogens,
         vitamin_b12: item.vitamin_b12,
+        potassium: (item as any).potassium || 0,
+        zinc: (item as any).zinc || 0,
+        vitamin_k: (item as any).vitamin_k || 0,
+        vitamin_b6: (item as any).vitamin_b6 || 0,
+        vitamin_b9: (item as any).vitamin_b9 || 0,
+        vitamin_e: (item as any).vitamin_e || 0,
         meal_type: destMeal,
       });
     });
