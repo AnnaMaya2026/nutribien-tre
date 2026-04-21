@@ -57,6 +57,12 @@ export function useFoodLogs(date?: string) {
       omega3: number;
       phytoestrogens: number;
       vitamin_b12: number;
+      potassium: number;
+      zinc: number;
+      vitamin_k: number;
+      vitamin_b6: number;
+      vitamin_b9: number;
+      vitamin_e: number;
       meal_type: string;
     }) => {
       if (!user) throw new Error("Not authenticated");
@@ -96,6 +102,12 @@ export function useFoodLogs(date?: string) {
       omega3?: number;
       phytoestrogens?: number;
       vitamin_b12?: number;
+      potassium?: number;
+      zinc?: number;
+      vitamin_k?: number;
+      vitamin_b6?: number;
+      vitamin_b9?: number;
+      vitamin_e?: number;
     }) => {
       const { error } = await supabase.from("food_logs").update(updates).eq("id", id);
       if (error) throw error;

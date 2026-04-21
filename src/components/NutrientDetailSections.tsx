@@ -15,6 +15,12 @@ interface Props {
     omega3: number;
     vitamin_b12: number;
     phytoestrogens: number;
+    potassium?: number;
+    zinc?: number;
+    vitamin_k?: number;
+    vitamin_b6?: number;
+    vitamin_b9?: number;
+    vitamin_e?: number;
   };
 }
 
@@ -60,11 +66,17 @@ export default function NutrientDetailSections({ scaled }: Props) {
     { label: "Calcium", value: fmt(scaled.calcium), unit: "mg" },
     { label: "Fer", value: fmt(scaled.iron), unit: "mg" },
     { label: "Magnésium", value: fmt(scaled.magnesium), unit: "mg" },
+    { label: "Potassium", value: fmt(scaled.potassium), unit: "mg" },
+    { label: "Zinc", value: fmt(scaled.zinc), unit: "mg" },
   ];
 
   const vitamins = [
     { label: "Vitamine D", value: fmt(scaled.vitamin_d), unit: "µg" },
+    { label: "Vitamine B6", value: fmt(scaled.vitamin_b6), unit: "mg" },
+    { label: "Vitamine B9 (folate)", value: fmt(scaled.vitamin_b9), unit: "µg" },
     { label: "Vitamine B12", value: fmt(scaled.vitamin_b12), unit: "µg" },
+    { label: "Vitamine E", value: fmt(scaled.vitamin_e), unit: "mg" },
+    { label: "Vitamine K", value: fmt(scaled.vitamin_k), unit: "µg" },
     { label: "Oméga-3", value: fmt(scaled.omega3), unit: "g" },
     { label: "Phytoestrogènes", value: fmt(scaled.phytoestrogens), unit: "mg" },
   ];
