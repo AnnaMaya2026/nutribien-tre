@@ -110,6 +110,33 @@ export default function ProfileSetup() {
           <label className="text-sm font-medium text-foreground mb-1 block">Taille (cm)</label>
           <Input type="number" placeholder="165" value={height} onChange={(e) => setHeight(e.target.value)} className="h-12 bg-card" />
         </div>
+        <div>
+          <label className="text-sm font-medium text-foreground mb-1 block">
+            💧 Objectif hydratation quotidien
+          </label>
+          <p className="text-xs text-muted-foreground mb-2">
+            Nombre de verres d'eau par jour (1 verre ≈ 250 ml)
+          </p>
+          <div className="grid grid-cols-5 gap-2">
+            {[6, 7, 8, 9, 10].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setHydrationGoal(n)}
+                className={`h-12 rounded-lg font-semibold text-sm transition-all border ${
+                  hydrationGoal === n
+                    ? "bg-primary/20 border-primary text-foreground"
+                    : "bg-card border-border text-foreground hover:border-primary/50"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1.5">
+            Soit environ {(hydrationGoal * 0.25).toFixed(2).replace(/\.?0+$/, "")} L par jour
+          </p>
+        </div>
       </div>
     </div>,
 
