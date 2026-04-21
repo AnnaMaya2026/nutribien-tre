@@ -83,6 +83,7 @@ export default function Dashboard() {
   const { profile } = useProfile();
   const { logs, weekLogs } = useFoodLogs();
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
+  const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
   const firstName = getDisplayName((profile as any)?.display_name, user?.email);
@@ -258,13 +259,25 @@ export default function Dashboard() {
           <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro />
           <ProgressBar value={totals.phytoestrogens} max={DAILY_TARGETS.phytoestrogens} label="Phytoestrogènes" unit="mg" isMicro />
           <ProgressBar value={totals.vitamin_b12} max={DAILY_TARGETS.vitamin_b12} label="Vitamine B12" unit="µg" isMicro />
-          <ProgressBar value={totals.potassium} max={DAILY_TARGETS.potassium} label="Potassium" unit="mg" isMicro />
-          <ProgressBar value={totals.zinc} max={DAILY_TARGETS.zinc} label="Zinc" unit="mg" isMicro />
-          <ProgressBar value={totals.vitamin_k} max={DAILY_TARGETS.vitamin_k} label="Vitamine K" unit="µg" isMicro />
-          <ProgressBar value={totals.vitamin_b6} max={DAILY_TARGETS.vitamin_b6} label="Vitamine B6" unit="mg" isMicro />
-          <ProgressBar value={totals.vitamin_b9} max={DAILY_TARGETS.vitamin_b9} label="Vitamine B9 (folate)" unit="µg" isMicro />
-          <ProgressBar value={totals.vitamin_e} max={DAILY_TARGETS.vitamin_e} label="Vitamine E" unit="mg" isMicro />
         </div>
+
+        {showSecondaryMicros && (
+          <div className="space-y-2 mt-2 pt-3 border-t border-border animate-fade-in">
+            <ProgressBar value={totals.potassium} max={DAILY_TARGETS.potassium} label="Potassium" unit="mg" isMicro />
+            <ProgressBar value={totals.zinc} max={DAILY_TARGETS.zinc} label="Zinc" unit="mg" isMicro />
+            <ProgressBar value={totals.vitamin_k} max={DAILY_TARGETS.vitamin_k} label="Vitamine K" unit="µg" isMicro />
+            <ProgressBar value={totals.vitamin_b6} max={DAILY_TARGETS.vitamin_b6} label="Vitamine B6" unit="mg" isMicro />
+            <ProgressBar value={totals.vitamin_b9} max={DAILY_TARGETS.vitamin_b9} label="Vitamine B9 (folate)" unit="µg" isMicro />
+            <ProgressBar value={totals.vitamin_e} max={DAILY_TARGETS.vitamin_e} label="Vitamine E" unit="mg" isMicro />
+          </div>
+        )}
+
+        <button
+          onClick={() => setShowSecondaryMicros((v) => !v)}
+          className="mt-3 w-full text-xs font-medium text-pink-deep hover:text-primary transition-colors py-1.5 rounded-lg hover:bg-primary/5"
+        >
+          {showSecondaryMicros ? "− Réduire" : "+ Voir tous les micronutriments (6)"}
+        </button>
       </div>
 
       {/* Micronutrient trend chart */}

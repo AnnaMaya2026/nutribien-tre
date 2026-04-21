@@ -45,6 +45,7 @@ export default function ProfileSetup() {
   const [stage, setStage] = useState("");
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [dietPrefs, setDietPrefs] = useState<string[]>([]);
+  const [hydrationGoal, setHydrationGoal] = useState(8);
   const [saving, setSaving] = useState(false);
 
   const toggleSymptom = (value: string) => {
@@ -69,6 +70,7 @@ export default function ProfileSetup() {
       symptoms,
       dietary_preferences: dietPrefs,
       daily_calorie_goal: cal,
+      hydration_goal: hydrationGoal,
       profile_completed: true,
     } as any);
     setSaving(false);
@@ -107,6 +109,33 @@ export default function ProfileSetup() {
         <div>
           <label className="text-sm font-medium text-foreground mb-1 block">Taille (cm)</label>
           <Input type="number" placeholder="165" value={height} onChange={(e) => setHeight(e.target.value)} className="h-12 bg-card" />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-foreground mb-1 block">
+            💧 Objectif hydratation quotidien
+          </label>
+          <p className="text-xs text-muted-foreground mb-2">
+            Nombre de verres d'eau par jour (1 verre ≈ 250 ml)
+          </p>
+          <div className="grid grid-cols-5 gap-2">
+            {[6, 7, 8, 9, 10].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setHydrationGoal(n)}
+                className={`h-12 rounded-lg font-semibold text-sm transition-all border ${
+                  hydrationGoal === n
+                    ? "bg-primary/20 border-primary text-foreground"
+                    : "bg-card border-border text-foreground hover:border-primary/50"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1.5">
+            Soit environ {(hydrationGoal * 0.25).toFixed(2).replace(/\.?0+$/, "")} L par jour
+          </p>
         </div>
       </div>
     </div>,
@@ -175,6 +204,10 @@ export default function ProfileSetup() {
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Taille</span>
           <span className="font-medium text-foreground">{height} cm</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">💧 Hydratation</span>
+          <span className="font-medium text-foreground">{hydrationGoal} verres / jour</span>
         </div>
         <div className="border-t border-border pt-3">
           <div className="flex justify-between text-sm">
