@@ -16,6 +16,12 @@ export interface CiqualFood {
   vitamine_b12_100g: number;
   omega3_total_100g: number;
   phytoestrogenes_100mg: number;
+  potassium_100g: number;
+  zinc_100g: number;
+  vitamine_k_100g: number;
+  vitamine_b6_100g: number;
+  vitamine_b9_100g: number;
+  vitamine_e_100g: number;
 }
 
 function n(v: number | null): number {
