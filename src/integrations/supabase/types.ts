@@ -448,6 +448,7 @@ export type Database = {
           health_conditions: string[] | null
           health_other: string | null
           height: number | null
+          hydration_goal: number | null
           id: string
           last_message_date: string | null
           main_symptom: string | null
@@ -474,6 +475,7 @@ export type Database = {
           health_conditions?: string[] | null
           health_other?: string | null
           height?: number | null
+          hydration_goal?: number | null
           id?: string
           last_message_date?: string | null
           main_symptom?: string | null
@@ -500,6 +502,7 @@ export type Database = {
           health_conditions?: string[] | null
           health_other?: string | null
           height?: number | null
+          hydration_goal?: number | null
           id?: string
           last_message_date?: string | null
           main_symptom?: string | null
