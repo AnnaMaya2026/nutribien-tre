@@ -88,7 +88,7 @@ export default function Dashboard() {
   const firstName = getDisplayName((profile as any)?.display_name, user?.email);
 
   const totals = logs.reduce(
-    (acc, log) => ({
+    (acc, log: any) => ({
       calories: acc.calories + (log.calories || 0),
       proteins: acc.proteins + (log.proteins || 0),
       carbs: acc.carbs + (log.carbs || 0),
@@ -101,8 +101,14 @@ export default function Dashboard() {
       omega3: acc.omega3 + (log.omega3 || 0),
       phytoestrogens: acc.phytoestrogens + (log.phytoestrogens || 0),
       vitamin_b12: acc.vitamin_b12 + (log.vitamin_b12 || 0),
+      potassium: acc.potassium + (log.potassium || 0),
+      zinc: acc.zinc + (log.zinc || 0),
+      vitamin_k: acc.vitamin_k + (log.vitamin_k || 0),
+      vitamin_b6: acc.vitamin_b6 + (log.vitamin_b6 || 0),
+      vitamin_b9: acc.vitamin_b9 + (log.vitamin_b9 || 0),
+      vitamin_e: acc.vitamin_e + (log.vitamin_e || 0),
     }),
-    { calories: 0, proteins: 0, carbs: 0, fats: 0, fibres: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0 }
+    { calories: 0, proteins: 0, carbs: 0, fats: 0, fibres: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0, potassium: 0, zinc: 0, vitamin_k: 0, vitamin_b6: 0, vitamin_b9: 0, vitamin_e: 0 }
   );
 
   const mealBreakdown = useMemo(() => {
@@ -252,6 +258,12 @@ export default function Dashboard() {
           <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro />
           <ProgressBar value={totals.phytoestrogens} max={DAILY_TARGETS.phytoestrogens} label="Phytoestrogènes" unit="mg" isMicro />
           <ProgressBar value={totals.vitamin_b12} max={DAILY_TARGETS.vitamin_b12} label="Vitamine B12" unit="µg" isMicro />
+          <ProgressBar value={totals.potassium} max={DAILY_TARGETS.potassium} label="Potassium" unit="mg" isMicro />
+          <ProgressBar value={totals.zinc} max={DAILY_TARGETS.zinc} label="Zinc" unit="mg" isMicro />
+          <ProgressBar value={totals.vitamin_k} max={DAILY_TARGETS.vitamin_k} label="Vitamine K" unit="µg" isMicro />
+          <ProgressBar value={totals.vitamin_b6} max={DAILY_TARGETS.vitamin_b6} label="Vitamine B6" unit="mg" isMicro />
+          <ProgressBar value={totals.vitamin_b9} max={DAILY_TARGETS.vitamin_b9} label="Vitamine B9 (folate)" unit="µg" isMicro />
+          <ProgressBar value={totals.vitamin_e} max={DAILY_TARGETS.vitamin_e} label="Vitamine E" unit="mg" isMicro />
         </div>
       </div>
 

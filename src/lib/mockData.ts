@@ -48,6 +48,12 @@ export const DAILY_TARGETS = {
   proteins: 60,       // g (adjusted per calorie goal)
   carbs: 250,         // g
   fats: 65,           // g
+  potassium: 3500,    // mg
+  zinc: 8,            // mg
+  vitamin_k: 90,      // µg
+  vitamin_b6: 1.5,    // mg
+  vitamin_b9: 400,    // µg
+  vitamin_e: 12,      // mg
 };
 
 // Mock meal suggestions

@@ -28,9 +28,15 @@ export type Database = {
           nom: string | null
           omega3_total_100g: number | null
           phytoestrogenes_100mg: number | null
+          potassium_100g: number | null
           proteines_100g: number | null
           vitamine_b12_100g: number | null
+          vitamine_b6_100g: number | null
+          vitamine_b9_100g: number | null
           vitamine_d_100g: number | null
+          vitamine_e_100g: number | null
+          vitamine_k_100g: number | null
+          zinc_100g: number | null
         }
         Insert: {
           calcium_100g?: number | null
@@ -45,9 +51,15 @@ export type Database = {
           nom?: string | null
           omega3_total_100g?: number | null
           phytoestrogenes_100mg?: number | null
+          potassium_100g?: number | null
           proteines_100g?: number | null
           vitamine_b12_100g?: number | null
+          vitamine_b6_100g?: number | null
+          vitamine_b9_100g?: number | null
           vitamine_d_100g?: number | null
+          vitamine_e_100g?: number | null
+          vitamine_k_100g?: number | null
+          zinc_100g?: number | null
         }
         Update: {
           calcium_100g?: number | null
@@ -62,9 +74,15 @@ export type Database = {
           nom?: string | null
           omega3_total_100g?: number | null
           phytoestrogenes_100mg?: number | null
+          potassium_100g?: number | null
           proteines_100g?: number | null
           vitamine_b12_100g?: number | null
+          vitamine_b6_100g?: number | null
+          vitamine_b9_100g?: number | null
           vitamine_d_100g?: number | null
+          vitamine_e_100g?: number | null
+          vitamine_k_100g?: number | null
+          zinc_100g?: number | null
         }
         Relationships: []
       }
@@ -107,9 +125,15 @@ export type Database = {
           omega3: number | null
           phytoestrogens: number | null
           portion_size: number | null
+          potassium: number | null
           proteins: number | null
           vitamin_b12: number | null
+          vitamin_b6: number | null
+          vitamin_b9: number | null
           vitamin_d: number | null
+          vitamin_e: number | null
+          vitamin_k: number | null
+          zinc: number | null
         }
         Insert: {
           calcium?: number | null
@@ -125,9 +149,15 @@ export type Database = {
           omega3?: number | null
           phytoestrogens?: number | null
           portion_size?: number | null
+          potassium?: number | null
           proteins?: number | null
           vitamin_b12?: number | null
+          vitamin_b6?: number | null
+          vitamin_b9?: number | null
           vitamin_d?: number | null
+          vitamin_e?: number | null
+          vitamin_k?: number | null
+          zinc?: number | null
         }
         Update: {
           calcium?: number | null
@@ -143,9 +173,15 @@ export type Database = {
           omega3?: number | null
           phytoestrogens?: number | null
           portion_size?: number | null
+          potassium?: number | null
           proteins?: number | null
           vitamin_b12?: number | null
+          vitamin_b6?: number | null
+          vitamin_b9?: number | null
           vitamin_d?: number | null
+          vitamin_e?: number | null
+          vitamin_k?: number | null
+          zinc?: number | null
         }
         Relationships: [
           {
@@ -225,10 +261,16 @@ export type Database = {
           omega3: number | null
           phytoestrogens: number | null
           portion_size: number | null
+          potassium: number | null
           proteins: number | null
           user_id: string
           vitamin_b12: number | null
+          vitamin_b6: number | null
+          vitamin_b9: number | null
           vitamin_d: number | null
+          vitamin_e: number | null
+          vitamin_k: number | null
+          zinc: number | null
         }
         Insert: {
           calcium?: number | null
@@ -246,10 +288,16 @@ export type Database = {
           omega3?: number | null
           phytoestrogens?: number | null
           portion_size?: number | null
+          potassium?: number | null
           proteins?: number | null
           user_id: string
           vitamin_b12?: number | null
+          vitamin_b6?: number | null
+          vitamin_b9?: number | null
           vitamin_d?: number | null
+          vitamin_e?: number | null
+          vitamin_k?: number | null
+          zinc?: number | null
         }
         Update: {
           calcium?: number | null
@@ -267,10 +315,16 @@ export type Database = {
           omega3?: number | null
           phytoestrogens?: number | null
           portion_size?: number | null
+          potassium?: number | null
           proteins?: number | null
           user_id?: string
           vitamin_b12?: number | null
+          vitamin_b6?: number | null
+          vitamin_b9?: number | null
           vitamin_d?: number | null
+          vitamin_e?: number | null
+          vitamin_k?: number | null
+          zinc?: number | null
         }
         Relationships: []
       }
@@ -720,9 +774,15 @@ export type Database = {
           nom: string | null
           omega3_total_100g: number | null
           phytoestrogenes_100mg: number | null
+          potassium_100g: number | null
           proteines_100g: number | null
           vitamine_b12_100g: number | null
+          vitamine_b6_100g: number | null
+          vitamine_b9_100g: number | null
           vitamine_d_100g: number | null
+          vitamine_e_100g: number | null
+          vitamine_k_100g: number | null
+          zinc_100g: number | null
         }[]
         SetofOptions: {
           from: "*"

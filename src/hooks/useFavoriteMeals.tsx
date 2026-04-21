@@ -27,6 +27,12 @@ export interface FavoriteMealItem {
   omega3: number;
   phytoestrogens: number;
   vitamin_b12: number;
+  potassium: number;
+  zinc: number;
+  vitamin_k: number;
+  vitamin_b6: number;
+  vitamin_b9: number;
+  vitamin_e: number;
 }
 
 export function useFavoriteMeals() {

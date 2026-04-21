@@ -127,7 +127,13 @@ Rappelle si pertinent : "Ces conseils ne remplacent pas un suivi médical."`;
           magnesium: acc.magnesium + (log.magnesium || 0),
           iron: acc.iron + (log.iron || 0),
           fibres: acc.fibres + (log.fibres || 0),
-        }), { calories: 0, proteins: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, fibres: 0 });
+          potassium: acc.potassium + (log.potassium || 0),
+          zinc: acc.zinc + (log.zinc || 0),
+          vitamin_k: acc.vitamin_k + (log.vitamin_k || 0),
+          vitamin_b6: acc.vitamin_b6 + (log.vitamin_b6 || 0),
+          vitamin_b9: acc.vitamin_b9 + (log.vitamin_b9 || 0),
+          vitamin_e: acc.vitamin_e + (log.vitamin_e || 0),
+        }), { calories: 0, proteins: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, fibres: 0, potassium: 0, zinc: 0, vitamin_k: 0, vitamin_b6: 0, vitamin_b9: 0, vitamin_e: 0 });
 
         const calorieGoal = profile?.daily_calorie_goal || 1800;
         nutritionContext = `
@@ -138,7 +144,13 @@ Données nutritionnelles du jour:
 - Vitamine D: ${totals.vitamin_d.toFixed(1)}µg / 20µg
 - Magnésium: ${Math.round(totals.magnesium)}mg / 320mg
 - Fer: ${Math.round(totals.iron)}mg / 18mg
-- Fibres: ${Math.round(totals.fibres)}g / 25g`;
+- Fibres: ${Math.round(totals.fibres)}g / 25g
+- Potassium: ${Math.round(totals.potassium)}mg / 3500mg
+- Zinc: ${totals.zinc.toFixed(1)}mg / 8mg
+- Vitamine K: ${totals.vitamin_k.toFixed(1)}µg / 90µg
+- Vitamine B6: ${totals.vitamin_b6.toFixed(2)}mg / 1.5mg
+- Vitamine B9 (folate): ${Math.round(totals.vitamin_b9)}µg / 400µg
+- Vitamine E: ${totals.vitamin_e.toFixed(1)}mg / 12mg`;
       } else {
         nutritionContext = "\nAucun aliment enregistré aujourd'hui.";
       }

@@ -111,6 +111,12 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
             vitamine_b12_100g: row.vitamine_b12_100g ?? 0,
             omega3_total_100g: row.omega3_total_100g ?? 0,
             phytoestrogenes_100mg: (row as any).phytoestrogenes_100mg ?? 0,
+            potassium_100g: (row as any).potassium_100g ?? 0,
+            zinc_100g: (row as any).zinc_100g ?? 0,
+            vitamine_k_100g: (row as any).vitamine_k_100g ?? 0,
+            vitamine_b6_100g: (row as any).vitamine_b6_100g ?? 0,
+            vitamine_b9_100g: (row as any).vitamine_b9_100g ?? 0,
+            vitamine_e_100g: (row as any).vitamine_e_100g ?? 0,
           }));
 
           const grams = Math.max(10, Math.min(1000, item.grams || 100));
