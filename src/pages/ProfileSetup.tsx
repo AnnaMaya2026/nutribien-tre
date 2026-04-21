@@ -45,6 +45,7 @@ export default function ProfileSetup() {
   const [stage, setStage] = useState("");
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [dietPrefs, setDietPrefs] = useState<string[]>([]);
+  const [hydrationGoal, setHydrationGoal] = useState(8);
   const [saving, setSaving] = useState(false);
 
   const toggleSymptom = (value: string) => {
@@ -69,6 +70,7 @@ export default function ProfileSetup() {
       symptoms,
       dietary_preferences: dietPrefs,
       daily_calorie_goal: cal,
+      hydration_goal: hydrationGoal,
       profile_completed: true,
     } as any);
     setSaving(false);
