@@ -58,7 +58,11 @@ export default function OnboardingFlow() {
         />
       )}
       {step === 3 && (
-        <Step4Truth symptom={(symptom || "autre") as SymptomKey} onNext={next} />
+        <Step4Truth
+          symptom={(symptom || "autre") as SymptomKey}
+          statements={statements}
+          onNext={next}
+        />
       )}
       {step === 4 && (
         <Step5Data

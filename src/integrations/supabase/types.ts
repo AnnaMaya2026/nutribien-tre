@@ -445,6 +445,7 @@ export type Database = {
           display_name: string | null
           duration_of_changes: string | null
           feature_tour_completed: boolean | null
+          getting_started_dismissed: boolean | null
           health_conditions: string[] | null
           health_other: string | null
           height: number | null
@@ -472,6 +473,7 @@ export type Database = {
           display_name?: string | null
           duration_of_changes?: string | null
           feature_tour_completed?: boolean | null
+          getting_started_dismissed?: boolean | null
           health_conditions?: string[] | null
           health_other?: string | null
           height?: number | null
@@ -499,6 +501,7 @@ export type Database = {
           display_name?: string | null
           duration_of_changes?: string | null
           feature_tour_completed?: boolean | null
+          getting_started_dismissed?: boolean | null
           health_conditions?: string[] | null
           health_other?: string | null
           height?: number | null

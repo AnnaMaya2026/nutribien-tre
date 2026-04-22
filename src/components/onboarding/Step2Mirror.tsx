@@ -5,7 +5,15 @@ const STATEMENTS = [
   "Je fais attention à mon alimentation mais ça ne change rien",
   "Mon corps réagit différemment qu'avant",
   "J'ai testé des choses… sans comprendre si ça marchait vraiment",
-  "Je ne veux plus faire au hasard",
+  "Je n'ai pas de symptômes particuliers mais je veux mieux prendre soin de moi",
+  "Je veux comprendre les besoins de mon corps à cette étape de ma vie",
+  "Je veux anticiper les changements plutôt que les subir",
+];
+
+export const PREVENTIVE_STATEMENTS = [
+  "Je n'ai pas de symptômes particuliers mais je veux mieux prendre soin de moi",
+  "Je veux comprendre les besoins de mon corps à cette étape de ma vie",
+  "Je veux anticiper les changements plutôt que les subir",
 ];
 
 export default function Step2Mirror({

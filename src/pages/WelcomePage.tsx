@@ -10,7 +10,7 @@ export default function WelcomePage() {
         </div>
         <h1 className="text-3xl font-bold text-foreground mb-2">NutriMéno</h1>
         <p className="text-muted-foreground mb-10 text-sm">
-          Votre nutrition adaptée à la ménopause
+          L'application nutritionnelle conçue pour les femmes de 45 ans et plus 💗
         </p>
 
         <div className="space-y-3">

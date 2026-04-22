@@ -8,6 +8,7 @@ import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
+import GettingStartedCarousel from "@/components/GettingStartedCarousel";
 import { ChevronDown, ChevronUp, LogOut } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
@@ -184,6 +185,9 @@ export default function Dashboard() {
 
       {/* Daily evening recap (visible after 8pm) */}
       <DailyRecapCard />
+
+      {/* Getting-started carousel (first 3 days, dismissible) */}
+      <GettingStartedCarousel />
 
       {/* Health profile (collapsible) */}
       <HealthProfileCard />

@@ -1,14 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { REASSURANCE, SymptomKey } from "@/lib/onboardingMessages";
+import { PREVENTIVE_STATEMENTS } from "./Step2Mirror";
+
+const PREVENTIVE_MESSAGE =
+  "Tu es au bon endroit.\n\nÀ partir de 45 ans, les besoins nutritionnels de ton corps changent silencieusement — bien avant que les symptômes apparaissent.\n\nCalcium, magnésium, vitamine D, oméga-3...\n\nNutriMéno t'aide à comprendre ce dont ton corps a vraiment besoin maintenant, pour rester en forme et pleine d'énergie.";
 
 export default function Step4Truth({
   symptom,
+  statements = [],
   onNext,
 }: {
   symptom: SymptomKey;
+  statements?: string[];
   onNext: () => void;
 }) {
-  const text = REASSURANCE[symptom] ?? REASSURANCE.autre;
+  const isPreventive =
+    statements.length > 0 &&
+    statements.every((s) => PREVENTIVE_STATEMENTS.includes(s));
+
+  const text = isPreventive
+    ? PREVENTIVE_MESSAGE
+    : REASSURANCE[symptom] ?? REASSURANCE.autre;
 
   return (
     <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
