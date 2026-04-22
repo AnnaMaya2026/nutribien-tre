@@ -468,8 +468,8 @@ export default function JournalPage() {
                   onClick={() => toggleMeal(meal.value)}
                   className="flex items-center gap-2 flex-1"
                 >
-                  <span className="text-sm font-semibold text-foreground">{meal.label}</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-lg font-bold text-foreground">{meal.label}</span>
+                  <span className="text-sm text-muted-foreground">
                     ({meal.items.length} aliment{meal.items.length !== 1 ? "s" : ""})
                   </span>
                 </button>
@@ -483,7 +483,7 @@ export default function JournalPage() {
                       <Star className="w-4 h-4" />
                     </button>
                   )}
-                  <span className="text-xs font-medium text-primary-foreground bg-primary/20 px-2 py-0.5 rounded-full">
+                  <span className="text-sm font-semibold text-primary-foreground bg-primary/20 px-2.5 py-1 rounded-full">
                     {meal.items.reduce((s, l) => s + (l.calories || 0), 0)} kcal
                   </span>
                   <button onClick={() => toggleMeal(meal.value)}>
@@ -500,16 +500,16 @@ export default function JournalPage() {
                           onClick={() => setExpandedLogs((prev) => ({ ...prev, [log.id]: !prev[log.id] }))}
                           className="flex-1 text-left"
                         >
-                          <div className="font-medium text-sm text-foreground line-clamp-1 flex items-center gap-1.5">
+                          <div className="font-semibold text-base text-foreground line-clamp-1 flex items-center gap-1.5">
                             {log.food_name.replace(" 📦", "")}
                             {log.food_name.includes("📦") && (
-                              <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[8px] px-1.5 py-0">
+                              <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[10px] px-1.5 py-0">
                                 Industriel
                               </Badge>
                             )}
                             <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${expandedLogs[log.id] ? "rotate-180" : ""}`} />
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-sm text-muted-foreground">
                             {log.calories} kcal · {log.proteins}g prot · {log.portion_size}g
                           </div>
                         </button>
