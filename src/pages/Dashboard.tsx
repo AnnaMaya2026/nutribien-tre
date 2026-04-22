@@ -186,6 +186,9 @@ export default function Dashboard() {
       {/* Daily evening recap (visible after 8pm) */}
       <DailyRecapCard />
 
+      {/* Getting-started carousel (first 3 days, dismissible) */}
+      <GettingStartedCarousel />
+
       {/* Health profile (collapsible) */}
       <HealthProfileCard />
 
