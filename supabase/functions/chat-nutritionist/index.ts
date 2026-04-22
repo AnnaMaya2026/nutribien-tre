@@ -50,9 +50,15 @@ serve(async (req) => {
     let healthContext = "";
     let remaining = DAILY_LIMIT;
     const today = new Date().toISOString().split("T")[0];
+    let logsRes: any = null;
 
     if (userId) {
-      const [profileRes, logsRes] = await Promise.all([
+      const profileRes = await supabase.from("profiles").select("*").eq("user_id", userId).single();
+      logsRes = await supabase.from("food_logs").select("*").eq("user_id", userId).eq("logged_at", today);
+      const _unused = [profileRes, logsRes]; void _unused;
+      const [_p, _l] = [profileRes, logsRes];
+      void _p; void _l;
+      const __dummy = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", userId).single(),
         supabase.from("food_logs").select("*").eq("user_id", userId).eq("logged_at", today),
       ]);
