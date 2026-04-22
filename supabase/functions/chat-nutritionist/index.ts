@@ -24,7 +24,13 @@ serve(async (req) => {
 
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
+    console.log("API key loaded:", OPENAI_API_KEY?.substring(0, 10));
+    if (!OPENAI_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "Clé API manquante — vérifiez la configuration" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const authHeader = req.headers.get("Authorization");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -50,14 +56,17 @@ serve(async (req) => {
     let healthContext = "";
     let remaining = DAILY_LIMIT;
     const today = new Date().toISOString().split("T")[0];
+    let logsRes: any = null;
 
     if (userId) {
-      const [profileRes, logsRes] = await Promise.all([
+      const [profileRes, logsResLocal] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", userId).single(),
         supabase.from("food_logs").select("*").eq("user_id", userId).eq("logged_at", today),
       ]);
+      logsRes = logsResLocal;
 
       const profile = profileRes.data as any;
+
 
       // ── Daily message limit enforcement ──
       if (profile) {
