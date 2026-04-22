@@ -182,14 +182,14 @@ export default function Dashboard() {
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialog>
+          </AlertDialog>
+        </div>
       </div>
 
       {/* Daily evening recap (visible after 8pm) */}
       <DailyRecapCard />
 
-      {/* Getting-started carousel (first 3 days, dismissible) */}
-      <GettingStartedCarousel />
+
 
       {/* Health profile (collapsible) */}
       <HealthProfileCard />
