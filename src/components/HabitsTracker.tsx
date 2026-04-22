@@ -135,10 +135,9 @@ function BinaryHabitCard({ habit }: { habit: UserHabit }) {
   );
 }
 
-// Hydration card — "good" habit: count UP toward goal (8 glasses by default, configurable in profile)
+// Hydration card — "good" habit: count UP toward goal (8 glasses by default)
 function HydrationCard({ habit }: { habit: UserHabit }) {
   const { logs, today, setCount, deleteHabit } = useHabits();
-  const { profile } = useProfile();
   const todayLog = logs.find(
     (l) => l.habit_key === habit.habit_key && l.logged_at === today
   );
