@@ -3,7 +3,7 @@ import { Plus, Trash2, X, Minus, AlertTriangle, Check, XCircle, Droplet } from "
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useHabits, UserHabit } from "@/hooks/useHabits";
-import { useProfile } from "@/hooks/useProfile";
+
 import { LineChart, Line, ResponsiveContainer, YAxis } from "recharts";
 import { toast } from "sonner";
 
