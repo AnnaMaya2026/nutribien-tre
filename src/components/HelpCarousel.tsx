@@ -72,11 +72,11 @@ export default function HelpCarousel() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center justify-center w-9 h-9 rounded-full bg-primary/15 hover:bg-primary/25 text-pink-deep transition-colors shrink-0"
+        className="flex items-center gap-1.5 min-h-[44px] px-4 py-2 rounded-[20px] border-2 border-primary bg-background text-pink-deep text-[15px] font-medium hover:bg-primary/10 transition-colors shrink-0"
         aria-label="Aide"
         title="Aide"
       >
-        <HelpCircle className="w-5 h-5" />
+        <span aria-hidden="true">❓</span> Aide
       </button>
 
       <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : close())}>
