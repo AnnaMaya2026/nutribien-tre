@@ -213,14 +213,14 @@ export default function Dashboard() {
         {/* Macro bars */}
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: "Protéines", value: totals.proteins, max: MACRO_GOALS.proteins },
-            { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs },
-            { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats },
-            { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres },
+            { label: "Protéines", value: totals.proteins, max: MACRO_GOALS.proteins, isMicro: false },
+            { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs, isMicro: false },
+            { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats, isMicro: false },
+            { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres, isMicro: true },
           ].map((m) => {
             const rawPct = (m.value / m.max) * 100;
             const barPct = Math.min(rawPct, 100);
-            const { bg, text, emoji } = getNutrientColor(rawPct);
+            const { bg, text, emoji } = getNutrientColor(rawPct, m.isMicro);
             return (
               <div key={m.label} className="text-center">
                 <div className="text-xs text-muted-foreground mb-1">{m.label}</div>

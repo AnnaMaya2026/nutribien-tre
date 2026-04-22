@@ -207,7 +207,7 @@ function WeeklySummary({ logs, period }: { logs: any[]; period: number }) {
       </div>
       <div className="space-y-2">
         {summary.top3.map(({ key, avg }, i) => {
-          const label = FULL_SYMPTOMS_LIST.find((s) => s.value === key)?.label || key;
+          const label = FULL_SYMPTOMS_LIST.find((s) => s.value === key)?.label || key.replace(/^custom_/, "");
           const pct = (avg / 10) * 100;
           const barColor = avg >= 7 ? "bg-destructive" : avg >= 4 ? "bg-warning" : "bg-progress-high";
           return (

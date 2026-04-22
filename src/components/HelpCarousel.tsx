@@ -9,56 +9,49 @@ import {
 
 const SLIDES = [
   {
-    icon: "🎤",
     title: "Loggez vos repas en 3 façons",
     text: `• Micro 🎤 : dites ce que vous avez mangé
 • Scanner 📷 : scannez le code-barres
 • Recherche 🔍 : tapez le nom de l'aliment
 
-Ajustez les portions et organisez par repas (petit-déjeuner, déjeuner...).`,
+Organisez par repas et ajustez les portions`,
+    image: "/help/journal_alimentaire.png",
   },
   {
-    icon: "📊",
     title: "Suivez vos nutriments clés",
-    text: `Le dashboard affiche en temps réel :
-• Calories et macros (protéines, glucides, lipides)
-• Micronutriments prioritaires ménopause (calcium, vitamine D, magnésium, oméga-3...)
-• Codes couleur : 🔴 insuffisant / 🟠 moyen / 🟢 objectif atteint`,
+    text: `Calories, macros et micronutriments prioritaires ménopause en temps réel.
+
+🔴 insuffisant / 🟠 moyen / 🟢 atteint`,
+    image: "/help/accueil.png",
   },
   {
-    icon: "📈",
     title: "Suivez l'évolution de vos symptômes",
-    text: `• Évaluez vos symptômes chaque jour (1-10)
-• Visualisez leur évolution dans le temps
-• Recevez des conseils nutritionnels adaptés à vos symptômes du jour
-• Notez vos compléments et routines pour mesurer leur impact`,
+    text: `• Évaluez chaque jour de 1 à 10
+• Visualisez l'évolution dans le temps
+• Recevez des conseils nutritionnels adaptés`,
+    image: "/help/symptomes.png",
   },
   {
-    icon: "🍽️",
-    title: "Des suggestions personnalisées pour vous",
-    text: `4 types de suggestions :
-• Par nutriment manquant
+    title: "Des suggestions personnalisées",
+    text: `• Par nutriment manquant
 • Par recette
 • Pour atténuer vos symptômes
-• Pour combler vos manques nutritionnels
-
-Toutes générées selon votre profil du jour.`,
+• Pour combler vos manques`,
+    image: "/help/idees.png",
   },
   {
-    icon: "💬",
     title: "Sophie, votre nutritionniste IA",
     text: `• Posez vos questions par écrit ou à la voix
 • Dites-lui ce que vous avez dans le frigo
-• Demandez-lui un menu pour la semaine
-• Elle connaît vos données nutritionnelles et adapte ses conseils en temps réel`,
+• Demandez un menu pour la semaine`,
+    image: "/help/sophie.png",
   },
   {
-    icon: "✅",
     title: "Routines et habitudes",
-    text: `• Créez vos routines quotidiennes (compléments, sport, bien-être)
-• Cochez-les chaque jour en un tap
-• Suivez vos habitudes à surveiller (café, alcool, hydratation...)
-• Corrélation automatique avec vos symptômes`,
+    text: `• Créez vos routines quotidiennes
+• Suivez vos habitudes à surveiller
+• Corrélation avec vos symptômes`,
+    image: "/help/routines_habitudes.png",
   },
 ];
 
@@ -87,11 +80,11 @@ export default function HelpCarousel() {
       </button>
 
       <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : close())}>
-        <DialogContent className="max-w-md p-0 gap-0 overflow-hidden border-primary/20">
+        <DialogContent className="max-w-md p-0 gap-0 overflow-hidden border-primary/20 max-h-[90vh] flex flex-col">
           <DialogTitle className="sr-only">Aide — {slide.title}</DialogTitle>
           <DialogDescription className="sr-only">{slide.text}</DialogDescription>
 
-          <div className="bg-gradient-to-br from-primary/15 to-primary/5 px-5 pt-5 pb-3 flex items-center justify-between">
+          <div className="bg-gradient-to-br from-primary/15 to-primary/5 px-5 pt-5 pb-3 flex items-center justify-between shrink-0">
             <h3 className="text-base font-bold text-foreground">Comment ça marche ? 🌸</h3>
             <button
               onClick={close}
@@ -102,15 +95,22 @@ export default function HelpCarousel() {
             </button>
           </div>
 
-          <div className="px-5 py-6 bg-card animate-fade-in" key={index}>
-            <div className="text-5xl mb-3">{slide.icon}</div>
+          <div className="px-5 py-5 bg-card animate-fade-in overflow-y-auto flex-1" key={index}>
             <h4 className="font-semibold text-foreground mb-2 text-lg">{slide.title}</h4>
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line mb-4">
               {slide.text}
             </p>
+            <div className="flex justify-center">
+              <img
+                src={slide.image}
+                alt={slide.title}
+                className="rounded-xl shadow-md max-h-[300px] w-auto object-contain"
+                loading="lazy"
+              />
+            </div>
           </div>
 
-          <div className="flex justify-center gap-2 py-3 bg-card border-t border-border">
+          <div className="flex justify-center gap-2 py-3 bg-card border-t border-border shrink-0">
             {SLIDES.map((_, i) => (
               <button
                 key={i}
@@ -123,7 +123,7 @@ export default function HelpCarousel() {
             ))}
           </div>
 
-          <div className="flex items-center justify-between gap-2 px-4 py-3 bg-card border-t border-border">
+          <div className="flex items-center justify-between gap-2 px-4 py-3 bg-card border-t border-border shrink-0">
             <button
               onClick={() => setIndex((i) => Math.max(0, i - 1))}
               disabled={isFirst}

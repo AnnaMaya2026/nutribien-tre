@@ -218,8 +218,8 @@ export default function RepasPage() {
 
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
-      <h1 className="text-2xl font-bold text-foreground mb-1">Suggestions de repas</h1>
-      <p className="text-muted-foreground text-sm mb-4">Trouvez des aliments adaptés à vos besoins</p>
+      <h1 className="text-2xl font-bold text-foreground mb-1">Suggestions pour toi</h1>
+      <p className="text-muted-foreground text-sm mb-4">Personnalisées selon vos besoins du jour</p>
 
       <Tabs defaultValue="nutrients" className="w-full">
         <TabsList className="w-full mb-4 h-auto flex-wrap min-h-12 p-1">
