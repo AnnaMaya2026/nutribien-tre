@@ -156,10 +156,44 @@ Données nutritionnelles du jour:
       }
     }
 
+    // Detect industrial/processed foods in today's logs
+    const INDUSTRIAL_PATTERNS = [
+      /lasagne/i, /pizza/i, /quiche/i, /hachis\s*parmentier/i, /gratin/i,
+      /cordon\s*bleu/i, /nugget/i, /cheeseburger/i, /hamburger/i, /burger/i,
+      /kebab/i, /tacos?/i, /sushi\s*box/i, /plat\s*pr[ée]par[ée]/i,
+      /plat\s*cuisin[ée]/i, /micro[-\s]*onde/i, /surgel[ée]\s*pr[ée]par/i,
+      /raviolis?\s*(en\s*)?bo[iî]te/i, /cassoulet\s*(en\s*)?bo[iî]te/i,
+      /paella\s*(en\s*)?bo[iî]te/i, /saucisse/i, /merguez/i, /knack/i,
+      /chipolata/i, /charcuterie/i, /jambon\s*industriel/i, /p[âa]t[ée]/i,
+      /rillettes/i, /croque[-\s]monsieur\s*industriel/i, /friand/i,
+      /samoussa/i, /nem\s*industriel/i, /bo[uû]ch[ée]e\s*ap[ée]ritive/i,
+      /chips?/i, /frites?\s*surgel/i, /bo[iî]te\s*conserve\s*plat/i,
+      /soupe\s*en\s*brique/i, /soupe\s*industrielle/i,
+      /barre\s*chocolat/i, /c[ée]r[ée]ales?\s*chocolat/i,
+      /mc\s*do/i, /mcdo/i, /kfc/i, /quick/i, /fast[-\s]*food/i,
+      /tortellini\s*frais/i, /gnocchi\s*po[êe]l/i,
+    ];
+    const detectedIndustrial: string[] = [];
+    if (logsRes?.data) {
+      for (const log of logsRes.data as any[]) {
+        const name = String(log.food_name || "");
+        if (INDUSTRIAL_PATTERNS.some((re) => re.test(name))) {
+          detectedIndustrial.push(name);
+        }
+      }
+    }
+    const industrialContext = detectedIndustrial.length > 0
+      ? `\n\n🍔 Aliments industriels détectés aujourd'hui : ${detectedIndustrial.join(", ")}.
+Si pertinent dans le contexte de la conversation (et seulement si tu n'as pas encore fait cette suggestion plus tôt), termine ta réponse par EXACTEMENT ce format :
+"💡 J'ai remarqué que tu as mangé ${detectedIndustrial[0]} aujourd'hui — souvent riche en sel et additifs. Tu veux que je te propose une version maison rapide et plus nutritive ?"
+Si l'utilisatrice répond oui (ou équivalent : "oui", "vas-y", "ok", "volontiers"), propose-lui une recette maison simple (5-7 ingrédients, étapes courtes, alternative saine et rapide à préparer) à la place du plat industriel détecté.`
+      : "";
+
     const systemPrompt = `Tu es Sophie, une nutritionniste spécialisée dans la nutrition pour la ménopause. Tu as accès au profil de l'utilisatrice et à ses données nutritionnelles du jour.
 ${profileContext}
 ${nutritionContext}
 ${healthContext}
+${industrialContext}
 
 Règles:
 - Réponds toujours en français
@@ -168,7 +202,7 @@ Règles:
 - Donne des conseils pratiques et accessibles
 - Base tes conseils sur les données du jour et les contraintes santé éventuelles
 - Ne remplace pas un médecin, rappelle-le si besoin
-- Réponds en maximum 3-4 phrases courtes
+- Réponds en maximum 3-4 phrases courtes (sauf si tu proposes une recette : alors structure clairement)
 - IMPORTANT: Ne termine JAMAIS tes réponses par des formules de politesse comme "Prends soin de toi", "Bon appétit", "À bientôt", "N'hésite pas à revenir", "Belle journée" ou toute autre formule de clôture. Réponds naturellement comme dans une vraie conversation — laisse la porte ouverte à la question suivante sans la forcer.`;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
