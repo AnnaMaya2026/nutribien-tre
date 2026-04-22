@@ -3,7 +3,7 @@ import { Plus, Trash2, X, Minus, AlertTriangle, Check, XCircle, Droplet } from "
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useHabits, UserHabit } from "@/hooks/useHabits";
-import { useProfile } from "@/hooks/useProfile";
+
 import { LineChart, Line, ResponsiveContainer, YAxis } from "recharts";
 import { toast } from "sonner";
 
@@ -135,15 +135,14 @@ function BinaryHabitCard({ habit }: { habit: UserHabit }) {
   );
 }
 
-// Hydration card — "good" habit: count UP toward goal (8 glasses by default, configurable in profile)
+// Hydration card — "good" habit: count UP toward goal (8 glasses by default)
 function HydrationCard({ habit }: { habit: UserHabit }) {
   const { logs, today, setCount, deleteHabit } = useHabits();
-  const { profile } = useProfile();
   const todayLog = logs.find(
     (l) => l.habit_key === habit.habit_key && l.logged_at === today
   );
   const count = todayLog?.count ?? 0;
-  const goal = (profile as any)?.hydration_goal || habit.goal || 8;
+  const goal = habit.goal || 8;
 
   // Inverted color logic vs other habits
   const color =
