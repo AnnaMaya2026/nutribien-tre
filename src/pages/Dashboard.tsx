@@ -51,9 +51,9 @@ function ProgressBar({ value, max, label, unit, isMicro = false }: { value: numb
   const { bg, text, emoji } = getNutrientColor(rawPct, isMicro);
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-xs">
+      <div className="flex justify-between text-[15px]">
         <span className="text-muted-foreground">{label}</span>
-        <span className={`font-medium ${text}`}>{emoji} {Math.round(value)}/{max}{unit}</span>
+        <span className={`font-semibold ${text}`}>{emoji} {Math.round(value)}/{max}{unit}</span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-500 ${bg}`} style={{ width: `${barPct}%` }} />
@@ -223,9 +223,9 @@ export default function Dashboard() {
             const { bg, text, emoji } = getNutrientColor(rawPct, m.isMicro);
             return (
               <div key={m.label} className="text-center">
-                <div className="text-xs text-muted-foreground mb-1">{m.label}</div>
-                <div className={`text-sm font-bold ${text}`}>{emoji} {Math.round(m.value)}g</div>
-                <div className="text-[10px] text-muted-foreground mb-1">/ {m.max}g</div>
+                <div className="text-sm text-muted-foreground mb-1">{m.label}</div>
+                <div className={`text-lg font-bold ${text}`}>{emoji} {Math.round(m.value)}g</div>
+                <div className="text-xs text-muted-foreground mb-1">/ {m.max}g</div>
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                   <div className={`h-full rounded-full transition-all duration-500 ${bg}`} style={{ width: `${barPct}%` }} />
                 </div>
@@ -256,7 +256,7 @@ export default function Dashboard() {
 
       {/* Micronutrients */}
       <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
-        <h3 className="text-sm font-semibold text-foreground mb-3">Micronutriments clés</h3>
+        <h3 className="text-base font-semibold text-foreground mb-3">Micronutriments clés</h3>
         <div className="space-y-2">
           <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" isMicro />
           <ProgressBar value={totals.vitamin_d} max={DAILY_TARGETS.vitamin_d} label="Vitamine D" unit="µg" isMicro />
@@ -291,7 +291,7 @@ export default function Dashboard() {
 
       {/* 7-day chart */}
       <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
-        <h3 className="text-sm font-semibold text-foreground mb-3">Tendances calories 7 jours</h3>
+        <h3 className="text-base font-semibold text-foreground mb-3">Tendances calories 7 jours</h3>
         <ResponsiveContainer width="100%" height={140}>
           <BarChart data={chartData}>
             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />

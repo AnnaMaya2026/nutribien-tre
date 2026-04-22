@@ -29,21 +29,21 @@ export default function BottomNav() {
             <button
               key={tab.path}
               onClick={() => navigate(tab.path)}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all ${
+              className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg transition-all min-h-[56px] ${
                 active ? "text-tab-active" : "text-tab-inactive"
               }`}
             >
-              <tab.icon className="w-5 h-5" />
-              <span className="text-[9px] font-medium">{tab.label}</span>
+              <tab.icon className="w-[26px] h-[26px]" />
+              <span className="text-[13px] font-medium leading-none">{tab.label}</span>
             </button>
           );
         })}
         <button
           onClick={() => setDark(!dark)}
-          className="flex flex-col items-center gap-0.5 px-2 py-1.5 text-tab-inactive"
+          className="flex flex-col items-center gap-1 px-2 py-2 text-tab-inactive min-h-[56px]"
         >
-          {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          <span className="text-[9px] font-medium">{dark ? "Clair" : "Sombre"}</span>
+          {dark ? <Sun className="w-[26px] h-[26px]" /> : <Moon className="w-[26px] h-[26px]" />}
+          <span className="text-[13px] font-medium leading-none">{dark ? "Clair" : "Sombre"}</span>
         </button>
       </div>
     </nav>

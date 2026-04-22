@@ -130,10 +130,10 @@
     }
   }
 
-  /* Min text size on mobile body */
+  /* Min text size on mobile body — readable for 45+ users */
   @media (max-width: 767px) {
     body {
-      font-size: 14px;
+      font-size: 16px;
     }
   }
 }
