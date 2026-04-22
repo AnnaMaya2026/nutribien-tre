@@ -53,17 +53,14 @@ serve(async (req) => {
     let logsRes: any = null;
 
     if (userId) {
-      const profileRes = await supabase.from("profiles").select("*").eq("user_id", userId).single();
-      logsRes = await supabase.from("food_logs").select("*").eq("user_id", userId).eq("logged_at", today);
-      const _unused = [profileRes, logsRes]; void _unused;
-      const [_p, _l] = [profileRes, logsRes];
-      void _p; void _l;
-      const __dummy = await Promise.all([
+      const [profileRes, logsResLocal] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", userId).single(),
         supabase.from("food_logs").select("*").eq("user_id", userId).eq("logged_at", today),
       ]);
+      logsRes = logsResLocal;
 
       const profile = profileRes.data as any;
+
 
       // ── Daily message limit enforcement ──
       if (profile) {
