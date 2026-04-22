@@ -256,7 +256,7 @@ export default function Dashboard() {
 
       {/* Micronutrients */}
       <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
-        <h3 className="text-sm font-semibold text-foreground mb-3">Micronutriments clés</h3>
+        <h3 className="text-base font-semibold text-foreground mb-3">Micronutriments clés</h3>
         <div className="space-y-2">
           <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" isMicro />
           <ProgressBar value={totals.vitamin_d} max={DAILY_TARGETS.vitamin_d} label="Vitamine D" unit="µg" isMicro />
@@ -291,7 +291,7 @@ export default function Dashboard() {
 
       {/* 7-day chart */}
       <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
-        <h3 className="text-sm font-semibold text-foreground mb-3">Tendances calories 7 jours</h3>
+        <h3 className="text-base font-semibold text-foreground mb-3">Tendances calories 7 jours</h3>
         <ResponsiveContainer width="100%" height={140}>
           <BarChart data={chartData}>
             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
