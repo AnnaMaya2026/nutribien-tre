@@ -363,8 +363,8 @@ export default function ChatPage() {
           <div className="min-w-0 flex-1 flex items-center gap-2.5">
             <SophieAvatar size={40} thinking={isLoading} />
             <div className="min-w-0">
-              <h1 className="text-lg font-bold text-foreground truncate">Sophie — Nutritionniste IA</h1>
-              <p className="text-xs text-muted-foreground">Conseils personnalisés pour la ménopause</p>
+              <h1 className="text-base sm:text-lg font-bold text-foreground whitespace-nowrap">Sophie — Nutritionniste IA</h1>
+              <p className="text-xs text-muted-foreground truncate">Conseils personnalisés pour la ménopause</p>
               {remaining !== null && (
                 <p className="text-[10px] text-muted-foreground/80 mt-0.5">
                   Messages restants aujourd'hui : {remaining}/20
