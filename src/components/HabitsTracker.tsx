@@ -143,7 +143,7 @@ function HydrationCard({ habit }: { habit: UserHabit }) {
     (l) => l.habit_key === habit.habit_key && l.logged_at === today
   );
   const count = todayLog?.count ?? 0;
-  const goal = (profile as any)?.hydration_goal || habit.goal || 8;
+  const goal = habit.goal || 8;
 
   // Inverted color logic vs other habits
   const color =
