@@ -8,7 +8,7 @@ import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
-import GettingStartedCarousel from "@/components/GettingStartedCarousel";
+import HelpCarousel from "@/components/HelpCarousel";
 import { ChevronDown, ChevronUp, LogOut } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
@@ -151,7 +151,9 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-foreground">Bonjour {firstName ? firstName : ""} 👋</h1>
           <p className="text-muted-foreground text-sm">{formatFrenchDate()}</p>
         </div>
-        <AlertDialog>
+        <div className="flex items-center gap-2 shrink-0">
+          <HelpCarousel />
+          <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
               variant="ghost"
