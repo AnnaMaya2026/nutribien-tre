@@ -839,6 +839,16 @@ export default function SymptomHistoryPage() {
         </div>
       )}
 
+      <CorrelationAnalysis
+        activeSymptomKeys={activeSymptomKeys}
+        symptomLogs={symptomLogs}
+        routines={routines}
+        routineLogs={routineLogs}
+        habits={habits}
+        habitLogs={habitLogsHistory}
+        journalEntries={journalEntries}
+      />
+
       {/* Per-symptom detail cards */}
       {activeSymptomKeys.length > 0 && (
         <div className="space-y-3">
