@@ -1,16 +1,18 @@
-import { useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useJournalEntries } from "@/hooks/useJournalEntries";
 import { useRoutines } from "@/hooks/useRoutines";
+import { useHabits } from "@/hooks/useHabits";
 import { SymptomScores } from "@/hooks/useSymptomLogs";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
 import { SYMPTOM_FOOD_MAP } from "@/lib/symptomFoods";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { Bar, ComposedChart, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { AlertTriangle, TrendingUp, TrendingDown, ArrowRight, Check, Settings } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { SymptomTipsCollapsible } from "@/components/SymptomTipsCollapsible";
 import { CustomizeSymptomsModal } from "@/components/CustomizeSymptomsModal";
@@ -27,6 +29,31 @@ const CHART_COLORS = [
   "hsl(330, 60%, 65%)", "hsl(200, 60%, 55%)", "hsl(145, 50%, 45%)",
   "hsl(35, 80%, 55%)", "hsl(270, 50%, 60%)", "hsl(10, 70%, 55%)",
 ];
+
+type CorrelationAction = {
+  id: string;
+  label: string;
+  type: "routine" | "habit" | "journal";
+  sourceKey: string;
+};
+
+const CORRELATION_PERIODS = [
+  { value: 7, label: "7j" },
+  { value: 30, label: "30j" },
+  { value: 90, label: "3 mois" },
+];
+
+const toDateKey = (date: Date) => date.toISOString().split("T")[0];
+
+const buildDateRange = (period: number) => {
+  const days: string[] = [];
+  for (let i = period - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(toDateKey(d));
+  }
+  return days;
+};
 
 // Simplified journal entry - no categories
 
@@ -226,6 +253,147 @@ function WeeklySummary({ logs, period }: { logs: any[]; period: number }) {
   );
 }
 
+function CorrelationAnalysis({
+  activeSymptomKeys,
+  symptomLogs,
+  routines,
+  routineLogs,
+  habits,
+  habitLogs,
+  journalEntries,
+}: {
+  activeSymptomKeys: string[];
+  symptomLogs: any[];
+  routines: { id: string; name: string }[];
+  routineLogs: { routine_id: string; logged_at: string; completed: boolean }[];
+  habits: { habit_key: string; habit_name: string; habit_emoji?: string }[];
+  habitLogs: { habit_key: string; habit_name: string; count: number; logged_at: string }[];
+  journalEntries: { category: string; entry_date: string }[];
+}) {
+  const [selectedSymptom, setSelectedSymptom] = useState("");
+  const [selectedAction, setSelectedAction] = useState("");
+  const [correlationPeriod, setCorrelationPeriod] = useState(30);
+
+  const symptomOptions = useMemo(
+    () => activeSymptomKeys.map((key) => ({ key, label: FULL_SYMPTOMS_LIST.find((s) => s.value === key)?.label || key.replace(/^custom_/, "") })),
+    [activeSymptomKeys]
+  );
+
+  const actionOptions = useMemo<CorrelationAction[]>(() => {
+    const habitMap = new Map<string, string>();
+    habits.forEach((h) => habitMap.set(h.habit_key, `${h.habit_emoji || "•"} ${h.habit_name}`));
+    habitLogs.forEach((h) => habitMap.set(h.habit_key, habitMap.get(h.habit_key) || h.habit_name));
+    const categories = Array.from(new Set(journalEntries.map((entry) => entry.category || "autre")));
+
+    return [
+      ...routines.map((routine) => ({ id: `routine:${routine.id}`, label: `Routine · ${routine.name}`, type: "routine" as const, sourceKey: routine.id })),
+      ...Array.from(habitMap.entries()).map(([key, label]) => ({ id: `habit:${key}`, label: `Habitude · ${label}`, type: "habit" as const, sourceKey: key })),
+      ...categories.map((category) => ({ id: `journal:${category}`, label: `Journal · ${category}`, type: "journal" as const, sourceKey: category })),
+    ];
+  }, [habits, habitLogs, journalEntries, routines]);
+
+  useEffect(() => {
+    if (!selectedSymptom && symptomOptions[0]) setSelectedSymptom(symptomOptions[0].key);
+  }, [selectedSymptom, symptomOptions]);
+
+  useEffect(() => {
+    if (!selectedAction && actionOptions[0]) setSelectedAction(actionOptions[0].id);
+  }, [selectedAction, actionOptions]);
+
+  const selectedActionOption = actionOptions.find((option) => option.id === selectedAction);
+  const selectedSymptomLabel = symptomOptions.find((option) => option.key === selectedSymptom)?.label || "ce symptôme";
+
+  const correlationData = useMemo(() => {
+    const days = buildDateRange(correlationPeriod);
+    return days.map((date) => {
+      const log = symptomLogs.find((item) => item.logged_at === date);
+      const scores = (log?.symptom_scores && typeof log.symptom_scores === "object" && !Array.isArray(log.symptom_scores))
+        ? log.symptom_scores as SymptomScores : {};
+      let actionValue = 0;
+
+      if (selectedActionOption?.type === "routine") {
+        actionValue = routineLogs.some((item) => item.logged_at === date && item.routine_id === selectedActionOption.sourceKey && item.completed) ? 1 : 0;
+      } else if (selectedActionOption?.type === "habit") {
+        actionValue = habitLogs
+          .filter((item) => item.logged_at === date && item.habit_key === selectedActionOption.sourceKey)
+          .reduce((sum, item) => sum + Number(item.count || 0), 0);
+      } else if (selectedActionOption?.type === "journal") {
+        actionValue = journalEntries.some((entry) => entry.entry_date === date && (entry.category || "autre") === selectedActionOption.sourceKey) ? 1 : 0;
+      }
+
+      const d = new Date(date);
+      return {
+        date,
+        label: `${d.getDate()}/${d.getMonth() + 1}`,
+        symptom: typeof scores[selectedSymptom] === "number" && scores[selectedSymptom] > 0 ? scores[selectedSymptom] : null,
+        action: actionValue,
+      };
+    });
+  }, [correlationPeriod, habitLogs, journalEntries, routineLogs, selectedActionOption, selectedSymptom, symptomLogs]);
+
+  const correlationMessage = useMemo(() => {
+    const overlap = correlationData.filter((point) => typeof point.symptom === "number");
+    const withAction = overlap.filter((point) => point.action > 0);
+    const withoutAction = overlap.filter((point) => point.action === 0);
+    if (overlap.length < 7 || withAction.length < 2 || withoutAction.length < 2) {
+      return "Continuez le suivi quelques jours pour voir apparaître les corrélations 💪";
+    }
+
+    const average = (points: typeof overlap) => points.reduce((sum, point) => sum + Number(point.symptom), 0) / points.length;
+    const diff = average(withoutAction) - average(withAction);
+    const actionLabel = selectedActionOption?.label.replace(/^(Routine|Habitude|Journal) · /, "") || "cette action";
+
+    if (diff >= 0.5) {
+      return `📉 Les jours où tu ${actionLabel}, ton score de ${selectedSymptomLabel} est en moyenne ${diff.toFixed(1)} points plus bas`;
+    }
+    if (diff <= -0.5) {
+      return `📈 Les jours où tu ${actionLabel}, ton score de ${selectedSymptomLabel} tend à augmenter`;
+    }
+    return "🔍 Pas encore assez de données pour établir une corrélation. Continue le suivi !";
+  }, [correlationData, selectedActionOption, selectedSymptomLabel]);
+
+  if (symptomOptions.length === 0 || actionOptions.length === 0) return null;
+
+  return (
+    <div className="bg-card rounded-2xl p-4 card-soft mb-4 animate-fade-in">
+      <h3 className="text-base font-semibold text-foreground mb-3">Analyser une corrélation</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+        <div>
+          <p className="text-sm font-medium text-foreground mb-1.5">Symptôme à analyser</p>
+          <Select value={selectedSymptom} onValueChange={setSelectedSymptom}>
+            <SelectTrigger className="min-h-11 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>{symptomOptions.map((option) => <SelectItem key={option.key} value={option.key}>{option.label}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-foreground mb-1.5">Action à corréler</p>
+          <Select value={selectedAction} onValueChange={setSelectedAction}>
+            <SelectTrigger className="min-h-11 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>{actionOptions.map((option) => <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="flex gap-2 mb-3">
+        {CORRELATION_PERIODS.map((p) => (
+          <button key={p.value} onClick={() => setCorrelationPeriod(p.value)} className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${correlationPeriod === p.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{p.label}</button>
+        ))}
+      </div>
+      <ResponsiveContainer width="100%" height={220}>
+        <ComposedChart data={correlationData}>
+          <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} interval={correlationPeriod <= 7 ? 0 : correlationPeriod <= 30 ? 4 : 14} />
+          <YAxis yAxisId="symptom" domain={[0, 10]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={24} />
+          <YAxis yAxisId="action" orientation="right" allowDecimals={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={28} />
+          <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12 }} labelStyle={{ color: "hsl(var(--foreground))" }} />
+          <Bar yAxisId="action" dataKey="action" name="Action" fill="hsl(var(--progress-high))" radius={[4, 4, 0, 0]} opacity={0.65} />
+          <Line yAxisId="symptom" type="linear" dataKey="symptom" name={selectedSymptomLabel} stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 2.5 }} connectNulls />
+        </ComposedChart>
+      </ResponsiveContainer>
+      <div className="mt-3 rounded-xl bg-muted/60 p-3 text-sm text-foreground font-medium">{correlationMessage}</div>
+      <p className="mt-2 text-sm text-muted-foreground">⚠️ Ces corrélations sont indicatives et ne constituent pas un avis médical.</p>
+    </div>
+  );
+}
+
 // ── Main Page ──
 export default function SymptomHistoryPage() {
   const { user } = useAuth();
@@ -235,6 +403,7 @@ export default function SymptomHistoryPage() {
   const [showCustomize, setShowCustomize] = useState(false);
   const { entries: journalEntries } = useJournalEntries();
   const { routines, logs: routineLogs } = useRoutines();
+  const { habits } = useHabits();
   const today = new Date().toISOString().split("T")[0];
 
   // Merged symptoms list = default minus disabled + custom user-added
@@ -295,6 +464,24 @@ export default function SymptomHistoryPage() {
         .select("*")
         .eq("user_id", user.id)
         .gte("logged_at", startDate)
+        .order("logged_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const { data: habitLogsHistory = [] } = useQuery({
+    queryKey: ["habit_logs_correlation", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const since = new Date();
+      since.setDate(since.getDate() - 89);
+      const { data, error } = await supabase
+        .from("habit_logs")
+        .select("habit_key, habit_name, count, logged_at")
+        .eq("user_id", user.id)
+        .gte("logged_at", since.toISOString().split("T")[0])
         .order("logged_at", { ascending: true });
       if (error) throw error;
       return data || [];
@@ -651,6 +838,16 @@ export default function SymptomHistoryPage() {
           </p>
         </div>
       )}
+
+      <CorrelationAnalysis
+        activeSymptomKeys={activeSymptomKeys}
+        symptomLogs={symptomLogs}
+        routines={routines}
+        routineLogs={routineLogs}
+        habits={habits}
+        habitLogs={habitLogsHistory}
+        journalEntries={journalEntries}
+      />
 
       {/* Per-symptom detail cards */}
       {activeSymptomKeys.length > 0 && (
