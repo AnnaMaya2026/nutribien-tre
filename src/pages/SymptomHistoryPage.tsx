@@ -350,7 +350,7 @@ export default function SymptomHistoryPage() {
     return Array.from(keys);
   }, [symptomLogs]);
 
-  const chartData = useMemo(() => {
+  const { chartData, lineSegments } = useMemo(() => {
     const effectivePeriod = period >= 9999 ? Math.max(symptomLogs.length, 30) : period;
     const days: string[] = [];
     for (let i = effectivePeriod - 1; i >= 0; i--) {
@@ -359,7 +359,7 @@ export default function SymptomHistoryPage() {
       days.push(d.toISOString().split("T")[0]);
     }
 
-    return days.map((date) => {
+    const data = days.map((date) => {
       const log = symptomLogs.find((l) => l.logged_at === date);
       const scores = (log?.symptom_scores && typeof log.symptom_scores === "object" && !Array.isArray(log.symptom_scores))
         ? log.symptom_scores as SymptomScores : {};
@@ -367,15 +367,57 @@ export default function SymptomHistoryPage() {
       const d = new Date(date);
       const label = `${d.getDate()}/${d.getMonth() + 1}`;
 
-      // Only include actual data points, leave undefined for gaps
       const point: any = { date, label };
       activeSymptomKeys.forEach((key) => {
         if (scores[key] !== undefined && scores[key] > 0) {
           point[key] = scores[key];
+          point[`${key}__interpolated`] = false;
         }
       });
       return point;
     });
+
+    activeSymptomKeys.forEach((key) => {
+      const realIndexes = data
+        .map((point, index) => (typeof point[key] === "number" ? index : -1))
+        .filter((index) => index >= 0);
+
+      realIndexes.forEach((startIndex, realIndex) => {
+        const endIndex = realIndexes[realIndex + 1];
+        if (endIndex === undefined || endIndex - startIndex <= 1) return;
+
+        const startValue = data[startIndex][key] as number;
+        const endValue = data[endIndex][key] as number;
+        const gap = endIndex - startIndex;
+
+        for (let i = startIndex + 1; i < endIndex; i++) {
+          const ratio = (i - startIndex) / gap;
+          data[i][key] = Number((startValue + (endValue - startValue) * ratio).toFixed(1));
+          data[i][`${key}__interpolated`] = true;
+        }
+      });
+    });
+
+    const segments: { key: string; dataKey: string; dashed: boolean; colorIndex: number }[] = [];
+    activeSymptomKeys.slice(0, 6).forEach((key, colorIndex) => {
+      for (let i = 0; i < data.length - 1; i++) {
+        const current = data[i][key];
+        const next = data[i + 1][key];
+        if (typeof current !== "number" || typeof next !== "number") continue;
+
+        const dataKey = `${key}__segment_${i}`;
+        data[i][dataKey] = current;
+        data[i + 1][dataKey] = next;
+        segments.push({
+          key,
+          dataKey,
+          dashed: Boolean(data[i][`${key}__interpolated`] || data[i + 1][`${key}__interpolated`]),
+          colorIndex,
+        });
+      }
+    });
+
+    return { chartData: data, lineSegments: segments };
   }, [symptomLogs, period, activeSymptomKeys]);
 
   const journalByDate = useMemo(() => {
@@ -404,16 +446,24 @@ export default function SymptomHistoryPage() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload) return null;
     const dateStr = payload[0]?.payload?.date;
+    const point = payload[0]?.payload || {};
     const dayEntries = dateStr ? (journalByDate[dateStr] || []) : [];
     return (
       <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs max-w-[250px]">
         <p className="font-semibold text-foreground mb-1">{label}</p>
-        {payload.map((p: any) => (
-          <div key={p.name} className="flex justify-between gap-3">
-            <span style={{ color: p.color }}>{p.name}</span>
-            <span className="font-bold text-foreground">{p.value}/10</span>
+        {activeSymptomKeys.slice(0, 6).map((key, i) => {
+          const value = point[key];
+          if (typeof value !== "number") return null;
+          const symptomLabel = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key;
+          return (
+          <div key={key} className="flex justify-between gap-3">
+            <span style={{ color: CHART_COLORS[i % CHART_COLORS.length] }}>{symptomLabel}</span>
+            <span className="font-bold text-foreground">
+              {value}/10{point[`${key}__interpolated`] ? " estimé" : ""}
+            </span>
           </div>
-        ))}
+        );
+        })}
         {dayEntries.length > 0 && (
           <div className="mt-2 pt-2 border-t border-border space-y-1">
             {dayEntries.map((e) => (
