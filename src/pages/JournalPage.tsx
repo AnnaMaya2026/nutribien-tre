@@ -504,13 +504,24 @@ export default function JournalPage() {
                           onClick={() => setExpandedLogs((prev) => ({ ...prev, [log.id]: !prev[log.id] }))}
                           className="flex-1 text-left"
                         >
-                          <div className="font-semibold text-base text-foreground line-clamp-1 flex items-center gap-1.5">
+                          <div className="font-semibold text-base text-foreground line-clamp-1 flex items-center gap-1.5 flex-wrap">
                             {log.food_name.replace(" 📦", "")}
                             {log.food_name.includes("📦") && (
                               <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[10px] px-1.5 py-0">
                                 Industriel
                               </Badge>
                             )}
+                            {(() => {
+                              const w = detectRestrictionWarning(log.food_name, dietaryRestrictions);
+                              return w ? (
+                                <Badge
+                                  className="bg-destructive/15 text-destructive border-destructive/30 text-[10px] px-1.5 py-0"
+                                  title={`Incompatible avec votre régime: ${w.label}`}
+                                >
+                                  ⚠️ Contient {w.label.toLowerCase().replace(/^sans /, "")}
+                                </Badge>
+                              ) : null;
+                            })()}
                             <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${expandedLogs[log.id] ? "rotate-180" : ""}`} />
                           </div>
                           <div className="text-sm text-muted-foreground">
