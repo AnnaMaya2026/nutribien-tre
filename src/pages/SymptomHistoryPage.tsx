@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -403,6 +403,7 @@ export default function SymptomHistoryPage() {
   const [showCustomize, setShowCustomize] = useState(false);
   const { entries: journalEntries } = useJournalEntries();
   const { routines, logs: routineLogs } = useRoutines();
+  const { habits } = useHabits();
   const today = new Date().toISOString().split("T")[0];
 
   // Merged symptoms list = default minus disabled + custom user-added
@@ -463,6 +464,24 @@ export default function SymptomHistoryPage() {
         .select("*")
         .eq("user_id", user.id)
         .gte("logged_at", startDate)
+        .order("logged_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const { data: habitLogsHistory = [] } = useQuery({
+    queryKey: ["habit_logs_correlation", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const since = new Date();
+      since.setDate(since.getDate() - 89);
+      const { data, error } = await supabase
+        .from("habit_logs")
+        .select("habit_key, habit_name, count, logged_at")
+        .eq("user_id", user.id)
+        .gte("logged_at", since.toISOString().split("T")[0])
         .order("logged_at", { ascending: true });
       if (error) throw error;
       return data || [];
