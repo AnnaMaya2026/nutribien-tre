@@ -98,12 +98,30 @@ serve(async (req) => {
           .eq("user_id", userId);
         remaining = Math.max(0, DAILY_LIMIT - nextCount);
 
+        // Dietary restrictions
+        const dietary: string[] = profile.dietary_preferences || [];
+        const DIET_LABELS: Record<string, string> = {
+          sans_lactose: "🥛 Sans lactose",
+          sans_gluten: "🌾 Sans gluten",
+          vegetarien: "🥩 Végétarien (pas de viande ni poisson)",
+          vegan: "🌱 Végétalien / Vegan (pas de produits animaux)",
+          sans_poisson: "🐟 Sans poisson ni fruits de mer",
+          sans_fruits_a_coque: "🥜 Sans fruits à coque (allergie possible)",
+          sans_oeufs: "🍳 Sans oeufs",
+        };
+        const dietLabels = dietary
+          .map((d) => d.startsWith("other:") ? d.slice(6) : (DIET_LABELS[d] || d))
+          .filter(Boolean);
+
         profileContext = `
 Profil utilisatrice:
 - Prénom: ${profile.display_name || "Non renseigné"}
 - Stade: ${profile.menopause_stage || "Non renseigné"}
 - Symptômes principaux: ${(profile.symptoms || []).join(", ") || "Aucun renseigné"}
-- Objectif calorique: ${profile.daily_calorie_goal || 1800} kcal`;
+- Objectif calorique: ${profile.daily_calorie_goal || 1800} kcal
+- Régimes/restrictions alimentaires: ${dietLabels.length ? dietLabels.join(", ") : "Aucune"}
+
+⚠️ IMPORTANT: Respecte STRICTEMENT les restrictions alimentaires ci-dessus. Ne propose JAMAIS d'aliments incompatibles. Propose toujours des alternatives adaptées.`;
 
         // Health conditions
         const healthCodes: string[] = profile.health_conditions || [];
