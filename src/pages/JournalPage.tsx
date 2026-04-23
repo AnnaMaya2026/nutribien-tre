@@ -13,6 +13,8 @@ import VoiceCandidatePicker from "@/components/VoiceCandidatePicker";
 import NutrientDetailSections from "@/components/NutrientDetailSections";
 import NutrientReportModal from "@/components/NutrientReportModal";
 import { toast } from "sonner";
+import { useProfile } from "@/hooks/useProfile";
+import { detectRestrictionWarning } from "@/lib/dietaryRestrictions";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -25,6 +27,8 @@ export default function JournalPage() {
   const { logs, addLog, updateLog, deleteLog } = useFoodLogs();
   const { favorites, saveFavorite, deleteFavorite } = useFavoriteMeals();
   const { user } = useAuth();
+  const { profile } = useProfile();
+  const dietaryRestrictions = ((profile as any)?.dietary_preferences as string[]) || [];
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<CiqualFood[]>([]);
   const [searching, setSearching] = useState(false);
