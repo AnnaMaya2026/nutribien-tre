@@ -32,7 +32,9 @@ export default function ProfileSetup() {
   const [displayName, setDisplayName] = useState((profile as any)?.display_name ?? "");
   const [stage, setStage] = useState((profile as any)?.menopause_stage ?? "");
   const [symptoms, setSymptoms] = useState<string[]>((profile as any)?.symptoms ?? []);
-  const [dietPrefs, setDietPrefs] = useState<string[]>((profile as any)?.dietary_preferences ?? []);
+  const initialDiet = splitDietary((profile as any)?.dietary_preferences);
+  const [dietPrefs, setDietPrefs] = useState<string[]>(initialDiet.codes);
+  const [dietOther, setDietOther] = useState<string>(initialDiet.other);
   const [saving, setSaving] = useState(false);
 
   const toggleSymptom = (value: string) => {
@@ -51,7 +53,7 @@ export default function ProfileSetup() {
       display_name: displayName.trim() || null,
       menopause_stage: stage,
       symptoms,
-      dietary_preferences: dietPrefs,
+      dietary_preferences: buildDietary(dietPrefs, dietOther),
       profile_completed: true,
     } as any);
     setSaving(false);
@@ -104,10 +106,10 @@ export default function ProfileSetup() {
 
     // Step 3: Diet
     <div key="diet" className="space-y-6 animate-fade-in">
-      <h2 className="text-xl font-semibold text-foreground">Préférences alimentaires</h2>
-      <p className="text-muted-foreground text-sm">Optionnel — sélectionnez si applicable</p>
+      <h2 className="text-xl font-semibold text-foreground">Régimes et restrictions alimentaires</h2>
+      <p className="text-muted-foreground text-sm">Optionnel — Sophie en tiendra compte dans ses conseils</p>
       <div className="space-y-3">
-        {DIETARY_PREFS.map((d) => (
+        {DIETARY_RESTRICTIONS.map((d) => (
           <button
             key={d.value}
             onClick={() => toggleItem(dietPrefs, setDietPrefs, d.value)}
@@ -117,9 +119,20 @@ export default function ProfileSetup() {
                 : "bg-card border-border text-foreground hover:border-primary/50"
             }`}
           >
+            <span className="mr-2">{d.emoji}</span>
             {d.label}
           </button>
         ))}
+      </div>
+      <div>
+        <label className="text-sm font-medium text-foreground mb-1 block">Autre (précisez)</label>
+        <Input
+          type="text"
+          placeholder="Ex: sans soja, halal, casher…"
+          value={dietOther}
+          onChange={(e) => setDietOther(e.target.value)}
+          className="h-12 bg-card"
+        />
       </div>
     </div>,
   ];
