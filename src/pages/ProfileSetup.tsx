@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronRight, ChevronLeft, Heart, LogOut } from "lucide-react";
 import { SymptomChips } from "@/components/SymptomChips";
+import { DIETARY_RESTRICTIONS, splitDietary, buildDietary } from "@/lib/dietaryRestrictions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,11 +24,6 @@ const MENOPAUSE_STAGES = [
   { value: "postmenopause", label: "Postménopause" },
 ];
 
-const DIETARY_PREFS = [
-  { value: "vegetarien", label: "Végétarien" },
-  { value: "sans_gluten", label: "Sans gluten" },
-  { value: "sans_lactose", label: "Sans lactose" },
-];
 
 export default function ProfileSetup() {
   const { profile, updateProfile } = useProfile();
