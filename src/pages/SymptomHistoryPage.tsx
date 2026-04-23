@@ -30,6 +30,31 @@ const CHART_COLORS = [
   "hsl(35, 80%, 55%)", "hsl(270, 50%, 60%)", "hsl(10, 70%, 55%)",
 ];
 
+type CorrelationAction = {
+  id: string;
+  label: string;
+  type: "routine" | "habit" | "journal";
+  sourceKey: string;
+};
+
+const CORRELATION_PERIODS = [
+  { value: 7, label: "7j" },
+  { value: 30, label: "30j" },
+  { value: 90, label: "3 mois" },
+];
+
+const toDateKey = (date: Date) => date.toISOString().split("T")[0];
+
+const buildDateRange = (period: number) => {
+  const days: string[] = [];
+  for (let i = period - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(toDateKey(d));
+  }
+  return days;
+};
+
 // Simplified journal entry - no categories
 
 // ── Daily Rating Component ──
