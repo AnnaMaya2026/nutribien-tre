@@ -253,6 +253,147 @@ function WeeklySummary({ logs, period }: { logs: any[]; period: number }) {
   );
 }
 
+function CorrelationAnalysis({
+  activeSymptomKeys,
+  symptomLogs,
+  routines,
+  routineLogs,
+  habits,
+  habitLogs,
+  journalEntries,
+}: {
+  activeSymptomKeys: string[];
+  symptomLogs: any[];
+  routines: { id: string; name: string }[];
+  routineLogs: { routine_id: string; logged_at: string; completed: boolean }[];
+  habits: { habit_key: string; habit_name: string; habit_emoji?: string }[];
+  habitLogs: { habit_key: string; habit_name: string; count: number; logged_at: string }[];
+  journalEntries: { category: string; entry_date: string }[];
+}) {
+  const [selectedSymptom, setSelectedSymptom] = useState("");
+  const [selectedAction, setSelectedAction] = useState("");
+  const [correlationPeriod, setCorrelationPeriod] = useState(30);
+
+  const symptomOptions = useMemo(
+    () => activeSymptomKeys.map((key) => ({ key, label: FULL_SYMPTOMS_LIST.find((s) => s.value === key)?.label || key.replace(/^custom_/, "") })),
+    [activeSymptomKeys]
+  );
+
+  const actionOptions = useMemo<CorrelationAction[]>(() => {
+    const habitMap = new Map<string, string>();
+    habits.forEach((h) => habitMap.set(h.habit_key, `${h.habit_emoji || "•"} ${h.habit_name}`));
+    habitLogs.forEach((h) => habitMap.set(h.habit_key, habitMap.get(h.habit_key) || h.habit_name));
+    const categories = Array.from(new Set(journalEntries.map((entry) => entry.category || "autre")));
+
+    return [
+      ...routines.map((routine) => ({ id: `routine:${routine.id}`, label: `Routine · ${routine.name}`, type: "routine" as const, sourceKey: routine.id })),
+      ...Array.from(habitMap.entries()).map(([key, label]) => ({ id: `habit:${key}`, label: `Habitude · ${label}`, type: "habit" as const, sourceKey: key })),
+      ...categories.map((category) => ({ id: `journal:${category}`, label: `Journal · ${category}`, type: "journal" as const, sourceKey: category })),
+    ];
+  }, [habits, habitLogs, journalEntries, routines]);
+
+  useEffect(() => {
+    if (!selectedSymptom && symptomOptions[0]) setSelectedSymptom(symptomOptions[0].key);
+  }, [selectedSymptom, symptomOptions]);
+
+  useEffect(() => {
+    if (!selectedAction && actionOptions[0]) setSelectedAction(actionOptions[0].id);
+  }, [selectedAction, actionOptions]);
+
+  const selectedActionOption = actionOptions.find((option) => option.id === selectedAction);
+  const selectedSymptomLabel = symptomOptions.find((option) => option.key === selectedSymptom)?.label || "ce symptôme";
+
+  const correlationData = useMemo(() => {
+    const days = buildDateRange(correlationPeriod);
+    return days.map((date) => {
+      const log = symptomLogs.find((item) => item.logged_at === date);
+      const scores = (log?.symptom_scores && typeof log.symptom_scores === "object" && !Array.isArray(log.symptom_scores))
+        ? log.symptom_scores as SymptomScores : {};
+      let actionValue = 0;
+
+      if (selectedActionOption?.type === "routine") {
+        actionValue = routineLogs.some((item) => item.logged_at === date && item.routine_id === selectedActionOption.sourceKey && item.completed) ? 1 : 0;
+      } else if (selectedActionOption?.type === "habit") {
+        actionValue = habitLogs
+          .filter((item) => item.logged_at === date && item.habit_key === selectedActionOption.sourceKey)
+          .reduce((sum, item) => sum + Number(item.count || 0), 0);
+      } else if (selectedActionOption?.type === "journal") {
+        actionValue = journalEntries.some((entry) => entry.entry_date === date && (entry.category || "autre") === selectedActionOption.sourceKey) ? 1 : 0;
+      }
+
+      const d = new Date(date);
+      return {
+        date,
+        label: `${d.getDate()}/${d.getMonth() + 1}`,
+        symptom: typeof scores[selectedSymptom] === "number" && scores[selectedSymptom] > 0 ? scores[selectedSymptom] : null,
+        action: actionValue,
+      };
+    });
+  }, [correlationPeriod, habitLogs, journalEntries, routineLogs, selectedActionOption, selectedSymptom, symptomLogs]);
+
+  const correlationMessage = useMemo(() => {
+    const overlap = correlationData.filter((point) => typeof point.symptom === "number");
+    const withAction = overlap.filter((point) => point.action > 0);
+    const withoutAction = overlap.filter((point) => point.action === 0);
+    if (overlap.length < 7 || withAction.length < 2 || withoutAction.length < 2) {
+      return "Continuez le suivi quelques jours pour voir apparaître les corrélations 💪";
+    }
+
+    const average = (points: typeof overlap) => points.reduce((sum, point) => sum + Number(point.symptom), 0) / points.length;
+    const diff = average(withoutAction) - average(withAction);
+    const actionLabel = selectedActionOption?.label.replace(/^(Routine|Habitude|Journal) · /, "") || "cette action";
+
+    if (diff >= 0.5) {
+      return `📉 Les jours où tu ${actionLabel}, ton score de ${selectedSymptomLabel} est en moyenne ${diff.toFixed(1)} points plus bas`;
+    }
+    if (diff <= -0.5) {
+      return `📈 Les jours où tu ${actionLabel}, ton score de ${selectedSymptomLabel} tend à augmenter`;
+    }
+    return "🔍 Pas encore assez de données pour établir une corrélation. Continue le suivi !";
+  }, [correlationData, selectedActionOption, selectedSymptomLabel]);
+
+  if (symptomOptions.length === 0 || actionOptions.length === 0) return null;
+
+  return (
+    <div className="bg-card rounded-2xl p-4 card-soft mb-4 animate-fade-in">
+      <h3 className="text-base font-semibold text-foreground mb-3">Analyser une corrélation</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+        <div>
+          <p className="text-sm font-medium text-foreground mb-1.5">Symptôme à analyser</p>
+          <Select value={selectedSymptom} onValueChange={setSelectedSymptom}>
+            <SelectTrigger className="min-h-11 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>{symptomOptions.map((option) => <SelectItem key={option.key} value={option.key}>{option.label}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-foreground mb-1.5">Action à corréler</p>
+          <Select value={selectedAction} onValueChange={setSelectedAction}>
+            <SelectTrigger className="min-h-11 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>{actionOptions.map((option) => <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="flex gap-2 mb-3">
+        {CORRELATION_PERIODS.map((p) => (
+          <button key={p.value} onClick={() => setCorrelationPeriod(p.value)} className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${correlationPeriod === p.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{p.label}</button>
+        ))}
+      </div>
+      <ResponsiveContainer width="100%" height={220}>
+        <ComposedChart data={correlationData}>
+          <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} interval={correlationPeriod <= 7 ? 0 : correlationPeriod <= 30 ? 4 : 14} />
+          <YAxis yAxisId="symptom" domain={[0, 10]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={24} />
+          <YAxis yAxisId="action" orientation="right" allowDecimals={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} width={28} />
+          <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12 }} labelStyle={{ color: "hsl(var(--foreground))" }} />
+          <Bar yAxisId="action" dataKey="action" name="Action" fill="hsl(var(--progress-high))" radius={[4, 4, 0, 0]} opacity={0.65} />
+          <Line yAxisId="symptom" type="linear" dataKey="symptom" name={selectedSymptomLabel} stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 2.5 }} connectNulls />
+        </ComposedChart>
+      </ResponsiveContainer>
+      <div className="mt-3 rounded-xl bg-muted/60 p-3 text-sm text-foreground font-medium">{correlationMessage}</div>
+      <p className="mt-2 text-sm text-muted-foreground">⚠️ Ces corrélations sont indicatives et ne constituent pas un avis médical.</p>
+    </div>
+  );
+}
+
 // ── Main Page ──
 export default function SymptomHistoryPage() {
   const { user } = useAuth();
