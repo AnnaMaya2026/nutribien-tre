@@ -588,18 +588,39 @@ export default function SymptomHistoryPage() {
                   />
                 );
               })}
+              {lineSegments.map(({ dataKey, dashed, colorIndex }) => (
+                <Line
+                  key={dataKey}
+                  type="linear"
+                  dataKey={dataKey}
+                  stroke={CHART_COLORS[colorIndex % CHART_COLORS.length]}
+                  strokeWidth={2}
+                  strokeDasharray={dashed ? "4 4" : undefined}
+                  dot={false}
+                  activeDot={false}
+                  isAnimationActive={false}
+                  connectNulls={false}
+                  legendType="none"
+                />
+              ))}
               {activeSymptomKeys.slice(0, 6).map((key, i) => {
                 const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key;
                 return (
                   <Line
                     key={key}
-                    type="monotone"
+                    type="linear"
                     dataKey={key}
                     name={label}
-                    stroke={CHART_COLORS[i % CHART_COLORS.length]}
-                    strokeWidth={2}
-                    dot={{ r: 2 }}
+                    stroke="transparent"
+                    strokeWidth={0}
+                    dot={(props: any) => {
+                      const { cx, cy, payload } = props;
+                      if (payload?.[`${key}__interpolated`]) return <g />;
+                      return <circle cx={cx} cy={cy} r={2.5} fill={CHART_COLORS[i % CHART_COLORS.length]} />;
+                    }}
+                    activeDot={{ r: 5, fill: CHART_COLORS[i % CHART_COLORS.length], stroke: "hsl(var(--card))", strokeWidth: 2 }}
                     connectNulls={false}
+                    isAnimationActive={false}
                   />
                 );
               })}
