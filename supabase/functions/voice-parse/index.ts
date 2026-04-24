@@ -31,7 +31,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Tu es un assistant nutritionnel français. Analyse cette phrase et identifie les aliments avec leurs quantités. Pour les aliments solides, retourne les quantités en grammes. Pour les liquides, retourne les volumes en millilitres (ml), mais garde la propriété JSON "grams" pour compatibilité. Si aucune quantité n'est précisée, estime une portion standard. Retourne UNIQUEMENT le mot clé principal de chaque aliment, sans adjectif ni mode de cuisson. Exemples: 'poulet' pas 'poulet rôti', 'oeuf' pas 'oeuf dur', 'pomme' pas 'pomme verte', 'riz' pas 'riz basmati'.
+            content: `Tu es un assistant nutritionnel français. Analyse cette phrase et identifie les aliments avec leurs quantités. Pour les aliments solides, retourne les quantités en grammes. Pour les liquides, retourne les volumes en millilitres (ml), mais garde la propriété JSON "grams" pour compatibilité. Si aucune quantité n'est précisée, estime une portion standard selon l'aliment. Retourne UNIQUEMENT le mot clé principal de chaque aliment, sans adjectif ni mode de cuisson. Exemples: 'poulet' pas 'poulet rôti', 'oeuf' pas 'oeuf dur', 'pomme' pas 'pomme verte', 'riz' pas 'riz basmati'.
 
 Si l'utilisatrice mentionne des mesures courantes, convertis-les en grammes pour les solides et en ml pour les liquides:
 - 1 cuillère à café (cc) = 5g (liquides) ou 3g (poudres)
@@ -47,10 +47,12 @@ Multiplie par la quantité indiquée (ex: "2 cuillères à soupe d'huile" = 30ml
 
 Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
 {"foods": [{"name": "mot clé principal", "grams": nombre}]}
-Exemples de portions standards: un oeuf = 60g, une pomme = 150g, un verre de lait = 200ml, une tasse de café = 150ml, un bol de soupe = 300ml, un verre de jus d'orange = 200ml, une tranche de pain = 30g, un yaourt = 125g.
+Exemples de portions standards: un oeuf = 55g, un yaourt = 125g, une portion de fromage = 30g, un croissant = 50g, une tranche de pain = 30g, une portion de baguette = 60g, un bol de céréales = 40g, une banane = 120g, une pomme = 150g, une orange = 150g, un kiwi = 80g, une portion de fraises = 150g, une carotte = 80g, une tomate = 120g, une courgette = 200g, une portion de poulet = 150g, une portion de saumon = 150g, un steak = 150g, deux tranches de jambon = 45g, une noix de beurre = 10g, une cuillère d'huile = 10ml, une poignée de noix = 30g, un verre de lait = 200ml, une tasse de café = 150ml, un bol de soupe = 300ml, un verre de jus d'orange = 200ml.
 
 Exemples de conversion:
 - "2 cuillères à soupe d'huile d'olive" → {"name": "huile olive", "grams": 30}
+- "un oeuf" → {"name": "oeuf", "grams": 55}
+- "une banane" → {"name": "banane", "grams": 120}
 - "1 bol de flocons d'avoine" → {"name": "flocons avoine", "grams": 300}
 - "1 verre de lait" → {"name": "lait", "grams": 200}
 - "une tasse de café" → {"name": "café", "grams": 150}
