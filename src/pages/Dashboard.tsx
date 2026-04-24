@@ -12,6 +12,7 @@ import HelpCarousel from "@/components/HelpCarousel";
 import { ChevronDown, ChevronUp, LogOut } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
+import { formatPortion } from "@/lib/portionUnits";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -122,6 +123,7 @@ export default function Dashboard() {
     return Object.entries(meals).map(([key, cal]) => ({
       label: MEAL_LABELS[key] || key,
       calories: Math.round(cal),
+      portions: logs.filter((log) => (log.meal_type || "autre") === key).map((log) => formatPortion(log.food_name, log.portion_size)).join(" · "),
     }));
   }, [logs]);
 
@@ -245,7 +247,7 @@ export default function Dashboard() {
                 {mealBreakdown.map((m) => (
                   <div key={m.label} className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2">
                     <span className="text-xs text-foreground">{m.label}</span>
-                    <span className="text-xs font-semibold text-foreground">{m.calories} kcal</span>
+                    <span className="text-xs font-semibold text-foreground">{m.calories} kcal{m.portions ? ` · ${m.portions}` : ""}</span>
                   </div>
                 ))}
               </div>
