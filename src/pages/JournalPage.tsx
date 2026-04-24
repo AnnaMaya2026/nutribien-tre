@@ -15,7 +15,7 @@ import NutrientReportModal from "@/components/NutrientReportModal";
 import { toast } from "sonner";
 import { useProfile } from "@/hooks/useProfile";
 import { detectRestrictionWarning } from "@/lib/dietaryRestrictions";
-import { formatPortion, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
+import { formatPortion, formatStandardPortionHint, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -402,6 +402,7 @@ export default function JournalPage() {
                 </button>
               ))}
             </div>
+            <p className="text-[11px] text-muted-foreground mt-2">{formatStandardPortionHint(selectedFood.nom)}</p>
           </div>
 
           {/* Meal type */}
