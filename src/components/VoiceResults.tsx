@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Plus, Minus, Check, X } from "lucide-react";
 import { scaleCiqual } from "@/lib/ciqual";
+import { formatPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 import type { VoiceMatch } from "./VoiceInput";
 
 interface VoiceResultsProps {
@@ -55,21 +56,26 @@ export default function VoiceResults({ matches, mealType, onConfirm, onCancel }:
             </button>
           </div>
           <div className="flex items-center gap-2">
+            {(() => {
+              const unit = getPortionUnit(item.food.nom);
+              const step = getPortionStep(item.food.nom);
+              const presets = unit === "ml" ? [100, 150, 200, 250] : [50, 100, 150, 200];
+              return <>
             <button
-              onClick={() => updateGrams(idx, Math.max(10, item.grams - 10))}
+              onClick={() => updateGrams(idx, Math.max(10, item.grams - step))}
               className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center"
             >
               <Minus className="w-3 h-3" />
             </button>
-            <span className="text-sm font-medium text-foreground w-14 text-center">{item.grams}g</span>
+            <span className="text-sm font-medium text-foreground w-14 text-center">{formatPortion(item.food.nom, item.grams)}</span>
             <button
-              onClick={() => updateGrams(idx, Math.min(1000, item.grams + 10))}
+              onClick={() => updateGrams(idx, Math.min(1000, item.grams + step))}
               className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center"
             >
               <Plus className="w-3 h-3" />
             </button>
             <div className="flex gap-1 ml-2">
-              {[50, 100, 150, 200].map((g) => (
+              {presets.map((g) => (
                 <button
                   key={g}
                   onClick={() => updateGrams(idx, g)}
@@ -77,10 +83,12 @@ export default function VoiceResults({ matches, mealType, onConfirm, onCancel }:
                     item.grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {g}g
+                  {g}{unit}
                 </button>
               ))}
             </div>
+              </>;
+            })()}
           </div>
         </div>
       ))}

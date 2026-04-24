@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { Recipe } from "@/lib/recipes";
 import { ChefHat, Leaf, ChevronDown, ChevronUp, Clock, Flame, UtensilsCrossed } from "lucide-react";
+import { getPortionUnit } from "@/lib/portionUnits";
 
 interface ResolvedIngredient {
   name: string;
@@ -167,7 +168,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
                 <span className="text-xs text-foreground">{ing.name}</span>
               </div>
               <span className="text-[10px] text-muted-foreground font-medium">
-                {Math.round(ing.grams * portionMultiplier)}g
+                {Math.round(ing.grams * portionMultiplier)}{getPortionUnit(ing.name)}
                 {ing.scaled && ` · ${Math.round(ing.scaled.calories * portionMultiplier)} kcal`}
               </span>
             </div>

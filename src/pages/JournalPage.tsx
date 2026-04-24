@@ -15,6 +15,7 @@ import NutrientReportModal from "@/components/NutrientReportModal";
 import { toast } from "sonner";
 import { useProfile } from "@/hooks/useProfile";
 import { detectRestrictionWarning } from "@/lib/dietaryRestrictions";
+import { formatPortion, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -353,7 +354,7 @@ export default function JournalPage() {
               {results.map((f) => (
                 <button
                   key={f.id}
-                  onClick={() => { setSelectedFood(f); setSearch(f.nom); setGrams(100); }}
+                  onClick={() => { setSelectedFood(f); setSearch(f.nom); setGrams(getDefaultPortion(f.nom)); }}
                   className="w-full text-left px-4 py-3 hover:bg-muted/50 border-b border-border last:border-0"
                 >
                   <div className="font-medium text-sm text-foreground line-clamp-1">{f.nom}</div>
@@ -374,7 +375,7 @@ export default function JournalPage() {
           <div className="flex justify-between items-start mb-3">
             <div className="flex-1 mr-2">
               <h3 className="font-semibold text-foreground line-clamp-2">{selectedFood.nom}</h3>
-              <p className="text-xs text-muted-foreground">Valeurs pour {grams}g</p>
+              <p className="text-xs text-muted-foreground">Valeurs pour {formatPortion(selectedFood.nom, grams)}</p>
             </div>
             <button onClick={() => { setSelectedFood(null); setSearch(""); }}>
               <X className="w-4 h-4 text-muted-foreground" />
@@ -383,21 +384,21 @@ export default function JournalPage() {
 
           {/* Portion */}
           <div className="mb-3">
-            <label className="text-xs text-muted-foreground block mb-1">Quantité (grammes)</label>
+            <label className="text-xs text-muted-foreground block mb-1">Quantité ({getPortionUnit(selectedFood.nom) === "ml" ? "millilitres" : "grammes"})</label>
             <div className="flex items-center gap-3">
-              <button onClick={() => setGrams((g) => Math.max(10, g - 10))} className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground">
+              <button onClick={() => setGrams((g) => Math.max(10, g - getPortionStep(selectedFood.nom)))} className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground">
                 <Minus className="w-4 h-4" />
               </button>
               <Input type="number" value={grams} onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 10 && v <= 1000) setGrams(v); }} className="w-20 text-center h-9 bg-muted" min={10} max={1000} />
-              <span className="text-sm text-muted-foreground">g</span>
-              <button onClick={() => setGrams((g) => Math.min(1000, g + 10))} className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground">
+              <span className="text-sm text-muted-foreground">{getPortionUnit(selectedFood.nom)}</span>
+              <button onClick={() => setGrams((g) => Math.min(1000, g + getPortionStep(selectedFood.nom)))} className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground">
                 <Plus className="w-4 h-4" />
               </button>
             </div>
             <div className="flex gap-2 mt-2">
-              {[50, 100, 150, 200, 300].map((g) => (
+              {(getPortionUnit(selectedFood.nom) === "ml" ? [100, 150, 200, 250, 300] : [50, 100, 150, 200, 300]).map((g) => (
                 <button key={g} onClick={() => setGrams(g)} className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                  {g}g
+                  {g}{getPortionUnit(selectedFood.nom)}
                 </button>
               ))}
             </div>
@@ -525,11 +526,11 @@ export default function JournalPage() {
                             <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${expandedLogs[log.id] ? "rotate-180" : ""}`} />
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {log.calories} kcal · {log.proteins}g prot · {log.portion_size}g
+                            {log.calories} kcal · {log.proteins}g prot · {formatPortion(log.food_name, log.portion_size)}
                           </div>
                         </button>
                         <button
-                          onClick={() => setEditPortion({ log, grams: log.portion_size || 100 })}
+                          onClick={() => setEditPortion({ log, grams: log.portion_size || getDefaultPortion(log.food_name) })}
                           className="text-muted-foreground hover:text-pink-deep transition-colors"
                           title="Modifier la portion"
                         >
@@ -664,7 +665,7 @@ export default function JournalPage() {
                     </div>
                     <div className="text-[10px] text-muted-foreground mb-2 space-y-0.5">
                       {fav.items.map((item, i) => (
-                        <div key={i}>{item.food_name} ({item.portion_size}g)</div>
+                        <div key={i}>{item.food_name} ({formatPortion(item.food_name, item.portion_size)})</div>
                       ))}
                     </div>
                     <button
@@ -747,13 +748,13 @@ export default function JournalPage() {
             <h3 className="text-sm font-semibold text-foreground mb-1">✏️ Modifier la portion</h3>
             <p className="text-xs text-muted-foreground mb-4 line-clamp-1">{editPortion.log.food_name}</p>
             <p className="text-[11px] text-muted-foreground mb-2">
-              Portion actuelle : <span className="font-medium text-foreground">{editPortion.log.portion_size}g</span>
+              Portion actuelle : <span className="font-medium text-foreground">{formatPortion(editPortion.log.food_name, editPortion.log.portion_size)}</span>
             </p>
 
-            <label className="text-xs text-muted-foreground block mb-1">Nouvelle quantité (grammes)</label>
+            <label className="text-xs text-muted-foreground block mb-1">Nouvelle quantité ({getPortionUnit(editPortion.log.food_name) === "ml" ? "millilitres" : "grammes"})</label>
             <div className="flex items-center gap-3 mb-4">
               <button
-                onClick={() => setEditPortion((p) => p && ({ ...p, grams: Math.max(10, p.grams - 10) }))}
+                onClick={() => setEditPortion((p) => p && ({ ...p, grams: Math.max(10, p.grams - getPortionStep(p.log.food_name)) }))}
                 className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-foreground"
               >
                 <Minus className="w-4 h-4" />
@@ -771,9 +772,9 @@ export default function JournalPage() {
                 min={1}
                 max={2000}
               />
-              <span className="text-sm text-muted-foreground">g</span>
+              <span className="text-sm text-muted-foreground">{getPortionUnit(editPortion.log.food_name)}</span>
               <button
-                onClick={() => setEditPortion((p) => p && ({ ...p, grams: Math.min(2000, p.grams + 10) }))}
+                onClick={() => setEditPortion((p) => p && ({ ...p, grams: Math.min(2000, p.grams + getPortionStep(p.log.food_name)) }))}
                 className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-foreground"
               >
                 <Plus className="w-4 h-4" />
@@ -781,7 +782,7 @@ export default function JournalPage() {
             </div>
 
             <div className="flex gap-2 mb-4">
-              {[50, 100, 150, 200, 300].map((g) => (
+              {(getPortionUnit(editPortion.log.food_name) === "ml" ? [100, 150, 200, 250, 300] : [50, 100, 150, 200, 300]).map((g) => (
                 <button
                   key={g}
                   onClick={() => setEditPortion((p) => p && ({ ...p, grams: g }))}
@@ -789,7 +790,7 @@ export default function JournalPage() {
                     editPortion.grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {g}g
+                  {g}{getPortionUnit(editPortion.log.food_name)}
                 </button>
               ))}
             </div>

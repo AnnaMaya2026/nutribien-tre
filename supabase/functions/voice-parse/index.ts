@@ -31,28 +31,31 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Tu es un assistant nutritionnel français. Analyse cette phrase et identifie les aliments avec leurs quantités en grammes. Si aucune quantité n'est précisée, estime une portion standard. Retourne UNIQUEMENT le mot clé principal de chaque aliment, sans adjectif ni mode de cuisson. Exemples: 'poulet' pas 'poulet rôti', 'oeuf' pas 'oeuf dur', 'pomme' pas 'pomme verte', 'riz' pas 'riz basmati'.
+            content: `Tu es un assistant nutritionnel français. Analyse cette phrase et identifie les aliments avec leurs quantités. Pour les aliments solides, retourne les quantités en grammes. Pour les liquides, retourne les volumes en millilitres (ml), mais garde la propriété JSON "grams" pour compatibilité. Si aucune quantité n'est précisée, estime une portion standard. Retourne UNIQUEMENT le mot clé principal de chaque aliment, sans adjectif ni mode de cuisson. Exemples: 'poulet' pas 'poulet rôti', 'oeuf' pas 'oeuf dur', 'pomme' pas 'pomme verte', 'riz' pas 'riz basmati'.
 
-Si l'utilisatrice mentionne des mesures courantes, convertis-les en grammes:
+Si l'utilisatrice mentionne des mesures courantes, convertis-les en grammes pour les solides et en ml pour les liquides:
 - 1 cuillère à café (cc) = 5g (liquides) ou 3g (poudres)
 - 1 cuillère à soupe (cs) = 15g (liquides) ou 10g (poudres)
-- 1 verre = 200ml/200g
-- 1 bol = 300g
-- 1 tasse = 250ml/250g
+- 1 verre = 200ml pour les liquides
+- 1 bol = 300ml pour soupe/bouillon, 300g pour solides
+- 1 tasse = 150ml pour café/thé/tisane/infusion, 250ml pour autres boissons, 250g pour solides
 - 1 poignée = 30g
 - 1 tranche = 30g (pain) ou 50g (viande/fromage)
-- 1 portion = 150g (viande/poisson) ou 100g (légumes)
+- 1 portion = 150g (viande/poisson), 100g (légumes), ou 200ml (liquides)
 - 1 filet = 150g
-Multiplie par la quantité indiquée (ex: "2 cuillères à soupe d'huile" = 30g). Retourne toujours le poids en grammes dans le JSON.
+Multiplie par la quantité indiquée (ex: "2 cuillères à soupe d'huile" = 30ml). Pour l'huile, retourne le volume en ml; la conversion nutritionnelle sera faite ensuite.
 
 Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
 {"foods": [{"name": "mot clé principal", "grams": nombre}]}
-Exemples de portions standards: un oeuf = 60g, une pomme = 150g, un verre de lait = 200g, une tranche de pain = 30g, un yaourt = 125g.
+Exemples de portions standards: un oeuf = 60g, une pomme = 150g, un verre de lait = 200ml, une tasse de café = 150ml, un bol de soupe = 300ml, un verre de jus d'orange = 200ml, une tranche de pain = 30g, un yaourt = 125g.
 
 Exemples de conversion:
 - "2 cuillères à soupe d'huile d'olive" → {"name": "huile olive", "grams": 30}
 - "1 bol de flocons d'avoine" → {"name": "flocons avoine", "grams": 300}
 - "1 verre de lait" → {"name": "lait", "grams": 200}
+- "une tasse de café" → {"name": "café", "grams": 150}
+- "un bol de soupe" → {"name": "soupe", "grams": 300}
+- "un verre de jus d'orange" → {"name": "jus orange", "grams": 200}
 - "une poignée de noix" → {"name": "noix", "grams": 30}`,
           },
           { role: "user", content: transcript },

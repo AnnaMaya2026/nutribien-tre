@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { scaleCiqual, CiqualFood } from "@/lib/ciqual";
+import { getDefaultPortion } from "@/lib/portionUnits";
 import { toast } from "sonner";
 
 export interface VoiceMatch {
@@ -119,7 +120,7 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
             vitamine_e_100g: (row as any).vitamine_e_100g ?? 0,
           }));
 
-          const grams = Math.max(10, Math.min(1000, item.grams || 100));
+          const grams = Math.max(10, Math.min(1000, item.grams || getDefaultPortion(item.name)));
 
           // Always show picker if more than 1 result
           if (mapped.length > 1 && onCandidates) {

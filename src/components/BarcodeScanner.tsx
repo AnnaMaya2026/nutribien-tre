@@ -3,6 +3,7 @@ import { X, ScanBarcode, Loader2, Plus, Minus, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { amountToNutritionGrams, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -116,6 +117,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
         omega3_100g: n(nm["omega-3-fat_100g"]),
         vitamin_b12_100g: n(nm["vitamin-b12_100g"]),
       });
+      setGrams(getDefaultPortion(p.product_name || p.product_name_fr || "Produit inconnu"));
     } catch {
       toast.error("Erreur de connexion, réessayez");
       setShowScanner(false);
@@ -219,19 +221,22 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
     lookupBarcode(code);
   };
 
+  const unit = product ? getPortionUnit(product.name) : "g";
+  const step = product ? getPortionStep(product.name) : 10;
+  const nutritionGrams = product ? amountToNutritionGrams(product.name, grams) : grams;
   const scaled = product
     ? {
-        calories: Math.round((product.calories_100g * grams) / 100),
-        proteins: Math.round((product.proteins_100g * grams) / 100),
-        carbs: Math.round((product.carbs_100g * grams) / 100),
-        fats: Math.round((product.fats_100g * grams) / 100),
-        fibres: Math.round((product.fiber_100g * grams) / 100),
-        calcium: Math.round((product.calcium_100g * grams) / 100),
-        vitamin_d: +((product.vitamin_d_100g * grams) / 100).toFixed(1),
-        magnesium: Math.round((product.magnesium_100g * grams) / 100),
-        iron: +((product.iron_100g * grams) / 100).toFixed(1),
-        omega3: +((product.omega3_100g * grams) / 100).toFixed(1),
-        vitamin_b12: +((product.vitamin_b12_100g * grams) / 100).toFixed(1),
+        calories: Math.round((product.calories_100g * nutritionGrams) / 100),
+        proteins: Math.round((product.proteins_100g * nutritionGrams) / 100),
+        carbs: Math.round((product.carbs_100g * nutritionGrams) / 100),
+        fats: Math.round((product.fats_100g * nutritionGrams) / 100),
+        fibres: Math.round((product.fiber_100g * nutritionGrams) / 100),
+        calcium: Math.round((product.calcium_100g * nutritionGrams) / 100),
+        vitamin_d: +((product.vitamin_d_100g * nutritionGrams) / 100).toFixed(1),
+        magnesium: Math.round((product.magnesium_100g * nutritionGrams) / 100),
+        iron: +((product.iron_100g * nutritionGrams) / 100).toFixed(1),
+        omega3: +((product.omega3_100g * nutritionGrams) / 100).toFixed(1),
+        vitamin_b12: +((product.vitamin_b12_100g * nutritionGrams) / 100).toFixed(1),
       }
     : null;
 
@@ -390,10 +395,10 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
 
                 {/* Portion */}
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Quantité (grammes)</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Quantité ({unit === "ml" ? "millilitres" : "grammes"})</label>
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => setGrams((g) => Math.max(10, g - 10))}
+                      onClick={() => setGrams((g) => Math.max(10, g - step))}
                       className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground"
                     >
                       <Minus className="w-4 h-4" />
@@ -409,22 +414,22 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                       min={10}
                       max={1000}
                     />
-                    <span className="text-sm text-muted-foreground">g</span>
+                    <span className="text-sm text-muted-foreground">{unit}</span>
                     <button
-                      onClick={() => setGrams((g) => Math.min(1000, g + 10))}
+                      onClick={() => setGrams((g) => Math.min(1000, g + step))}
                       className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="flex gap-2 mt-2">
-                    {[50, 100, 150, 200, 300].map((g) => (
+                    {(unit === "ml" ? [100, 150, 200, 250, 300] : [50, 100, 150, 200, 300]).map((g) => (
                       <button
                         key={g}
                         onClick={() => setGrams(g)}
                         className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
                       >
-                        {g}g
+                        {g}{unit}
                       </button>
                     ))}
                   </div>

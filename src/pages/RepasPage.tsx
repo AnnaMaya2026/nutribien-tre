@@ -9,6 +9,7 @@ import { NutrientGapTab } from "@/components/NutrientGapTab";
 import { ChefHat, Leaf, AlertTriangle, Search, Loader2, UtensilsCrossed } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { getDefaultPortion, getPortionUnit } from "@/lib/portionUnits";
 
 interface NutrientGap {
   key: string;
@@ -21,8 +22,9 @@ interface NutrientGap {
 }
 
 function FoodCard({ food, gapsCovered }: { food: CiqualFood; gapsCovered?: string[] }) {
-  const [grams, setGrams] = useState(100);
+  const [grams, setGrams] = useState(getDefaultPortion(food.nom));
   const scaled = scaleCiqual(food, grams);
+  const unit = getPortionUnit(food.nom);
 
   return (
     <div className="bg-card rounded-2xl p-4 card-soft animate-fade-in">
@@ -51,13 +53,13 @@ function FoodCard({ food, gapsCovered }: { food: CiqualFood; gapsCovered?: strin
       <div className="flex items-center gap-2 mb-3">
         <span className="text-xs text-muted-foreground">Portion :</span>
         <div className="flex gap-1">
-          {[50, 100, 150, 200].map((g) => (
+          {(unit === "ml" ? [100, 150, 200, 250] : [50, 100, 150, 200]).map((g) => (
             <button
               key={g}
               onClick={() => setGrams(g)}
               className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all ${grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
             >
-              {g}g
+              {g}{unit}
             </button>
           ))}
         </div>
