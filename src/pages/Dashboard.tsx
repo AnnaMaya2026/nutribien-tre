@@ -9,7 +9,7 @@ import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
 import HelpCarousel from "@/components/HelpCarousel";
-import { ChevronDown, ChevronUp, LogOut } from "lucide-react";
+import { ChevronDown, ChevronUp, Info, LogOut } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
 import { formatPortion } from "@/lib/portionUnits";
@@ -73,6 +73,25 @@ function formatFrenchDate(): string {
 
 const MACRO_GOALS = { proteins: 100, carbs: 200, fats: 65, fibres: 25 };
 
+const COLORFUL_PRODUCE_KEYWORDS = [
+  "myrtille", "fraise", "framboise", "mure", "mûre", "grenade", "raisin", "cerise", "orange", "kiwi", "pomme", "poire", "banane", "abricot", "peche", "pêche", "prune", "mangue", "ananas", "brocoli", "carotte", "tomate", "poivron", "epinard", "épinard", "courgette", "aubergine", "betterave", "chou", "salade", "concombre", "haricot vert", "patate douce",
+];
+
+function getVitaminDGoal(age?: number | null) {
+  if (!age) return DAILY_TARGETS.vitamin_d;
+  if (age <= 50) return 5;
+  if (age <= 70) return 10;
+  return 15;
+}
+
+function getProducePortions(logs: any[]) {
+  return logs.reduce((count, log) => {
+    const name = String(log.food_name || "").toLowerCase();
+    if (!COLORFUL_PRODUCE_KEYWORDS.some((keyword) => name.includes(keyword))) return count;
+    return count + Math.max(1, Math.round(Number(log.portion_size || 100) / 100));
+  }, 0);
+}
+
 const MEAL_LABELS: Record<string, string> = {
   "petit-dejeuner": "🌅 Petit-déj",
   dejeuner: "☀️ Déjeuner",
@@ -88,6 +107,8 @@ export default function Dashboard() {
   const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
+  const proteinGoal = Math.max(1, Math.round(Number(profile?.weight || 60) * 1.0));
+  const vitaminDGoal = getVitaminDGoal(profile?.age);
   const firstName = getDisplayName((profile as any)?.display_name, user?.email);
 
   const totals = logs.reduce(
@@ -110,9 +131,16 @@ export default function Dashboard() {
       vitamin_b6: acc.vitamin_b6 + (log.vitamin_b6 || 0),
       vitamin_b9: acc.vitamin_b9 + (log.vitamin_b9 || 0),
       vitamin_e: acc.vitamin_e + (log.vitamin_e || 0),
+      omega6: acc.omega6 + ((log as any).omega6 || 0),
     }),
-    { calories: 0, proteins: 0, carbs: 0, fats: 0, fibres: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0, potassium: 0, zinc: 0, vitamin_k: 0, vitamin_b6: 0, vitamin_b9: 0, vitamin_e: 0 }
+    { calories: 0, proteins: 0, carbs: 0, fats: 0, fibres: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0, potassium: 0, zinc: 0, vitamin_k: 0, vitamin_b6: 0, vitamin_b9: 0, vitamin_e: 0, omega6: 0 }
   );
+
+  const antioxidantScore = getProducePortions(logs);
+  const antioxidantTone = antioxidantScore >= 5 ? "text-green-500" : antioxidantScore >= 3 ? "text-orange-500" : "text-red-500";
+  const hasOmega6Data = totals.omega6 > 0;
+  const omegaRatio = hasOmega6Data && totals.omega3 > 0 ? totals.omega6 / totals.omega3 : null;
+  const omegaRatioStatus = omegaRatio === null ? null : omegaRatio <= 4 ? "🟢 Excellent (anti-inflammatoire)" : omegaRatio <= 8 ? "🟠 Acceptable" : "🔴 Pro-inflammatoire";
 
   const mealBreakdown = useMemo(() => {
     const meals: Record<string, number> = {};
@@ -215,7 +243,7 @@ export default function Dashboard() {
         {/* Macro bars */}
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: "Protéines", value: totals.proteins, max: MACRO_GOALS.proteins, isMicro: false },
+            { label: "Protéines", value: totals.proteins, max: proteinGoal, isMicro: false },
             { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs, isMicro: false },
             { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats, isMicro: false },
             { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres, isMicro: true },
@@ -235,6 +263,18 @@ export default function Dashboard() {
             );
           })}
         </div>
+
+        <p className="mt-3 text-xs text-muted-foreground text-center">
+          Protéines: {Math.round(totals.proteins)}g / {proteinGoal}g (1g par kg de votre poids)
+        </p>
+        {totals.proteins < proteinGoal && (
+          <p className="mt-2 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            ⚠️ Apport protéique insuffisant pour préserver votre masse musculaire. Objectif : {proteinGoal}g de protéines aujourd'hui.
+          </p>
+        )}
+        <p className="mt-2 text-[11px] text-muted-foreground text-center">
+          ⚠️ Ces recommandations sont indicatives. Consultez votre médecin pour un suivi personnalisé.
+        </p>
 
         {/* Meal breakdown toggle */}
         {mealBreakdown.length > 0 && (
@@ -261,7 +301,7 @@ export default function Dashboard() {
         <h3 className="text-base font-semibold text-foreground mb-3">Micronutriments clés</h3>
         <div className="space-y-2">
           <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" isMicro />
-          <ProgressBar value={totals.vitamin_d} max={DAILY_TARGETS.vitamin_d} label="Vitamine D" unit="µg" isMicro />
+          <ProgressBar value={totals.vitamin_d} max={vitaminDGoal} label="Vitamine D" unit="µg" isMicro />
           <ProgressBar value={totals.magnesium} max={DAILY_TARGETS.magnesium} label="Magnésium" unit="mg" isMicro />
           <ProgressBar value={totals.iron} max={DAILY_TARGETS.iron} label="Fer" unit="mg" isMicro />
           <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro />
@@ -277,6 +317,29 @@ export default function Dashboard() {
             <ProgressBar value={totals.vitamin_b6} max={DAILY_TARGETS.vitamin_b6} label="Vitamine B6" unit="mg" isMicro />
             <ProgressBar value={totals.vitamin_b9} max={DAILY_TARGETS.vitamin_b9} label="Vitamine B9 (folate)" unit="µg" isMicro />
             <ProgressBar value={totals.vitamin_e} max={DAILY_TARGETS.vitamin_e} label="Vitamine E" unit="mg" isMicro />
+            <div className="rounded-xl bg-muted/30 px-3 py-2">
+              <div className="flex items-start justify-between gap-2 text-sm">
+                <span className="font-medium text-foreground">Ratio Oméga-6 / Oméga-3</span>
+                <span className="text-muted-foreground" title="Un ratio élevé favorise l'inflammation. L'objectif est d'atteindre un ratio ≤ 4:1 en augmentant les oméga-3 (poissons gras, noix, graines de lin) et en réduisant les huiles végétales riches en oméga-6.">
+                  <Info className="h-4 w-4" />
+                </span>
+              </div>
+              {omegaRatio ? (
+                <p className="mt-1 text-xs text-muted-foreground">Ratio oméga-6/oméga-3 : {omegaRatio.toFixed(1)}:1 · {omegaRatioStatus}</p>
+              ) : (
+                <p className="mt-1 text-xs text-muted-foreground">Données oméga-6 en cours d'intégration</p>
+              )}
+            </div>
+            <div className="rounded-xl bg-muted/30 px-3 py-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-foreground">Score antioxydants 🫐</span>
+                <span className={`font-semibold ${antioxidantTone}`}>{Math.min(antioxidantScore, 5)}/5</span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{Math.min(antioxidantScore, 5)}/5 portions fruits & légumes</p>
+              {antioxidantScore < 3 && (
+                <p className="mt-1 text-xs text-muted-foreground">Ajoutez des fruits rouges ou légumes colorés pour booster vos antioxydants !</p>
+              )}
+            </div>
           </div>
         )}
 
