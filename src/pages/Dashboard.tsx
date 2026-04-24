@@ -243,7 +243,7 @@ export default function Dashboard() {
         {/* Macro bars */}
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: "Protéines", value: totals.proteins, max: MACRO_GOALS.proteins, isMicro: false },
+            { label: "Protéines", value: totals.proteins, max: proteinGoal, isMicro: false },
             { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs, isMicro: false },
             { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats, isMicro: false },
             { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres, isMicro: true },
@@ -263,6 +263,18 @@ export default function Dashboard() {
             );
           })}
         </div>
+
+        <p className="mt-3 text-xs text-muted-foreground text-center">
+          Protéines: {Math.round(totals.proteins)}g / {proteinGoal}g (1g par kg de votre poids)
+        </p>
+        {totals.proteins < proteinGoal && (
+          <p className="mt-2 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            ⚠️ Apport protéique insuffisant pour préserver votre masse musculaire. Objectif : {proteinGoal}g de protéines aujourd'hui.
+          </p>
+        )}
+        <p className="mt-2 text-[11px] text-muted-foreground text-center">
+          ⚠️ Ces recommandations sont indicatives. Consultez votre médecin pour un suivi personnalisé.
+        </p>
 
         {/* Meal breakdown toggle */}
         {mealBreakdown.length > 0 && (
