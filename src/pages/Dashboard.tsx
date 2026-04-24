@@ -107,6 +107,8 @@ export default function Dashboard() {
   const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
+  const proteinGoal = Math.max(1, Math.round(Number(profile?.weight || 60) * 1.0));
+  const vitaminDGoal = getVitaminDGoal(profile?.age);
   const firstName = getDisplayName((profile as any)?.display_name, user?.email);
 
   const totals = logs.reduce(
@@ -129,9 +131,16 @@ export default function Dashboard() {
       vitamin_b6: acc.vitamin_b6 + (log.vitamin_b6 || 0),
       vitamin_b9: acc.vitamin_b9 + (log.vitamin_b9 || 0),
       vitamin_e: acc.vitamin_e + (log.vitamin_e || 0),
+      omega6: acc.omega6 + ((log as any).omega6 || 0),
     }),
-    { calories: 0, proteins: 0, carbs: 0, fats: 0, fibres: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0, potassium: 0, zinc: 0, vitamin_k: 0, vitamin_b6: 0, vitamin_b9: 0, vitamin_e: 0 }
+    { calories: 0, proteins: 0, carbs: 0, fats: 0, fibres: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0, potassium: 0, zinc: 0, vitamin_k: 0, vitamin_b6: 0, vitamin_b9: 0, vitamin_e: 0, omega6: 0 }
   );
+
+  const antioxidantScore = getProducePortions(logs);
+  const antioxidantTone = antioxidantScore >= 5 ? "text-green-500" : antioxidantScore >= 3 ? "text-orange-500" : "text-red-500";
+  const hasOmega6Data = totals.omega6 > 0;
+  const omegaRatio = hasOmega6Data && totals.omega3 > 0 ? totals.omega6 / totals.omega3 : null;
+  const omegaRatioStatus = omegaRatio === null ? null : omegaRatio <= 4 ? "🟢 Excellent (anti-inflammatoire)" : omegaRatio <= 8 ? "🟠 Acceptable" : "🔴 Pro-inflammatoire";
 
   const mealBreakdown = useMemo(() => {
     const meals: Record<string, number> = {};
