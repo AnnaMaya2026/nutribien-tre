@@ -15,6 +15,7 @@ import NutrientReportModal from "@/components/NutrientReportModal";
 import { toast } from "sonner";
 import { useProfile } from "@/hooks/useProfile";
 import { detectRestrictionWarning } from "@/lib/dietaryRestrictions";
+import { formatPortion, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -353,7 +354,7 @@ export default function JournalPage() {
               {results.map((f) => (
                 <button
                   key={f.id}
-                  onClick={() => { setSelectedFood(f); setSearch(f.nom); setGrams(100); }}
+                  onClick={() => { setSelectedFood(f); setSearch(f.nom); setGrams(getDefaultPortion(f.nom)); }}
                   className="w-full text-left px-4 py-3 hover:bg-muted/50 border-b border-border last:border-0"
                 >
                   <div className="font-medium text-sm text-foreground line-clamp-1">{f.nom}</div>
@@ -374,7 +375,7 @@ export default function JournalPage() {
           <div className="flex justify-between items-start mb-3">
             <div className="flex-1 mr-2">
               <h3 className="font-semibold text-foreground line-clamp-2">{selectedFood.nom}</h3>
-              <p className="text-xs text-muted-foreground">Valeurs pour {grams}g</p>
+              <p className="text-xs text-muted-foreground">Valeurs pour {formatPortion(selectedFood.nom, grams)}</p>
             </div>
             <button onClick={() => { setSelectedFood(null); setSearch(""); }}>
               <X className="w-4 h-4 text-muted-foreground" />
@@ -383,21 +384,21 @@ export default function JournalPage() {
 
           {/* Portion */}
           <div className="mb-3">
-            <label className="text-xs text-muted-foreground block mb-1">Quantité (grammes)</label>
+            <label className="text-xs text-muted-foreground block mb-1">Quantité ({getPortionUnit(selectedFood.nom) === "ml" ? "millilitres" : "grammes"})</label>
             <div className="flex items-center gap-3">
-              <button onClick={() => setGrams((g) => Math.max(10, g - 10))} className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground">
+              <button onClick={() => setGrams((g) => Math.max(10, g - getPortionStep(selectedFood.nom)))} className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground">
                 <Minus className="w-4 h-4" />
               </button>
               <Input type="number" value={grams} onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 10 && v <= 1000) setGrams(v); }} className="w-20 text-center h-9 bg-muted" min={10} max={1000} />
-              <span className="text-sm text-muted-foreground">g</span>
-              <button onClick={() => setGrams((g) => Math.min(1000, g + 10))} className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground">
+              <span className="text-sm text-muted-foreground">{getPortionUnit(selectedFood.nom)}</span>
+              <button onClick={() => setGrams((g) => Math.min(1000, g + getPortionStep(selectedFood.nom)))} className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground">
                 <Plus className="w-4 h-4" />
               </button>
             </div>
             <div className="flex gap-2 mt-2">
-              {[50, 100, 150, 200, 300].map((g) => (
+              {(getPortionUnit(selectedFood.nom) === "ml" ? [100, 150, 200, 250, 300] : [50, 100, 150, 200, 300]).map((g) => (
                 <button key={g} onClick={() => setGrams(g)} className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                  {g}g
+                  {g}{getPortionUnit(selectedFood.nom)}
                 </button>
               ))}
             </div>
