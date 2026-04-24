@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Minus, Plus, ChevronRight, RotateCcw } from "lucide-react";
 import { scaleCiqual, CiqualFood } from "@/lib/ciqual";
-import { formatPortion, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
+import { formatPortion, formatStandardPortionHint, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 import type { VoiceCandidate } from "./VoiceInput";
 import type { VoiceMatch } from "./VoiceInput";
 
@@ -154,6 +154,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
               </button>
             ))}
           </div>
+          <p className="text-[11px] text-muted-foreground -mt-2 mb-4 text-center">{formatStandardPortionHint(pickedFood.nom)}</p>
 
           {/* Nutritional preview */}
           <div className="text-xs text-muted-foreground mb-4 text-center">
