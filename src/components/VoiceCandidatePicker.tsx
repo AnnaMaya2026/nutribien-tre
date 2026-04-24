@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Minus, Plus, ChevronRight, RotateCcw } from "lucide-react";
 import { scaleCiqual, CiqualFood } from "@/lib/ciqual";
+import { formatPortion, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 import type { VoiceCandidate } from "./VoiceInput";
 import type { VoiceMatch } from "./VoiceInput";
 
@@ -22,7 +23,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
 
   const handlePick = (food: CiqualFood) => {
     setPickedFood(food);
-    setGrams(current.grams || 100);
+    setGrams(current.grams || getDefaultPortion(food.nom));
   };
 
   const handleConfirm = () => {
@@ -79,7 +80,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
                     <div className="text-[10px] text-pink-deep/70 line-clamp-1">{food.groupe}</div>
                   )}
                   <div className="text-xs text-muted-foreground">
-                    {food.calories_100g} kcal / 100g
+                    {food.calories_100g} kcal / 100{getPortionUnit(food.nom)}
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -127,14 +128,14 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
           <div className="flex items-center gap-2 mb-3">
             <span className="text-xs text-muted-foreground">Quantité :</span>
             <button
-              onClick={() => setGrams((g) => Math.max(10, g - 10))}
+              onClick={() => setGrams((g) => Math.max(10, g - getPortionStep(pickedFood.nom)))}
               className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center"
             >
               <Minus className="w-3 h-3" />
             </button>
-            <span className="text-sm font-medium text-foreground w-14 text-center">{grams}g</span>
+            <span className="text-sm font-medium text-foreground w-14 text-center">{formatPortion(pickedFood.nom, grams)}</span>
             <button
-              onClick={() => setGrams((g) => Math.min(1000, g + 10))}
+              onClick={() => setGrams((g) => Math.min(1000, g + getPortionStep(pickedFood.nom)))}
               className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center"
             >
               <Plus className="w-3 h-3" />
@@ -143,13 +144,13 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
 
           {/* Quick grams */}
           <div className="flex gap-2 mb-4">
-            {[50, 100, 150, 200, 300].map((g) => (
+            {(getPortionUnit(pickedFood.nom) === "ml" ? [100, 150, 200, 250, 300] : [50, 100, 150, 200, 300]).map((g) => (
               <button
                 key={g}
                 onClick={() => setGrams(g)}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
               >
-                {g}g
+                {g}{getPortionUnit(pickedFood.nom)}
               </button>
             ))}
           </div>
