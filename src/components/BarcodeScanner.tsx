@@ -117,6 +117,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
         omega3_100g: n(nm["omega-3-fat_100g"]),
         vitamin_b12_100g: n(nm["vitamin-b12_100g"]),
       });
+      setGrams(getDefaultPortion(p.product_name || p.product_name_fr || "Produit inconnu"));
     } catch {
       toast.error("Erreur de connexion, réessayez");
       setShowScanner(false);
@@ -394,10 +395,10 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
 
                 {/* Portion */}
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Quantité (grammes)</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Quantité ({unit === "ml" ? "millilitres" : "grammes"})</label>
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => setGrams((g) => Math.max(10, g - 10))}
+                      onClick={() => setGrams((g) => Math.max(10, g - step))}
                       className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground"
                     >
                       <Minus className="w-4 h-4" />
@@ -413,22 +414,22 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                       min={10}
                       max={1000}
                     />
-                    <span className="text-sm text-muted-foreground">g</span>
+                    <span className="text-sm text-muted-foreground">{unit}</span>
                     <button
-                      onClick={() => setGrams((g) => Math.min(1000, g + 10))}
+                      onClick={() => setGrams((g) => Math.min(1000, g + step))}
                       className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="flex gap-2 mt-2">
-                    {[50, 100, 150, 200, 300].map((g) => (
+                    {(unit === "ml" ? [100, 150, 200, 250, 300] : [50, 100, 150, 200, 300]).map((g) => (
                       <button
                         key={g}
                         onClick={() => setGrams(g)}
                         className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
                       >
-                        {g}g
+                        {g}{unit}
                       </button>
                     ))}
                   </div>
