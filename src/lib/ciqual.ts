@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { amountToNutritionGrams } from "@/lib/portionUnits";
 
 export interface CiqualFood {
   id: number;
@@ -161,7 +162,7 @@ export async function searchByNutrient(
 }
 
 export function scaleCiqual(food: CiqualFood, grams: number) {
-  const r = grams / 100;
+  const r = amountToNutritionGrams(food.nom, grams) / 100;
   return {
     calories: Math.round(food.calories_100g * r),
     proteins: Math.round(food.proteines_100g * r),
