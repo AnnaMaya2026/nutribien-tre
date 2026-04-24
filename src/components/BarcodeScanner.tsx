@@ -3,7 +3,7 @@ import { X, ScanBarcode, Loader2, Plus, Minus, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { amountToNutritionGrams, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
+import { amountToNutritionGrams, formatStandardPortionHint, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -433,6 +433,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                       </button>
                     ))}
                   </div>
+                  <p className="text-[11px] text-muted-foreground mt-2">{formatStandardPortionHint(product.name)}</p>
                 </div>
 
                 {/* Macros */}
