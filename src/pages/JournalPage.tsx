@@ -526,11 +526,11 @@ export default function JournalPage() {
                             <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${expandedLogs[log.id] ? "rotate-180" : ""}`} />
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {log.calories} kcal · {log.proteins}g prot · {log.portion_size}g
+                            {log.calories} kcal · {log.proteins}g prot · {formatPortion(log.food_name, log.portion_size)}
                           </div>
                         </button>
                         <button
-                          onClick={() => setEditPortion({ log, grams: log.portion_size || 100 })}
+                          onClick={() => setEditPortion({ log, grams: log.portion_size || getDefaultPortion(log.food_name) })}
                           className="text-muted-foreground hover:text-pink-deep transition-colors"
                           title="Modifier la portion"
                         >
@@ -665,7 +665,7 @@ export default function JournalPage() {
                     </div>
                     <div className="text-[10px] text-muted-foreground mb-2 space-y-0.5">
                       {fav.items.map((item, i) => (
-                        <div key={i}>{item.food_name} ({item.portion_size}g)</div>
+                        <div key={i}>{item.food_name} ({formatPortion(item.food_name, item.portion_size)})</div>
                       ))}
                     </div>
                     <button
