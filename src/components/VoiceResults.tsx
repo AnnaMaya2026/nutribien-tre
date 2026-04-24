@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus, Minus, Check, X } from "lucide-react";
 import { scaleCiqual } from "@/lib/ciqual";
-import { formatPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
+import { formatPortion, formatStandardPortionHint, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 import type { VoiceMatch } from "./VoiceInput";
 
 interface VoiceResultsProps {
@@ -90,6 +90,7 @@ export default function VoiceResults({ matches, mealType, onConfirm, onCancel }:
               </>;
             })()}
           </div>
+          <p className="text-[11px] text-muted-foreground">{formatStandardPortionHint(item.food.nom)}</p>
         </div>
       ))}
 
