@@ -39,10 +39,10 @@ export const FOOD_DATABASE: FoodItem[] = [
 // Daily recommended values for menopausal women
 export const DAILY_TARGETS = {
   calcium: 1200,      // mg
-  vitamin_d: 20,      // µg
+  vitamin_d: 10,      // µg (adjusted by age on dashboard)
   magnesium: 320,     // mg
   iron: 8,            // mg (post-menopause)
-  omega3: 1.1,        // g
+  omega3: 2.0,        // g
   phytoestrogens: 40, // mg
   vitamin_b12: 2.4,   // µg
   proteins: 60,       // g (adjusted per calorie goal)
