@@ -9,9 +9,10 @@ import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
 import HelpCarousel from "@/components/HelpCarousel";
-import { ChevronDown, ChevronUp, Info, LogOut } from "lucide-react";
+import { ChevronDown, ChevronUp, Info, LogOut, UserCircle2 } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { formatPortion } from "@/lib/portionUnits";
 import {
   AlertDialog,
@@ -102,6 +103,7 @@ const MEAL_LABELS: Record<string, string> = {
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
+  const navigate = useNavigate();
   const { logs, weekLogs } = useFoodLogs();
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
   const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
@@ -183,6 +185,16 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <HelpCarousel />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/profil")}
+            aria-label="Mon profil"
+            className="text-muted-foreground hover:text-foreground shrink-0"
+          >
+            <UserCircle2 className="w-5 h-5" />
+            <span className="hidden sm:inline ml-1">Profil</span>
+          </Button>
           <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
