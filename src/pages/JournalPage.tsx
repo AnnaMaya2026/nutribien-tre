@@ -748,13 +748,13 @@ export default function JournalPage() {
             <h3 className="text-sm font-semibold text-foreground mb-1">✏️ Modifier la portion</h3>
             <p className="text-xs text-muted-foreground mb-4 line-clamp-1">{editPortion.log.food_name}</p>
             <p className="text-[11px] text-muted-foreground mb-2">
-              Portion actuelle : <span className="font-medium text-foreground">{editPortion.log.portion_size}g</span>
+              Portion actuelle : <span className="font-medium text-foreground">{formatPortion(editPortion.log.food_name, editPortion.log.portion_size)}</span>
             </p>
 
-            <label className="text-xs text-muted-foreground block mb-1">Nouvelle quantité (grammes)</label>
+            <label className="text-xs text-muted-foreground block mb-1">Nouvelle quantité ({getPortionUnit(editPortion.log.food_name) === "ml" ? "millilitres" : "grammes"})</label>
             <div className="flex items-center gap-3 mb-4">
               <button
-                onClick={() => setEditPortion((p) => p && ({ ...p, grams: Math.max(10, p.grams - 10) }))}
+                onClick={() => setEditPortion((p) => p && ({ ...p, grams: Math.max(10, p.grams - getPortionStep(p.log.food_name)) }))}
                 className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-foreground"
               >
                 <Minus className="w-4 h-4" />
@@ -772,9 +772,9 @@ export default function JournalPage() {
                 min={1}
                 max={2000}
               />
-              <span className="text-sm text-muted-foreground">g</span>
+              <span className="text-sm text-muted-foreground">{getPortionUnit(editPortion.log.food_name)}</span>
               <button
-                onClick={() => setEditPortion((p) => p && ({ ...p, grams: Math.min(2000, p.grams + 10) }))}
+                onClick={() => setEditPortion((p) => p && ({ ...p, grams: Math.min(2000, p.grams + getPortionStep(p.log.food_name)) }))}
                 className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-foreground"
               >
                 <Plus className="w-4 h-4" />
@@ -782,7 +782,7 @@ export default function JournalPage() {
             </div>
 
             <div className="flex gap-2 mb-4">
-              {[50, 100, 150, 200, 300].map((g) => (
+              {(getPortionUnit(editPortion.log.food_name) === "ml" ? [100, 150, 200, 250, 300] : [50, 100, 150, 200, 300]).map((g) => (
                 <button
                   key={g}
                   onClick={() => setEditPortion((p) => p && ({ ...p, grams: g }))}
@@ -790,7 +790,7 @@ export default function JournalPage() {
                     editPortion.grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {g}g
+                  {g}{getPortionUnit(editPortion.log.food_name)}
                 </button>
               ))}
             </div>
