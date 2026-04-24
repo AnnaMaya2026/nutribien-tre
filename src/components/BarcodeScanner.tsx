@@ -3,6 +3,7 @@ import { X, ScanBarcode, Loader2, Plus, Minus, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { amountToNutritionGrams, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -219,19 +220,22 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
     lookupBarcode(code);
   };
 
+  const unit = product ? getPortionUnit(product.name) : "g";
+  const step = product ? getPortionStep(product.name) : 10;
+  const nutritionGrams = product ? amountToNutritionGrams(product.name, grams) : grams;
   const scaled = product
     ? {
-        calories: Math.round((product.calories_100g * grams) / 100),
-        proteins: Math.round((product.proteins_100g * grams) / 100),
-        carbs: Math.round((product.carbs_100g * grams) / 100),
-        fats: Math.round((product.fats_100g * grams) / 100),
-        fibres: Math.round((product.fiber_100g * grams) / 100),
-        calcium: Math.round((product.calcium_100g * grams) / 100),
-        vitamin_d: +((product.vitamin_d_100g * grams) / 100).toFixed(1),
-        magnesium: Math.round((product.magnesium_100g * grams) / 100),
-        iron: +((product.iron_100g * grams) / 100).toFixed(1),
-        omega3: +((product.omega3_100g * grams) / 100).toFixed(1),
-        vitamin_b12: +((product.vitamin_b12_100g * grams) / 100).toFixed(1),
+        calories: Math.round((product.calories_100g * nutritionGrams) / 100),
+        proteins: Math.round((product.proteins_100g * nutritionGrams) / 100),
+        carbs: Math.round((product.carbs_100g * nutritionGrams) / 100),
+        fats: Math.round((product.fats_100g * nutritionGrams) / 100),
+        fibres: Math.round((product.fiber_100g * nutritionGrams) / 100),
+        calcium: Math.round((product.calcium_100g * nutritionGrams) / 100),
+        vitamin_d: +((product.vitamin_d_100g * nutritionGrams) / 100).toFixed(1),
+        magnesium: Math.round((product.magnesium_100g * nutritionGrams) / 100),
+        iron: +((product.iron_100g * nutritionGrams) / 100).toFixed(1),
+        omega3: +((product.omega3_100g * nutritionGrams) / 100).toFixed(1),
+        vitamin_b12: +((product.vitamin_b12_100g * nutritionGrams) / 100).toFixed(1),
       }
     : null;
 
