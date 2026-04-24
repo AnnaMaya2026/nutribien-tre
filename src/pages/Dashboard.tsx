@@ -9,7 +9,7 @@ import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
 import HelpCarousel from "@/components/HelpCarousel";
-import { ChevronDown, ChevronUp, LogOut } from "lucide-react";
+import { ChevronDown, ChevronUp, Info, LogOut } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
 import { formatPortion } from "@/lib/portionUnits";
@@ -72,6 +72,25 @@ function formatFrenchDate(): string {
 
 
 const MACRO_GOALS = { proteins: 100, carbs: 200, fats: 65, fibres: 25 };
+
+const COLORFUL_PRODUCE_KEYWORDS = [
+  "myrtille", "fraise", "framboise", "mure", "mûre", "grenade", "raisin", "cerise", "orange", "kiwi", "pomme", "poire", "banane", "abricot", "peche", "pêche", "prune", "mangue", "ananas", "brocoli", "carotte", "tomate", "poivron", "epinard", "épinard", "courgette", "aubergine", "betterave", "chou", "salade", "concombre", "haricot vert", "patate douce",
+];
+
+function getVitaminDGoal(age?: number | null) {
+  if (!age) return DAILY_TARGETS.vitamin_d;
+  if (age <= 50) return 5;
+  if (age <= 70) return 10;
+  return 15;
+}
+
+function getProducePortions(logs: any[]) {
+  return logs.reduce((count, log) => {
+    const name = String(log.food_name || "").toLowerCase();
+    if (!COLORFUL_PRODUCE_KEYWORDS.some((keyword) => name.includes(keyword))) return count;
+    return count + Math.max(1, Math.round(Number(log.portion_size || 100) / 100));
+  }, 0);
+}
 
 const MEAL_LABELS: Record<string, string> = {
   "petit-dejeuner": "🌅 Petit-déj",
