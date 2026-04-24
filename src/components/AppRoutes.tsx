@@ -13,6 +13,7 @@ import ChatPage from "@/pages/ChatPage";
 import SymptomHistoryPage from "@/pages/SymptomHistoryPage";
 import PersonalJournalPage from "@/pages/PersonalJournalPage";
 import SavedMenusPage from "@/pages/SavedMenusPage";
+import ProfilePage from "@/pages/ProfilePage";
 import BottomNav from "@/components/BottomNav";
 import OnboardingTutorial from "@/components/OnboardingTutorial";
 import FeedbackButton from "@/components/FeedbackButton";
@@ -52,6 +53,7 @@ function ProtectedLayout() {
         <Route path="/symptomes" element={<SymptomHistoryPage />} />
         <Route path="/notes" element={<PersonalJournalPage />} />
         <Route path="/menus" element={<SavedMenusPage />} />
+        <Route path="/profil" element={<ProfilePage />} />
         <Route path="/auth" element={<Navigate to="/" replace />} />
         <Route path="/onboarding" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFound />} />
