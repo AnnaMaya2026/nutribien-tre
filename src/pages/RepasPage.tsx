@@ -9,7 +9,7 @@ import { NutrientGapTab } from "@/components/NutrientGapTab";
 import { ChefHat, Leaf, AlertTriangle, Search, Loader2, UtensilsCrossed } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { getDefaultPortion, getPortionUnit } from "@/lib/portionUnits";
+import { formatStandardPortionHint, getDefaultPortion, getPortionUnit } from "@/lib/portionUnits";
 
 interface NutrientGap {
   key: string;
@@ -64,6 +64,7 @@ function FoodCard({ food, gapsCovered }: { food: CiqualFood; gapsCovered?: strin
           ))}
         </div>
       </div>
+      <p className="text-[11px] text-muted-foreground mb-3">{formatStandardPortionHint(food.nom)}</p>
 
       {/* Macros */}
       <div className="grid grid-cols-5 gap-1 text-center mb-2">
