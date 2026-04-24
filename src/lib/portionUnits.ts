@@ -87,13 +87,23 @@ function normalizeFoodName(foodName: string): string {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-export function isLiquidFoodName(foodName: string): boolean {
-  const normalized = normalizeFoodName(foodName);
-  return LIQUID_KEYWORDS.some((keyword) => normalized.includes(normalizeFoodName(keyword)));
+function hasWord(normalized: string, word: string): boolean {
+  // Word-boundary match on already-normalized (accent-stripped, lowercased) text.
+  const re = new RegExp(`(^|[^a-z0-9])${word}([^a-z0-9]|$)`, "i");
+  return re.test(normalized);
 }
 
 export function isOilFoodName(foodName: string): boolean {
-  return normalizeFoodName(foodName).includes("huile");
+  const normalized = normalizeFoodName(foodName);
+  return OIL_WORDS.some((w) => hasWord(normalized, w));
+}
+
+export function isLiquidFoodName(foodName: string): boolean {
+  const normalized = normalizeFoodName(foodName);
+  if (LIQUID_PHRASES.some((p) => normalized.includes(p))) return true;
+  if (LIQUID_WORDS.some((w) => hasWord(normalized, w))) return true;
+  if (isOilFoodName(foodName)) return true;
+  return false;
 }
 
 export function getPortionUnit(foodName: string): "g" | "ml" {
