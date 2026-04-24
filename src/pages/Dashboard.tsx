@@ -301,7 +301,7 @@ export default function Dashboard() {
         <h3 className="text-base font-semibold text-foreground mb-3">Micronutriments clés</h3>
         <div className="space-y-2">
           <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" isMicro />
-          <ProgressBar value={totals.vitamin_d} max={DAILY_TARGETS.vitamin_d} label="Vitamine D" unit="µg" isMicro />
+          <ProgressBar value={totals.vitamin_d} max={vitaminDGoal} label="Vitamine D" unit="µg" isMicro />
           <ProgressBar value={totals.magnesium} max={DAILY_TARGETS.magnesium} label="Magnésium" unit="mg" isMicro />
           <ProgressBar value={totals.iron} max={DAILY_TARGETS.iron} label="Fer" unit="mg" isMicro />
           <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro />
@@ -317,6 +317,29 @@ export default function Dashboard() {
             <ProgressBar value={totals.vitamin_b6} max={DAILY_TARGETS.vitamin_b6} label="Vitamine B6" unit="mg" isMicro />
             <ProgressBar value={totals.vitamin_b9} max={DAILY_TARGETS.vitamin_b9} label="Vitamine B9 (folate)" unit="µg" isMicro />
             <ProgressBar value={totals.vitamin_e} max={DAILY_TARGETS.vitamin_e} label="Vitamine E" unit="mg" isMicro />
+            <div className="rounded-xl bg-muted/30 px-3 py-2">
+              <div className="flex items-start justify-between gap-2 text-sm">
+                <span className="font-medium text-foreground">Ratio Oméga-6 / Oméga-3</span>
+                <span className="text-muted-foreground" title="Un ratio élevé favorise l'inflammation. L'objectif est d'atteindre un ratio ≤ 4:1 en augmentant les oméga-3 (poissons gras, noix, graines de lin) et en réduisant les huiles végétales riches en oméga-6.">
+                  <Info className="h-4 w-4" />
+                </span>
+              </div>
+              {omegaRatio ? (
+                <p className="mt-1 text-xs text-muted-foreground">Ratio oméga-6/oméga-3 : {omegaRatio.toFixed(1)}:1 · {omegaRatioStatus}</p>
+              ) : (
+                <p className="mt-1 text-xs text-muted-foreground">Données oméga-6 en cours d'intégration</p>
+              )}
+            </div>
+            <div className="rounded-xl bg-muted/30 px-3 py-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-foreground">Score antioxydants 🫐</span>
+                <span className={`font-semibold ${antioxidantTone}`}>{Math.min(antioxidantScore, 5)}/5</span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{Math.min(antioxidantScore, 5)}/5 portions fruits & légumes</p>
+              {antioxidantScore < 3 && (
+                <p className="mt-1 text-xs text-muted-foreground">Ajoutez des fruits rouges ou légumes colorés pour booster vos antioxydants !</p>
+              )}
+            </div>
           </div>
         )}
 
