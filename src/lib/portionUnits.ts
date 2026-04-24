@@ -1,34 +1,59 @@
-const LIQUID_KEYWORDS = [
+// Multi-word phrases checked with substring (after normalization)
+const LIQUID_PHRASES = [
+  "yaourt a boire",
+  "creme liquide",
+  "soupe liquide",
+  "jus de",
+  "jus d",
+  "eau de coco",
+  "eau minerale",
+  "eau gazeuse",
+  "eau plate",
+];
+
+// Single words checked with strict word-boundary match to avoid false positives
+// (e.g. "the" must not match inside "panthere", "eau" must not match "beaufort")
+const LIQUID_WORDS = [
   "lait",
+  "laits",
   "boisson",
+  "boissons",
   "jus",
   "eau",
-  "café",
+  "eaux",
   "cafe",
-  "thé",
+  "cafes",
   "the",
+  "thes",
   "tisane",
+  "tisanes",
   "infusion",
+  "infusions",
   "soda",
+  "sodas",
   "limonade",
-  "bière",
+  "limonades",
   "biere",
+  "bieres",
   "vin",
+  "vins",
   "cidre",
+  "cidres",
   "champagne",
   "alcool",
+  "alcools",
   "smoothie",
+  "smoothies",
   "milkshake",
-  "kéfir",
+  "milkshakes",
   "kefir",
-  "yaourt à boire",
-  "yaourt a boire",
-  "soupe",
   "bouillon",
-  "crème liquide",
-  "creme liquide",
-  "huile",
+  "bouillons",
 ];
+
+// Oils are tracked separately because they need a density conversion (0.92 g/ml)
+// but should still display in ml when used as a liquid measure (e.g. spoon volumes).
+const OIL_WORDS = ["huile", "huiles"];
 
 const STANDARD_PORTIONS = [
   { keywords: ["oeuf", "œuf"], amount: 55, description: "1 œuf moyen" },
