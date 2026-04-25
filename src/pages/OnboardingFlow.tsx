@@ -74,6 +74,8 @@ export default function OnboardingFlow() {
           setHeight={setHeight}
           weight={weight}
           setWeight={setWeight}
+          activityLevel={activityLevel}
+          setActivityLevel={setActivityLevel}
           onNext={next}
         />
       )}
