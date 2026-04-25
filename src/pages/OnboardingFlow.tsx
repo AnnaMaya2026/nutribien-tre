@@ -38,6 +38,7 @@ export default function OnboardingFlow() {
       age: Number(age),
       height: Number(height),
       weight: Number(weight),
+      activity_level: activityLevel,
     };
     sessionStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(answers));
     navigate("/auth");
