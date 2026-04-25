@@ -25,6 +25,7 @@ export default function OnboardingFlow() {
   const [age, setAge] = useState("");
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
+  const [activityLevel, setActivityLevel] = useState("sedentaire");
 
   const next = () => setStep((s) => Math.min(TOTAL - 1, s + 1));
   const back = () => setStep((s) => Math.max(0, s - 1));
