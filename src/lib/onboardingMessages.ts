@@ -64,4 +64,5 @@ export type OnboardingAnswers = {
   age: number;
   height: number;
   weight: number;
+  activity_level?: string;
 };
