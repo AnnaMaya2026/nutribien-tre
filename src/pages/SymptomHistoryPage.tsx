@@ -641,7 +641,7 @@ export default function SymptomHistoryPage() {
         {activeSymptomKeys.slice(0, 6).map((key, i) => {
           const value = point[key];
           if (typeof value !== "number") return null;
-          const symptomLabel = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key;
+          const symptomLabel = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key.replace(/^custom_/, "");
           return (
           <div key={key} className="flex justify-between gap-3">
             <span style={{ color: CHART_COLORS[i % CHART_COLORS.length] }}>{symptomLabel}</span>
@@ -791,7 +791,7 @@ export default function SymptomHistoryPage() {
                 />
               ))}
               {activeSymptomKeys.slice(0, 6).map((key, i) => {
-                const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key;
+                const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key.replace(/^custom_/, "");
                 return (
                   <Line
                     key={key}
@@ -817,7 +817,7 @@ export default function SymptomHistoryPage() {
           {/* Legend */}
           <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
             {activeSymptomKeys.slice(0, 6).map((key, i) => {
-              const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key;
+              const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key.replace(/^custom_/, "");
               return (
                 <span key={key} className="text-[10px] flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
