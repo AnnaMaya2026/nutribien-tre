@@ -5,7 +5,17 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProfile } from "@/hooks/useProfile";
-import { ACTIVITY_LEVELS, calculateCalorieGoal, calculateProteinGoal } from "@/lib/calorieGoal";
+import {
+  ACTIVITY_LEVELS,
+  calculateCalorieGoal,
+  calculateProteinGoal,
+  calculateBMR,
+  calculateCarbsGoal,
+  calculateFatsGoal,
+  getActivityLevel,
+  FIBRES_GOAL_MIN,
+  FIBRES_GOAL_MAX,
+} from "@/lib/calorieGoal";
 import { DIETARY_RESTRICTIONS, splitDietary, buildDietary } from "@/lib/dietaryRestrictions";
 import { HEALTH_CONDITIONS } from "@/lib/healthConditions";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
@@ -67,6 +77,15 @@ export default function ProfilePage() {
     setSymptoms(p.symptoms ?? []);
   }, [profile]);
 
+  const computedBMR = useMemo(
+    () =>
+      calculateBMR({
+        weight: weight ? Number(weight) : null,
+        height: height ? Number(height) : null,
+        age: age ? Number(age) : null,
+      }),
+    [weight, height, age]
+  );
   const computedCalorieGoal = useMemo(
     () =>
       calculateCalorieGoal({
@@ -81,6 +100,15 @@ export default function ProfilePage() {
     () => calculateProteinGoal(weight ? Number(weight) : null),
     [weight]
   );
+  const computedCarbsGoal = useMemo(
+    () => calculateCarbsGoal(computedCalorieGoal),
+    [computedCalorieGoal]
+  );
+  const computedFatsGoal = useMemo(
+    () => calculateFatsGoal(computedCalorieGoal),
+    [computedCalorieGoal]
+  );
+  const activityInfo = useMemo(() => getActivityLevel(activityLevel), [activityLevel]);
 
   const toggle = (list: string[], setter: (v: string[]) => void, value: string) => {
     setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
