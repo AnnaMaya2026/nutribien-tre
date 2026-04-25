@@ -6,6 +6,7 @@ import AuthPage from "@/pages/AuthPage";
 import WelcomePage from "@/pages/WelcomePage";
 import OnboardingFlow from "@/pages/OnboardingFlow";
 import ProfileSetup from "@/pages/ProfileSetup";
+import IntroPage from "@/pages/IntroPage";
 import Dashboard from "@/pages/Dashboard";
 import JournalPage from "@/pages/JournalPage";
 import RepasPage from "@/pages/RepasPage";
@@ -41,6 +42,10 @@ function ProtectedLayout() {
 
   if (!profile?.profile_completed) {
     return <ProfileSetup />;
+  }
+
+  if (!(profile as any).seen_welcome) {
+    return <IntroPage />;
   }
 
   return (
