@@ -5,7 +5,17 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProfile } from "@/hooks/useProfile";
-import { ACTIVITY_LEVELS, calculateCalorieGoal, calculateProteinGoal } from "@/lib/calorieGoal";
+import {
+  ACTIVITY_LEVELS,
+  calculateCalorieGoal,
+  calculateProteinGoal,
+  calculateBMR,
+  calculateCarbsGoal,
+  calculateFatsGoal,
+  getActivityLevel,
+  FIBRES_GOAL_MIN,
+  FIBRES_GOAL_MAX,
+} from "@/lib/calorieGoal";
 import { DIETARY_RESTRICTIONS, splitDietary, buildDietary } from "@/lib/dietaryRestrictions";
 import { HEALTH_CONDITIONS } from "@/lib/healthConditions";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
@@ -67,6 +77,15 @@ export default function ProfilePage() {
     setSymptoms(p.symptoms ?? []);
   }, [profile]);
 
+  const computedBMR = useMemo(
+    () =>
+      calculateBMR({
+        weight: weight ? Number(weight) : null,
+        height: height ? Number(height) : null,
+        age: age ? Number(age) : null,
+      }),
+    [weight, height, age]
+  );
   const computedCalorieGoal = useMemo(
     () =>
       calculateCalorieGoal({
@@ -81,6 +100,15 @@ export default function ProfilePage() {
     () => calculateProteinGoal(weight ? Number(weight) : null),
     [weight]
   );
+  const computedCarbsGoal = useMemo(
+    () => calculateCarbsGoal(computedCalorieGoal),
+    [computedCalorieGoal]
+  );
+  const computedFatsGoal = useMemo(
+    () => calculateFatsGoal(computedCalorieGoal),
+    [computedCalorieGoal]
+  );
+  const activityInfo = useMemo(() => getActivityLevel(activityLevel), [activityLevel]);
 
   const toggle = (list: string[], setter: (v: string[]) => void, value: string) => {
     setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
@@ -220,17 +248,38 @@ export default function ProfilePage() {
 
         {/* Objectifs */}
         <Section title="Objectifs (calculés automatiquement)">
+          <div className="bg-primary/10 border border-primary/20 rounded-xl p-3">
+            <div className="text-xs text-muted-foreground mb-0.5">Votre objectif calorique</div>
+            <div className="text-2xl font-bold text-foreground">{computedCalorieGoal} kcal/jour</div>
+            <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+              Basé sur votre métabolisme de base de <strong>{computedBMR} kcal</strong> ×
+              niveau d'activité <strong>{activityInfo.label.toLowerCase()}</strong> (×{activityInfo.factor}).
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-muted/40 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground">Calories / jour</div>
-              <div className="text-lg font-bold text-foreground">{computedCalorieGoal} kcal</div>
-            </div>
-            <div className="bg-muted/40 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground">Protéines / jour</div>
+              <div className="text-xs text-muted-foreground">Protéines</div>
               <div className="text-lg font-bold text-foreground">{computedProteinGoal} g</div>
               <div className="text-[10px] text-muted-foreground">1g × kg de poids</div>
             </div>
+            <div className="bg-muted/40 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground">Glucides</div>
+              <div className="text-lg font-bold text-foreground">{computedCarbsGoal} g</div>
+              <div className="text-[10px] text-muted-foreground">50% des calories</div>
+            </div>
+            <div className="bg-muted/40 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground">Lipides</div>
+              <div className="text-lg font-bold text-foreground">{computedFatsGoal} g</div>
+              <div className="text-[10px] text-muted-foreground">30% des calories</div>
+            </div>
+            <div className="bg-muted/40 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground">Fibres</div>
+              <div className="text-lg font-bold text-foreground">{FIBRES_GOAL_MIN}–{FIBRES_GOAL_MAX} g</div>
+              <div className="text-[10px] text-muted-foreground">Recommandation OMS</div>
+            </div>
           </div>
+
           <Button
             type="button"
             variant="outline"
