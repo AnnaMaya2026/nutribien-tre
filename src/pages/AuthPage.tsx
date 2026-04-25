@@ -8,8 +8,8 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   ONBOARDING_STORAGE_KEY,
   OnboardingAnswers,
-  calcCalories,
 } from "@/lib/onboardingMessages";
+import { calculateCalorieGoal } from "@/lib/calorieGoal";
 
 export default function AuthPage() {
   const { signIn, signUp, user } = useAuth();
@@ -35,13 +35,19 @@ export default function AuthPage() {
       if (!raw) return;
       try {
         const a: OnboardingAnswers = JSON.parse(raw);
-        const calories = calcCalories(a.age, a.weight, a.height);
+        const calories = calculateCalorieGoal({
+          age: a.age,
+          weight: a.weight,
+          height: a.height,
+          activityLevel: a.activity_level,
+        });
         await supabase
           .from("profiles")
           .update({
             age: a.age,
             weight: a.weight,
             height: a.height,
+            activity_level: a.activity_level ?? "sedentaire",
             daily_calorie_goal: calories,
             symptoms: a.main_symptom ? [a.main_symptom] : [],
             main_symptom: a.main_symptom,

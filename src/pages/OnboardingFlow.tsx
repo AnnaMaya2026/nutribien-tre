@@ -25,6 +25,7 @@ export default function OnboardingFlow() {
   const [age, setAge] = useState("");
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
+  const [activityLevel, setActivityLevel] = useState("sedentaire");
 
   const next = () => setStep((s) => Math.min(TOTAL - 1, s + 1));
   const back = () => setStep((s) => Math.max(0, s - 1));
@@ -37,6 +38,7 @@ export default function OnboardingFlow() {
       age: Number(age),
       height: Number(height),
       weight: Number(weight),
+      activity_level: activityLevel,
     };
     sessionStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(answers));
     navigate("/auth");
@@ -72,6 +74,8 @@ export default function OnboardingFlow() {
           setHeight={setHeight}
           weight={weight}
           setWeight={setWeight}
+          activityLevel={activityLevel}
+          setActivityLevel={setActivityLevel}
           onNext={next}
         />
       )}
