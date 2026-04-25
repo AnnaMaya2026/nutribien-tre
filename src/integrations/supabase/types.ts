@@ -457,6 +457,7 @@ export type Database = {
           menopause_stage: string | null
           onboarding_completed: boolean | null
           profile_completed: boolean | null
+          seen_welcome: boolean | null
           selected_statements: string[] | null
           symptoms: string[] | null
           updated_at: string
@@ -486,6 +487,7 @@ export type Database = {
           menopause_stage?: string | null
           onboarding_completed?: boolean | null
           profile_completed?: boolean | null
+          seen_welcome?: boolean | null
           selected_statements?: string[] | null
           symptoms?: string[] | null
           updated_at?: string
@@ -515,6 +517,7 @@ export type Database = {
           menopause_stage?: string | null
           onboarding_completed?: boolean | null
           profile_completed?: boolean | null
+          seen_welcome?: boolean | null
           selected_statements?: string[] | null
           symptoms?: string[] | null
           updated_at?: string
