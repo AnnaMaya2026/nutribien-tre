@@ -8,8 +8,8 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   ONBOARDING_STORAGE_KEY,
   OnboardingAnswers,
-  calcCalories,
 } from "@/lib/onboardingMessages";
+import { calculateCalorieGoal } from "@/lib/calorieGoal";
 
 export default function AuthPage() {
   const { signIn, signUp, user } = useAuth();
