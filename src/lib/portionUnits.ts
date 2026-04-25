@@ -1,13 +1,8 @@
-// Multi-word phrases checked with substring (after normalization)
-// Kept minimal to avoid false positives on cooked solid foods.
-const LIQUID_PHRASES = [
-  "yaourt a boire",
-  "jus de",
-  "jus d",
-];
+// No multi-word phrases — strict word-boundary matching only to avoid
+// false positives on cooked solid foods (e.g. "asperges bouillies").
+const LIQUID_PHRASES: string[] = [];
 
-// Strict whitelist of pure liquids. Word-boundary match on normalized text.
-// Cooked vegetables (asperges bouillies, carottes cuites, etc.) MUST stay in grams.
+// Strict whitelist of pure liquids only. Word-boundary match on normalized text.
 const LIQUID_WORDS = [
   "lait",
   "laits",
@@ -22,14 +17,6 @@ const LIQUID_WORDS = [
   "sodas",
   "biere",
   "bieres",
-  "vin",
-  "vins",
-  "smoothie",
-  "smoothies",
-  "bouillon",
-  "bouillons",
-  "soupe",
-  "soupes",
 ];
 
 // Oils are tracked separately because they need a density conversion (0.92 g/ml)
