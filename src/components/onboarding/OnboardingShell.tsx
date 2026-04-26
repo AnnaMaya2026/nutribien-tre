@@ -15,11 +15,12 @@ export default function OnboardingShell({
   return (
     <div className="min-h-screen flex flex-col bg-background px-6 py-6">
       {/* Top bar */}
-      <div className="h-8 flex items-center">
+      <div className="h-10 flex items-center">
         {onBack && step > 0 && (
           <button
             onClick={onBack}
-            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm"
+            type="button"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm font-medium px-2 py-1 -ml-2 rounded-md"
           >
             <ChevronLeft className="w-4 h-4" /> Précédent
           </button>
