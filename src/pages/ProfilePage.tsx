@@ -134,6 +134,40 @@ export default function ProfilePage() {
     toast.success(`🔄 Objectifs recalculés : ${computedCalorieGoal} kcal · ${computedProteinGoal}g protéines`);
   };
 
+  // Auto-save when activity_level changes (so dashboard reflects new goal)
+  const handleActivityChange = async (newLevel: string) => {
+    setActivityLevel(newLevel);
+    const newGoal = calculateCalorieGoal({
+      weight: weight ? Number(weight) : null,
+      height: height ? Number(height) : null,
+      age: age ? Number(age) : null,
+      activityLevel: newLevel,
+    });
+    try {
+      await updateProfile.mutateAsync({
+        activity_level: newLevel,
+        daily_calorie_goal: newGoal,
+      } as any);
+      toast.success(`Objectif mis à jour : ${newGoal} kcal/jour`);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      await signOut();
+      navigateTop("/onboarding");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors de la suppression du compte");
+      setDeleting(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
