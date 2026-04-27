@@ -29,6 +29,7 @@ import {
   FIBRES_GOAL_MIN,
   FIBRES_GOAL_MAX,
 } from "@/lib/calorieGoal";
+import GettingStartedCarousel from "@/components/GettingStartedCarousel";
 import { DIETARY_RESTRICTIONS, splitDietary, buildDietary } from "@/lib/dietaryRestrictions";
 import { HEALTH_CONDITIONS } from "@/lib/healthConditions";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
