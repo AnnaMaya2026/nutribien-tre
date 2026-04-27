@@ -5,14 +5,14 @@ const FEATURES = [
   {
     icon: Target,
     emoji: "🎯",
-    title: "Suivi personnalisé",
-    text: "Calories, macros et micronutriments adaptés à vos besoins ménopausiques",
+    title: "Suivi nutritionnel personnalisé",
+    text: "13 nutriments clés adaptés à vos besoins ménopausiques",
   },
   {
     icon: MessageCircle,
     emoji: "💬",
     title: "Sophie, votre nutritionniste IA",
-    text: "Conseils personnalisés disponibles 24h/24",
+    text: "Conseils personnalisés et vocaux disponibles 24h/24",
   },
   {
     icon: BarChart3,
@@ -69,7 +69,14 @@ export default function IntroPage() {
           disabled={updateProfile.isPending}
           className="w-full mt-8 h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50"
         >
-          Commencer mon suivi →
+          Commencer →
+        </button>
+        <button
+          onClick={handleStart}
+          disabled={updateProfile.isPending}
+          className="w-full mt-3 text-sm text-muted-foreground hover:text-foreground transition"
+        >
+          Passer
         </button>
       </div>
     </div>

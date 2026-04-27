@@ -1,10 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Save } from "lucide-react";
+import { ArrowLeft, RefreshCw, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   ACTIVITY_LEVELS,
   calculateCalorieGoal,
@@ -59,6 +72,9 @@ export default function ProfilePage() {
   const [dietOther, setDietOther] = useState("");
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const navigateTop = navigate;
+  const { signOut } = useAuth();
 
   // Hydrate state from profile
   useEffect(() => {
@@ -116,6 +132,40 @@ export default function ProfilePage() {
 
   const handleRecalculate = () => {
     toast.success(`🔄 Objectifs recalculés : ${computedCalorieGoal} kcal · ${computedProteinGoal}g protéines`);
+  };
+
+  // Auto-save when activity_level changes (so dashboard reflects new goal)
+  const handleActivityChange = async (newLevel: string) => {
+    setActivityLevel(newLevel);
+    const newGoal = calculateCalorieGoal({
+      weight: weight ? Number(weight) : null,
+      height: height ? Number(height) : null,
+      age: age ? Number(age) : null,
+      activityLevel: newLevel,
+    });
+    try {
+      await updateProfile.mutateAsync({
+        activity_level: newLevel,
+        daily_calorie_goal: newGoal,
+      } as any);
+      toast.success(`Objectif mis à jour : ${newGoal} kcal/jour`);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      await signOut();
+      navigateTop("/onboarding");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors de la suppression du compte");
+      setDeleting(false);
+    }
   };
 
   const handleSave = async () => {
@@ -212,7 +262,7 @@ export default function ProfilePage() {
                 <button
                   key={level.value}
                   type="button"
-                  onClick={() => setActivityLevel(level.value)}
+                  onClick={() => handleActivityChange(level.value)}
                   className={`p-3 rounded-lg text-left text-sm transition-all border ${
                     activityLevel === level.value
                       ? "bg-primary/15 border-primary text-foreground"
@@ -371,6 +421,41 @@ export default function ProfilePage() {
           <Save className="w-4 h-4 mr-2" />
           {saving ? "Sauvegarde…" : "Sauvegarder"}
         </Button>
+
+        {/* Delete account */}
+        <section className="pt-6 border-t border-border/50">
+          <h2 className="text-sm font-semibold text-muted-foreground mb-2">Zone dangereuse</h2>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                🗑️ Supprimer mon compte
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer votre compte ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Êtes-vous sûre de vouloir supprimer votre compte ? Cette action
+                  est irréversible et supprimera toutes vos données.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {deleting ? "Suppression…" : "Supprimer définitivement"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </section>
       </div>
     </div>
   );

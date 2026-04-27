@@ -47,6 +47,12 @@ const buildSteps = (name: string) => [
     position: "top" as const,
   },
   {
+    type: "info" as const,
+    title: "Notes, Routines & Habitudes 📝",
+    subtitle:
+      "• Notez vos événements de vie\n• Créez vos routines quotidiennes (compléments, sport...)\n• Suivez vos habitudes à surveiller (café, alcool, hydratation...)",
+  },
+  {
     type: "final" as const,
     title: "Vous êtes prête ! 🎉",
     subtitle: "NutriMéno va vous accompagner chaque jour pour mieux vivre votre ménopause grâce à la nutrition 💗",
@@ -183,7 +189,7 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
             : "opacity-100 translate-x-0"
         }`}
         style={
-          currentStep.type === "welcome" || currentStep.type === "final"
+          currentStep.type === "welcome" || currentStep.type === "final" || currentStep.type === "info"
             ? { top: "50%", left: "50%", transform: `translate(-50%, -50%) ${animating ? (slideDirection === "right" ? "translateX(32px)" : "translateX(-32px)") : ""}` }
             : tooltipStyle()
         }
@@ -208,6 +214,19 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
           <div className="bg-white rounded-2xl p-5 max-w-[280px] shadow-2xl border border-primary/20">
             <h3 className="font-bold text-foreground text-sm mb-1">{currentStep.title}</h3>
             <p className="text-muted-foreground text-xs leading-relaxed">{currentStep.tooltip}</p>
+          </div>
+        )}
+
+        {currentStep.type === "info" && (
+          <div className="bg-white rounded-3xl p-8 max-w-sm mx-auto text-center shadow-2xl">
+            <h2 className="text-xl font-bold text-foreground mb-3">{currentStep.title}</h2>
+            <p className="text-muted-foreground text-sm mb-6 whitespace-pre-line text-left leading-relaxed">{currentStep.subtitle}</p>
+            <button
+              onClick={goNext}
+              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition"
+            >
+              Suivant →
+            </button>
           </div>
         )}
 
