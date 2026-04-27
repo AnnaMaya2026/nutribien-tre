@@ -69,7 +69,14 @@ export default function IntroPage() {
           disabled={updateProfile.isPending}
           className="w-full mt-8 h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50"
         >
-          Commencer mon suivi →
+          Commencer →
+        </button>
+        <button
+          onClick={handleStart}
+          disabled={updateProfile.isPending}
+          className="w-full mt-3 text-sm text-muted-foreground hover:text-foreground transition"
+        >
+          Passer
         </button>
       </div>
     </div>
