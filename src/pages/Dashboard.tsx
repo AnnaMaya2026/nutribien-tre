@@ -193,7 +193,7 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-sm">{formatFrenchDate()}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <HelpCarousel />
+          <HelpMenu autoOpenGuide={autoOpenGuide} onAutoOpenConsumed={() => setAutoOpenGuide(false)} />
           <Button
             variant="ghost"
             size="sm"
