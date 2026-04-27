@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, RefreshCw, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, RefreshCw, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,6 @@ import {
   FIBRES_GOAL_MIN,
   FIBRES_GOAL_MAX,
 } from "@/lib/calorieGoal";
-import GettingStartedCarousel from "@/components/GettingStartedCarousel";
 import { DIETARY_RESTRICTIONS, splitDietary, buildDietary } from "@/lib/dietaryRestrictions";
 import { HEALTH_CONDITIONS } from "@/lib/healthConditions";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
@@ -74,7 +73,6 @@ export default function ProfilePage() {
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [guideOpen, setGuideOpen] = useState(false);
   const navigateTop = navigate;
   const { signOut } = useAuth();
 
@@ -424,17 +422,6 @@ export default function ProfilePage() {
           {saving ? "Sauvegarde…" : "Sauvegarder"}
         </Button>
 
-        {/* Aide & guide */}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setGuideOpen(true)}
-          className="w-full h-12 rounded-xl font-medium"
-        >
-          <BookOpen className="w-4 h-4 mr-2" />
-          📖 Guide de démarrage
-        </Button>
-
         {/* Delete account */}
         <section className="pt-6 border-t border-border/50">
           <h2 className="text-sm font-semibold text-muted-foreground mb-2">Zone dangereuse</h2>
@@ -470,8 +457,6 @@ export default function ProfilePage() {
           </AlertDialog>
         </section>
       </div>
-
-      <GettingStartedCarousel open={guideOpen} onClose={() => setGuideOpen(false)} />
     </div>
   );
 }

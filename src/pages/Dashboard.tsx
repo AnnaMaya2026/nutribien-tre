@@ -8,7 +8,7 @@ import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
-import HelpMenu from "@/components/HelpMenu";
+import HelpCarousel from "@/components/HelpCarousel";
 import { ChevronDown, ChevronUp, Info, LogOut, UserCircle2 } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
@@ -107,15 +107,6 @@ export default function Dashboard() {
   const { logs, weekLogs } = useFoodLogs();
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
   const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
-  const [autoOpenGuide, setAutoOpenGuide] = useState(() => {
-    try {
-      if (sessionStorage.getItem("nutrimeno:show_getting_started") === "1") {
-        sessionStorage.removeItem("nutrimeno:show_getting_started");
-        return true;
-      }
-    } catch {}
-    return false;
-  });
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
   const proteinGoal = Math.max(1, Math.round(Number(profile?.weight || 60) * 1.0));
@@ -193,7 +184,7 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-sm">{formatFrenchDate()}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <HelpMenu autoOpenGuide={autoOpenGuide} onAutoOpenConsumed={() => setAutoOpenGuide(false)} />
+          <HelpCarousel />
           <Button
             variant="ghost"
             size="sm"
