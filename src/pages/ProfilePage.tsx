@@ -470,6 +470,8 @@ export default function ProfilePage() {
           </AlertDialog>
         </section>
       </div>
+
+      <GettingStartedCarousel open={guideOpen} onClose={() => setGuideOpen(false)} />
     </div>
   );
 }
