@@ -8,7 +8,7 @@ import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
-import HelpCarousel from "@/components/HelpCarousel";
+import HelpMenu from "@/components/HelpMenu";
 import { ChevronDown, ChevronUp, Info, LogOut, UserCircle2 } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
