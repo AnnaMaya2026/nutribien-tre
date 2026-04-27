@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { calculateCalorieGoal } from "@/lib/calorieGoal";
 
 const ACTIVITY_OPTIONS = [
   { value: "sedentaire", emoji: "🛋️", label: "Sédentaire", description: "Peu ou pas d'exercice" },
@@ -29,6 +30,13 @@ export default function Step5Data({
   setActivityLevel: (v: string) => void;
   onNext: () => void;
 }) {
+  const estimatedCalories = calculateCalorieGoal({
+    age: Number(age),
+    height: Number(height),
+    weight: Number(weight),
+    activityLevel: activityLevel || "sedentaire",
+  });
+  const canShowEstimate = Number(age) > 0 && Number(height) > 0 && Number(weight) > 0;
   const valid =
     Number(age) > 0 &&
     Number(height) > 0 &&
@@ -87,7 +95,7 @@ export default function Step5Data({
 
         <div>
           <label className="text-sm font-medium text-foreground mb-2 block">
-            Quel est ton niveau d'activité physique ?
+            Votre niveau d'activité physique ?
           </label>
           <div className="grid grid-cols-1 gap-2">
             {ACTIVITY_OPTIONS.map((opt) => {
@@ -112,6 +120,13 @@ export default function Step5Data({
               );
             })}
           </div>
+          {canShowEstimate && (
+            <div className="mt-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3">
+              <p className="text-sm font-semibold text-foreground">
+                Votre objectif estimé : {estimatedCalories} kcal/jour
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
