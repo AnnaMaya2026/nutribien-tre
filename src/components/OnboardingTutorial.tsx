@@ -189,7 +189,7 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
             : "opacity-100 translate-x-0"
         }`}
         style={
-          currentStep.type === "welcome" || currentStep.type === "final"
+          currentStep.type === "welcome" || currentStep.type === "final" || currentStep.type === "info"
             ? { top: "50%", left: "50%", transform: `translate(-50%, -50%) ${animating ? (slideDirection === "right" ? "translateX(32px)" : "translateX(-32px)") : ""}` }
             : tooltipStyle()
         }
