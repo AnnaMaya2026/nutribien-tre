@@ -74,6 +74,7 @@ export default function ProfilePage() {
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const navigateTop = navigate;
   const { signOut } = useAuth();
 
