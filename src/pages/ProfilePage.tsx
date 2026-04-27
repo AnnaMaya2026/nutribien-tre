@@ -72,6 +72,9 @@ export default function ProfilePage() {
   const [dietOther, setDietOther] = useState("");
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const navigateTop = navigate;
+  const { signOut } = useAuth();
 
   // Hydrate state from profile
   useEffect(() => {
