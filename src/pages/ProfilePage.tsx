@@ -424,6 +424,17 @@ export default function ProfilePage() {
           {saving ? "Sauvegarde…" : "Sauvegarder"}
         </Button>
 
+        {/* Aide & guide */}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setGuideOpen(true)}
+          className="w-full h-12 rounded-xl font-medium"
+        >
+          <BookOpen className="w-4 h-4 mr-2" />
+          📖 Guide de démarrage
+        </Button>
+
         {/* Delete account */}
         <section className="pt-6 border-t border-border/50">
           <h2 className="text-sm font-semibold text-muted-foreground mb-2">Zone dangereuse</h2>
