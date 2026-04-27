@@ -5,14 +5,14 @@ const FEATURES = [
   {
     icon: Target,
     emoji: "🎯",
-    title: "Suivi personnalisé",
-    text: "Calories, macros et micronutriments adaptés à vos besoins ménopausiques",
+    title: "Suivi nutritionnel personnalisé",
+    text: "13 nutriments clés adaptés à vos besoins ménopausiques",
   },
   {
     icon: MessageCircle,
     emoji: "💬",
     title: "Sophie, votre nutritionniste IA",
-    text: "Conseils personnalisés disponibles 24h/24",
+    text: "Conseils personnalisés et vocaux disponibles 24h/24",
   },
   {
     icon: BarChart3,
