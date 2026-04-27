@@ -421,6 +421,41 @@ export default function ProfilePage() {
           <Save className="w-4 h-4 mr-2" />
           {saving ? "Sauvegarde…" : "Sauvegarder"}
         </Button>
+
+        {/* Delete account */}
+        <section className="pt-6 border-t border-border/50">
+          <h2 className="text-sm font-semibold text-muted-foreground mb-2">Zone dangereuse</h2>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                🗑️ Supprimer mon compte
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer votre compte ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Êtes-vous sûre de vouloir supprimer votre compte ? Cette action
+                  est irréversible et supprimera toutes vos données.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {deleting ? "Suppression…" : "Supprimer définitivement"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </section>
       </div>
     </div>
   );
