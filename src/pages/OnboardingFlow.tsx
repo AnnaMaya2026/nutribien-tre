@@ -84,6 +84,7 @@ export default function OnboardingFlow() {
           age={Number(age)}
           height={Number(height)}
           weight={Number(weight)}
+          activityLevel={activityLevel || "sedentaire"}
           symptom={(symptom || "autre") as SymptomKey}
           onNext={finishToAuth}
         />
