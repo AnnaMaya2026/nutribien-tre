@@ -107,6 +107,15 @@ export default function Dashboard() {
   const { logs, weekLogs } = useFoodLogs();
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
   const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
+  const [autoOpenGuide, setAutoOpenGuide] = useState(() => {
+    try {
+      if (sessionStorage.getItem("nutrimeno:show_getting_started") === "1") {
+        sessionStorage.removeItem("nutrimeno:show_getting_started");
+        return true;
+      }
+    } catch {}
+    return false;
+  });
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
   const proteinGoal = Math.max(1, Math.round(Number(profile?.weight || 60) * 1.0));
