@@ -217,6 +217,19 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
           </div>
         )}
 
+        {currentStep.type === "info" && (
+          <div className="bg-white rounded-3xl p-8 max-w-sm mx-auto text-center shadow-2xl">
+            <h2 className="text-xl font-bold text-foreground mb-3">{currentStep.title}</h2>
+            <p className="text-muted-foreground text-sm mb-6 whitespace-pre-line text-left leading-relaxed">{currentStep.subtitle}</p>
+            <button
+              onClick={goNext}
+              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition"
+            >
+              Suivant →
+            </button>
+          </div>
+        )}
+
         {currentStep.type === "final" && (
           <div className="bg-white rounded-3xl p-8 max-w-sm mx-auto text-center shadow-2xl">
             <div className="text-5xl mb-4">🎉</div>
