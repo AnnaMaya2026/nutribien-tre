@@ -111,6 +111,10 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
     try {
       await updateProfile.mutateAsync({ feature_tour_completed: true, onboarding_completed: true } as any);
     } catch {}
+    // Signal Dashboard to auto-open the Getting Started guide once.
+    try {
+      sessionStorage.setItem("nutrimeno:show_getting_started", "1");
+    } catch {}
     onComplete();
   };
 
