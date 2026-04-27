@@ -65,7 +65,20 @@ export function calculateCalorieGoal(params: {
   const level = getActivityLevel(params.activityLevel);
   const tdee = bmr * level.factor;
   const withFloor = Math.max(level.minCalories, tdee);
-  return Math.round(withFloor / 10) * 10;
+  const final = Math.round(withFloor / 10) * 10;
+  if (typeof window !== "undefined") {
+    console.log("[calorieGoal]", {
+      weight: params.weight,
+      height: params.height,
+      age: params.age,
+      activity_level: params.activityLevel,
+      BMR: bmr,
+      NAP: level.factor,
+      TDEE: Math.round(tdee),
+      final,
+    });
+  }
+  return final;
 }
 
 export function calculateProteinGoal(weightKg?: number | null): number {
