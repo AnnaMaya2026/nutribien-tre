@@ -262,7 +262,7 @@ export default function ProfilePage() {
                 <button
                   key={level.value}
                   type="button"
-                  onClick={() => setActivityLevel(level.value)}
+                  onClick={() => handleActivityChange(level.value)}
                   className={`p-3 rounded-lg text-left text-sm transition-all border ${
                     activityLevel === level.value
                       ? "bg-primary/15 border-primary text-foreground"
