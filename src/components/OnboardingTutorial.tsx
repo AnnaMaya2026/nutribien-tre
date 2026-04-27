@@ -47,6 +47,12 @@ const buildSteps = (name: string) => [
     position: "top" as const,
   },
   {
+    type: "info" as const,
+    title: "Notes, Routines & Habitudes 📝",
+    subtitle:
+      "• Notez vos événements de vie\n• Créez vos routines quotidiennes (compléments, sport...)\n• Suivez vos habitudes à surveiller (café, alcool, hydratation...)",
+  },
+  {
     type: "final" as const,
     title: "Vous êtes prête ! 🎉",
     subtitle: "NutriMéno va vous accompagner chaque jour pour mieux vivre votre ménopause grâce à la nutrition 💗",
