@@ -1,21 +1,24 @@
 import { Button } from "@/components/ui/button";
-import { calcCalories, PRIORITY_NUTRIENTS, SymptomKey } from "@/lib/onboardingMessages";
+import { PRIORITY_NUTRIENTS, SymptomKey } from "@/lib/onboardingMessages";
+import { calculateCalorieGoal } from "@/lib/calorieGoal";
 import { Flame, Sparkles, LineChart } from "lucide-react";
 
 export default function Step6Result({
   age,
   height,
   weight,
+  activityLevel,
   symptom,
   onNext,
 }: {
   age: number;
   height: number;
   weight: number;
+  activityLevel?: string;
   symptom: SymptomKey;
   onNext: () => void;
 }) {
-  const calories = calcCalories(age, weight, height);
+  const calories = calculateCalorieGoal({ age, weight, height, activityLevel });
   const nutrients = PRIORITY_NUTRIENTS[symptom] ?? PRIORITY_NUTRIENTS.autre;
 
   return (
