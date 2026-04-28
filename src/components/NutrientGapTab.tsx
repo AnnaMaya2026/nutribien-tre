@@ -138,6 +138,18 @@ export function NutrientGapTab() {
           </p>
         </div>
 
+        {restrictionLabels.length > 0 && (
+          <div className="mb-3 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs text-foreground">
+            ✅ Suggestions filtrées selon votre profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
+            {alternatives.length > 0 && (
+              <ul className="mt-1.5 space-y-0.5 text-muted-foreground">
+                {alternatives.slice(0, 3).map((a, i) => (
+                  <li key={i}>• Au lieu de {a.from} → {a.to}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
         <h3 className="text-sm font-semibold text-foreground mb-2">🥗 Top 5 aliments riches en {selected.label}</h3>
         {loadingFoods ? (
           <div className="flex items-center justify-center py-6">
