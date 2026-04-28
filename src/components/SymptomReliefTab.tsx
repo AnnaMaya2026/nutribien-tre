@@ -90,8 +90,10 @@ export function SymptomReliefTab() {
       const entries = await Promise.all(
         activeSymptoms.map(async (symptomKey) => {
           const cfg = SYMPTOM_RELIEF_FOODS[symptomKey];
+          // Drop foods incompatible with the user's dietary restrictions
+          const allowedFoods = cfg.foods.filter((f) => isFoodAllowed(f.name, restrictions));
           const items: ResolvedSuggestion[] = await Promise.all(
-            cfg.foods.map(async (f) => {
+            allowedFoods.map(async (f) => {
               try {
                 const res = await searchCiqual(f.ciqualSearch);
                 return { name: f.name, nutrient: f.nutrient, food: res[0] || null };
