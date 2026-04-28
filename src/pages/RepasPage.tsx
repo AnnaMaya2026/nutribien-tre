@@ -187,17 +187,17 @@ export default function RepasPage() {
       try {
         const foodMap = new Map<number, { food: CiqualFood; covers: Set<string> }>();
 
-        // For each gap, fetch top foods rich in that nutrient
+        // For each gap, fetch more than needed so filtering still leaves good options
         const promises = gaps.map(async (gap) => {
-          const foods = await searchByNutrient(gap.dbCol, 5);
-          return { gap, foods };
+          const foods = await searchByNutrient(gap.dbCol, 20);
+          return { gap, foods: foods.filter((f) => isFoodAllowed(f.nom, restrictions)) };
         });
 
         const results = await Promise.all(promises);
         if (cancelled) return;
 
         results.forEach(({ gap, foods }) => {
-          foods.forEach((f) => {
+          foods.slice(0, 5).forEach((f) => {
             const existing = foodMap.get(f.id);
             if (existing) {
               existing.covers.add(gap.label);
