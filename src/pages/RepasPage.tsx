@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { DAILY_TARGETS } from "@/lib/mockData";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
+import { useProfile } from "@/hooks/useProfile";
+import { isFoodAllowed, getDietaryLabels } from "@/lib/dietaryRestrictions";
 import { searchCiqual, searchByNutrient, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { searchRecipes, Recipe } from "@/lib/recipes";
 import { RecipeCard } from "@/components/RecipeCard";
@@ -111,6 +113,9 @@ export default function RepasPage() {
   const [recipeQuery, setRecipeQuery] = useState("");
   const [recipeResults, setRecipeResults] = useState<Recipe[]>([]);
   const { logs } = useFoodLogs();
+  const { profile } = useProfile();
+  const restrictions = (profile?.dietary_preferences as string[] | null) || [];
+  const restrictionLabels = getDietaryLabels(restrictions);
 
   // Debounced ingredient search
   useEffect(() => {
@@ -182,17 +187,17 @@ export default function RepasPage() {
       try {
         const foodMap = new Map<number, { food: CiqualFood; covers: Set<string> }>();
 
-        // For each gap, fetch top foods rich in that nutrient
+        // For each gap, fetch more than needed so filtering still leaves good options
         const promises = gaps.map(async (gap) => {
-          const foods = await searchByNutrient(gap.dbCol, 5);
-          return { gap, foods };
+          const foods = await searchByNutrient(gap.dbCol, 20);
+          return { gap, foods: foods.filter((f) => isFoodAllowed(f.nom, restrictions)) };
         });
 
         const results = await Promise.all(promises);
         if (cancelled) return;
 
         results.forEach(({ gap, foods }) => {
-          foods.forEach((f) => {
+          foods.slice(0, 5).forEach((f) => {
             const existing = foodMap.get(f.id);
             if (existing) {
               existing.covers.add(gap.label);
@@ -217,7 +222,8 @@ export default function RepasPage() {
     })();
 
     return () => { cancelled = true; };
-  }, [gaps]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gaps, restrictions.join(",")]);
 
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
@@ -291,6 +297,11 @@ export default function RepasPage() {
               </div>
 
               <h3 className="text-sm font-semibold text-foreground mb-3">Aliments suggérés pour combler vos manques</h3>
+              {restrictionLabels.length > 0 && (
+                <p className="text-[11px] text-foreground bg-primary/10 rounded-md px-2 py-1 mb-3">
+                  ✅ Suggestions filtrées selon votre profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
+                </p>
+              )}
 
               {loadingGaps && (
                 <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">

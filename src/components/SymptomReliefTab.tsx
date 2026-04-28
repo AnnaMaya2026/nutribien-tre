@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { SYMPTOM_RELIEF_FOODS } from "@/lib/symptomReliefFoods";
 import { searchCiqual, CiqualFood } from "@/lib/ciqual";
 import { supabase } from "@/integrations/supabase/client";
+import { isFoodAllowed, getDietaryLabels } from "@/lib/dietaryRestrictions";
 import { Activity, Loader2, Sparkles, ChefHat, Clock, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -30,6 +32,9 @@ interface RecipeIdea {
 
 export function SymptomReliefTab() {
   const { user } = useAuth();
+  const { profile } = useProfile();
+  const restrictions = (profile?.dietary_preferences as string[] | null) || [];
+  const restrictionLabels = getDietaryLabels(restrictions);
   const { todayLog } = useSymptomLogs();
   const [resolved, setResolved] = useState<Record<string, ResolvedSuggestion[]>>({});
   const [loading, setLoading] = useState(false);
@@ -68,8 +73,8 @@ export function SymptomReliefTab() {
 
   console.log("[SymptomReliefTab] Active symptoms to display:", activeSymptoms);
 
-  // Stable signature for effect deps
-  const activeKey = activeSymptoms.join("|");
+  // Stable signature for effect deps (include restrictions so list refreshes when profile changes)
+  const activeKey = activeSymptoms.join("|") + "::" + restrictions.join(",");
 
   useEffect(() => {
     if (activeSymptoms.length === 0) {
@@ -85,8 +90,10 @@ export function SymptomReliefTab() {
       const entries = await Promise.all(
         activeSymptoms.map(async (symptomKey) => {
           const cfg = SYMPTOM_RELIEF_FOODS[symptomKey];
+          // Drop foods incompatible with the user's dietary restrictions
+          const allowedFoods = cfg.foods.filter((f) => isFoodAllowed(f.name, restrictions));
           const items: ResolvedSuggestion[] = await Promise.all(
-            cfg.foods.map(async (f) => {
+            allowedFoods.map(async (f) => {
               try {
                 const res = await searchCiqual(f.ciqualSearch);
                 return { name: f.name, nutrient: f.nutrient, food: res[0] || null };
@@ -154,6 +161,11 @@ export function SymptomReliefTab() {
         <p className="text-[11px] text-muted-foreground">
           Aliments inspirants adaptés à vos symptômes. Cliquez pour découvrir des idées de recettes ✨
         </p>
+        {restrictionLabels.length > 0 && (
+          <p className="mt-2 text-[11px] text-foreground bg-primary/10 rounded-md px-2 py-1">
+            ✅ Filtré selon votre profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
+          </p>
+        )}
       </div>
 
       {loading && (

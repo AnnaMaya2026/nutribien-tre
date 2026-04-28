@@ -3,6 +3,8 @@ import { DAILY_TARGETS } from "@/lib/mockData";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { searchByNutrient, CiqualFood } from "@/lib/ciqual";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/hooks/useProfile";
+import { isFoodAllowed, getAlternativesForRestrictions, getDietaryLabels } from "@/lib/dietaryRestrictions";
 import { Loader2, Sparkles, ChevronLeft, RotateCw, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -30,6 +32,10 @@ interface GeneratedRecipe {
 
 export function NutrientGapTab() {
   const { logs } = useFoodLogs();
+  const { profile } = useProfile();
+  const restrictions = (profile?.dietary_preferences as string[] | null) || [];
+  const restrictionLabels = getDietaryLabels(restrictions);
+  const alternatives = getAlternativesForRestrictions(restrictions);
   const [selected, setSelected] = useState<NutrientGap | null>(null);
   const [foods, setFoods] = useState<CiqualFood[]>([]);
   const [loadingFoods, setLoadingFoods] = useState(false);
@@ -75,8 +81,10 @@ export function NutrientGapTab() {
 
     (async () => {
       try {
-        const res = await searchByNutrient(selected.dbCol, 5);
-        if (!cancelled) setFoods(res);
+        // Fetch more than needed so we can keep 5 even after filtering
+        const res = await searchByNutrient(selected.dbCol, 20);
+        const filtered = res.filter((f) => isFoodAllowed(f.nom, restrictions)).slice(0, 5);
+        if (!cancelled) setFoods(filtered);
       } finally {
         if (!cancelled) setLoadingFoods(false);
       }
@@ -130,6 +138,18 @@ export function NutrientGapTab() {
           </p>
         </div>
 
+        {restrictionLabels.length > 0 && (
+          <div className="mb-3 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs text-foreground">
+            ✅ Suggestions filtrées selon votre profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
+            {alternatives.length > 0 && (
+              <ul className="mt-1.5 space-y-0.5 text-muted-foreground">
+                {alternatives.slice(0, 3).map((a, i) => (
+                  <li key={i}>• Au lieu de {a.from} → {a.to}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
         <h3 className="text-sm font-semibold text-foreground mb-2">🥗 Top 5 aliments riches en {selected.label}</h3>
         {loadingFoods ? (
           <div className="flex items-center justify-center py-6">
