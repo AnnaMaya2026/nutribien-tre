@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { buildProfileRestrictionsContext } from "../_shared/profileRestrictions.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -129,7 +130,11 @@ serve(async (req) => {
 - Habitudes: ${habitSummary.length ? habitSummary.join(", ") : "aucune habitude suivie"}
 - Aliments enregistrés: ${foodLogs.length} entrée(s)`;
 
+    const restrictionsCtx = buildProfileRestrictionsContext(profile);
+
     const systemPrompt = `Tu es Sophie, nutritionniste spécialisée en ménopause. Génère un bilan quotidien bienveillant et motivant basé sur les données fournies.
+
+${restrictionsCtx.promptBlock}
 
 Format obligatoire :
 1. Un point positif (toujours commencer par ça)
