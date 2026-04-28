@@ -136,3 +136,92 @@ export function getDietaryLabels(stored: string[] | null | undefined): string[] 
   if (other) labels.push(other);
   return labels;
 }
+
+// Convenience: is this food allowed given the user's restrictions?
+export function isFoodAllowed(
+  foodName: string,
+  restrictions: string[] | null | undefined
+): boolean {
+  return detectRestrictionWarning(foodName, restrictions) === null;
+}
+
+// Suggested nutritionally-equivalent alternatives keyed by restriction code.
+// Used to recommend a substitute when an excluded food would have been suggested.
+export const RESTRICTION_ALTERNATIVES: Record<string, { from: string; to: string }[]> = {
+  sans_lactose: [
+    { from: "lait", to: "boisson d'amande ou de soja enrichie en calcium" },
+    { from: "yaourt", to: "yaourt végétal au soja enrichi en calcium" },
+    { from: "fromage", to: "fromage végétal, tofu lacto-fermenté, ou sardines (calcium)" },
+    { from: "beurre", to: "purée d'amande ou huile d'olive" },
+    { from: "crème", to: "crème de soja, d'avoine ou de coco" },
+  ],
+  sans_gluten: [
+    { from: "pain", to: "pain sans gluten (sarrasin, riz) ou galettes de riz" },
+    { from: "pâtes", to: "pâtes de riz, de quinoa ou de légumineuses" },
+    { from: "semoule", to: "quinoa, polenta ou riz" },
+    { from: "farine", to: "farine de riz, de sarrasin ou de pois chiche" },
+  ],
+  vegetarien: [
+    { from: "viande", to: "tofu, tempeh, lentilles ou pois chiches (protéines)" },
+    { from: "poulet", to: "tempeh ou seitan" },
+    { from: "boeuf", to: "lentilles + quinoa (fer + protéines)" },
+  ],
+  vegan: [
+    { from: "viande", to: "tofu, tempeh, lentilles" },
+    { from: "poisson", to: "algues + graines de lin (oméga-3) ou noix" },
+    { from: "lait", to: "boisson de soja enrichie en calcium et B12" },
+    { from: "fromage", to: "fromage végétal ou levure maltée" },
+    { from: "yaourt", to: "yaourt de soja enrichi" },
+    { from: "oeuf", to: "tofu brouillé ou graines de chia (liant)" },
+    { from: "miel", to: "sirop d'érable ou d'agave" },
+  ],
+  sans_poisson: [
+    { from: "poisson", to: "graines de lin/chia, noix ou huile de colza (oméga-3)" },
+    { from: "saumon", to: "noix + graines de lin" },
+    { from: "sardine", to: "tofu enrichi en calcium + graines de chia" },
+  ],
+  sans_fruits_a_coque: [
+    { from: "amande", to: "graines de tournesol ou de courge" },
+    { from: "noix", to: "graines de chia ou de lin" },
+    { from: "noisette", to: "graines de tournesol" },
+  ],
+  sans_oeufs: [
+    { from: "oeuf", to: "tofu brouillé, ou graines de chia (1 c. à s. + 3 c. à s. d'eau)" },
+  ],
+};
+
+export function getAlternativesForRestrictions(
+  restrictions: string[] | null | undefined
+): { from: string; to: string }[] {
+  if (!restrictions || restrictions.length === 0) return [];
+  const out: { from: string; to: string }[] = [];
+  for (const code of restrictions) {
+    const alts = RESTRICTION_ALTERNATIVES[code];
+    if (alts) out.push(...alts);
+  }
+  return out;
+}
+
+// Build a string block to inject into AI system prompts
+export function buildAIRestrictionsBlock(
+  dietary: string[] | null | undefined,
+  healthLabels: string[] | null | undefined
+): string {
+  const dietLabels = getDietaryLabels(dietary);
+  const alts = getAlternativesForRestrictions(dietary);
+  const parts: string[] = [];
+  if (dietLabels.length > 0) {
+    parts.push(`⚠️ RESTRICTIONS ALIMENTAIRES STRICTES: ${dietLabels.join(", ")}.`);
+    parts.push(`Tu NE DOIS JAMAIS proposer un aliment incompatible avec ces restrictions, même en exemple.`);
+    if (alts.length > 0) {
+      parts.push(`Alternatives à utiliser systématiquement :`);
+      for (const a of alts) parts.push(`  • Au lieu de ${a.from} → ${a.to}`);
+    }
+  }
+  if (healthLabels && healthLabels.length > 0) {
+    parts.push(`\n⚠️ PATHOLOGIES DÉCLARÉES : ${healthLabels.join(", ")}. Adapte tes conseils en conséquence.`);
+  }
+  parts.push(`\nVÉRIFICATION FINALE : avant d'envoyer la réponse, relis-la et supprime tout aliment interdit.`);
+  return parts.join("\n");
+}
+
