@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { getDisplayName } from "@/lib/displayName";
@@ -12,39 +12,33 @@ const buildSteps = (name: string) => [
     subtitle: "Découvrez en 30 secondes comment NutriMéno va vous accompagner",
   },
   {
-    type: "highlight" as const,
-    title: "Votre tableau de bord",
-    tooltip: "Suivez vos calories et nutriments clés en temps réel 📊",
-    targetSelector: ".calorie-ring-section",
-    position: "bottom" as const,
+    type: "info" as const,
+    title: "Votre tableau de bord 📊",
+    subtitle: "Suivez vos calories et nutriments clés en temps réel, adaptés à vos besoins ménopausiques.",
   },
   {
-    type: "highlight" as const,
-    title: "Journal alimentaire",
-    tooltip: "Loggez vos repas par la voix 🎤, le scanner 📷 ou la recherche manuelle",
-    targetNav: "/journal",
-    position: "top" as const,
+    type: "info" as const,
+    title: "Journal alimentaire 🍽️",
+    subtitle:
+      "• Dictez vos repas à la voix 🎤\n• Scannez les codes-barres 📷\n• Recherchez manuellement vos aliments",
   },
   {
-    type: "highlight" as const,
-    title: "Idées repas 🍽️",
-    tooltip: "Trouvez des idées de repas par ingrédients, par recette, pour combler vos manques ou atténuer vos symptômes ✨",
-    targetNav: "/repas",
-    position: "top" as const,
+    type: "info" as const,
+    title: "Idées repas ✨",
+    subtitle:
+      "Trouvez des idées de repas :\n• Par ingrédients du frigo\n• Par recette\n• Pour combler vos manques\n• Pour atténuer vos symptômes",
   },
   {
-    type: "highlight" as const,
-    title: "Sophie, votre nutritionniste",
-    tooltip: "Posez vos questions à Sophie, votre nutritionniste IA spécialisée en ménopause — elle vous répond et vous parle 🎙️",
-    targetNav: "/chat",
-    position: "top" as const,
+    type: "info" as const,
+    title: "Sophie, votre nutritionniste 💬",
+    subtitle:
+      "Posez vos questions à Sophie, votre nutritionniste IA spécialisée en ménopause — elle vous répond et vous parle 🎙️",
   },
   {
-    type: "highlight" as const,
-    title: "Suivi des symptômes",
-    tooltip: "Suivez vos symptômes chaque jour et observez leur évolution dans le temps 📈",
-    targetNav: "/symptomes",
-    position: "top" as const,
+    type: "info" as const,
+    title: "Suivi des symptômes 📈",
+    subtitle:
+      "Évaluez vos symptômes chaque jour et observez leur évolution dans le temps pour mieux les comprendre.",
   },
   {
     type: "info" as const,
@@ -70,36 +64,6 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
   const [animating, setAnimating] = useState(false);
 
   const currentStep = STEPS[step];
-
-  const findTarget = useCallback(() => {
-    if (currentStep.type !== "highlight") return null;
-    if ("targetSelector" in currentStep && currentStep.targetSelector) {
-      return document.querySelector(currentStep.targetSelector);
-    }
-    if ("targetNav" in currentStep && currentStep.targetNav) {
-      const buttons = document.querySelectorAll("nav button");
-      for (const btn of buttons) {
-        const onclick = btn as HTMLButtonElement;
-        if (onclick.textContent?.includes(getNavLabel(currentStep.targetNav))) {
-          return btn;
-        }
-      }
-    }
-    return null;
-  }, [step]);
-
-  useEffect(() => {
-    if (currentStep.type === "highlight") {
-      const timer = setTimeout(() => {
-        const el = findTarget();
-        if (el) setTargetRect(el.getBoundingClientRect());
-        else setTargetRect(null);
-      }, 100);
-      return () => clearTimeout(timer);
-    } else {
-      setTargetRect(null);
-    }
-  }, [step, findTarget]);
 
   useEffect(() => {
     if (currentStep.type === "final") {
@@ -132,44 +96,9 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
     setTimeout(() => { setStep(s => s - 1); setAnimating(false); }, 250);
   };
 
-  const tooltipStyle = (): React.CSSProperties => {
-    if (!targetRect) return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
-    const isTop = "position" in currentStep && currentStep.position === "top";
-    if (isTop) {
-      return {
-        bottom: `${window.innerHeight - targetRect.top + 16}px`,
-        left: `${Math.max(16, Math.min(targetRect.left + targetRect.width / 2 - 140, window.innerWidth - 296))}px`,
-      };
-    }
-    return {
-      top: `${targetRect.bottom + 16}px`,
-      left: `${Math.max(16, Math.min(targetRect.left + targetRect.width / 2 - 140, window.innerWidth - 296))}px`,
-    };
-  };
-
   return (
     <div className="fixed inset-0 z-[9999]">
-      {/* Overlay */}
-      {currentStep.type === "highlight" && targetRect ? (
-        <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: "none" }}>
-          <defs>
-            <mask id="spotlight">
-              <rect width="100%" height="100%" fill="white" />
-              <rect
-                x={targetRect.left - 8}
-                y={targetRect.top - 8}
-                width={targetRect.width + 16}
-                height={targetRect.height + 16}
-                rx="12"
-                fill="black"
-              />
-            </mask>
-          </defs>
-          <rect width="100%" height="100%" fill="rgba(0,0,0,0.6)" mask="url(#spotlight)" style={{ pointerEvents: "auto" }} />
-        </svg>
-      ) : (
-        <div className="absolute inset-0 bg-black/60" />
-      )}
+      <div className="absolute inset-0 bg-black/60" />
 
       {/* Skip button */}
       {step < STEPS.length - 1 && (
@@ -188,11 +117,7 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
             ? slideDirection === "right" ? "opacity-0 translate-x-8" : "opacity-0 -translate-x-8"
             : "opacity-100 translate-x-0"
         }`}
-        style={
-          currentStep.type === "welcome" || currentStep.type === "final" || currentStep.type === "info"
-            ? { top: "50%", left: "50%", transform: `translate(-50%, -50%) ${animating ? (slideDirection === "right" ? "translateX(32px)" : "translateX(-32px)") : ""}` }
-            : tooltipStyle()
-        }
+        style={{ top: "50%", left: "50%", transform: `translate(-50%, -50%) ${animating ? (slideDirection === "right" ? "translateX(32px)" : "translateX(-32px)") : ""}` }}
       >
         {currentStep.type === "welcome" && (
           <div className="bg-white rounded-3xl p-8 max-w-sm mx-auto text-center shadow-2xl">
@@ -210,10 +135,16 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
           </div>
         )}
 
-        {currentStep.type === "highlight" && (
-          <div className="bg-white rounded-2xl p-5 max-w-[280px] shadow-2xl border border-primary/20">
-            <h3 className="font-bold text-foreground text-sm mb-1">{currentStep.title}</h3>
-            <p className="text-muted-foreground text-xs leading-relaxed">{currentStep.tooltip}</p>
+        {currentStep.type === "info" && (
+          <div className="bg-white rounded-3xl p-8 max-w-sm mx-auto text-center shadow-2xl">
+            <h2 className="text-xl font-bold text-foreground mb-3">{currentStep.title}</h2>
+            <p className="text-muted-foreground text-sm mb-6 whitespace-pre-line text-left leading-relaxed">{currentStep.subtitle}</p>
+            <button
+              onClick={goNext}
+              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition"
+            >
+              Suivant →
+            </button>
           </div>
         )}
 
@@ -274,12 +205,3 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
   );
 }
 
-function getNavLabel(path: string): string {
-  const map: Record<string, string> = {
-    "/journal": "Repas",
-    "/repas": "Idées",
-    "/chat": "Nutritionniste",
-    "/symptomes": "Symptômes",
-  };
-  return map[path] || "";
-}
