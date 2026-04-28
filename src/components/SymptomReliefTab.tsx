@@ -161,6 +161,11 @@ export function SymptomReliefTab() {
         <p className="text-[11px] text-muted-foreground">
           Aliments inspirants adaptés à vos symptômes. Cliquez pour découvrir des idées de recettes ✨
         </p>
+        {restrictionLabels.length > 0 && (
+          <p className="mt-2 text-[11px] text-foreground bg-primary/10 rounded-md px-2 py-1">
+            ✅ Filtré selon votre profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
+          </p>
+        )}
       </div>
 
       {loading && (
