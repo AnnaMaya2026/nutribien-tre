@@ -73,8 +73,8 @@ export function SymptomReliefTab() {
 
   console.log("[SymptomReliefTab] Active symptoms to display:", activeSymptoms);
 
-  // Stable signature for effect deps
-  const activeKey = activeSymptoms.join("|");
+  // Stable signature for effect deps (include restrictions so list refreshes when profile changes)
+  const activeKey = activeSymptoms.join("|") + "::" + restrictions.join(",");
 
   useEffect(() => {
     if (activeSymptoms.length === 0) {
