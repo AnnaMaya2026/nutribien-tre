@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { buildProfileRestrictionsContext } from "../_shared/profileRestrictions.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -98,20 +99,8 @@ serve(async (req) => {
           .eq("user_id", userId);
         remaining = Math.max(0, DAILY_LIMIT - nextCount);
 
-        // Dietary restrictions
-        const dietary: string[] = profile.dietary_preferences || [];
-        const DIET_LABELS: Record<string, string> = {
-          sans_lactose: "🥛 Sans lactose",
-          sans_gluten: "🌾 Sans gluten",
-          vegetarien: "🥩 Végétarien (pas de viande ni poisson)",
-          vegan: "🌱 Végétalien / Vegan (pas de produits animaux)",
-          sans_poisson: "🐟 Sans poisson ni fruits de mer",
-          sans_fruits_a_coque: "🥜 Sans fruits à coque (allergie possible)",
-          sans_oeufs: "🍳 Sans oeufs",
-        };
-        const dietLabels = dietary
-          .map((d) => d.startsWith("other:") ? d.slice(6) : (DIET_LABELS[d] || d))
-          .filter(Boolean);
+        // Dietary + health restrictions (centralized helper with alternatives)
+        const restrictionsCtx = buildProfileRestrictionsContext(profile);
 
         profileContext = `
 Profil utilisatrice:
@@ -119,30 +108,13 @@ Profil utilisatrice:
 - Stade: ${profile.menopause_stage || "Non renseigné"}
 - Symptômes principaux: ${(profile.symptoms || []).join(", ") || "Aucun renseigné"}
 - Objectif calorique: ${profile.daily_calorie_goal || 1800} kcal
-- Régimes/restrictions alimentaires: ${dietLabels.length ? dietLabels.join(", ") : "Aucune"}
+- Régimes/restrictions alimentaires: ${restrictionsCtx.dietaryLabels.length ? restrictionsCtx.dietaryLabels.join(", ") : "Aucune"}
 
-⚠️ IMPORTANT: Respecte STRICTEMENT les restrictions alimentaires ci-dessus. Ne propose JAMAIS d'aliments incompatibles. Propose toujours des alternatives adaptées.`;
+${restrictionsCtx.promptBlock}
 
-        // Health conditions
-        const healthCodes: string[] = profile.health_conditions || [];
-        const healthOther: string | null = profile.health_other || null;
-        const labels = healthCodes
-          .map((c) => HEALTH_LABELS[c] || c)
-          .concat(healthOther ? [healthOther] : []);
-        if (labels.length > 0) {
-          healthContext = `
-
-⚠️ Problèmes de santé déclarés par l'utilisatrice : ${labels.join(", ")}.
-Tiens compte de ces contraintes dans tes recommandations :
-- Cholestérol : limite les graisses saturées (charcuterie, fromages gras, beurre).
-- Diabète/prédiabète : privilégie les aliments à index glycémique bas, évite les sucres rapides.
-- Hypertension : limite le sel et les produits transformés.
-- Ostéoporose : recommande des aliments riches en calcium et vitamine D.
-- Surpoids : favorise les aliments rassasiants riches en protéines et fibres.
-- Syndrome métabolique : combine les conseils diabète + cholestérol + surpoids.
-- Troubles thyroïdiens : modère le soja cru et les crucifères crus, recommande iode et sélénium.
 Rappelle si pertinent : "Ces conseils ne remplacent pas un suivi médical."`;
-        }
+
+        healthContext = ""; // merged inside promptBlock above
       }
 
       if (logsRes.data && logsRes.data.length > 0) {
