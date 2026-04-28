@@ -205,12 +205,3 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
   );
 }
 
-function getNavLabel(path: string): string {
-  const map: Record<string, string> = {
-    "/journal": "Repas",
-    "/repas": "Idées",
-    "/chat": "Nutritionniste",
-    "/symptomes": "Symptômes",
-  };
-  return map[path] || "";
-}
