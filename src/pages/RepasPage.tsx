@@ -222,7 +222,8 @@ export default function RepasPage() {
     })();
 
     return () => { cancelled = true; };
-  }, [gaps]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gaps, restrictions.join(",")]);
 
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
