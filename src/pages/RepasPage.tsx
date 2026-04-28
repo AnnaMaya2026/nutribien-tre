@@ -113,6 +113,9 @@ export default function RepasPage() {
   const [recipeQuery, setRecipeQuery] = useState("");
   const [recipeResults, setRecipeResults] = useState<Recipe[]>([]);
   const { logs } = useFoodLogs();
+  const { profile } = useProfile();
+  const restrictions = (profile?.dietary_preferences as string[] | null) || [];
+  const restrictionLabels = getDietaryLabels(restrictions);
 
   // Debounced ingredient search
   useEffect(() => {
