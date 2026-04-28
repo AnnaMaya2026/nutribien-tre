@@ -297,6 +297,11 @@ export default function RepasPage() {
               </div>
 
               <h3 className="text-sm font-semibold text-foreground mb-3">Aliments suggérés pour combler vos manques</h3>
+              {restrictionLabels.length > 0 && (
+                <p className="text-[11px] text-foreground bg-primary/10 rounded-md px-2 py-1 mb-3">
+                  ✅ Suggestions filtrées selon votre profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
+                </p>
+              )}
 
               {loadingGaps && (
                 <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
