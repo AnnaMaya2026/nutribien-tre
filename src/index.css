@@ -136,6 +136,46 @@
       font-size: 16px;
     }
   }
+
+  /* ============================================================
+     LISIBILITÉ 45+ — Augmentation globale des tailles minimales
+     Surcharge les classes Tailwind utilitaires pour garantir
+     un seuil minimum de lecture sans toucher aux h1/h2.
+     ============================================================ */
+
+  /* Tags, badges, descriptions, messages vides, secondaires : min 15px */
+  .text-xs { font-size: 15px !important; line-height: 1.4 !important; }
+  .text-sm { font-size: 15px !important; line-height: 1.45 !important; }
+
+  /* Tailles arbitraires basses → relevées au minimum 15px */
+  .text-\[10px\],
+  .text-\[11px\],
+  .text-\[12px\],
+  .text-\[13px\],
+  .text-\[14px\] { font-size: 15px !important; line-height: 1.4 !important; }
+
+  /* Labels de nutriments et noms d'éléments dans les listes : min 17px
+     (text-base par défaut = 16px → 17px) */
+  .text-base { font-size: 17px !important; line-height: 1.5 !important; }
+
+  /* Sous-titres de pages : min 16px (text-lg conservé au-dessus) */
+
+  /* Boutons (shadcn) — taille par défaut min 16px */
+  button { font-size: inherit; }
+
+  /* Barre de navigation du bas : min 13px (déjà à 13px, on garantit) */
+  nav .text-\[13px\] { font-size: 13px !important; }
+  nav span { font-size: 13px !important; }
+
+  /* Préserver les grands titres */
+  h1, .text-2xl, .text-3xl, .text-4xl, .text-5xl, .text-6xl,
+  h2, .text-xl, .text-lg {
+    font-size: revert !important;
+    line-height: revert !important;
+  }
+  /* Mais s'assurer que text-lg (sous-titres) est >= 16px */
+  .text-lg { font-size: 18px !important; }
+  .text-xl { font-size: 20px !important; }
 }
 
 @layer utilities {
