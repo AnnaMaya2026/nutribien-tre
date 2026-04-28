@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { DAILY_TARGETS } from "@/lib/mockData";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
+import { useProfile } from "@/hooks/useProfile";
+import { isFoodAllowed, getDietaryLabels } from "@/lib/dietaryRestrictions";
 import { searchCiqual, searchByNutrient, scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { searchRecipes, Recipe } from "@/lib/recipes";
 import { RecipeCard } from "@/components/RecipeCard";
