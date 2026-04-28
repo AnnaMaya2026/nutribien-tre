@@ -12,39 +12,33 @@ const buildSteps = (name: string) => [
     subtitle: "Découvrez en 30 secondes comment NutriMéno va vous accompagner",
   },
   {
-    type: "highlight" as const,
-    title: "Votre tableau de bord",
-    tooltip: "Suivez vos calories et nutriments clés en temps réel 📊",
-    targetSelector: ".calorie-ring-section",
-    position: "bottom" as const,
+    type: "info" as const,
+    title: "Votre tableau de bord 📊",
+    subtitle: "Suivez vos calories et nutriments clés en temps réel, adaptés à vos besoins ménopausiques.",
   },
   {
-    type: "highlight" as const,
-    title: "Journal alimentaire",
-    tooltip: "Loggez vos repas par la voix 🎤, le scanner 📷 ou la recherche manuelle",
-    targetNav: "/journal",
-    position: "top" as const,
+    type: "info" as const,
+    title: "Journal alimentaire 🍽️",
+    subtitle:
+      "• Dictez vos repas à la voix 🎤\n• Scannez les codes-barres 📷\n• Recherchez manuellement vos aliments",
   },
   {
-    type: "highlight" as const,
-    title: "Idées repas 🍽️",
-    tooltip: "Trouvez des idées de repas par ingrédients, par recette, pour combler vos manques ou atténuer vos symptômes ✨",
-    targetNav: "/repas",
-    position: "top" as const,
+    type: "info" as const,
+    title: "Idées repas ✨",
+    subtitle:
+      "Trouvez des idées de repas :\n• Par ingrédients du frigo\n• Par recette\n• Pour combler vos manques\n• Pour atténuer vos symptômes",
   },
   {
-    type: "highlight" as const,
-    title: "Sophie, votre nutritionniste",
-    tooltip: "Posez vos questions à Sophie, votre nutritionniste IA spécialisée en ménopause — elle vous répond et vous parle 🎙️",
-    targetNav: "/chat",
-    position: "top" as const,
+    type: "info" as const,
+    title: "Sophie, votre nutritionniste 💬",
+    subtitle:
+      "Posez vos questions à Sophie, votre nutritionniste IA spécialisée en ménopause — elle vous répond et vous parle 🎙️",
   },
   {
-    type: "highlight" as const,
-    title: "Suivi des symptômes",
-    tooltip: "Suivez vos symptômes chaque jour et observez leur évolution dans le temps 📈",
-    targetNav: "/symptomes",
-    position: "top" as const,
+    type: "info" as const,
+    title: "Suivi des symptômes 📈",
+    subtitle:
+      "Évaluez vos symptômes chaque jour et observez leur évolution dans le temps pour mieux les comprendre.",
   },
   {
     type: "info" as const,
