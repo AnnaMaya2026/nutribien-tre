@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { SYMPTOM_RELIEF_FOODS } from "@/lib/symptomReliefFoods";
 import { searchCiqual, CiqualFood } from "@/lib/ciqual";
 import { supabase } from "@/integrations/supabase/client";
+import { isFoodAllowed, getDietaryLabels } from "@/lib/dietaryRestrictions";
 import { Activity, Loader2, Sparkles, ChefHat, Clock, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -30,6 +32,9 @@ interface RecipeIdea {
 
 export function SymptomReliefTab() {
   const { user } = useAuth();
+  const { profile } = useProfile();
+  const restrictions = (profile?.dietary_preferences as string[] | null) || [];
+  const restrictionLabels = getDietaryLabels(restrictions);
   const { todayLog } = useSymptomLogs();
   const [resolved, setResolved] = useState<Record<string, ResolvedSuggestion[]>>({});
   const [loading, setLoading] = useState(false);
