@@ -3,6 +3,8 @@ import { DAILY_TARGETS } from "@/lib/mockData";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { searchByNutrient, CiqualFood } from "@/lib/ciqual";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/hooks/useProfile";
+import { isFoodAllowed, getAlternativesForRestrictions, getDietaryLabels } from "@/lib/dietaryRestrictions";
 import { Loader2, Sparkles, ChevronLeft, RotateCw, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
