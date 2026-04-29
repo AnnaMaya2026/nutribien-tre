@@ -39,15 +39,30 @@ export function RoutinesTracker() {
   const total = routines.length;
   const pct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!name.trim()) return;
+    if (reminderEnabled) {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        // Continue saving even if denied — user can re-enable in browser settings
+        console.warn("Notification permission not granted");
+      }
+    }
     addRoutine.mutate(
-      { name: name.trim(), category, frequency },
+      {
+        name: name.trim(),
+        category,
+        frequency,
+        reminder_enabled: reminderEnabled,
+        reminder_time: reminderEnabled ? reminderTime : null,
+      },
       {
         onSuccess: () => {
           setName("");
           setCategory("complement");
           setFrequency("quotidien");
+          setReminderEnabled(false);
+          setReminderTime("08:00");
           setShowForm(false);
         },
       }
