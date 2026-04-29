@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
-import { Plus, X, Trash2, Check, Flame, Star } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Plus, X, Trash2, Check, Flame, Star, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import {
   useRoutines,
   ROUTINE_CATEGORIES,
@@ -9,6 +10,10 @@ import {
   calculateStreak,
   weekCompletionCount,
 } from "@/hooks/useRoutines";
+import {
+  requestNotificationPermission,
+  scheduleAllReminders,
+} from "@/lib/routineReminders";
 
 export function RoutinesTracker() {
   const { routines, logs, addRoutine, deleteRoutine, toggleToday, isLoading } = useRoutines();
@@ -16,6 +21,13 @@ export function RoutinesTracker() {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("complement");
   const [frequency, setFrequency] = useState("quotidien");
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderTime, setReminderTime] = useState("08:00");
+
+  // Schedule notifications for all routines with reminders
+  useEffect(() => {
+    scheduleAllReminders(routines as any);
+  }, [routines]);
 
   const today = new Date().toISOString().split("T")[0];
   const completedTodayIds = useMemo(
