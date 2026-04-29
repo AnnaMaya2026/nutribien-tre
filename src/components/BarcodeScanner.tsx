@@ -244,7 +244,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
   const handleAdd = () => {
     if (!product || !scaled) return;
     onAdd({
-      food_name: `${product.name}${product.brand ? ` (${product.brand})` : ""} 📦`,
+      food_name: `${product.name}${product.brand ? ` (${product.brand})` : ""}${isIndustrialFood(product.name) ? " 📦" : ""}`,
       portion_size: grams,
       calories: scaled.calories,
       proteins: scaled.proteins,
