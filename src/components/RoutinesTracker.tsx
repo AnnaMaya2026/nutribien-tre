@@ -157,6 +157,37 @@ export function RoutinesTracker() {
             </div>
           </div>
 
+          {/* Reminder */}
+          <div className="mb-3 rounded-lg bg-muted/40 p-3">
+            <div className="flex items-center justify-between">
+              <label htmlFor="reminder-toggle" className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                🔔 Activer un rappel
+              </label>
+              <Switch
+                id="reminder-toggle"
+                checked={reminderEnabled}
+                onCheckedChange={(v) => setReminderEnabled(!!v)}
+              />
+            </div>
+            {reminderEnabled && (
+              <div className="mt-3">
+                <label className="text-xs text-muted-foreground block mb-1">
+                  À quelle heure ?
+                </label>
+                <Input
+                  type="time"
+                  value={reminderTime}
+                  onChange={(e) => setReminderTime(e.target.value || "08:00")}
+                  className="h-9 bg-background w-32"
+                />
+              </div>
+            )}
+            <p className="text-[12px] text-muted-foreground mt-2 leading-snug">
+              💡 Pour recevoir les rappels même quand l'app est fermée,
+              installez NutriMéno sur votre écran d'accueil
+            </p>
+          </div>
+
           <button
             onClick={handleAdd}
             disabled={!name.trim() || addRoutine.isPending}
