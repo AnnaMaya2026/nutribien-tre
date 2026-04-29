@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useProfile } from "@/hooks/useProfile";
 import { detectRestrictionWarning } from "@/lib/dietaryRestrictions";
 import { formatPortion, formatStandardPortionHint, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
+import { isIndustrialFood } from "@/lib/industrialFood";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -508,7 +509,7 @@ export default function JournalPage() {
                         >
                           <div className="font-semibold text-base text-foreground line-clamp-1 flex items-center gap-1.5 flex-wrap">
                             {log.food_name.replace(" 📦", "")}
-                            {log.food_name.includes("📦") && (
+                            {isIndustrialFood(log.food_name) && (
                               <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[10px] px-1.5 py-0">
                                 Industriel
                               </Badge>

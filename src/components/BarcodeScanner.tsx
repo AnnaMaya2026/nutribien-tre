@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { amountToNutritionGrams, formatStandardPortionHint, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
+import { isIndustrialFood } from "@/lib/industrialFood";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -243,7 +244,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
   const handleAdd = () => {
     if (!product || !scaled) return;
     onAdd({
-      food_name: `${product.name}${product.brand ? ` (${product.brand})` : ""} 📦`,
+      food_name: `${product.name}${product.brand ? ` (${product.brand})` : ""}${isIndustrialFood(product.name) ? " 📦" : ""}`,
       portion_size: grams,
       calories: scaled.calories,
       proteins: scaled.proteins,
@@ -386,9 +387,11 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                       <h4 className="font-semibold text-foreground">{product.name}</h4>
                       {product.brand && <p className="text-xs text-muted-foreground">{product.brand}</p>}
                     </div>
-                    <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[10px] shrink-0">
-                      Produit industriel
-                    </Badge>
+                    {isIndustrialFood(product.name) && (
+                      <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[10px] shrink-0">
+                        Produit industriel
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-1">Code: {product.barcode}</p>
                 </div>

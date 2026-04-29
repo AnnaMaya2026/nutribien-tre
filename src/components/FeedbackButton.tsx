@@ -27,22 +27,31 @@ export default function FeedbackButton() {
       return;
     }
     setSending(true);
-    const { error } = await supabase.from("feedback" as any).insert({
-      user_id: user.id,
-      rating,
-      category,
-      message: message.trim(),
-    } as any);
+    const { data, error } = await supabase
+      .from("feedback" as any)
+      .insert({
+        user_id: user.id,
+        rating,
+        category,
+        message: message.trim(),
+      } as any)
+      .select();
     setSending(false);
     if (error) {
-      toast.error("Erreur lors de l'envoi");
+      console.error("Feedback error:", error);
+      toast.error("Une erreur est survenue. Réessayez dans quelques instants.");
       return;
     }
-    toast.success("Merci pour votre retour ! 💗");
-    setOpen(false);
-    setRating(0);
-    setCategory("suggestion");
-    setMessage("");
+    console.log("Feedback saved:", data);
+    toast.success(
+      "Merci pour votre retour ! Votre avis nous aide à améliorer NutriMéno 💗"
+    );
+    setTimeout(() => {
+      setOpen(false);
+      setRating(0);
+      setCategory("suggestion");
+      setMessage("");
+    }, 2000);
   };
 
   return (

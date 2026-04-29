@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
-import { Plus, X, Trash2, Check, Flame, Star } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Plus, X, Trash2, Check, Flame, Star, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import {
   useRoutines,
   ROUTINE_CATEGORIES,
@@ -9,6 +10,10 @@ import {
   calculateStreak,
   weekCompletionCount,
 } from "@/hooks/useRoutines";
+import {
+  requestNotificationPermission,
+  scheduleAllReminders,
+} from "@/lib/routineReminders";
 
 export function RoutinesTracker() {
   const { routines, logs, addRoutine, deleteRoutine, toggleToday, isLoading } = useRoutines();
@@ -16,6 +21,13 @@ export function RoutinesTracker() {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("complement");
   const [frequency, setFrequency] = useState("quotidien");
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderTime, setReminderTime] = useState("08:00");
+
+  // Schedule notifications for all routines with reminders
+  useEffect(() => {
+    scheduleAllReminders(routines as any);
+  }, [routines]);
 
   const today = new Date().toISOString().split("T")[0];
   const completedTodayIds = useMemo(
@@ -27,15 +39,30 @@ export function RoutinesTracker() {
   const total = routines.length;
   const pct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!name.trim()) return;
+    if (reminderEnabled) {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        // Continue saving even if denied — user can re-enable in browser settings
+        console.warn("Notification permission not granted");
+      }
+    }
     addRoutine.mutate(
-      { name: name.trim(), category, frequency },
+      {
+        name: name.trim(),
+        category,
+        frequency,
+        reminder_enabled: reminderEnabled,
+        reminder_time: reminderEnabled ? reminderTime : null,
+      },
       {
         onSuccess: () => {
           setName("");
           setCategory("complement");
           setFrequency("quotidien");
+          setReminderEnabled(false);
+          setReminderTime("08:00");
           setShowForm(false);
         },
       }
@@ -130,6 +157,37 @@ export function RoutinesTracker() {
             </div>
           </div>
 
+          {/* Reminder */}
+          <div className="mb-3 rounded-lg bg-muted/40 p-3">
+            <div className="flex items-center justify-between">
+              <label htmlFor="reminder-toggle" className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                🔔 Activer un rappel
+              </label>
+              <Switch
+                id="reminder-toggle"
+                checked={reminderEnabled}
+                onCheckedChange={(v) => setReminderEnabled(!!v)}
+              />
+            </div>
+            {reminderEnabled && (
+              <div className="mt-3">
+                <label className="text-xs text-muted-foreground block mb-1">
+                  À quelle heure ?
+                </label>
+                <Input
+                  type="time"
+                  value={reminderTime}
+                  onChange={(e) => setReminderTime(e.target.value || "08:00")}
+                  className="h-9 bg-background w-32"
+                />
+              </div>
+            )}
+            <p className="text-[12px] text-muted-foreground mt-2 leading-snug">
+              💡 Pour recevoir les rappels même quand l'app est fermée,
+              installez NutriMéno sur votre écran d'accueil
+            </p>
+          </div>
+
           <button
             onClick={handleAdd}
             disabled={!name.trim() || addRoutine.isPending}
@@ -186,6 +244,12 @@ export function RoutinesTracker() {
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                         {cat?.label || "📝 Autre"}
                       </span>
+                      {r.reminder_enabled && r.reminder_time && (
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
+                          <Bell className="w-3 h-3" />
+                          Rappel à {r.reminder_time.slice(0, 5)}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 mt-0.5">
                       {streak > 0 && (

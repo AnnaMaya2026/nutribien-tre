@@ -12,6 +12,8 @@ export interface Routine {
   active: boolean;
   sort_order: number;
   created_at: string;
+  reminder_enabled?: boolean;
+  reminder_time?: string | null;
 }
 
 export interface RoutineLog {
@@ -84,13 +86,21 @@ export function useRoutines() {
   });
 
   const addRoutine = useMutation({
-    mutationFn: async (input: { name: string; category: string; frequency: string }) => {
+    mutationFn: async (input: {
+      name: string;
+      category: string;
+      frequency: string;
+      reminder_enabled?: boolean;
+      reminder_time?: string | null;
+    }) => {
       if (!userId) throw new Error("not authenticated");
       const { error } = await (supabase as any).from("routines").insert({
         user_id: userId,
         name: input.name,
         category: input.category,
         frequency: input.frequency,
+        reminder_enabled: input.reminder_enabled ?? false,
+        reminder_time: input.reminder_enabled ? input.reminder_time ?? "08:00" : null,
       });
       if (error) throw error;
     },
