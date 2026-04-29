@@ -244,6 +244,12 @@ export function RoutinesTracker() {
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                         {cat?.label || "📝 Autre"}
                       </span>
+                      {r.reminder_enabled && r.reminder_time && (
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
+                          <Bell className="w-3 h-3" />
+                          Rappel à {r.reminder_time.slice(0, 5)}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 mt-0.5">
                       {streak > 0 && (
