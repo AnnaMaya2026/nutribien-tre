@@ -29,7 +29,13 @@ const MEAL_TYPES = [
 ];
 
 export default function JournalPage() {
-  const { logs, addLog, updateLog, deleteLog } = useFoodLogs();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const selectedDateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
+  const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })();
+  const isToday = selectedDateStr === todayStr;
+  const isFuture = selectedDateStr > todayStr;
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const { logs, addLog, updateLog, deleteLog } = useFoodLogs(selectedDateStr);
   const { favorites, saveFavorite, deleteFavorite } = useFavoriteMeals();
   const { user } = useAuth();
   const { profile } = useProfile();
