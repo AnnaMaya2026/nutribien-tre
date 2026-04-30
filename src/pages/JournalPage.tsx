@@ -296,8 +296,67 @@ export default function JournalPage() {
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
       <h1 className="text-2xl font-bold text-foreground mb-1">Journal alimentaire</h1>
-      <p className="text-muted-foreground text-sm mb-1">Ajoutez vos repas du jour</p>
-      {!showSearch && !selectedFood && !voiceMatches && !voiceCandidates && (
+      <p className="text-muted-foreground text-sm mb-3">Ajoutez vos repas du jour</p>
+
+      {/* Date selector */}
+      <div className="flex items-center gap-2 mb-3 bg-card rounded-xl p-2 card-soft">
+        <button
+          onClick={() => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); setSelectedDate(d); }}
+          className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground hover:bg-muted/80"
+          aria-label="Jour précédent"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <PopoverTrigger asChild>
+            <button className="flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium text-foreground hover:bg-muted/40 rounded-lg">
+              <CalendarIcon className="w-4 h-4 text-pink-deep" />
+              <span className="capitalize">
+                {isToday ? "Aujourd'hui — " : ""}
+                {selectedDate.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+              </span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="center">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(d) => { if (d) { setSelectedDate(d); setCalendarOpen(false); } }}
+              disabled={(date) => date > new Date()}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
+        <button
+          onClick={() => { if (isToday) return; const d = new Date(selectedDate); d.setDate(d.getDate() + 1); if (d <= new Date()) setSelectedDate(d); }}
+          disabled={isToday}
+          className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground hover:bg-muted/80 disabled:opacity-30 disabled:cursor-not-allowed"
+          aria-label="Jour suivant"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Past-date banner */}
+      {!isToday && !isFuture && (
+        <button
+          onClick={() => setSelectedDate(new Date())}
+          className="w-full mb-3 px-4 py-2.5 rounded-xl bg-pink-deep/10 border border-pink-deep/20 text-left text-sm text-foreground hover:bg-pink-deep/15 transition-colors"
+        >
+          📅 Vous consultez le {selectedDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+          <span className="block text-pink-deep font-semibold mt-0.5">Retour à aujourd'hui →</span>
+        </button>
+      )}
+
+      {/* Future date message */}
+      {isFuture && (
+        <div className="w-full mb-3 px-4 py-3 rounded-xl bg-muted text-center text-sm text-muted-foreground">
+          Vous ne pouvez pas saisir des repas pour une date future
+        </div>
+      )}
+
+      {!isFuture && !showSearch && !selectedFood && !voiceMatches && !voiceCandidates && (
         <p className="text-xs text-pink-deep/60 italic mb-4">
           🎤 Dites par exemple : « J'ai mangé du poulet rôti et des haricots verts »
         </p>
@@ -305,7 +364,7 @@ export default function JournalPage() {
       {(showSearch || selectedFood || voiceMatches || voiceCandidates) && <div className="mb-3" />}
 
       {/* Add food button */}
-      {!showSearch && (
+      {!isFuture && !showSearch && (
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setShowSearch(true)}
