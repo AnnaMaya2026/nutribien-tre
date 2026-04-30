@@ -43,6 +43,25 @@ export default function FeedbackButton() {
       return;
     }
     console.log("Feedback saved:", data);
+    const saved = Array.isArray(data) ? data[0] : data;
+    try {
+      const { error: emailError } = await supabase.functions.invoke("send-feedback-email", {
+        body: {
+          rating,
+          category,
+          message: message.trim(),
+          created_at: saved?.created_at ?? new Date().toISOString(),
+          user_id: user.id,
+        },
+      });
+      if (emailError) {
+        console.log("Error if any:", emailError);
+      } else {
+        console.log("Email sent successfully");
+      }
+    } catch (e) {
+      console.log("Error if any:", e);
+    }
     toast.success(
       "Merci pour votre retour ! Votre avis nous aide à améliorer NutriMéno 💗"
     );
