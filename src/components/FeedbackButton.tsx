@@ -43,7 +43,7 @@ export default function FeedbackButton() {
       return;
     }
     console.log("Feedback saved:", data);
-    const saved = Array.isArray(data) ? data[0] : data;
+    const saved = (Array.isArray(data) ? data[0] : data) as { created_at?: string } | null;
     try {
       const { error: emailError } = await supabase.functions.invoke("send-feedback-email", {
         body: {
