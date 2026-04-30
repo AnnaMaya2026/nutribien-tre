@@ -16,13 +16,13 @@ export default function WelcomePage() {
         <div className="space-y-3">
           <Link
             to="/onboarding"
-            className="block w-full h-12 leading-[3rem] rounded-lg bg-primary text-primary-foreground font-semibold text-base"
+            className="flex items-center justify-center w-full min-h-12 rounded-lg bg-primary text-primary-foreground font-semibold text-base px-4 text-center"
           >
             Créer mon compte
           </Link>
           <Link
             to="/auth?mode=login"
-            className="block w-full h-12 leading-[3rem] rounded-lg bg-card border border-border text-foreground font-semibold text-base"
+            className="flex items-center justify-center w-full min-h-12 rounded-lg bg-card border border-border text-foreground font-semibold text-base px-4 text-center"
           >
             J'ai déjà un compte
           </Link>
