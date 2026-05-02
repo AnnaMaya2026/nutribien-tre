@@ -311,7 +311,7 @@ export default function ProfilePage() {
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Protéines</div>
               <div className="text-lg font-bold text-foreground">{computedProteinGoal} g</div>
-              <div className="text-[10px] text-muted-foreground">1g × kg de poids</div>
+              <div className="text-[10px] text-muted-foreground">1.2g × kg de poids</div>
             </div>
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Glucides</div>
@@ -325,8 +325,8 @@ export default function ProfilePage() {
             </div>
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Fibres</div>
-              <div className="text-lg font-bold text-foreground">{FIBRES_GOAL_MIN}–{FIBRES_GOAL_MAX} g</div>
-              <div className="text-[10px] text-muted-foreground">Recommandation OMS</div>
+              <div className="text-lg font-bold text-foreground">{FIBRES_GOAL_MIN} g</div>
+              <div className="text-[10px] text-muted-foreground">Recommandation</div>
             </div>
           </div>
 
