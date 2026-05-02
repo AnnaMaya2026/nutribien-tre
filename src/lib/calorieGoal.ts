@@ -82,7 +82,7 @@ export function calculateCalorieGoal(params: {
 }
 
 export function calculateProteinGoal(weightKg?: number | null): number {
-  return Math.max(1, Math.round((Number(weightKg) || 60) * 1.0));
+  return Math.max(1, Math.round((Number(weightKg) || 60) * 1.2));
 }
 
 /** Glucides (g) = (TDEE × 0.50) / 4 */
@@ -95,6 +95,7 @@ export function calculateFatsGoal(tdee: number): number {
   return Math.round((tdee * 0.3) / 9);
 }
 
-/** Fibres : recommandation OMS 25-30g/jour pour les femmes adultes. */
+/** Fibres : recommandation fixe 25g/jour. */
 export const FIBRES_GOAL_MIN = 25;
-export const FIBRES_GOAL_MAX = 30;
+export const FIBRES_GOAL_MAX = 25;
+export const FIBRES_GOAL = 25;
