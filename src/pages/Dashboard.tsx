@@ -268,17 +268,20 @@ export default function Dashboard() {
         {/* Macro bars */}
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: "Protéines", value: totals.proteins, max: proteinGoal, isMicro: false },
-            { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs, isMicro: false },
-            { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats, isMicro: false },
-            { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres, isMicro: true },
+            { label: "Protéines", value: totals.proteins, max: proteinGoal, isMicro: false, key: "proteins" as NutrientKey },
+            { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs, isMicro: false, key: undefined },
+            { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats, isMicro: false, key: undefined },
+            { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres, isMicro: true, key: "fibres" as NutrientKey },
           ].map((m) => {
             const rawPct = (m.value / m.max) * 100;
             const barPct = Math.min(rawPct, 100);
             const { bg, text, emoji } = getNutrientColor(rawPct, m.isMicro);
             return (
               <div key={m.label} className="text-center">
-                <div className="text-sm text-muted-foreground mb-1">{m.label}</div>
+                <div className="text-sm text-muted-foreground mb-1 inline-flex items-center justify-center gap-1">
+                  {m.label}
+                  {m.key && <NutrientInfo nutrient={m.key} />}
+                </div>
                 <div className={`text-lg font-bold ${text}`}>{emoji} {Math.round(m.value)}g</div>
                 <div className="text-xs text-muted-foreground mb-1">/ {m.max}g</div>
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -290,7 +293,7 @@ export default function Dashboard() {
         </div>
 
         <p className="mt-3 text-xs text-muted-foreground text-center">
-          Protéines: {Math.round(totals.proteins)}g / {proteinGoal}g (1g par kg de votre poids)
+          Protéines: {Math.round(totals.proteins)}g / {proteinGoal}g (1.2g par kg de votre poids)
         </p>
         {totals.proteins < proteinGoal && (
           <p className="mt-2 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
