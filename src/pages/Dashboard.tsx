@@ -188,7 +188,10 @@ export default function Dashboard() {
       <div className="mb-6 flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Bonjour {firstName ? firstName : ""} 👋</h1>
-          <p className="text-muted-foreground text-sm">{formatFrenchDate()}</p>
+          <p className="text-muted-foreground text-sm capitalize">
+            {isToday ? "Aujourd'hui — " : ""}
+            {selectedDate.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <HelpCarousel />
