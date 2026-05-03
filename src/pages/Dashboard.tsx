@@ -50,15 +50,18 @@ function getCalorieColor(pct: number) {
   return { stroke: "hsl(var(--primary))", text: "text-pink-deep", emoji: "" };
 }
 
-function ProgressBar({ value, max, label, unit, isMicro = false }: { value: number; max: number; label: string; unit: string; isMicro?: boolean }) {
+function ProgressBar({ value, max, label, unit, isMicro = false, nutrient, maxPrefix, suffix }: { value: number; max: number; label: string; unit: string; isMicro?: boolean; nutrient?: NutrientKey; maxPrefix?: string; suffix?: string }) {
   const rawPct = (value / max) * 100;
   const barPct = Math.min(rawPct, 100);
   const { bg, text, emoji } = getNutrientColor(rawPct, isMicro);
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-[15px]">
-        <span className="text-muted-foreground">{label}</span>
-        <span className={`font-semibold ${text}`}>{emoji} {Math.round(value)}/{max}{unit}</span>
+        <span className="text-muted-foreground inline-flex items-center gap-1">
+          {label}
+          {nutrient && <NutrientInfo nutrient={nutrient} />}
+        </span>
+        <span className={`font-semibold ${text}`}>{emoji} {Math.round(value)}/{maxPrefix || ""}{max}{unit}{suffix ? ` ${suffix}` : ""}</span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-500 ${bg}`} style={{ width: `${barPct}%` }} />
