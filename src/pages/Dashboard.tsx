@@ -238,6 +238,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Global date selector */}
+      <DateSelector />
+
       {/* Daily evening recap (visible after 8pm) */}
       <DailyRecapCard />
 
