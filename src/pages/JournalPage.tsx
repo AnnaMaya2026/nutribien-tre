@@ -2,10 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
-import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil, ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil } from "lucide-react";
+import { useSelectedDate } from "@/hooks/useSelectedDate";
+import DateSelector from "@/components/DateSelector";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -29,12 +28,7 @@ const MEAL_TYPES = [
 ];
 
 export default function JournalPage() {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const selectedDateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
-  const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })();
-  const isToday = selectedDateStr === todayStr;
-  const isFuture = selectedDateStr > todayStr;
-  const [calendarOpen, setCalendarOpen] = useState(false);
+  const { selectedDateStr, isToday, isFuture } = useSelectedDate();
   const { logs, addLog, updateLog, deleteLog } = useFoodLogs(selectedDateStr);
   const { favorites, saveFavorite, deleteFavorite } = useFavoriteMeals();
   const { user } = useAuth();
@@ -298,56 +292,8 @@ export default function JournalPage() {
       <h1 className="text-2xl font-bold text-foreground mb-1">Journal alimentaire</h1>
       <p className="text-muted-foreground text-sm mb-3">Ajoutez vos repas du jour</p>
 
-      {/* Date selector */}
-      <div className="flex items-center gap-2 mb-3 bg-card rounded-xl p-2 card-soft">
-        <button
-          onClick={() => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); setSelectedDate(d); }}
-          className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground hover:bg-muted/80"
-          aria-label="Jour précédent"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-          <PopoverTrigger asChild>
-            <button className="flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium text-foreground hover:bg-muted/40 rounded-lg">
-              <CalendarIcon className="w-4 h-4 text-pink-deep" />
-              <span className="capitalize">
-                {isToday ? "Aujourd'hui — " : ""}
-                {selectedDate.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
-              </span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(d) => { if (d) { setSelectedDate(d); setCalendarOpen(false); } }}
-              disabled={(date) => date > new Date()}
-              initialFocus
-              className={cn("p-3 pointer-events-auto")}
-            />
-          </PopoverContent>
-        </Popover>
-        <button
-          onClick={() => { if (isToday) return; const d = new Date(selectedDate); d.setDate(d.getDate() + 1); if (d <= new Date()) setSelectedDate(d); }}
-          disabled={isToday}
-          className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-foreground hover:bg-muted/80 disabled:opacity-30 disabled:cursor-not-allowed"
-          aria-label="Jour suivant"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Past-date banner */}
-      {!isToday && !isFuture && (
-        <button
-          onClick={() => setSelectedDate(new Date())}
-          className="w-full mb-3 px-4 py-2.5 rounded-xl bg-pink-deep/10 border border-pink-deep/20 text-left text-sm text-foreground hover:bg-pink-deep/15 transition-colors"
-        >
-          📅 Vous consultez le {selectedDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
-          <span className="block text-pink-deep font-semibold mt-0.5">Retour à aujourd'hui →</span>
-        </button>
-      )}
+      {/* Date selector (synchronized with dashboard) */}
+      <DateSelector />
 
       {/* Future date message */}
       {isFuture && (

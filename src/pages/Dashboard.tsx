@@ -1,6 +1,9 @@
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
+import { useSelectedDate } from "@/hooks/useSelectedDate";
+import DateSelector from "@/components/DateSelector";
+import NutrientInfo, { NutrientKey } from "@/components/NutrientInfo";
 import { DAILY_TARGETS } from "@/lib/mockData";
 import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
@@ -47,15 +50,18 @@ function getCalorieColor(pct: number) {
   return { stroke: "hsl(var(--primary))", text: "text-pink-deep", emoji: "" };
 }
 
-function ProgressBar({ value, max, label, unit, isMicro = false }: { value: number; max: number; label: string; unit: string; isMicro?: boolean }) {
+function ProgressBar({ value, max, label, unit, isMicro = false, nutrient, maxPrefix, suffix }: { value: number; max: number; label: string; unit: string; isMicro?: boolean; nutrient?: NutrientKey; maxPrefix?: string; suffix?: string }) {
   const rawPct = (value / max) * 100;
   const barPct = Math.min(rawPct, 100);
   const { bg, text, emoji } = getNutrientColor(rawPct, isMicro);
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-[15px]">
-        <span className="text-muted-foreground">{label}</span>
-        <span className={`font-semibold ${text}`}>{emoji} {Math.round(value)}/{max}{unit}</span>
+        <span className="text-muted-foreground inline-flex items-center gap-1">
+          {label}
+          {nutrient && <NutrientInfo nutrient={nutrient} />}
+        </span>
+        <span className={`font-semibold ${text}`}>{emoji} {Math.round(value)}/{maxPrefix || ""}{max}{unit}{suffix ? ` ${suffix}` : ""}</span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-500 ${bg}`} style={{ width: `${barPct}%` }} />
@@ -104,12 +110,13 @@ export default function Dashboard() {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const navigate = useNavigate();
-  const { logs, weekLogs } = useFoodLogs();
+  const { selectedDate, selectedDateStr, isToday } = useSelectedDate();
+  const { logs, weekLogs } = useFoodLogs(selectedDateStr);
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
   const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
-  const proteinGoal = Math.max(1, Math.round(Number(profile?.weight || 60) * 1.0));
+  const proteinGoal = Math.max(1, Math.round(Number(profile?.weight || 60) * 1.2));
   const vitaminDGoal = getVitaminDGoal(profile?.age);
   const firstName = getDisplayName((profile as any)?.display_name, user?.email);
 
@@ -181,7 +188,10 @@ export default function Dashboard() {
       <div className="mb-6 flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Bonjour {firstName ? firstName : ""} 👋</h1>
-          <p className="text-muted-foreground text-sm">{formatFrenchDate()}</p>
+          <p className="text-muted-foreground text-sm capitalize">
+            {isToday ? "Aujourd'hui — " : ""}
+            {selectedDate.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <HelpCarousel />
@@ -228,6 +238,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Global date selector */}
+      <DateSelector />
+
       {/* Daily evening recap (visible after 8pm) */}
       <DailyRecapCard />
 
@@ -255,17 +268,20 @@ export default function Dashboard() {
         {/* Macro bars */}
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: "Protéines", value: totals.proteins, max: proteinGoal, isMicro: false },
-            { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs, isMicro: false },
-            { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats, isMicro: false },
-            { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres, isMicro: true },
+            { label: "Protéines", value: totals.proteins, max: proteinGoal, isMicro: false, key: "proteins" as NutrientKey },
+            { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs, isMicro: false, key: undefined },
+            { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats, isMicro: false, key: undefined },
+            { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres, isMicro: true, key: "fibres" as NutrientKey },
           ].map((m) => {
             const rawPct = (m.value / m.max) * 100;
             const barPct = Math.min(rawPct, 100);
             const { bg, text, emoji } = getNutrientColor(rawPct, m.isMicro);
             return (
               <div key={m.label} className="text-center">
-                <div className="text-sm text-muted-foreground mb-1">{m.label}</div>
+                <div className="text-sm text-muted-foreground mb-1 inline-flex items-center justify-center gap-1">
+                  {m.label}
+                  {m.key && <NutrientInfo nutrient={m.key} />}
+                </div>
                 <div className={`text-lg font-bold ${text}`}>{emoji} {Math.round(m.value)}g</div>
                 <div className="text-xs text-muted-foreground mb-1">/ {m.max}g</div>
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -277,7 +293,7 @@ export default function Dashboard() {
         </div>
 
         <p className="mt-3 text-xs text-muted-foreground text-center">
-          Protéines: {Math.round(totals.proteins)}g / {proteinGoal}g (1g par kg de votre poids)
+          Protéines: {Math.round(totals.proteins)}g / {proteinGoal}g (1.2g par kg de votre poids)
         </p>
         {totals.proteins < proteinGoal && (
           <p className="mt-2 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
@@ -312,23 +328,23 @@ export default function Dashboard() {
       <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
         <h3 className="text-base font-semibold text-foreground mb-3">Micronutriments clés</h3>
         <div className="space-y-2">
-          <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" isMicro />
-          <ProgressBar value={totals.vitamin_d} max={vitaminDGoal} label="Vitamine D" unit="µg" isMicro />
-          <ProgressBar value={totals.magnesium} max={DAILY_TARGETS.magnesium} label="Magnésium" unit="mg" isMicro />
-          <ProgressBar value={totals.iron} max={DAILY_TARGETS.iron} label="Fer" unit="mg" isMicro />
-          <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro />
-          <ProgressBar value={totals.phytoestrogens} max={DAILY_TARGETS.phytoestrogens} label="Phytoestrogènes" unit="mg" isMicro />
-          <ProgressBar value={totals.vitamin_b12} max={DAILY_TARGETS.vitamin_b12} label="Vitamine B12" unit="µg" isMicro />
+          <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" isMicro nutrient="calcium" />
+          <ProgressBar value={totals.vitamin_d} max={vitaminDGoal} label="Vitamine D" unit="µg" isMicro nutrient="vitamin_d" />
+          <ProgressBar value={totals.magnesium} max={DAILY_TARGETS.magnesium} label="Magnésium" unit="mg" isMicro nutrient="magnesium" />
+          <ProgressBar value={totals.iron} max={DAILY_TARGETS.iron} label="Fer" unit="mg" isMicro nutrient="iron" />
+          <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro nutrient="omega3" />
+          <ProgressBar value={totals.phytoestrogens} max={DAILY_TARGETS.phytoestrogens} label="Phytoestrogènes" unit="mg" isMicro nutrient="phytoestrogens" maxPrefix="~" suffix="(objectif indicatif)" />
+          <ProgressBar value={totals.vitamin_b12} max={DAILY_TARGETS.vitamin_b12} label="Vitamine B12" unit="µg" isMicro nutrient="vitamin_b12" />
         </div>
 
         {showSecondaryMicros && (
           <div className="space-y-2 mt-2 pt-3 border-t border-border animate-fade-in">
-            <ProgressBar value={totals.potassium} max={DAILY_TARGETS.potassium} label="Potassium" unit="mg" isMicro />
-            <ProgressBar value={totals.zinc} max={DAILY_TARGETS.zinc} label="Zinc" unit="mg" isMicro />
-            <ProgressBar value={totals.vitamin_k} max={DAILY_TARGETS.vitamin_k} label="Vitamine K" unit="µg" isMicro />
-            <ProgressBar value={totals.vitamin_b6} max={DAILY_TARGETS.vitamin_b6} label="Vitamine B6" unit="mg" isMicro />
-            <ProgressBar value={totals.vitamin_b9} max={DAILY_TARGETS.vitamin_b9} label="Vitamine B9 (folate)" unit="µg" isMicro />
-            <ProgressBar value={totals.vitamin_e} max={DAILY_TARGETS.vitamin_e} label="Vitamine E" unit="mg" isMicro />
+            <ProgressBar value={totals.potassium} max={DAILY_TARGETS.potassium} label="Potassium" unit="mg" isMicro nutrient="potassium" />
+            <ProgressBar value={totals.zinc} max={DAILY_TARGETS.zinc} label="Zinc" unit="mg" isMicro nutrient="zinc" />
+            <ProgressBar value={totals.vitamin_k} max={DAILY_TARGETS.vitamin_k} label="Vitamine K" unit="µg" isMicro nutrient="vitamin_k" />
+            <ProgressBar value={totals.vitamin_b6} max={DAILY_TARGETS.vitamin_b6} label="Vitamine B6" unit="mg" isMicro nutrient="vitamin_b6" />
+            <ProgressBar value={totals.vitamin_b9} max={DAILY_TARGETS.vitamin_b9} label="Vitamine B9 (folate)" unit="µg" isMicro nutrient="vitamin_b9" />
+            <ProgressBar value={totals.vitamin_e} max={DAILY_TARGETS.vitamin_e} label="Vitamine E" unit="mg" isMicro nutrient="vitamin_e" />
             <div className="rounded-xl bg-muted/30 px-3 py-2">
               <div className="flex items-start justify-between gap-2 text-sm">
                 <span className="font-medium text-foreground">Ratio Oméga-6 / Oméga-3</span>
