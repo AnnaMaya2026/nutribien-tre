@@ -110,12 +110,13 @@ export default function Dashboard() {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const navigate = useNavigate();
-  const { logs, weekLogs } = useFoodLogs();
+  const { selectedDate, selectedDateStr, isToday } = useSelectedDate();
+  const { logs, weekLogs } = useFoodLogs(selectedDateStr);
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
   const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
-  const proteinGoal = Math.max(1, Math.round(Number(profile?.weight || 60) * 1.0));
+  const proteinGoal = Math.max(1, Math.round(Number(profile?.weight || 60) * 1.2));
   const vitaminDGoal = getVitaminDGoal(profile?.age);
   const firstName = getDisplayName((profile as any)?.display_name, user?.email);
 
