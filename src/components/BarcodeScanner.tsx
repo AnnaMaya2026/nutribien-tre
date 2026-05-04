@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { amountToNutritionGrams, formatStandardPortionHint, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 import { isIndustrialFood } from "@/lib/industrialFood";
+import { estimatePhytoestrogensPer100g } from "@/lib/phytoestrogenEstimator";
+import { findCiqualMatch } from "@/lib/ciqualMatcher";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
