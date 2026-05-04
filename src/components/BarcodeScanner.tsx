@@ -570,7 +570,12 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                       </div>
                       <div className="text-[9px] text-muted-foreground">{item.label}</div>
                     </div>
-                  ))}
+                  ))
+                  ) : (
+                    <div className="col-span-3 text-center text-xs text-muted-foreground py-3">
+                      —
+                    </div>
+                  )}
                 </div>
 
                 {/* Meal type */}
