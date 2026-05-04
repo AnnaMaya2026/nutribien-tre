@@ -315,6 +315,13 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
         iron: +((product.iron_100g * nutritionGrams) / 100).toFixed(1),
         omega3: +((product.omega3_100g * nutritionGrams) / 100).toFixed(1),
         vitamin_b12: +((product.vitamin_b12_100g * nutritionGrams) / 100).toFixed(1),
+        phytoestrogens: +((product.phytoestrogens_100g * nutritionGrams) / 100).toFixed(1),
+        potassium: Math.round((product.potassium_100g * nutritionGrams) / 100),
+        zinc: +((product.zinc_100g * nutritionGrams) / 100).toFixed(1),
+        vitamin_k: +((product.vitamin_k_100g * nutritionGrams) / 100).toFixed(1),
+        vitamin_b6: +((product.vitamin_b6_100g * nutritionGrams) / 100).toFixed(2),
+        vitamin_b9: Math.round((product.vitamin_b9_100g * nutritionGrams) / 100),
+        vitamin_e: +((product.vitamin_e_100g * nutritionGrams) / 100).toFixed(1),
       }
     : null;
 
@@ -333,14 +340,14 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       magnesium: scaled.magnesium,
       iron: scaled.iron,
       omega3: scaled.omega3,
-      phytoestrogens: 0,
+      phytoestrogens: scaled.phytoestrogens,
       vitamin_b12: scaled.vitamin_b12,
-      potassium: 0,
-      zinc: 0,
-      vitamin_k: 0,
-      vitamin_b6: 0,
-      vitamin_b9: 0,
-      vitamin_e: 0,
+      potassium: scaled.potassium,
+      zinc: scaled.zinc,
+      vitamin_k: scaled.vitamin_k,
+      vitamin_b6: scaled.vitamin_b6,
+      vitamin_b9: scaled.vitamin_b9,
+      vitamin_e: scaled.vitamin_e,
       meal_type: selectedMeal,
     });
     toast.success("Produit ajouté au journal ✓");
