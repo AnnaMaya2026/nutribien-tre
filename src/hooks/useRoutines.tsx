@@ -251,3 +251,28 @@ export function weekCompletionCount(logs: RoutineLog[], routineId: string): numb
       l.logged_at <= todayStrV
   ).length;
 }
+
+/**
+ * Sum supplement contributions for routines completed on a given date.
+ * Returns a map: nutrient_key → { amount, unit, sources[] }
+ */
+export function getSupplementContributions(
+  routines: Routine[],
+  logs: RoutineLog[],
+  dateStr: string
+): Record<string, { amount: number; unit: string; sources: string[] }> {
+  const completedIds = new Set(
+    logs.filter((l) => l.logged_at === dateStr && l.completed).map((l) => l.routine_id)
+  );
+  const out: Record<string, { amount: number; unit: string; sources: string[] }> = {};
+  for (const r of routines) {
+    if (!completedIds.has(r.id)) continue;
+    if (!r.provides_nutrient || !r.nutrient_key || !r.nutrient_amount) continue;
+    const key = r.nutrient_key;
+    if (!out[key]) out[key] = { amount: 0, unit: r.nutrient_unit || "mg", sources: [] };
+    out[key].amount += Number(r.nutrient_amount) || 0;
+    out[key].sources.push(r.name);
+  }
+  return out;
+}
+
