@@ -107,6 +107,10 @@ export function useRoutines() {
       frequency: string;
       reminder_enabled?: boolean;
       reminder_time?: string | null;
+      provides_nutrient?: boolean;
+      nutrient_key?: string | null;
+      nutrient_amount?: number | null;
+      nutrient_unit?: string | null;
     }) => {
       if (!userId) throw new Error("not authenticated");
       const { error } = await (supabase as any).from("routines").insert({
@@ -116,12 +120,52 @@ export function useRoutines() {
         frequency: input.frequency,
         reminder_enabled: input.reminder_enabled ?? false,
         reminder_time: input.reminder_enabled ? input.reminder_time ?? "08:00" : null,
+        provides_nutrient: input.provides_nutrient ?? false,
+        nutrient_key: input.provides_nutrient ? input.nutrient_key ?? null : null,
+        nutrient_amount: input.provides_nutrient ? input.nutrient_amount ?? null : null,
+        nutrient_unit: input.provides_nutrient ? input.nutrient_unit ?? null : null,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["routines", userId] });
       toast.success("Routine ajoutée");
+    },
+    onError: (e: any) => toast.error(e.message || "Erreur"),
+  });
+
+  const updateRoutine = useMutation({
+    mutationFn: async ({
+      id,
+      ...updates
+    }: {
+      id: string;
+      name?: string;
+      category?: string;
+      frequency?: string;
+      reminder_enabled?: boolean;
+      reminder_time?: string | null;
+      provides_nutrient?: boolean;
+      nutrient_key?: string | null;
+      nutrient_amount?: number | null;
+      nutrient_unit?: string | null;
+    }) => {
+      const payload: any = { ...updates };
+      if (payload.reminder_enabled === false) payload.reminder_time = null;
+      if (payload.provides_nutrient === false) {
+        payload.nutrient_key = null;
+        payload.nutrient_amount = null;
+        payload.nutrient_unit = null;
+      }
+      const { error } = await (supabase as any)
+        .from("routines")
+        .update(payload)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["routines", userId] });
+      toast.success("Routine modifiée");
     },
     onError: (e: any) => toast.error(e.message || "Erreur"),
   });
