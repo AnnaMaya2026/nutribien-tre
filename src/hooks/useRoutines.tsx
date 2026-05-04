@@ -14,6 +14,10 @@ export interface Routine {
   created_at: string;
   reminder_enabled?: boolean;
   reminder_time?: string | null;
+  provides_nutrient?: boolean;
+  nutrient_key?: string | null;
+  nutrient_amount?: number | null;
+  nutrient_unit?: string | null;
 }
 
 export interface RoutineLog {
@@ -23,6 +27,17 @@ export interface RoutineLog {
   logged_at: string;
   completed: boolean;
 }
+
+export const SUPPLEMENT_NUTRIENTS: { value: string; label: string; unit: "mg" | "µg" }[] = [
+  { value: "calcium", label: "Calcium", unit: "mg" },
+  { value: "vitamin_d", label: "Vitamine D", unit: "µg" },
+  { value: "magnesium", label: "Magnésium", unit: "mg" },
+  { value: "iron", label: "Fer", unit: "mg" },
+  { value: "omega3", label: "Oméga-3", unit: "mg" },
+  { value: "zinc", label: "Zinc", unit: "mg" },
+  { value: "vitamin_b12", label: "Vitamine B12", unit: "µg" },
+  { value: "other", label: "Autre", unit: "mg" },
+];
 
 export const ROUTINE_CATEGORIES = [
   { value: "complement", label: "💊 Complément" },
