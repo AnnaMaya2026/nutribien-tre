@@ -99,7 +99,11 @@ export function isOilFoodName(foodName: string): boolean {
 
 export function isLiquidFoodName(foodName: string): boolean {
   const normalized = normalizeFoodName(foodName);
-  if (LIQUID_PHRASES.some((p) => normalized.includes(p))) return true;
+  // Cooking phrases (e.g. "carottes bouillies à l'eau") force solid grams,
+  // even when they happen to contain "eau".
+  if (COOKING_PHRASES.some((p) => normalized.includes(p))) {
+    return isOilFoodName(foodName); // oils stay liquid even if a cooking phrase is present
+  }
   if (LIQUID_WORDS.some((w) => hasWord(normalized, w))) return true;
   if (isOilFoodName(foodName)) return true;
   return false;
