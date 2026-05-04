@@ -3,6 +3,33 @@
 const LIQUID_PHRASES: string[] = [];
 
 // Strict whitelist of pure liquids only. Word-boundary match on normalized text.
+// IMPORTANT: never match cooked solids (e.g. "carottes bouillies à l'eau") — the
+// "eau" word inside cooking phrases must NOT trigger ml. We exclude common
+// cooking phrases first, then require a strict whitelisted standalone liquid noun.
+const COOKING_PHRASES = [
+  "a l eau",
+  "a l'eau",
+  "bouilli",
+  "bouillie",
+  "bouillis",
+  "bouillies",
+  "cuit",
+  "cuite",
+  "cuits",
+  "cuites",
+  "vapeur",
+  "poche",
+  "pochee",
+  "poches",
+  "pochees",
+  "roti",
+  "rotie",
+  "grille",
+  "grillee",
+  "saute",
+  "sautee",
+];
+
 const LIQUID_WORDS = [
   "lait",
   "laits",
@@ -17,6 +44,10 @@ const LIQUID_WORDS = [
   "sodas",
   "biere",
   "bieres",
+  "vin",
+  "vins",
+  "smoothie",
+  "smoothies",
 ];
 
 // Oils are tracked separately because they need a density conversion (0.92 g/ml)
@@ -68,7 +99,11 @@ export function isOilFoodName(foodName: string): boolean {
 
 export function isLiquidFoodName(foodName: string): boolean {
   const normalized = normalizeFoodName(foodName);
-  if (LIQUID_PHRASES.some((p) => normalized.includes(p))) return true;
+  // Cooking phrases (e.g. "carottes bouillies à l'eau") force solid grams,
+  // even when they happen to contain "eau".
+  if (COOKING_PHRASES.some((p) => normalized.includes(p))) {
+    return isOilFoodName(foodName); // oils stay liquid even if a cooking phrase is present
+  }
   if (LIQUID_WORDS.some((w) => hasWord(normalized, w))) return true;
   if (isOilFoodName(foodName)) return true;
   return false;

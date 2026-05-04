@@ -14,6 +14,10 @@ export interface Routine {
   created_at: string;
   reminder_enabled?: boolean;
   reminder_time?: string | null;
+  provides_nutrient?: boolean;
+  nutrient_key?: string | null;
+  nutrient_amount?: number | null;
+  nutrient_unit?: string | null;
 }
 
 export interface RoutineLog {
@@ -23,6 +27,17 @@ export interface RoutineLog {
   logged_at: string;
   completed: boolean;
 }
+
+export const SUPPLEMENT_NUTRIENTS: { value: string; label: string; unit: "mg" | "µg" }[] = [
+  { value: "calcium", label: "Calcium", unit: "mg" },
+  { value: "vitamin_d", label: "Vitamine D", unit: "µg" },
+  { value: "magnesium", label: "Magnésium", unit: "mg" },
+  { value: "iron", label: "Fer", unit: "mg" },
+  { value: "omega3", label: "Oméga-3", unit: "mg" },
+  { value: "zinc", label: "Zinc", unit: "mg" },
+  { value: "vitamin_b12", label: "Vitamine B12", unit: "µg" },
+  { value: "other", label: "Autre", unit: "mg" },
+];
 
 export const ROUTINE_CATEGORIES = [
   { value: "complement", label: "💊 Complément" },
@@ -92,6 +107,10 @@ export function useRoutines() {
       frequency: string;
       reminder_enabled?: boolean;
       reminder_time?: string | null;
+      provides_nutrient?: boolean;
+      nutrient_key?: string | null;
+      nutrient_amount?: number | null;
+      nutrient_unit?: string | null;
     }) => {
       if (!userId) throw new Error("not authenticated");
       const { error } = await (supabase as any).from("routines").insert({
@@ -101,12 +120,52 @@ export function useRoutines() {
         frequency: input.frequency,
         reminder_enabled: input.reminder_enabled ?? false,
         reminder_time: input.reminder_enabled ? input.reminder_time ?? "08:00" : null,
+        provides_nutrient: input.provides_nutrient ?? false,
+        nutrient_key: input.provides_nutrient ? input.nutrient_key ?? null : null,
+        nutrient_amount: input.provides_nutrient ? input.nutrient_amount ?? null : null,
+        nutrient_unit: input.provides_nutrient ? input.nutrient_unit ?? null : null,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["routines", userId] });
       toast.success("Routine ajoutée");
+    },
+    onError: (e: any) => toast.error(e.message || "Erreur"),
+  });
+
+  const updateRoutine = useMutation({
+    mutationFn: async ({
+      id,
+      ...updates
+    }: {
+      id: string;
+      name?: string;
+      category?: string;
+      frequency?: string;
+      reminder_enabled?: boolean;
+      reminder_time?: string | null;
+      provides_nutrient?: boolean;
+      nutrient_key?: string | null;
+      nutrient_amount?: number | null;
+      nutrient_unit?: string | null;
+    }) => {
+      const payload: any = { ...updates };
+      if (payload.reminder_enabled === false) payload.reminder_time = null;
+      if (payload.provides_nutrient === false) {
+        payload.nutrient_key = null;
+        payload.nutrient_amount = null;
+        payload.nutrient_unit = null;
+      }
+      const { error } = await (supabase as any)
+        .from("routines")
+        .update(payload)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["routines", userId] });
+      toast.success("Routine modifiée");
     },
     onError: (e: any) => toast.error(e.message || "Erreur"),
   });
@@ -155,6 +214,7 @@ export function useRoutines() {
     logs: logsQuery.data || [],
     isLoading: routinesQuery.isLoading || logsQuery.isLoading,
     addRoutine,
+    updateRoutine,
     deleteRoutine,
     toggleToday,
   };
@@ -191,3 +251,28 @@ export function weekCompletionCount(logs: RoutineLog[], routineId: string): numb
       l.logged_at <= todayStrV
   ).length;
 }
+
+/**
+ * Sum supplement contributions for routines completed on a given date.
+ * Returns a map: nutrient_key → { amount, unit, sources[] }
+ */
+export function getSupplementContributions(
+  routines: Routine[],
+  logs: RoutineLog[],
+  dateStr: string
+): Record<string, { amount: number; unit: string; sources: string[] }> {
+  const completedIds = new Set(
+    logs.filter((l) => l.logged_at === dateStr && l.completed).map((l) => l.routine_id)
+  );
+  const out: Record<string, { amount: number; unit: string; sources: string[] }> = {};
+  for (const r of routines) {
+    if (!completedIds.has(r.id)) continue;
+    if (!r.provides_nutrient || !r.nutrient_key || !r.nutrient_amount) continue;
+    const key = r.nutrient_key;
+    if (!out[key]) out[key] = { amount: 0, unit: r.nutrient_unit || "mg", sources: [] };
+    out[key].amount += Number(r.nutrient_amount) || 0;
+    out[key].sources.push(r.name);
+  }
+  return out;
+}
+

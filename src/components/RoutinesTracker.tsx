@@ -1,28 +1,223 @@
 import { useState, useMemo, useEffect } from "react";
-import { Plus, X, Trash2, Check, Flame, Star, Bell } from "lucide-react";
+import { Plus, X, Trash2, Check, Flame, Star, Bell, Pencil, BellRing } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   useRoutines,
   ROUTINE_CATEGORIES,
   ROUTINE_FREQUENCIES,
+  SUPPLEMENT_NUTRIENTS,
   calculateStreak,
   weekCompletionCount,
+  type Routine,
 } from "@/hooks/useRoutines";
 import {
   requestNotificationPermission,
   scheduleAllReminders,
+  sendTestNotification,
 } from "@/lib/routineReminders";
+import { toast } from "sonner";
+
+interface FormState {
+  name: string;
+  category: string;
+  frequency: string;
+  reminder_enabled: boolean;
+  reminder_time: string;
+  provides_nutrient: boolean;
+  nutrient_key: string;
+  nutrient_amount: string;
+  nutrient_unit: "mg" | "µg";
+}
+
+const emptyForm = (): FormState => ({
+  name: "",
+  category: "complement",
+  frequency: "quotidien",
+  reminder_enabled: false,
+  reminder_time: "08:00",
+  provides_nutrient: false,
+  nutrient_key: "calcium",
+  nutrient_amount: "",
+  nutrient_unit: "mg",
+});
+
+function RoutineForm({
+  state,
+  setState,
+}: {
+  state: FormState;
+  setState: (s: FormState) => void;
+}) {
+  const isSupplement = state.category === "complement";
+  return (
+    <>
+      <div className="mb-3">
+        <label className="text-xs text-muted-foreground block mb-1">Nom</label>
+        <Input
+          value={state.name}
+          onChange={(e) => setState({ ...state, name: e.target.value })}
+          placeholder="Ex: Collagène, Yoga, Magnésium..."
+          className="h-9 bg-muted"
+        />
+      </div>
+
+      <div className="mb-3">
+        <label className="text-xs text-muted-foreground block mb-1">Catégorie</label>
+        <div className="flex gap-1.5 flex-wrap">
+          {ROUTINE_CATEGORIES.map((c) => (
+            <button
+              key={c.value}
+              onClick={() => setState({ ...state, category: c.value })}
+              className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all ${
+                state.category === c.value
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <label className="text-xs text-muted-foreground block mb-1">Fréquence</label>
+        <div className="flex gap-1.5">
+          {ROUTINE_FREQUENCIES.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => setState({ ...state, frequency: f.value })}
+              className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
+                state.frequency === f.value
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Supplement nutrient */}
+      {isSupplement && (
+        <div className="mb-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-3">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-foreground">
+              💊 Ce complément apporte-t-il un nutriment ?
+            </label>
+            <Switch
+              checked={state.provides_nutrient}
+              onCheckedChange={(v) => setState({ ...state, provides_nutrient: !!v })}
+            />
+          </div>
+          {state.provides_nutrient && (
+            <div className="mt-3 space-y-2">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">
+                  Nutriment apporté
+                </label>
+                <select
+                  value={state.nutrient_key}
+                  onChange={(e) => {
+                    const key = e.target.value;
+                    const def = SUPPLEMENT_NUTRIENTS.find((n) => n.value === key);
+                    setState({
+                      ...state,
+                      nutrient_key: key,
+                      nutrient_unit: def?.unit || "mg",
+                    });
+                  }}
+                  className="w-full h-9 rounded-md bg-background border border-border px-2 text-sm"
+                >
+                  {SUPPLEMENT_NUTRIENTS.map((n) => (
+                    <option key={n.value} value={n.value}>
+                      {n.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="text-xs text-muted-foreground block mb-1">Quantité</label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    value={state.nutrient_amount}
+                    onChange={(e) =>
+                      setState({ ...state, nutrient_amount: e.target.value })
+                    }
+                    placeholder="ex: 500"
+                    className="h-9 bg-background"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">Unité</label>
+                  <div className="flex gap-1">
+                    {(["mg", "µg"] as const).map((u) => (
+                      <button
+                        key={u}
+                        type="button"
+                        onClick={() => setState({ ...state, nutrient_unit: u })}
+                        className={`px-3 h-9 rounded-md text-xs font-medium ${
+                          state.nutrient_unit === u
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {u}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Reminder */}
+      <div className="mb-3 rounded-lg bg-muted/40 p-3">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+            🔔 Activer un rappel
+          </label>
+          <Switch
+            checked={state.reminder_enabled}
+            onCheckedChange={(v) => setState({ ...state, reminder_enabled: !!v })}
+          />
+        </div>
+        {state.reminder_enabled && (
+          <div className="mt-3">
+            <label className="text-xs text-muted-foreground block mb-1">À quelle heure ?</label>
+            <Input
+              type="time"
+              value={state.reminder_time}
+              onChange={(e) =>
+                setState({ ...state, reminder_time: e.target.value || "08:00" })
+              }
+              className="h-9 bg-background w-32"
+            />
+          </div>
+        )}
+        <p className="text-[12px] text-muted-foreground mt-2 leading-snug">
+          💡 Pour recevoir les rappels même quand l'app est fermée, installez NutriMéno sur
+          votre écran d'accueil
+        </p>
+      </div>
+    </>
+  );
+}
 
 export function RoutinesTracker() {
-  const { routines, logs, addRoutine, deleteRoutine, toggleToday, isLoading } = useRoutines();
+  const { routines, logs, addRoutine, updateRoutine, deleteRoutine, toggleToday, isLoading } =
+    useRoutines();
   const [showForm, setShowForm] = useState(false);
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("complement");
-  const [frequency, setFrequency] = useState("quotidien");
-  const [reminderEnabled, setReminderEnabled] = useState(false);
-  const [reminderTime, setReminderTime] = useState("08:00");
+  const [editing, setEditing] = useState<Routine | null>(null);
+  const [form, setForm] = useState<FormState>(emptyForm());
 
   // Schedule notifications for all routines with reminders
   useEffect(() => {
@@ -31,7 +226,10 @@ export function RoutinesTracker() {
 
   const today = new Date().toISOString().split("T")[0];
   const completedTodayIds = useMemo(
-    () => new Set(logs.filter((l) => l.logged_at === today && l.completed).map((l) => l.routine_id)),
+    () =>
+      new Set(
+        logs.filter((l) => l.logged_at === today && l.completed).map((l) => l.routine_id)
+      ),
     [logs, today]
   );
 
@@ -40,37 +238,96 @@ export function RoutinesTracker() {
   const pct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
 
   const handleAdd = async () => {
-    if (!name.trim()) return;
-    if (reminderEnabled) {
+    if (!form.name.trim()) return;
+    if (form.reminder_enabled) {
       const granted = await requestNotificationPermission();
       if (!granted) {
-        // Continue saving even if denied — user can re-enable in browser settings
-        console.warn("Notification permission not granted");
+        toast.message(
+          "Les notifications sont bloquées. Activez-les dans les paramètres de votre navigateur."
+        );
       }
     }
     addRoutine.mutate(
       {
-        name: name.trim(),
-        category,
-        frequency,
-        reminder_enabled: reminderEnabled,
-        reminder_time: reminderEnabled ? reminderTime : null,
+        name: form.name.trim(),
+        category: form.category,
+        frequency: form.frequency,
+        reminder_enabled: form.reminder_enabled,
+        reminder_time: form.reminder_enabled ? form.reminder_time : null,
+        provides_nutrient: form.provides_nutrient,
+        nutrient_key: form.provides_nutrient ? form.nutrient_key : null,
+        nutrient_amount: form.provides_nutrient
+          ? parseFloat(form.nutrient_amount) || null
+          : null,
+        nutrient_unit: form.provides_nutrient ? form.nutrient_unit : null,
       },
       {
         onSuccess: () => {
-          setName("");
-          setCategory("complement");
-          setFrequency("quotidien");
-          setReminderEnabled(false);
-          setReminderTime("08:00");
+          setForm(emptyForm());
           setShowForm(false);
         },
       }
     );
   };
 
+  const openEdit = (r: Routine) => {
+    setEditing(r);
+    const def = SUPPLEMENT_NUTRIENTS.find((n) => n.value === (r.nutrient_key || ""));
+    setForm({
+      name: r.name,
+      category: r.category,
+      frequency: r.frequency,
+      reminder_enabled: !!r.reminder_enabled,
+      reminder_time: (r.reminder_time || "08:00").slice(0, 5),
+      provides_nutrient: !!r.provides_nutrient,
+      nutrient_key: r.nutrient_key || "calcium",
+      nutrient_amount: r.nutrient_amount != null ? String(r.nutrient_amount) : "",
+      nutrient_unit: ((r.nutrient_unit as "mg" | "µg") || def?.unit || "mg") as "mg" | "µg",
+    });
+  };
+
+  const handleEditSave = async () => {
+    if (!editing || !form.name.trim()) return;
+    if (form.reminder_enabled) await requestNotificationPermission();
+    updateRoutine.mutate(
+      {
+        id: editing.id,
+        name: form.name.trim(),
+        category: form.category,
+        frequency: form.frequency,
+        reminder_enabled: form.reminder_enabled,
+        reminder_time: form.reminder_enabled ? form.reminder_time : null,
+        provides_nutrient: form.provides_nutrient,
+        nutrient_key: form.provides_nutrient ? form.nutrient_key : null,
+        nutrient_amount: form.provides_nutrient
+          ? parseFloat(form.nutrient_amount) || null
+          : null,
+        nutrient_unit: form.provides_nutrient ? form.nutrient_unit : null,
+      },
+      {
+        onSuccess: () => {
+          setEditing(null);
+          setForm(emptyForm());
+        },
+      }
+    );
+  };
+
+  const handleTest = async (r: Routine) => {
+    const ok = await sendTestNotification(r.name);
+    if (ok) {
+      toast.success("Notification de test envoyée 🔔");
+    } else {
+      toast.error(
+        "Notifications bloquées. Autorisez-les dans votre navigateur pour recevoir les rappels."
+      );
+    }
+  };
+
   if (isLoading) {
-    return <div className="py-12 text-center text-sm text-muted-foreground">Chargement...</div>;
+    return (
+      <div className="py-12 text-center text-sm text-muted-foreground">Chargement...</div>
+    );
   }
 
   return (
@@ -92,7 +349,10 @@ export function RoutinesTracker() {
       {/* Add button */}
       {!showForm && (
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => {
+            setForm(emptyForm());
+            setShowForm(true);
+          }}
           className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 shadow-md"
         >
           <Plus className="w-4 h-4" /> Ajouter une routine
@@ -109,88 +369,11 @@ export function RoutinesTracker() {
             </button>
           </div>
 
-          <div className="mb-3">
-            <label className="text-xs text-muted-foreground block mb-1">Nom</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Collagène, Yoga, Magnésium..."
-              className="h-9 bg-muted"
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="text-xs text-muted-foreground block mb-1">Catégorie</label>
-            <div className="flex gap-1.5 flex-wrap">
-              {ROUTINE_CATEGORIES.map((c) => (
-                <button
-                  key={c.value}
-                  onClick={() => setCategory(c.value)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all ${
-                    category === c.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="text-xs text-muted-foreground block mb-1">Fréquence</label>
-            <div className="flex gap-1.5">
-              {ROUTINE_FREQUENCIES.map((f) => (
-                <button
-                  key={f.value}
-                  onClick={() => setFrequency(f.value)}
-                  className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
-                    frequency === f.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Reminder */}
-          <div className="mb-3 rounded-lg bg-muted/40 p-3">
-            <div className="flex items-center justify-between">
-              <label htmlFor="reminder-toggle" className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                🔔 Activer un rappel
-              </label>
-              <Switch
-                id="reminder-toggle"
-                checked={reminderEnabled}
-                onCheckedChange={(v) => setReminderEnabled(!!v)}
-              />
-            </div>
-            {reminderEnabled && (
-              <div className="mt-3">
-                <label className="text-xs text-muted-foreground block mb-1">
-                  À quelle heure ?
-                </label>
-                <Input
-                  type="time"
-                  value={reminderTime}
-                  onChange={(e) => setReminderTime(e.target.value || "08:00")}
-                  className="h-9 bg-background w-32"
-                />
-              </div>
-            )}
-            <p className="text-[12px] text-muted-foreground mt-2 leading-snug">
-              💡 Pour recevoir les rappels même quand l'app est fermée,
-              installez NutriMéno sur votre écran d'accueil
-            </p>
-          </div>
+          <RoutineForm state={form} setState={setForm} />
 
           <button
             onClick={handleAdd}
-            disabled={!name.trim() || addRoutine.isPending}
+            disabled={!form.name.trim() || addRoutine.isPending}
             className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <Plus className="w-4 h-4" /> Enregistrer
@@ -198,13 +381,38 @@ export function RoutinesTracker() {
         </div>
       )}
 
+      {/* Edit modal */}
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifier la routine</DialogTitle>
+          </DialogHeader>
+          <RoutineForm state={form} setState={setForm} />
+          <div className="flex gap-2">
+            <button
+              onClick={() => setEditing(null)}
+              className="flex-1 py-2.5 rounded-lg bg-muted text-muted-foreground text-sm font-medium"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleEditSave}
+              disabled={!form.name.trim() || updateRoutine.isPending}
+              className="flex-1 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
+            >
+              Enregistrer
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Routines list */}
       {routines.length === 0 && !showForm ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="text-6xl mb-4">✅</div>
           <p className="text-sm text-muted-foreground max-w-[260px]">
-            Ajoutez vos routines (compléments, sport, méditation...) pour les suivre
-            au quotidien
+            Ajoutez vos routines (compléments, sport, méditation...) pour les suivre au
+            quotidien
           </p>
         </div>
       ) : (
@@ -214,6 +422,9 @@ export function RoutinesTracker() {
             const streak = calculateStreak(logs, r.id);
             const weekCount = weekCompletionCount(logs, r.id);
             const cat = ROUTINE_CATEGORIES.find((c) => c.value === r.category);
+            const nutrientDef = SUPPLEMENT_NUTRIENTS.find(
+              (n) => n.value === (r.nutrient_key || "")
+            );
             return (
               <div
                 key={r.id}
@@ -247,7 +458,13 @@ export function RoutinesTracker() {
                       {r.reminder_enabled && r.reminder_time && (
                         <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
                           <Bell className="w-3 h-3" />
-                          Rappel à {r.reminder_time.slice(0, 5)}
+                          {r.reminder_time.slice(0, 5)}
+                        </span>
+                      )}
+                      {r.provides_nutrient && r.nutrient_amount && (
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                          +{r.nutrient_amount}
+                          {r.nutrient_unit} {nutrientDef?.label || r.nutrient_key}
                         </span>
                       )}
                     </div>
@@ -255,7 +472,8 @@ export function RoutinesTracker() {
                       {streak > 0 && (
                         <span className="text-[11px] text-orange-500 font-medium flex items-center gap-1">
                           <Flame className="w-3 h-3" />
-                          {streak} jour{streak > 1 ? "s" : ""} consécutif{streak > 1 ? "s" : ""}
+                          {streak} jour{streak > 1 ? "s" : ""} consécutif
+                          {streak > 1 ? "s" : ""}
                         </span>
                       )}
                       <span className="text-[11px] text-muted-foreground flex items-center gap-1">
@@ -265,17 +483,37 @@ export function RoutinesTracker() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      if (confirm(`Supprimer la routine "${r.name}" ?`)) {
-                        deleteRoutine.mutate(r.id);
-                      }
-                    }}
-                    className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0"
-                    aria-label="Supprimer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {r.reminder_enabled && (
+                      <button
+                        onClick={() => handleTest(r)}
+                        className="text-muted-foreground hover:text-primary transition-colors"
+                        aria-label="Tester le rappel"
+                        title="Tester le rappel"
+                      >
+                        <BellRing className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => openEdit(r)}
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      aria-label="Modifier"
+                      title="Modifier"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Supprimer la routine "${r.name}" ?`)) {
+                          deleteRoutine.mutate(r.id);
+                        }
+                      }}
+                      className="text-muted-foreground hover:text-destructive transition-colors"
+                      aria-label="Supprimer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );

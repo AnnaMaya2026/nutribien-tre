@@ -2,6 +2,7 @@ import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
+import { useRoutines, getSupplementContributions } from "@/hooks/useRoutines";
 import DateSelector from "@/components/DateSelector";
 import NutrientInfo, { NutrientKey } from "@/components/NutrientInfo";
 import { DAILY_TARGETS } from "@/lib/mockData";
@@ -45,22 +46,70 @@ function getCalorieColor(pct: number) {
   return { stroke: "hsl(var(--primary))", text: "text-pink-deep", emoji: "" };
 }
 
-function ProgressBar({ value, max, label, unit, isMicro = false, nutrient, maxPrefix, suffix }: { value: number; max: number; label: string; unit: string; isMicro?: boolean; nutrient?: NutrientKey; maxPrefix?: string; suffix?: string }) {
-  const rawPct = (value / max) * 100;
-  const barPct = Math.min(rawPct, 100);
-  const { bg, text, emoji } = getNutrientColor(rawPct, isMicro);
+function ProgressBar({
+  value,
+  max,
+  label,
+  unit,
+  isMicro = false,
+  nutrient,
+  maxPrefix,
+  hint,
+  supplementAmount,
+  supplementUnit,
+}: {
+  value: number;
+  max: number;
+  label: string;
+  unit: string;
+  isMicro?: boolean;
+  nutrient?: NutrientKey;
+  maxPrefix?: string;
+  hint?: string;
+  supplementAmount?: number;
+  supplementUnit?: string;
+}) {
+  const totalValue = value + (supplementAmount || 0);
+  const rawPct = (totalValue / max) * 100;
+  const foodPct = Math.min((value / max) * 100, 100);
+  const totalPct = Math.min(rawPct, 100);
+  const supplementPct = Math.max(0, totalPct - foodPct);
+  const { text, emoji } = getNutrientColor(rawPct, isMicro);
+  const foodColor = getNutrientColor((value / max) * 100, isMicro).bg;
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-[15px]">
+      <div className="flex justify-between items-center text-[15px]">
         <span className="text-muted-foreground inline-flex items-center gap-1">
           {label}
           {nutrient && <NutrientInfo nutrient={nutrient} />}
         </span>
-        <span className={`font-semibold ${text}`}>{emoji} {Math.round(value)}/{maxPrefix || ""}{max}{unit}{suffix ? ` ${suffix}` : ""}</span>
+        <span className={`font-semibold ${text} text-right`}>
+          {emoji} {Math.round(totalValue)}/{maxPrefix || ""}
+          {max}
+          {unit}
+        </span>
       </div>
-      <div className="h-2 bg-muted rounded-full overflow-hidden">
-        <div className={`h-full rounded-full transition-all duration-500 ${bg}`} style={{ width: `${barPct}%` }} />
+      <div className="h-2 bg-muted rounded-full overflow-hidden flex">
+        <div
+          className={`h-full transition-all duration-500 ${foodColor}`}
+          style={{ width: `${foodPct}%` }}
+        />
+        {supplementPct > 0 && (
+          <div
+            className="h-full transition-all duration-500 bg-amber-400"
+            style={{ width: `${supplementPct}%` }}
+            title="Contribution des compléments"
+          />
+        )}
       </div>
+      {supplementAmount ? (
+        <p className="text-[11px] text-amber-600 dark:text-amber-400">
+          💊 Compléments: +{Math.round(supplementAmount)}{supplementUnit || unit}
+        </p>
+      ) : null}
+      {hint && (
+        <p className="text-[11px] text-muted-foreground italic">{hint}</p>
+      )}
     </div>
   );
 }
@@ -107,6 +156,19 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { selectedDate, selectedDateStr, isToday } = useSelectedDate();
   const { logs, weekLogs } = useFoodLogs(selectedDateStr);
+  const { allRoutines, logs: routineLogs } = useRoutines();
+  const supplementContribs = useMemo(
+    () => getSupplementContributions(allRoutines as any, routineLogs as any, selectedDateStr),
+    [allRoutines, routineLogs, selectedDateStr]
+  );
+  // Convert nutrient amounts to the same unit used by the food totals.
+  // Most micros are mg or µg already in the right unit; oméga-3 is stored in g
+  // by food logs but supplements are typically reported in mg → convert.
+  const supBy = (key: string, divisor = 1) => {
+    const c = supplementContribs[key];
+    if (!c) return 0;
+    return c.amount / divisor;
+  };
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
   const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
 
@@ -323,19 +385,19 @@ export default function Dashboard() {
       <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
         <h3 className="text-base font-semibold text-foreground mb-3">Micronutriments clés</h3>
         <div className="space-y-2">
-          <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" isMicro nutrient="calcium" />
-          <ProgressBar value={totals.vitamin_d} max={vitaminDGoal} label="Vitamine D" unit="µg" isMicro nutrient="vitamin_d" />
-          <ProgressBar value={totals.magnesium} max={DAILY_TARGETS.magnesium} label="Magnésium" unit="mg" isMicro nutrient="magnesium" />
-          <ProgressBar value={totals.iron} max={DAILY_TARGETS.iron} label="Fer" unit="mg" isMicro nutrient="iron" />
-          <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro nutrient="omega3" />
-          <ProgressBar value={totals.phytoestrogens} max={DAILY_TARGETS.phytoestrogens} label="Phytoestrogènes" unit="mg" isMicro nutrient="phytoestrogens" maxPrefix="~" suffix="(objectif indicatif)" />
-          <ProgressBar value={totals.vitamin_b12} max={DAILY_TARGETS.vitamin_b12} label="Vitamine B12" unit="µg" isMicro nutrient="vitamin_b12" />
+          <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" isMicro nutrient="calcium" supplementAmount={supBy("calcium")} supplementUnit="mg" />
+          <ProgressBar value={totals.vitamin_d} max={vitaminDGoal} label="Vitamine D" unit="µg" isMicro nutrient="vitamin_d" supplementAmount={supBy("vitamin_d")} supplementUnit="µg" />
+          <ProgressBar value={totals.magnesium} max={DAILY_TARGETS.magnesium} label="Magnésium" unit="mg" isMicro nutrient="magnesium" supplementAmount={supBy("magnesium")} supplementUnit="mg" />
+          <ProgressBar value={totals.iron} max={DAILY_TARGETS.iron} label="Fer" unit="mg" isMicro nutrient="iron" supplementAmount={supBy("iron")} supplementUnit="mg" />
+          <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro nutrient="omega3" supplementAmount={supBy("omega3", 1000)} supplementUnit="g" />
+          <ProgressBar value={totals.phytoestrogens} max={DAILY_TARGETS.phytoestrogens} label="Phytoestrogènes" unit="mg" isMicro nutrient="phytoestrogens" maxPrefix="~" hint="(objectif indicatif)" />
+          <ProgressBar value={totals.vitamin_b12} max={DAILY_TARGETS.vitamin_b12} label="Vitamine B12" unit="µg" isMicro nutrient="vitamin_b12" supplementAmount={supBy("vitamin_b12")} supplementUnit="µg" />
         </div>
 
         {showSecondaryMicros && (
           <div className="space-y-2 mt-2 pt-3 border-t border-border animate-fade-in">
             <ProgressBar value={totals.potassium} max={DAILY_TARGETS.potassium} label="Potassium" unit="mg" isMicro nutrient="potassium" />
-            <ProgressBar value={totals.zinc} max={DAILY_TARGETS.zinc} label="Zinc" unit="mg" isMicro nutrient="zinc" />
+            <ProgressBar value={totals.zinc} max={DAILY_TARGETS.zinc} label="Zinc" unit="mg" isMicro nutrient="zinc" supplementAmount={supBy("zinc")} supplementUnit="mg" />
             <ProgressBar value={totals.vitamin_k} max={DAILY_TARGETS.vitamin_k} label="Vitamine K" unit="µg" isMicro nutrient="vitamin_k" />
             <ProgressBar value={totals.vitamin_b6} max={DAILY_TARGETS.vitamin_b6} label="Vitamine B6" unit="mg" isMicro nutrient="vitamin_b6" />
             <ProgressBar value={totals.vitamin_b9} max={DAILY_TARGETS.vitamin_b9} label="Vitamine B9 (folate)" unit="µg" isMicro nutrient="vitamin_b9" />
