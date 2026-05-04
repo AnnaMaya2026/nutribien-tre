@@ -287,6 +287,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={handleClose}>
           <div
             className="bg-card rounded-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto animate-fade-in"
+            style={{ paddingBottom: 80 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
