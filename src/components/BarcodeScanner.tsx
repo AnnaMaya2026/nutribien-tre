@@ -540,9 +540,22 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                   ))}
                 </div>
 
+                {/* Micros source banner */}
+                {product.microsSource === "ciqual" && product.ciqualMatchName && (
+                  <p className="text-[11px] text-muted-foreground italic">
+                    Micronutriments estimés depuis CIQUAL ({product.ciqualMatchName})
+                  </p>
+                )}
+                {!product.microsAvailable && (
+                  <p className="text-[11px] text-orange-600 italic">
+                    Micros non disponibles pour ce produit
+                  </p>
+                )}
+
                 {/* Micros */}
                 <div className="grid grid-cols-3 gap-1.5 text-center">
-                  {[
+                  {product.microsAvailable ? (
+                  [
                     { label: "Calcium", value: scaled.calcium, unit: "mg" },
                     { label: "Vit. D", value: scaled.vitamin_d, unit: "µg" },
                     { label: "Magnésium", value: scaled.magnesium, unit: "mg" },
