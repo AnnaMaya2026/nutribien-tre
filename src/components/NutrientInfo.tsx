@@ -72,7 +72,13 @@ export default function NutrientInfo({ nutrient }: { nutrient: NutrientKey }) {
         </button>
       </PopoverTrigger>
       <PopoverContent
-        className="max-w-[280px] w-[280px] p-3 bg-pink-deep/5 border-pink-deep/30"
+        className="max-w-[280px] w-[280px] py-3 px-4 rounded-xl"
+        style={{
+          backgroundColor: "#FFFFFF",
+          border: "1px solid #F8BBD9",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          zIndex: 9999,
+        }}
         side="top"
         align="center"
       >
