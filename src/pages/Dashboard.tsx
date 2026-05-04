@@ -45,22 +45,70 @@ function getCalorieColor(pct: number) {
   return { stroke: "hsl(var(--primary))", text: "text-pink-deep", emoji: "" };
 }
 
-function ProgressBar({ value, max, label, unit, isMicro = false, nutrient, maxPrefix, suffix }: { value: number; max: number; label: string; unit: string; isMicro?: boolean; nutrient?: NutrientKey; maxPrefix?: string; suffix?: string }) {
-  const rawPct = (value / max) * 100;
-  const barPct = Math.min(rawPct, 100);
-  const { bg, text, emoji } = getNutrientColor(rawPct, isMicro);
+function ProgressBar({
+  value,
+  max,
+  label,
+  unit,
+  isMicro = false,
+  nutrient,
+  maxPrefix,
+  hint,
+  supplementAmount,
+  supplementUnit,
+}: {
+  value: number;
+  max: number;
+  label: string;
+  unit: string;
+  isMicro?: boolean;
+  nutrient?: NutrientKey;
+  maxPrefix?: string;
+  hint?: string;
+  supplementAmount?: number;
+  supplementUnit?: string;
+}) {
+  const totalValue = value + (supplementAmount || 0);
+  const rawPct = (totalValue / max) * 100;
+  const foodPct = Math.min((value / max) * 100, 100);
+  const totalPct = Math.min(rawPct, 100);
+  const supplementPct = Math.max(0, totalPct - foodPct);
+  const { text, emoji } = getNutrientColor(rawPct, isMicro);
+  const foodColor = getNutrientColor((value / max) * 100, isMicro).bg;
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-[15px]">
+      <div className="flex justify-between items-center text-[15px]">
         <span className="text-muted-foreground inline-flex items-center gap-1">
           {label}
           {nutrient && <NutrientInfo nutrient={nutrient} />}
         </span>
-        <span className={`font-semibold ${text}`}>{emoji} {Math.round(value)}/{maxPrefix || ""}{max}{unit}{suffix ? ` ${suffix}` : ""}</span>
+        <span className={`font-semibold ${text} text-right`}>
+          {emoji} {Math.round(totalValue)}/{maxPrefix || ""}
+          {max}
+          {unit}
+        </span>
       </div>
-      <div className="h-2 bg-muted rounded-full overflow-hidden">
-        <div className={`h-full rounded-full transition-all duration-500 ${bg}`} style={{ width: `${barPct}%` }} />
+      <div className="h-2 bg-muted rounded-full overflow-hidden flex">
+        <div
+          className={`h-full transition-all duration-500 ${foodColor}`}
+          style={{ width: `${foodPct}%` }}
+        />
+        {supplementPct > 0 && (
+          <div
+            className="h-full transition-all duration-500 bg-amber-400"
+            style={{ width: `${supplementPct}%` }}
+            title="Contribution des compléments"
+          />
+        )}
       </div>
+      {supplementAmount ? (
+        <p className="text-[11px] text-amber-600 dark:text-amber-400">
+          💊 Compléments: +{Math.round(supplementAmount)}{supplementUnit || unit}
+        </p>
+      ) : null}
+      {hint && (
+        <p className="text-[11px] text-muted-foreground italic">{hint}</p>
+      )}
     </div>
   );
 }
