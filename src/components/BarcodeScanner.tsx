@@ -30,6 +30,16 @@ interface ScannedProduct {
   iron_100g: number;
   omega3_100g: number;
   vitamin_b12_100g: number;
+  phytoestrogens_100g: number;
+  potassium_100g: number;
+  zinc_100g: number;
+  vitamin_k_100g: number;
+  vitamin_b6_100g: number;
+  vitamin_b9_100g: number;
+  vitamin_e_100g: number;
+  microsAvailable: boolean;
+  microsSource?: "openfoodfacts" | "ciqual" | "none";
+  ciqualMatchName?: string;
 }
 
 interface BarcodeScannerProps {
