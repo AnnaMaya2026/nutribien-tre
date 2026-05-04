@@ -214,6 +214,7 @@ export function useRoutines() {
     logs: logsQuery.data || [],
     isLoading: routinesQuery.isLoading || logsQuery.isLoading,
     addRoutine,
+    updateRoutine,
     deleteRoutine,
     toggleToday,
   };
