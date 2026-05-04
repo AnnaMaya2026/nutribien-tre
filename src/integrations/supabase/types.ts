@@ -569,6 +569,10 @@ export type Database = {
           frequency: string
           id: string
           name: string
+          nutrient_amount: number | null
+          nutrient_key: string | null
+          nutrient_unit: string | null
+          provides_nutrient: boolean
           reminder_enabled: boolean
           reminder_time: string | null
           sort_order: number
@@ -582,6 +586,10 @@ export type Database = {
           frequency?: string
           id?: string
           name: string
+          nutrient_amount?: number | null
+          nutrient_key?: string | null
+          nutrient_unit?: string | null
+          provides_nutrient?: boolean
           reminder_enabled?: boolean
           reminder_time?: string | null
           sort_order?: number
@@ -595,6 +603,10 @@ export type Database = {
           frequency?: string
           id?: string
           name?: string
+          nutrient_amount?: number | null
+          nutrient_key?: string | null
+          nutrient_unit?: string | null
+          provides_nutrient?: boolean
           reminder_enabled?: boolean
           reminder_time?: string | null
           sort_order?: number
