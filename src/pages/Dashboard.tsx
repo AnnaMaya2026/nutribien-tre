@@ -29,15 +29,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-function getNutrientColor(pct: number, isMicro = false) {
-  if (isMicro) {
-    if (pct > 100) return { bg: "bg-blue-500", text: "text-blue-500", emoji: "💧" };
-    if (pct >= 80) return { bg: "bg-green-500", text: "text-green-500", emoji: "🟢" };
-    if (pct >= 50) return { bg: "bg-orange-500", text: "text-orange-500", emoji: "🟠" };
-    return { bg: "bg-red-500", text: "text-red-500", emoji: "🔴" };
-  }
-  if (pct > 120) return { bg: "bg-red-500", text: "text-red-500", emoji: "🔴" };
-  if (pct > 100) return { bg: "bg-orange-500", text: "text-orange-500", emoji: "🟠" };
+function getNutrientColor(pct: number, _isMicro = false) {
+  // Unified color logic for both macros and micros:
+  // < 50% red, 50-80% orange, 80-100% green, > 100% blue
+  if (pct > 100) return { bg: "bg-blue-500", text: "text-blue-500", emoji: "💧" };
   if (pct >= 80) return { bg: "bg-green-500", text: "text-green-500", emoji: "🟢" };
   if (pct >= 50) return { bg: "bg-orange-500", text: "text-orange-500", emoji: "🟠" };
   return { bg: "bg-red-500", text: "text-red-500", emoji: "🔴" };
