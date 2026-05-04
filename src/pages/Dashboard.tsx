@@ -156,6 +156,19 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { selectedDate, selectedDateStr, isToday } = useSelectedDate();
   const { logs, weekLogs } = useFoodLogs(selectedDateStr);
+  const { allRoutines, logs: routineLogs } = useRoutines();
+  const supplementContribs = useMemo(
+    () => getSupplementContributions(allRoutines as any, routineLogs as any, selectedDateStr),
+    [allRoutines, routineLogs, selectedDateStr]
+  );
+  // Convert nutrient amounts to the same unit used by the food totals.
+  // Most micros are mg or µg already in the right unit; oméga-3 is stored in g
+  // by food logs but supplements are typically reported in mg → convert.
+  const supBy = (key: string, divisor = 1) => {
+    const c = supplementContribs[key];
+    if (!c) return 0;
+    return c.amount / divisor;
+  };
   const [showMealBreakdown, setShowMealBreakdown] = useState(false);
   const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
 
