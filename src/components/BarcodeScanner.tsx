@@ -113,9 +113,64 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       }
       const p = data.product;
       const nm = p.nutriments || {};
-      console.log("Product found:", p.product_name || p.product_name_fr);
+      const productName = p.product_name || p.product_name_fr || "Produit inconnu";
+      console.log("Product found:", productName);
+
+      let calcium = n(nm.calcium_100g);
+      let vitamin_d = n(nm["vitamin-d_100g"]);
+      let magnesium = n(nm.magnesium_100g);
+      let iron = n(nm.iron_100g);
+      let omega3 = n(nm["omega-3-fat_100g"]);
+      let vitamin_b12 = n(nm["vitamin-b12_100g"]);
+      let potassium = n(nm.potassium_100g);
+      let zinc = n(nm.zinc_100g);
+      let vitamin_k = n(nm["vitamin-k_100g"]);
+      let vitamin_b6 = n(nm["vitamin-b6_100g"]);
+      let vitamin_b9 = n(nm["vitamin-b9_100g"]);
+      let vitamin_e = n(nm["vitamin-e_100g"]);
+      let phytoestrogens = 0;
+      let microsAvailable =
+        calcium + vitamin_d + magnesium + iron + omega3 + vitamin_b12 > 0;
+      let microsSource: "openfoodfacts" | "ciqual" | "none" = microsAvailable
+        ? "openfoodfacts"
+        : "none";
+      let ciqualMatchName: string | undefined;
+
+      // If OFF doesn't provide micros, look up CIQUAL by name (fuzzy match)
+      if (!microsAvailable) {
+        try {
+          const match = await findCiqualMatch(productName);
+          if (match) {
+            const f = match.food;
+            calcium = f.calcium_100g || 0;
+            vitamin_d = f.vitamine_d_100g || 0;
+            magnesium = f.magnesium_100g || 0;
+            iron = f.fer_100g || 0;
+            omega3 = f.omega3_total_100g || 0;
+            vitamin_b12 = f.vitamine_b12_100g || 0;
+            potassium = f.potassium_100g || 0;
+            zinc = f.zinc_100g || 0;
+            vitamin_k = f.vitamine_k_100g || 0;
+            vitamin_b6 = f.vitamine_b6_100g || 0;
+            vitamin_b9 = f.vitamine_b9_100g || 0;
+            vitamin_e = f.vitamine_e_100g || 0;
+            phytoestrogens = f.phytoestrogenes_100mg || 0;
+            microsAvailable = true;
+            microsSource = "ciqual";
+            ciqualMatchName = f.nom;
+          }
+        } catch (err) {
+          console.warn("CIQUAL match failed:", err);
+        }
+      }
+
+      // Estimate phytoestrogens from name when still missing (e.g. tofu, lin…)
+      if (!phytoestrogens) {
+        phytoestrogens = estimatePhytoestrogensPer100g(productName);
+      }
+
       setProduct({
-        name: p.product_name || p.product_name_fr || "Produit inconnu",
+        name: productName,
         brand: p.brands || "",
         barcode,
         calories_100g: n(nm["energy-kcal_100g"]),
@@ -123,14 +178,24 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
         carbs_100g: n(nm.carbohydrates_100g),
         fats_100g: n(nm.fat_100g),
         fiber_100g: n(nm.fiber_100g),
-        calcium_100g: n(nm.calcium_100g),
-        vitamin_d_100g: n(nm["vitamin-d_100g"]),
-        magnesium_100g: n(nm.magnesium_100g),
-        iron_100g: n(nm.iron_100g),
-        omega3_100g: n(nm["omega-3-fat_100g"]),
-        vitamin_b12_100g: n(nm["vitamin-b12_100g"]),
+        calcium_100g: calcium,
+        vitamin_d_100g: vitamin_d,
+        magnesium_100g: magnesium,
+        iron_100g: iron,
+        omega3_100g: omega3,
+        vitamin_b12_100g: vitamin_b12,
+        phytoestrogens_100g: phytoestrogens,
+        potassium_100g: potassium,
+        zinc_100g: zinc,
+        vitamin_k_100g: vitamin_k,
+        vitamin_b6_100g: vitamin_b6,
+        vitamin_b9_100g: vitamin_b9,
+        vitamin_e_100g: vitamin_e,
+        microsAvailable: microsAvailable || phytoestrogens > 0,
+        microsSource,
+        ciqualMatchName,
       });
-      setGrams(getDefaultPortion(p.product_name || p.product_name_fr || "Produit inconnu"));
+      setGrams(getDefaultPortion(productName));
     } catch {
       toast.error("Erreur de connexion, réessayez");
       setShowScanner(false);
