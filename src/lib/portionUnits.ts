@@ -3,6 +3,33 @@
 const LIQUID_PHRASES: string[] = [];
 
 // Strict whitelist of pure liquids only. Word-boundary match on normalized text.
+// IMPORTANT: never match cooked solids (e.g. "carottes bouillies à l'eau") — the
+// "eau" word inside cooking phrases must NOT trigger ml. We exclude common
+// cooking phrases first, then require a strict whitelisted standalone liquid noun.
+const COOKING_PHRASES = [
+  "a l eau",
+  "a l'eau",
+  "bouilli",
+  "bouillie",
+  "bouillis",
+  "bouillies",
+  "cuit",
+  "cuite",
+  "cuits",
+  "cuites",
+  "vapeur",
+  "poche",
+  "pochee",
+  "poches",
+  "pochees",
+  "roti",
+  "rotie",
+  "grille",
+  "grillee",
+  "saute",
+  "sautee",
+];
+
 const LIQUID_WORDS = [
   "lait",
   "laits",
@@ -17,6 +44,10 @@ const LIQUID_WORDS = [
   "sodas",
   "biere",
   "bieres",
+  "vin",
+  "vins",
+  "smoothie",
+  "smoothies",
 ];
 
 // Oils are tracked separately because they need a density conversion (0.92 g/ml)
