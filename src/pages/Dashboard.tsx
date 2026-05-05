@@ -403,19 +403,6 @@ export default function Dashboard() {
             <ProgressBar value={totals.vitamin_b9} max={DAILY_TARGETS.vitamin_b9} label="Vitamine B9 (folate)" unit="µg" isMicro nutrient="vitamin_b9" />
             <ProgressBar value={totals.vitamin_e} max={DAILY_TARGETS.vitamin_e} label="Vitamine E" unit="mg" isMicro nutrient="vitamin_e" />
             <div className="rounded-xl bg-muted/30 px-3 py-2">
-              <div className="flex items-start justify-between gap-2 text-sm">
-                <span className="font-medium text-foreground">Ratio Oméga-6 / Oméga-3</span>
-                <span className="text-muted-foreground" title="Un ratio élevé favorise l'inflammation. L'objectif est d'atteindre un ratio ≤ 4:1 en augmentant les oméga-3 (poissons gras, noix, graines de lin) et en réduisant les huiles végétales riches en oméga-6.">
-                  <Info className="h-4 w-4" />
-                </span>
-              </div>
-              {omegaRatio ? (
-                <p className="mt-1 text-xs text-muted-foreground">Ratio oméga-6/oméga-3 : {omegaRatio.toFixed(1)}:1 · {omegaRatioStatus}</p>
-              ) : (
-                <p className="mt-1 text-xs text-muted-foreground">Données oméga-6 en cours d'intégration</p>
-              )}
-            </div>
-            <div className="rounded-xl bg-muted/30 px-3 py-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium text-foreground">Score antioxydants 🫐</span>
                 <span className={`font-semibold ${antioxidantTone}`}>{Math.min(antioxidantScore, 5)}/5</span>
