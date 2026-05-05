@@ -204,9 +204,6 @@ export default function Dashboard() {
 
   const antioxidantScore = getProducePortions(logs);
   const antioxidantTone = antioxidantScore >= 5 ? "text-green-500" : antioxidantScore >= 3 ? "text-orange-500" : "text-red-500";
-  const hasOmega6Data = totals.omega6 > 0;
-  const omegaRatio = hasOmega6Data && totals.omega3 > 0 ? totals.omega6 / totals.omega3 : null;
-  const omegaRatioStatus = omegaRatio === null ? null : omegaRatio <= 4 ? "🟢 Excellent (anti-inflammatoire)" : omegaRatio <= 8 ? "🟠 Acceptable" : "🔴 Pro-inflammatoire";
 
   const mealBreakdown = useMemo(() => {
     const meals: Record<string, number> = {};
