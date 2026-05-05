@@ -1,13 +1,62 @@
-/* NutriMéno service worker — used to deliver scheduled local notifications
-   for routine reminders. Notifications are scheduled by the page (which
-   sends a "schedule" message) and rebroadcast at the requested time. */
+/* NutriMéno service worker — local notifications for routine reminders
+   + lightweight offline support (network-first for navigations, cache
+   fallback for static assets). */
+
+const CACHE = "nutrimeno-v1";
+const PRECACHE_URLS = ["/", "/manifest.json", "/favicon.svg", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (e) => {
+  e.waitUntil(
+    caches.open(CACHE).then((c) => c.addAll(PRECACHE_URLS)).catch(() => {})
+  );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (e) => {
-  e.waitUntil(self.clients.claim());
+  e.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+      await self.clients.claim();
+    })()
+  );
+});
+
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+
+  // Network-first for HTML navigations, fall back to cached shell
+  if (req.mode === "navigate") {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+          return res;
+        })
+        .catch(() => caches.match(req).then((r) => r || caches.match("/")))
+    );
+    return;
+  }
+
+  // Cache-first for same-origin static assets
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+      return fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+          }
+          return res;
+        })
+        .catch(() => cached);
+    })
+  );
 });
 
 const timers = new Map();
