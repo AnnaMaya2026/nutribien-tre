@@ -13,7 +13,7 @@ import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
 import HelpCarousel from "@/components/HelpCarousel";
-import { ChevronDown, ChevronUp, Info, LogOut, UserCircle2 } from "lucide-react";
+import { ChevronDown, ChevronUp, LogOut, UserCircle2 } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -204,9 +204,6 @@ export default function Dashboard() {
 
   const antioxidantScore = getProducePortions(logs);
   const antioxidantTone = antioxidantScore >= 5 ? "text-green-500" : antioxidantScore >= 3 ? "text-orange-500" : "text-red-500";
-  const hasOmega6Data = totals.omega6 > 0;
-  const omegaRatio = hasOmega6Data && totals.omega3 > 0 ? totals.omega6 / totals.omega3 : null;
-  const omegaRatioStatus = omegaRatio === null ? null : omegaRatio <= 4 ? "🟢 Excellent (anti-inflammatoire)" : omegaRatio <= 8 ? "🟠 Acceptable" : "🔴 Pro-inflammatoire";
 
   const mealBreakdown = useMemo(() => {
     const meals: Record<string, number> = {};
@@ -402,19 +399,6 @@ export default function Dashboard() {
             <ProgressBar value={totals.vitamin_b6} max={DAILY_TARGETS.vitamin_b6} label="Vitamine B6" unit="mg" isMicro nutrient="vitamin_b6" />
             <ProgressBar value={totals.vitamin_b9} max={DAILY_TARGETS.vitamin_b9} label="Vitamine B9 (folate)" unit="µg" isMicro nutrient="vitamin_b9" />
             <ProgressBar value={totals.vitamin_e} max={DAILY_TARGETS.vitamin_e} label="Vitamine E" unit="mg" isMicro nutrient="vitamin_e" />
-            <div className="rounded-xl bg-muted/30 px-3 py-2">
-              <div className="flex items-start justify-between gap-2 text-sm">
-                <span className="font-medium text-foreground">Ratio Oméga-6 / Oméga-3</span>
-                <span className="text-muted-foreground" title="Un ratio élevé favorise l'inflammation. L'objectif est d'atteindre un ratio ≤ 4:1 en augmentant les oméga-3 (poissons gras, noix, graines de lin) et en réduisant les huiles végétales riches en oméga-6.">
-                  <Info className="h-4 w-4" />
-                </span>
-              </div>
-              {omegaRatio ? (
-                <p className="mt-1 text-xs text-muted-foreground">Ratio oméga-6/oméga-3 : {omegaRatio.toFixed(1)}:1 · {omegaRatioStatus}</p>
-              ) : (
-                <p className="mt-1 text-xs text-muted-foreground">Données oméga-6 en cours d'intégration</p>
-              )}
-            </div>
             <div className="rounded-xl bg-muted/30 px-3 py-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium text-foreground">Score antioxydants 🫐</span>

@@ -495,8 +495,13 @@ export function RoutinesTracker() {
                       </button>
                     )}
                     <button
-                      onClick={() => openEdit(r)}
-                      className="text-muted-foreground hover:text-primary transition-colors"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log("[Routines] Edit clicked", r.id, r.name);
+                        openEdit(r);
+                      }}
+                      className="text-muted-foreground hover:text-primary transition-colors p-1"
                       aria-label="Modifier"
                       title="Modifier"
                     >

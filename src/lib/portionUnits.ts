@@ -1,41 +1,10 @@
-// No multi-word phrases — strict word-boundary matching only to avoid
-// false positives on cooked solid foods (e.g. "asperges bouillies").
-const LIQUID_PHRASES: string[] = [];
-
-// Strict whitelist of pure liquids only. Word-boundary match on normalized text.
-// IMPORTANT: never match cooked solids (e.g. "carottes bouillies à l'eau") — the
-// "eau" word inside cooking phrases must NOT trigger ml. We exclude common
-// cooking phrases first, then require a strict whitelisted standalone liquid noun.
-const COOKING_PHRASES = [
-  "a l eau",
-  "a l'eau",
-  "bouilli",
-  "bouillie",
-  "bouillis",
-  "bouillies",
-  "cuit",
-  "cuite",
-  "cuits",
-  "cuites",
-  "vapeur",
-  "poche",
-  "pochee",
-  "poches",
-  "pochees",
-  "roti",
-  "rotie",
-  "grille",
-  "grillee",
-  "saute",
-  "sautee",
-];
-
+// Strict whitelist: ONLY these standalone words trigger ml.
+// Everything else (vegetables cooked or raw, fruits, meat, fish, dairy
+// solids, oils, water, cooked dishes...) is saved and displayed in grams.
 const LIQUID_WORDS = [
   "lait",
   "laits",
   "jus",
-  "eau",
-  "eaux",
   "cafe",
   "cafes",
   "the",
@@ -49,10 +18,6 @@ const LIQUID_WORDS = [
   "smoothie",
   "smoothies",
 ];
-
-// Oils are tracked separately because they need a density conversion (0.92 g/ml)
-// but should still display in ml when used as a liquid measure (e.g. spoon volumes).
-const OIL_WORDS = ["huile", "huiles"];
 
 const STANDARD_PORTIONS = [
   { keywords: ["oeuf", "œuf"], amount: 55, description: "1 œuf moyen" },
@@ -87,26 +52,18 @@ function normalizeFoodName(foodName: string): string {
 }
 
 function hasWord(normalized: string, word: string): boolean {
-  // Word-boundary match on already-normalized (accent-stripped, lowercased) text.
   const re = new RegExp(`(^|[^a-z0-9])${word}([^a-z0-9]|$)`, "i");
   return re.test(normalized);
 }
 
-export function isOilFoodName(foodName: string): boolean {
-  const normalized = normalizeFoodName(foodName);
-  return OIL_WORDS.some((w) => hasWord(normalized, w));
+export function isOilFoodName(_foodName: string): boolean {
+  // Oils are now treated as solid grams (no density conversion).
+  return false;
 }
 
 export function isLiquidFoodName(foodName: string): boolean {
   const normalized = normalizeFoodName(foodName);
-  // Cooking phrases (e.g. "carottes bouillies à l'eau") force solid grams,
-  // even when they happen to contain "eau".
-  if (COOKING_PHRASES.some((p) => normalized.includes(p))) {
-    return isOilFoodName(foodName); // oils stay liquid even if a cooking phrase is present
-  }
-  if (LIQUID_WORDS.some((w) => hasWord(normalized, w))) return true;
-  if (isOilFoodName(foodName)) return true;
-  return false;
+  return LIQUID_WORDS.some((w) => hasWord(normalized, w));
 }
 
 export function getPortionUnit(foodName: string): "g" | "ml" {
@@ -128,8 +85,9 @@ export function getPortionStep(foodName: string): number {
   return isLiquidFoodName(foodName) ? 25 : 10;
 }
 
-export function amountToNutritionGrams(foodName: string, amount: number): number {
-  return isOilFoodName(foodName) ? amount * 0.92 : amount;
+export function amountToNutritionGrams(_foodName: string, amount: number): number {
+  // 1 ml ≈ 1 g for the supported pure liquids (water-based beverages).
+  return amount;
 }
 
 export function formatPortion(foodName: string, amount: number | null | undefined): string {
