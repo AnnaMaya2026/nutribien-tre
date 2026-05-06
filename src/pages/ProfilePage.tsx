@@ -456,6 +456,21 @@ export default function ProfilePage() {
             </AlertDialogContent>
           </AlertDialog>
         </section>
+
+        {/* Legal */}
+        <section className="pt-4 text-center space-y-1">
+          <div className="flex justify-center gap-4 text-xs text-muted-foreground">
+            <button onClick={() => navigate("/cgu")} className="underline underline-offset-2">
+              Conditions d'utilisation
+            </button>
+            <button onClick={() => navigate("/confidentialite")} className="underline underline-offset-2">
+              Politique de confidentialité
+            </button>
+          </div>
+          <p className="text-[10px] text-muted-foreground/70 italic">
+            NutriMéno est un outil d'aide nutritionnelle et ne remplace pas un avis médical.
+          </p>
+        </section>
       </div>
     </div>
   );
