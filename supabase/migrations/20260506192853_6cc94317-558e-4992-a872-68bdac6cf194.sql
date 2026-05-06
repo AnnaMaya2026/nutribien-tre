@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS medical_disclaimer_dismissed boolean NOT NULL DEFAULT false;

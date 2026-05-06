@@ -454,6 +454,7 @@ export type Database = {
           id: string
           last_message_date: string | null
           main_symptom: string | null
+          medical_disclaimer_dismissed: boolean
           menopause_stage: string | null
           onboarding_completed: boolean | null
           profile_completed: boolean | null
@@ -484,6 +485,7 @@ export type Database = {
           id?: string
           last_message_date?: string | null
           main_symptom?: string | null
+          medical_disclaimer_dismissed?: boolean
           menopause_stage?: string | null
           onboarding_completed?: boolean | null
           profile_completed?: boolean | null
@@ -514,6 +516,7 @@ export type Database = {
           id?: string
           last_message_date?: string | null
           main_symptom?: string | null
+          medical_disclaimer_dismissed?: boolean
           menopause_stage?: string | null
           onboarding_completed?: boolean | null
           profile_completed?: boolean | null
