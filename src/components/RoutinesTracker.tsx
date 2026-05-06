@@ -201,6 +201,14 @@ function RoutineForm({
               }
               className="h-9 bg-background w-32"
             />
+            {typeof window !== "undefined" &&
+              "Notification" in window &&
+              Notification.permission !== "granted" && (
+                <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-2 leading-snug">
+                  ⚠️ Activez les notifications dans les paramètres de votre navigateur pour
+                  recevoir les rappels.
+                </p>
+              )}
           </div>
         )}
         <p className="text-[12px] text-muted-foreground mt-2 leading-snug">
