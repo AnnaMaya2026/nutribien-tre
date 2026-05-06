@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import SophieHistoryDrawer from "@/components/SophieHistoryDrawer";
 import SophieAvatar from "@/components/SophieAvatar";
 import { useAuth } from "@/hooks/useAuth";
+import MedicalDisclaimerBanner from "@/components/MedicalDisclaimerBanner";
 
 const MENU_KEYWORDS = ["petit-déjeuner", "petit déjeuner", "déjeuner", "dîner", "diner", "menu", "repas", "collation", "goûter", "souper"];
 const containsMenu = (text: string) => {
