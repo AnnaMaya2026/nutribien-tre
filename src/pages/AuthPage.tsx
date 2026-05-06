@@ -10,6 +10,7 @@ import {
   OnboardingAnswers,
 } from "@/lib/onboardingMessages";
 import { calculateCalorieGoal } from "@/lib/calorieGoal";
+import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
 
 export default function AuthPage() {
   const { signIn, signUp, user } = useAuth();
@@ -21,6 +22,7 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   // Has the user gone through the onboarding journey?
   const hasOnboardingAnswers =
@@ -130,7 +132,23 @@ export default function AuthPage() {
           >
             {loading ? "..." : isLogin ? "Se connecter" : "Créer mon compte"}
           </Button>
+
+          {isLogin && (
+            <button
+              type="button"
+              onClick={() => setForgotOpen(true)}
+              className="w-full text-center text-sm text-muted-foreground hover:text-foreground underline underline-offset-2"
+            >
+              Mot de passe oublié ?
+            </button>
+          )}
         </form>
+
+        <ForgotPasswordDialog
+          open={forgotOpen}
+          onOpenChange={setForgotOpen}
+          defaultEmail={email}
+        />
 
         <p className="text-center mt-6 text-sm text-muted-foreground">
           {isLogin ? "Pas encore de compte ?" : "Déjà un compte ?"}{" "}
