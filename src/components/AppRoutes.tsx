@@ -15,6 +15,9 @@ import SymptomHistoryPage from "@/pages/SymptomHistoryPage";
 import PersonalJournalPage from "@/pages/PersonalJournalPage";
 import SavedMenusPage from "@/pages/SavedMenusPage";
 import ProfilePage from "@/pages/ProfilePage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import TermsPage from "@/pages/TermsPage";
+import PrivacyPage from "@/pages/PrivacyPage";
 import BottomNav from "@/components/BottomNav";
 import OnboardingTutorial from "@/components/OnboardingTutorial";
 import FeedbackButton from "@/components/FeedbackButton";
@@ -59,6 +62,9 @@ function ProtectedLayout() {
         <Route path="/notes" element={<PersonalJournalPage />} />
         <Route path="/menus" element={<SavedMenusPage />} />
         <Route path="/profil" element={<ProfilePage />} />
+        <Route path="/cgu" element={<TermsPage />} />
+        <Route path="/confidentialite" element={<PrivacyPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth" element={<Navigate to="/" replace />} />
         <Route path="/onboarding" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFound />} />
@@ -89,6 +95,9 @@ export default function AppRoutes() {
         <Route path="/" element={<WelcomePage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/onboarding" element={<OnboardingFlow />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/cgu" element={<TermsPage />} />
+        <Route path="/confidentialite" element={<PrivacyPage />} />
         <Route path="*" element={<WelcomePage />} />
       </Routes>
     );

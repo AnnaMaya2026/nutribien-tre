@@ -201,6 +201,14 @@ function RoutineForm({
               }
               className="h-9 bg-background w-32"
             />
+            {typeof window !== "undefined" &&
+              "Notification" in window &&
+              Notification.permission !== "granted" && (
+                <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-2 leading-snug">
+                  ⚠️ Activez les notifications dans les paramètres de votre navigateur pour
+                  recevoir les rappels.
+                </p>
+              )}
           </div>
         )}
         <p className="text-[12px] text-muted-foreground mt-2 leading-snug">
@@ -487,11 +495,12 @@ export function RoutinesTracker() {
                     {r.reminder_enabled && (
                       <button
                         onClick={() => handleTest(r)}
-                        className="text-muted-foreground hover:text-primary transition-colors"
+                        className="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-pink-deep font-medium hover:bg-primary/20 transition-colors flex items-center gap-1"
                         aria-label="Tester le rappel"
-                        title="Tester le rappel"
+                        title="Envoyer une notification de test"
                       >
-                        <BellRing className="w-4 h-4" />
+                        <BellRing className="w-3 h-3" />
+                        Tester
                       </button>
                     )}
                     <button

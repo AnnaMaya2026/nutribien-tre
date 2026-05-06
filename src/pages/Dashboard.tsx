@@ -13,6 +13,7 @@ import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
 import HelpCarousel from "@/components/HelpCarousel";
+import MedicalDisclaimerBanner from "@/components/MedicalDisclaimerBanner";
 import { ChevronDown, ChevronUp, LogOut, UserCircle2 } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
@@ -238,6 +239,7 @@ export default function Dashboard() {
 
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
+      <MedicalDisclaimerBanner />
       {/* Greeting */}
       <div className="mb-6 flex items-start justify-between gap-3">
         <div>
