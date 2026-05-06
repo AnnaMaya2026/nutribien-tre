@@ -495,11 +495,12 @@ export function RoutinesTracker() {
                     {r.reminder_enabled && (
                       <button
                         onClick={() => handleTest(r)}
-                        className="text-muted-foreground hover:text-primary transition-colors"
+                        className="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-pink-deep font-medium hover:bg-primary/20 transition-colors flex items-center gap-1"
                         aria-label="Tester le rappel"
-                        title="Tester le rappel"
+                        title="Envoyer une notification de test"
                       >
-                        <BellRing className="w-4 h-4" />
+                        <BellRing className="w-3 h-3" />
+                        Tester
                       </button>
                     )}
                     <button
