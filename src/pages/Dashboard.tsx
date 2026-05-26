@@ -198,9 +198,8 @@ export default function Dashboard() {
       vitamin_b6: acc.vitamin_b6 + (log.vitamin_b6 || 0),
       vitamin_b9: acc.vitamin_b9 + (log.vitamin_b9 || 0),
       vitamin_e: acc.vitamin_e + (log.vitamin_e || 0),
-      omega6: acc.omega6 + ((log as any).omega6 || 0),
     }),
-    { calories: 0, proteins: 0, carbs: 0, fats: 0, fibres: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0, potassium: 0, zinc: 0, vitamin_k: 0, vitamin_b6: 0, vitamin_b9: 0, vitamin_e: 0, omega6: 0 }
+    { calories: 0, proteins: 0, carbs: 0, fats: 0, fibres: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0, potassium: 0, zinc: 0, vitamin_k: 0, vitamin_b6: 0, vitamin_b9: 0, vitamin_e: 0 }
   );
 
   const antioxidantScore = getProducePortions(logs);
