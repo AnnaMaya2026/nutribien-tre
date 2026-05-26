@@ -759,6 +759,30 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_reports: {
+        Row: {
+          created_at: string
+          id: string
+          report_text: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          report_text: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          report_text?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       weight_logs: {
         Row: {
           created_at: string
