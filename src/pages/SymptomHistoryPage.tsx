@@ -840,6 +840,8 @@ export default function SymptomHistoryPage() {
         </div>
       )}
 
+      <CorrelationsSection />
+
       <CorrelationAnalysis
         activeSymptomKeys={activeSymptomKeys}
         symptomLogs={symptomLogs}
