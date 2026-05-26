@@ -4,6 +4,7 @@ import { Plus, Trash2, X, CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { HabitsTracker } from "@/components/HabitsTracker";
 import { RoutinesTracker } from "@/components/RoutinesTracker";
+import BeforeAfterButton from "@/components/BeforeAfterButton";
 
 export default function PersonalJournalPage() {
   const { entries, addEntry, deleteEntry } = useJournalEntries();
@@ -176,6 +177,13 @@ export default function PersonalJournalPage() {
                                   </span>
                                 </div>
                                 <p className="text-sm text-foreground">{entry.content}</p>
+                                <div className="mt-2">
+                                  <BeforeAfterButton
+                                    entryId={entry.id}
+                                    entryDate={entry.entry_date}
+                                    entryLabel={entry.content}
+                                  />
+                                </div>
                               </div>
                               <button
                                 onClick={() => deleteEntry.mutate(entry.id)}
