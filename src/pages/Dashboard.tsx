@@ -11,6 +11,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recha
 import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
+import WeeklyReportCard from "@/components/WeeklyReportCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
 import HelpCarousel from "@/components/HelpCarousel";
 import MedicalDisclaimerBanner from "@/components/MedicalDisclaimerBanner";
@@ -298,6 +299,15 @@ export default function Dashboard() {
 
       {/* Daily evening recap (visible after 8pm) */}
       <DailyRecapCard />
+
+      {/* Weekly report (visible from Monday) */}
+      {new Date().getDay() !== 0 && (
+        <div className="mb-4">
+          <WeeklyReportCard />
+        </div>
+      )}
+
+
 
 
 
