@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { SymptomTipsCollapsible } from "@/components/SymptomTipsCollapsible";
 import { CustomizeSymptomsModal } from "@/components/CustomizeSymptomsModal";
+import CorrelationsSection from "@/components/CorrelationsSection";
 
 const PERIODS = [
   { value: 7, label: "7 jours" },
@@ -838,6 +839,8 @@ export default function SymptomHistoryPage() {
           </p>
         </div>
       )}
+
+      <CorrelationsSection />
 
       <CorrelationAnalysis
         activeSymptomKeys={activeSymptomKeys}
