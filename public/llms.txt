@@ -1,0 +1,16 @@
+# NutriMéno
+Application nutritionnelle pour femmes ménopausées (45+).
+
+## Fonctionnalités
+- Suivi calories et 13 micronutriments
+- Journal alimentaire avec saisie vocale
+- Sophie, nutritionniste IA spécialisée
+- Suivi symptômes ménopause
+- Suggestions de repas personnalisées
+- Routines et habitudes
+
+## Public cible
+Femmes de 45 ans et plus, en périménopause ou ménopause.
+
+## Tarification
+7 jours gratuits, puis 7.99€/mois
