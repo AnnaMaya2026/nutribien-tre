@@ -55,36 +55,95 @@ function mapRows(data: any[]): CiqualFood[] {
   }));
 }
 
-export async function searchCiqual(query: string): Promise<CiqualFood[]> {
-  const trimmed = query.trim();
-  if (trimmed.length < 2) return [];
+// Common French misspellings → correct form
+const COMMON_MISSPELLINGS: Record<string, string> = {
+  patate: "pomme de terre",
+  patates: "pommes de terre",
+  cacaouete: "cacahuète",
+  cacaouetes: "cacahuètes",
+  yahourt: "yaourt",
+  yahourts: "yaourts",
+  yogourt: "yaourt",
+  yogourts: "yaourts",
+  chocolate: "chocolat",
+  brocolis: "brocoli",
+};
 
+// Simplify double consonants: "carrottes" → "carottes", "tommates" → "tomates"
+function simplifyDoubles(s: string): string {
+  return s.replace(/([bcdfghjklmnpqrstvwxz])\1+/gi, "$1");
+}
+
+function applyMisspellingFixes(s: string): string {
+  const lower = s.toLowerCase();
+  for (const [bad, good] of Object.entries(COMMON_MISSPELLINGS)) {
+    const re = new RegExp(`\\b${bad}\\b`, "gi");
+    if (re.test(lower)) return lower.replace(re, good);
+  }
+  return s;
+}
+
+async function runSearch(term: string): Promise<CiqualFood[]> {
   const { data, error } = await supabase.rpc("search_aliments_unaccent" as any, {
-    search_term: trimmed,
+    search_term: term,
     max_results: 1000,
   });
+  if (error) throw error;
 
-  if (error) {
-    console.error("Search error:", error);
-    throw error;
-  }
-
-  // Normalize for accent-insensitive sorting
   const stripAccents = (s: string) =>
     s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const lower = stripAccents(trimmed);
+  const lower = stripAccents(term);
   const sorted = ((data as any[]) || []).sort((a, b) => {
     const aNom = stripAccents(a.nom || "");
     const bNom = stripAccents(b.nom || "");
     const aScore = aNom.startsWith(lower) ? 0 : aNom.includes(` ${lower}`) ? 1 : 2;
     const bScore = bNom.startsWith(lower) ? 0 : bNom.includes(` ${lower}`) ? 1 : 2;
-
     if (aScore !== bScore) return aScore - bScore;
     if (aNom.length !== bNom.length) return aNom.length - bNom.length;
     return aNom.localeCompare(bNom);
   });
-
   return mapRows(sorted.slice(0, 20));
+}
+
+export async function searchCiqual(query: string): Promise<CiqualFood[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+
+  // 1. Try original query first
+  let results: CiqualFood[] = [];
+  try {
+    results = await runSearch(trimmed);
+  } catch (e) {
+    console.error("Search error:", e);
+  }
+  if (results.length >= 3) return results;
+
+  // 2. Try simplified doubles ("carrottes" → "carottes")
+  const simplified = simplifyDoubles(trimmed);
+  if (simplified.toLowerCase() !== trimmed.toLowerCase()) {
+    try {
+      const more = await runSearch(simplified);
+      const seen = new Set(results.map((r) => r.id));
+      results = [...results, ...more.filter((r) => !seen.has(r.id))];
+      if (results.length >= 3) return results.slice(0, 20);
+    } catch (e) {
+      console.warn("Fuzzy (doubles) search failed:", e);
+    }
+  }
+
+  // 3. Try common misspellings ("patates" → "pommes de terre")
+  const fixed = applyMisspellingFixes(trimmed);
+  if (fixed.toLowerCase() !== trimmed.toLowerCase()) {
+    try {
+      const more = await runSearch(fixed);
+      const seen = new Set(results.map((r) => r.id));
+      results = [...results, ...more.filter((r) => !seen.has(r.id))];
+    } catch (e) {
+      console.warn("Fuzzy (misspellings) search failed:", e);
+    }
+  }
+
+  return results.slice(0, 20);
 }
 
 // Exclude exotic/uncommon foods from suggestions
