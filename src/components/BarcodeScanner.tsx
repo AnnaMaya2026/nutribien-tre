@@ -626,10 +626,11 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
 
                 <button
                   onClick={handleAdd}
-                  disabled={isPending}
+                  disabled={isPending || product.calories_100g === 0}
                   className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  <Plus className="w-4 h-4" /> Ajouter au journal
+                  <Plus className="w-4 h-4" />
+                  {product.calories_100g === 0 ? "Saisissez les calories pour ajouter" : "Ajouter au journal"}
                 </button>
               </div>
             )}
