@@ -481,6 +481,36 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                   <p className="text-[10px] text-muted-foreground mt-1">Code: {product.barcode}</p>
                 </div>
 
+                {/* Warning: incomplete nutritional data */}
+                {product.calories_100g === 0 && (
+                  <div className="rounded-xl border border-orange-500/40 bg-orange-500/10 p-3 space-y-2">
+                    <p className="text-xs text-orange-700 font-medium">
+                      ⚠️ Données nutritionnelles incomplètes pour ce produit. Vérifiez l'étiquette.
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Saisissez les calories pour 100{unit} manuellement, ou recherchez ce produit
+                      directement dans la base CIQUAL via la recherche d'aliments.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <label className="text-[11px] text-muted-foreground">kcal / 100{unit} :</label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={900}
+                        placeholder="Ex: 250"
+                        onChange={(e) => {
+                          const v = parseInt(e.target.value);
+                          if (!isNaN(v) && v >= 0 && v <= 900) {
+                            setProduct((p) => (p ? { ...p, calories_100g: v } : p));
+                          }
+                        }}
+                        className="h-8 w-24 text-sm bg-background"
+                      />
+                    </div>
+                  </div>
+                )}
+
+
                 {/* Portion */}
                 <div>
                   <label className="text-xs text-muted-foreground block mb-1">Quantité ({unit === "ml" ? "millilitres" : "grammes"})</label>
