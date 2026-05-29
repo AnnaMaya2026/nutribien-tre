@@ -31,10 +31,8 @@ function dayScore(opts: {
   habitsRespected: number;
 }): number {
   let score = 0;
-  for (const n of NUTRIENT_KEYS) {
-    const goal = (DAILY_TARGETS as any)[n.goalKey!];
-    if (!goal) continue;
-    const value = sumNutrient(opts.logs, n.key);
+  for (const [key, goal] of Object.entries(NUTRIENT_GOALS)) {
+    const value = sumNutrient(opts.logs, key);
     if (value / goal >= 0.8) score += 0.5;
   }
   if (opts.symptomScores) {
