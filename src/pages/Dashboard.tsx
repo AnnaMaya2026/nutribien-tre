@@ -12,6 +12,7 @@ import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
 import WeeklyReportCard from "@/components/WeeklyReportCard";
+import WellnessScoreCard from "@/components/WellnessScoreCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
 import HelpCarousel from "@/components/HelpCarousel";
 import MedicalDisclaimerBanner from "@/components/MedicalDisclaimerBanner";
@@ -297,8 +298,12 @@ export default function Dashboard() {
       {/* Global date selector */}
       <DateSelector />
 
+      {/* Wellness score (always visible, estimated for new users) */}
+      <WellnessScoreCard />
+
       {/* Daily evening recap (visible after 8pm) */}
       <DailyRecapCard />
+
 
       {/* Weekly report (visible from Monday) */}
       {new Date().getDay() !== 0 && (
