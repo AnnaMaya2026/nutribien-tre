@@ -456,10 +456,13 @@ export type Database = {
           main_symptom: string | null
           medical_disclaimer_dismissed: boolean
           menopause_stage: string | null
+          nutritional_diagnosis: Json | null
           onboarding_completed: boolean | null
           profile_completed: boolean | null
+          seen_diagnosis: boolean | null
           seen_welcome: boolean | null
           selected_statements: string[] | null
+          sophie_first_message: string | null
           symptoms: string[] | null
           updated_at: string
           user_id: string
@@ -487,10 +490,13 @@ export type Database = {
           main_symptom?: string | null
           medical_disclaimer_dismissed?: boolean
           menopause_stage?: string | null
+          nutritional_diagnosis?: Json | null
           onboarding_completed?: boolean | null
           profile_completed?: boolean | null
+          seen_diagnosis?: boolean | null
           seen_welcome?: boolean | null
           selected_statements?: string[] | null
+          sophie_first_message?: string | null
           symptoms?: string[] | null
           updated_at?: string
           user_id: string
@@ -518,10 +524,13 @@ export type Database = {
           main_symptom?: string | null
           medical_disclaimer_dismissed?: boolean
           menopause_stage?: string | null
+          nutritional_diagnosis?: Json | null
           onboarding_completed?: boolean | null
           profile_completed?: boolean | null
+          seen_diagnosis?: boolean | null
           seen_welcome?: boolean | null
           selected_statements?: string[] | null
+          sophie_first_message?: string | null
           symptoms?: string[] | null
           updated_at?: string
           user_id?: string

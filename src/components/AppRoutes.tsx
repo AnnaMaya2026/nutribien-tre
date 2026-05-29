@@ -16,6 +16,7 @@ import PersonalJournalPage from "@/pages/PersonalJournalPage";
 import SavedMenusPage from "@/pages/SavedMenusPage";
 import ProfilePage from "@/pages/ProfilePage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import DiagnosisPage from "@/pages/DiagnosisPage";
 import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
 import BottomNav from "@/components/BottomNav";
@@ -67,6 +68,10 @@ function ProtectedLayout() {
 
   if (!profile?.profile_completed) {
     return <ProfileSetup />;
+  }
+
+  if (!(profile as any).seen_diagnosis) {
+    return <DiagnosisPage />;
   }
 
   if (!(profile as any).seen_welcome) {
