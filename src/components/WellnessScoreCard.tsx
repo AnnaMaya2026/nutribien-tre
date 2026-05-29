@@ -5,21 +5,20 @@ import { useSelectedDate } from "@/hooks/useSelectedDate";
 import { useRoutines } from "@/hooks/useRoutines";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useHabits } from "@/hooks/useHabits";
-import { DAILY_TARGETS } from "@/lib/mockData";
 import { ArrowDown, ArrowRight, ArrowUp, Sparkles } from "lucide-react";
 
-const NUTRIENT_KEYS: { key: string; goalKey?: keyof typeof DAILY_TARGETS }[] = [
-  { key: "calcium", goalKey: "calcium" },
-  { key: "magnesium", goalKey: "magnesium" },
-  { key: "iron", goalKey: "iron" },
-  { key: "fibres", goalKey: "fibres" },
-  { key: "omega3", goalKey: "omega3" },
-  { key: "zinc", goalKey: "zinc" },
-  { key: "potassium", goalKey: "potassium" },
-  { key: "vitamin_b12", goalKey: "vitamin_b12" },
-  { key: "vitamin_b9", goalKey: "vitamin_b9" },
-  { key: "vitamin_e", goalKey: "vitamin_e" },
-];
+const NUTRIENT_GOALS: Record<string, number> = {
+  calcium: 1200,
+  magnesium: 320,
+  iron: 8,
+  fibres: 25,
+  omega3: 2.0,
+  zinc: 8,
+  potassium: 3500,
+  vitamin_b12: 2.4,
+  vitamin_b9: 400,
+  vitamin_e: 12,
+};
 
 function sumNutrient(logs: any[], k: string) {
   return logs.reduce((s, l) => s + (Number(l[k]) || 0), 0);
