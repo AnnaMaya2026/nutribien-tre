@@ -59,7 +59,7 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Restore today's conversation on mount
+  // Restore today's conversation on mount, or fetch personalized Sophie greeting
   useEffect(() => {
     if (!user || restored) return;
     (async () => {
@@ -77,6 +77,16 @@ export default function ChatPage() {
           from: m.role === "user" ? "user" : "ai",
         }));
         setMessages([WELCOME, ...restoredMsgs]);
+      } else {
+        // No conversation yet — fetch personalized opening message
+        try {
+          const { data: g } = await supabase.functions.invoke("generate-sophie-greeting", { body: {} });
+          if (g?.message && typeof g.message === "string") {
+            setMessages([{ id: 0, text: g.message, from: "ai" }]);
+          }
+        } catch (e) {
+          console.warn("greeting fallback", e);
+        }
       }
       setRestored(true);
     })();
