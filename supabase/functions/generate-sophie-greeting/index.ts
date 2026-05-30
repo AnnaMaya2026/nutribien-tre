@@ -37,12 +37,16 @@ serve(async (req) => {
 
     const p: any = profile || {};
     const summary = `Prénom: ${p.display_name || "inconnu"}, Âge: ${p.age ?? "?"}, Stade: ${p.menopause_stage ?? "?"}, Symptômes: ${(p.symptoms || []).join(", ") || "aucun"}, Activité: ${p.activity_level ?? "?"}`;
-    const prompt = `Tu es Sophie, nutritionniste en ménopause. L'utilisatrice vient de créer son compte. Son profil: ${summary}.
+    const prompt = `Tu es Sophie, nutritionniste spécialisée en ménopause avec une expertise pointue. L'utilisatrice vient de créer son compte.
+Son profil: ${summary}.
+
 Génère un premier message chaleureux qui:
-- Montre que tu connais son profil (mentionne 1 élément concret)
-- Pose UNE question pertinente sur ses habitudes
-- Donne envie de répondre
-Max 3 phrases. Tutoie-la.`;
+- Mentionne UN fait nutritionnel surprenant lié à ses symptômes spécifiques
+- Pose UNE question qui montre une vraie expertise (pas "mangez-vous équilibré?")
+- Exemple de bonne question: "Est-ce que vous prenez votre vitamine D avec un repas contenant des graisses? Sans ça, l'absorption chute de 50%"
+
+Max 3 phrases. Ton chaleureux mais expert.
+Jamais banal. Jamais évident.`;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",

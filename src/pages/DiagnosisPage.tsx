@@ -3,8 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Loader2, Sparkles } from "lucide-react";
 
+type Insight = {
+  title: string;
+  explanation: string;
+  action: string;
+  emoji: string;
+};
+
 type Diagnosis = {
-  likely_deficiencies: { nutrient: string; reason: string; emoji: string }[];
+  insights: Insight[];
   empathy_message: string;
   promise_message: string;
 };
@@ -25,15 +32,15 @@ export default function DiagnosisPage() {
       } catch (e: any) {
         console.error(e);
         setError(e.message || "Erreur");
-        // Fallback minimal
+        // Fallback minimal avec insights
         setData({
-          likely_deficiencies: [
-            { nutrient: "Magnésium", reason: "Souvent insuffisant chez les femmes en ménopause", emoji: "✨" },
-            { nutrient: "Vitamine D", reason: "Carence très fréquente après 45 ans", emoji: "☀️" },
-            { nutrient: "Oméga-3", reason: "Apports souvent en-dessous des besoins", emoji: "🐟" },
+          insights: [
+            { title: "Le magnésium change de forme", explanation: "Avec la baisse d'oestrogènes, ton corps absorbe moins bien le magnésium oxyde — la forme la plus courante dans les compléments bon marché. Le bisglycinate est 4x mieux absorbé.", action: "Vérifie la forme de magnésium dans ton complément. Si c'est de l'oxyde, envisage de changer.", emoji: "✨" },
+            { title: "Vitamine D sans K2 = danger", explanation: "La vitamine D seule augmente le calcium dans le sang, mais sans K2 (MK-7), ce calcium se dépose dans les artères au lieu des os. C'est le mécanisme des calcifications vasculaires.", action: "Si tu prends de la vitamine D, assure-toi qu'elle contient aussi de la K2 MK-7.", emoji: "☀️" },
+            { title: "Le microbiote décide du soja", explanation: "Les phytoestrogènes du soja (isoflavones) sont métabolisés par des bactéries intestinales en équol — mais seulement 30-50% des femmes ont le microbiote adéquat pour ça.", action: "Si le soja ne semble pas t'aider, ce n'est peut-être pas toi, c'est ton microbiote.", emoji: "🌱" },
           ],
-          empathy_message: "Ce que tu ressens n'est pas dans ta tête. Ton corps traverse des changements réels, et ton alimentation peut t'aider à mieux les vivre.",
-          promise_message: "NutriMéno va t'accompagner chaque jour pour identifier tes besoins, suivre tes apports, et te proposer des conseils concrets adaptés à toi.",
+          empathy_message: "Ce que tu ressens n'est pas dans ta tête. Ton corps traverse des changements réels, et la science nutritionnelle a des réponses précises — pas seulement des conseils génériques.",
+          promise_message: "NutriMéno va t'accompagner chaque jour avec des insights comme ceux-ci, adaptés à ton profil et ton évolution.",
         });
       }
     })();
@@ -67,24 +74,25 @@ export default function DiagnosisPage() {
             <Sparkles className="w-7 h-7 text-pink-deep" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">Votre profil nutritionnel 💗</h1>
-          <p className="text-sm text-muted-foreground mt-2">Analyse personnalisée par Sophie</p>
+          <p className="text-sm text-muted-foreground mt-2">Insights personnalisés par Sophie</p>
         </div>
 
         <div className="space-y-3 mb-5">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-            Carences probables pour votre profil
+            Découvertes surprenantes pour votre profil
           </h2>
-          {data.likely_deficiencies.slice(0, 3).map((d, i) => (
+          {data.insights.slice(0, 3).map((insight, i) => (
             <div
               key={i}
               className="bg-card rounded-2xl p-4 border border-border/50 card-soft flex gap-3 items-start"
             >
               <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-xl flex-shrink-0">
-                {d.emoji}
+                {insight.emoji}
               </div>
               <div className="flex-1">
-                <h3 className="text-sm font-semibold text-foreground mb-0.5">{d.nutrient}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{d.reason}</p>
+                <h3 className="text-sm font-semibold text-foreground mb-1">{insight.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-2">{insight.explanation}</p>
+                <p className="text-xs font-medium text-primary leading-relaxed">→ {insight.action}</p>
               </div>
             </div>
           ))}
@@ -107,7 +115,7 @@ export default function DiagnosisPage() {
 
         {error && (
           <p className="text-xs text-muted-foreground text-center mb-3">
-            (Diagnostic général affiché — l'analyse personnalisée sera bientôt disponible.)
+            (Insights généraux affichés — l'analyse personnalisée sera bientôt disponible.)
           </p>
         )}
 

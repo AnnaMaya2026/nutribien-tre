@@ -37,18 +37,34 @@ serve(async (req) => {
     }
 
     const p: any = profile || {};
-    const prompt = `Tu es Sophie, nutritionniste spécialisée en ménopause. Basé sur ce profil:
-- Âge: ${p.age ?? "non renseigné"} ans
-- Poids: ${p.weight ?? "non renseigné"} kg
-- Taille: ${p.height ?? "non renseignée"} cm
-- Stade: ${p.menopause_stage ?? "non renseigné"}
-- Symptômes principaux: ${(p.symptoms || []).join(", ") || "aucun"}
-- Activité: ${p.activity_level ?? "non renseignée"}
+    const prompt = `Tu es Sophie, nutritionniste spécialisée en ménopause avec une expertise pointue.
 
-Génère un diagnostic nutritionnel personnalisé:
-1. Les 3 carences les plus probables pour ce profil (avec une explication courte et un emoji par nutriment).
-2. Un message d'empathie et de réassurance chaleureux (2-3 phrases).
-3. Ce que NutriMéno va faire pour aider (2-3 phrases).
+Profil: âge ${p.age ?? "non renseigné"}, stade: ${p.menopause_stage ?? "non renseigné"}, symptômes: ${(p.symptoms || []).join(", ") || "aucun"}, poids: ${p.weight ?? "?"}kg, taille: ${p.height ?? "?"}cm, activité: ${p.activity_level ?? "non renseignée"}.
+
+Génère 3 insights nutritionnels SURPRENANTS et peu connus pour ce profil exact.
+
+Pas de conseils évidents. Chaque insight doit:
+- Expliquer un mécanisme biologique précis
+- Connecter directement aux symptômes déclarés
+- Apporter une information que la femme n'a probablement jamais entendue
+
+Exemples du niveau attendu:
+- Lien entre oestrogène et absorption du magnésium qui change en ménopause
+- Rôle de la vitamine K2 souvent oubliée
+- Impact du microbiote sur les phytoestrogènes
+- Lien entre cortisol et carences en B6
+
+Format JSON:
+{
+  insights: [{
+    title: string (6 mots max, accrocheur),
+    explanation: string (2-3 phrases, mécanisme précis),
+    action: string (conseil spécifique et non-évident),
+    emoji: string
+  }],
+  empathy_message: string (1 phrase qui montre qu'on comprend vraiment leur vécu),
+  promise_message: string (1 phrase sur ce que NutriMéno va faire concrètement)
+}
 
 Réponds UNIQUEMENT via l'appel d'outil.`;
 
@@ -65,26 +81,27 @@ Réponds UNIQUEMENT via l'appel d'outil.`;
           type: "function",
           function: {
             name: "diagnosis",
-            description: "Return personalized nutritional diagnosis",
+            description: "Return personalized surprising nutritional insights",
             parameters: {
               type: "object",
               properties: {
-                likely_deficiencies: {
+                insights: {
                   type: "array",
                   items: {
                     type: "object",
                     properties: {
-                      nutrient: { type: "string" },
-                      reason: { type: "string" },
+                      title: { type: "string" },
+                      explanation: { type: "string" },
+                      action: { type: "string" },
                       emoji: { type: "string" },
                     },
-                    required: ["nutrient", "reason", "emoji"],
+                    required: ["title", "explanation", "action", "emoji"],
                   },
                 },
                 empathy_message: { type: "string" },
                 promise_message: { type: "string" },
               },
-              required: ["likely_deficiencies", "empathy_message", "promise_message"],
+              required: ["insights", "empathy_message", "promise_message"],
             },
           },
         }],
