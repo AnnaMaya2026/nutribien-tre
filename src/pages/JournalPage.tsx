@@ -58,6 +58,8 @@ export default function JournalPage() {
   const [showFavorites, setShowFavorites] = useState(false);
   const [reportFood, setReportFood] = useState<string | null>(null);
   const [editPortion, setEditPortion] = useState<{ log: any; grams: number } | null>(null);
+  const [followupSuggestions, setFollowupSuggestions] = useState<Array<{ food_name: string; portion_size: number }> | null>(null);
+  const [conversationOpen, setConversationOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Debounced search - min 2 chars
