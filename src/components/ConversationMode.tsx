@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Mic, MicOff, MessageCircle, X, Check, Loader2 } from "lucide-react";
+import { Mic, MicOff, X, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { scaleCiqual } from "@/lib/ciqual";
 import { getDefaultPortion } from "@/lib/portionUnits";
