@@ -128,11 +128,11 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
 
           // Always show picker if more than 1 result
           if (mapped.length > 1 && onCandidates) {
-            allCandidates.push({ name: item.name, grams, candidates: mapped });
+            allCandidates.push({ name: item.name, grams, candidates: mapped, confidence: item.confidence });
           } else {
             // Only 1 result — add directly
             const food = mapped[0];
-            directMatches.push({ food, grams, scaled: scaleCiqual(food, grams) });
+            directMatches.push({ food, grams, scaled: scaleCiqual(food, grams), confidence: item.confidence });
           }
         } catch {
           toast.error(`Erreur pour "${item.name}"`);
