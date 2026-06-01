@@ -399,23 +399,42 @@ export default function JournalPage() {
 
       {/* Add food button */}
       {!isFuture && !showSearch && (
-        <div className="flex gap-2 mb-4">
+        <>
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={() => setShowSearch(true)}
+              className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 shadow-md"
+            >
+              <Plus className="w-4 h-4" /> Ajouter un aliment
+            </button>
+            <VoiceInput
+              onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }}
+              onCandidates={(c) => { setVoiceCandidates(c); setShowSearch(false); }}
+            />
+            <BarcodeScanner
+              mealType={mealType}
+              onAdd={(log) => { if (user) addLog.mutate(log); }}
+              isPending={addLog.isPending}
+            />
+          </div>
           <button
-            onClick={() => setShowSearch(true)}
-            className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 shadow-md"
+            onClick={() => setConversationOpen(true)}
+            className="w-full mb-4 py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-pink-deep text-sm font-medium flex items-center justify-center gap-2 transition-all border border-primary/20"
           >
-            <Plus className="w-4 h-4" /> Ajouter un aliment
+            <MessageCircle className="w-4 h-4" />
+            💬 Mode conversation avec Sophie
           </button>
-          <VoiceInput
-            onResults={(m) => { setVoiceMatches(m); setShowSearch(false); }}
-            onCandidates={(c) => { setVoiceCandidates(c); setShowSearch(false); }}
-          />
-          <BarcodeScanner
-            mealType={mealType}
-            onAdd={(log) => { if (user) addLog.mutate(log); }}
-            isPending={addLog.isPending}
-          />
-        </div>
+        </>
+      )}
+
+      {/* Smart followup suggestions (accompaniments + repeat meals) */}
+      {followupSuggestions && (
+        <SmartFollowupSuggestions
+          justLogged={followupSuggestions}
+          onAddAccompaniment={handleAddAccompaniment}
+          onRepeatPortion={handleRepeatPortion}
+          onClose={() => setFollowupSuggestions(null)}
+        />
       )}
 
       {/* Search */}
