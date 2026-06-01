@@ -148,6 +148,89 @@ export default function JournalPage() {
       });
     });
     setVoiceMatches(null);
+    // Trigger smart followup suggestions
+    setFollowupSuggestions(
+      items.map((i) => ({ food_name: i.food.nom, portion_size: i.grams }))
+    );
+  };
+
+  const handleConversationComplete = (meals: Array<{ meal: string; items: VoiceMatch[] }>) => {
+    if (!user) return;
+    let total = 0;
+    meals.forEach(({ meal, items }) => {
+      items.forEach((item) => {
+        total++;
+        addLog.mutate({
+          food_name: item.food.nom,
+          portion_size: item.grams,
+          calories: item.scaled.calories,
+          proteins: item.scaled.proteins,
+          carbs: item.scaled.carbs,
+          fats: item.scaled.fats,
+          fibres: item.scaled.fibres,
+          calcium: item.scaled.calcium,
+          vitamin_d: item.scaled.vitamin_d,
+          magnesium: item.scaled.magnesium,
+          iron: item.scaled.iron,
+          omega3: item.scaled.omega3,
+          phytoestrogens: item.scaled.phytoestrogens,
+          vitamin_b12: item.scaled.vitamin_b12,
+          potassium: item.scaled.potassium,
+          zinc: item.scaled.zinc,
+          vitamin_k: item.scaled.vitamin_k,
+          vitamin_b6: item.scaled.vitamin_b6,
+          vitamin_b9: item.scaled.vitamin_b9,
+          vitamin_e: item.scaled.vitamin_e,
+          meal_type: meal,
+        });
+      });
+    });
+    if (total > 0) toast.success(`${total} aliment(s) ajouté(s) ✨`);
+  };
+
+  const handleAddAccompaniment = (keyword: string) => {
+    setFollowupSuggestions(null);
+    setShowSearch(true);
+    setSearch(keyword);
+  };
+
+  const handleRepeatPortion = async (foodName: string, grams: number) => {
+    // Re-add the same food by searching ciqual and inserting
+    try {
+      const res = await searchCiqual(foodName);
+      const food = res.find((f) => f.nom === foodName) || res[0];
+      if (!food) {
+        toast.error("Aliment introuvable");
+        return;
+      }
+      const scaled = scaleCiqual(food, grams);
+      addLog.mutate({
+        food_name: food.nom,
+        portion_size: grams,
+        calories: scaled.calories,
+        proteins: scaled.proteins,
+        carbs: scaled.carbs,
+        fats: scaled.fats,
+        fibres: scaled.fibres,
+        calcium: scaled.calcium,
+        vitamin_d: scaled.vitamin_d,
+        magnesium: scaled.magnesium,
+        iron: scaled.iron,
+        omega3: scaled.omega3,
+        phytoestrogens: scaled.phytoestrogens,
+        vitamin_b12: scaled.vitamin_b12,
+        potassium: scaled.potassium,
+        zinc: scaled.zinc,
+        vitamin_k: scaled.vitamin_k,
+        vitamin_b6: scaled.vitamin_b6,
+        vitamin_b9: scaled.vitamin_b9,
+        vitamin_e: scaled.vitamin_e,
+        meal_type: mealType,
+      });
+      toast.success(`${food.nom} ré-ajouté ✓`);
+    } catch {
+      toast.error("Erreur lors de l'ajout");
+    }
   };
 
   const toggleMeal = (value: string) => {
