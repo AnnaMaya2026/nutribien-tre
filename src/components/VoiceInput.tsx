@@ -5,16 +5,20 @@ import { scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { getDefaultPortion } from "@/lib/portionUnits";
 import { toast } from "sonner";
 
+export type VoiceConfidence = "high" | "medium" | "low";
+
 export interface VoiceMatch {
   food: CiqualFood;
   grams: number;
   scaled: ReturnType<typeof scaleCiqual>;
+  confidence?: VoiceConfidence;
 }
 
 export interface VoiceCandidate {
   name: string;
   grams: number;
   candidates: CiqualFood[];
+  confidence?: VoiceConfidence;
 }
 
 interface VoiceInputProps {
