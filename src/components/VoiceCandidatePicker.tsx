@@ -28,7 +28,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
 
   const handleConfirm = () => {
     if (!pickedFood) return;
-    const match: VoiceMatch = { food: pickedFood, grams, scaled: scaleCiqual(pickedFood, grams) };
+    const match: VoiceMatch = { food: pickedFood, grams, scaled: scaleCiqual(pickedFood, grams), confidence: current.confidence };
     const newSelected = [...selected, match];
 
     if (currentIndex < candidates.length - 1) {
