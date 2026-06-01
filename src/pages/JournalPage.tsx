@@ -931,6 +931,13 @@ export default function JournalPage() {
           </div>
         </div>
       )}
+
+      {/* Conversation mode */}
+      <ConversationMode
+        open={conversationOpen}
+        onClose={() => setConversationOpen(false)}
+        onComplete={handleConversationComplete}
+      />
     </div>
   );
 }
