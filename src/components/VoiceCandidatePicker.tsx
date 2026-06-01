@@ -41,13 +41,29 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
     }
   };
 
+  const confidenceBadge = (() => {
+    const c = current.confidence;
+    if (!c) return null;
+    const meta = c === "high"
+      ? { emoji: "✅", label: "Confiance élevée", cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30" }
+      : c === "medium"
+      ? { emoji: "🔄", label: "À vérifier", cls: "bg-amber-500/15 text-amber-700 border-amber-500/30" }
+      : { emoji: "❓", label: "À confirmer", cls: "bg-rose-500/15 text-rose-700 border-rose-500/30" };
+    return (
+      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${meta.cls}`}>
+        {meta.emoji} {meta.label}
+      </span>
+    );
+  })();
+
   return (
     <div className="bg-card rounded-2xl p-4 card-soft mb-4 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold text-foreground">
+      <div className="flex items-center justify-between mb-2 gap-2">
+        <h3 className="text-sm font-semibold text-foreground flex-1 min-w-0 truncate">
           🎤 Quel type de « {current.name} » ?
         </h3>
+        {confidenceBadge}
         <button onClick={onCancel} className="text-muted-foreground">
           <X className="w-4 h-4" />
         </button>
