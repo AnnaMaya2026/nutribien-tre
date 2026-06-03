@@ -33,6 +33,9 @@ export default function AuthPage() {
   useEffect(() => {
     const apply = async () => {
       if (!user) return;
+      console.log("Login successful, redirecting to dashboard");
+      console.log("Window width:", window.innerWidth);
+      console.log("User:", user.id);
       const raw = sessionStorage.getItem(ONBOARDING_STORAGE_KEY);
       if (!raw) return;
       try {
