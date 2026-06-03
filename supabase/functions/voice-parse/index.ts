@@ -5,83 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Tu es un assistant nutritionnel expert français.
-
-Analyse la phrase de l'utilisatrice et identifie TOUS les aliments mentionnés
-avec leurs quantités. Retourne TOUJOURS le poids en grammes (g) pour les solides
-et en millilitres (ml) pour les liquides — dans les deux cas, place la valeur
-numérique dans la clé "grams" du JSON.
-
-RÈGLES IMPORTANTES :
-
-1. PAS DE QUANTITÉ → utilise les portions standard :
-   • 1 œuf = 55g
-   • 1 tranche de pain = 30g
-   • 1 bol = 300g (solide) / 300ml (liquide)
-   • 1 verre = 200ml
-   • 1 tasse de café/thé = 150ml
-   • 1 yaourt = 125g
-   • 1 portion fromage = 30g
-   • 1 portion viande/poisson = 150g
-   • 1 cuillère à soupe = 15ml
-   • 1 cuillère à café = 5ml
-   • 1 poignée = 30g
-
-2. DESCRIPTIONS VAGUES → interprète intelligemment :
-   • "un peu de beurre" → beurre 10g
-   • "une grosse salade" → salade 200g
-   • "quelques noix" → noix 30g
-   • "un petit yaourt" → yaourt 100g
-   • "un grand verre" → 300ml
-   • "une grosse portion" → +50% de la portion standard
-   • "une petite portion" → -50% de la portion standard
-
-3. PLATS COMPOSÉS → décompose en ingrédients :
-   • "sandwich jambon fromage" → pain 60g + jambon 45g + fromage 30g + beurre 5g
-   • "salade niçoise" → salade verte 100g + thon 80g + œuf 55g + tomate 100g + olives 20g + haricots verts 50g
-   • "pâtes bolognaise" → pâtes 200g + sauce tomate 100g + viande hachée 80g
-   • "croque-monsieur" → pain 60g + jambon 45g + fromage 40g
-   • "salade césar" → salade 100g + poulet 80g + parmesan 20g + croûtons 20g
-
-4. BOISSONS → toujours en ml, place dans "grams".
-
-5. NIVEAU DE CONFIANCE — pour CHAQUE aliment, ajoute un champ "confidence" :
-   • "high"   → quantité claire OU portion standard évidente OU plat composé bien connu
-   • "medium" → quantité estimée à partir d'une description vague ("un peu", "quelques")
-   • "low"    → aliment ambigu, plat inconnu, ou quantité totalement inférée
-
-6. NOM → retourne UNIQUEMENT le mot-clé principal de chaque aliment,
-   sans adjectif ni mode de cuisson :
-   ✅ "poulet"   ❌ "poulet rôti"
-   ✅ "œuf"      ❌ "œuf dur"
-   ✅ "pomme"    ❌ "pomme verte"
-
-Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks :
-{
-  "foods": [
-    { "name": "nom court", "grams": <number>, "confidence": "high"|"medium"|"low" }
-  ]
-}
-
-EXEMPLES :
-- "j'ai mangé un sandwich jambon fromage"
-  → {"foods":[
-       {"name":"pain","grams":60,"confidence":"high"},
-       {"name":"jambon","grams":45,"confidence":"high"},
-       {"name":"fromage","grams":30,"confidence":"high"}
-     ]}
-- "un peu de beurre sur du pain"
-  → {"foods":[
-       {"name":"beurre","grams":10,"confidence":"medium"},
-       {"name":"pain","grams":30,"confidence":"high"}
-     ]}
-- "deux cuillères à soupe d'huile d'olive"
-  → {"foods":[{"name":"huile olive","grams":30,"confidence":"high"}]}
-- "un grand verre de jus d'orange"
-  → {"foods":[{"name":"jus orange","grams":300,"confidence":"medium"}]}
-- "quelques noix"
-  → {"foods":[{"name":"noix","grams":30,"confidence":"medium"}]}`;
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -106,12 +29,41 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "system",
+            content: `Tu es un assistant nutritionnel français. Analyse cette phrase et identifie les aliments avec leurs quantités. Pour les aliments solides, retourne les quantités en grammes. Pour les liquides, retourne les volumes en millilitres (ml), mais garde la propriété JSON "grams" pour compatibilité. Si aucune quantité n'est précisée, estime une portion standard selon l'aliment. Retourne UNIQUEMENT le mot clé principal de chaque aliment, sans adjectif ni mode de cuisson. Exemples: 'poulet' pas 'poulet rôti', 'oeuf' pas 'oeuf dur', 'pomme' pas 'pomme verte', 'riz' pas 'riz basmati'.
+
+Si l'utilisatrice mentionne des mesures courantes, convertis-les en grammes pour les solides et en ml pour les liquides:
+- 1 cuillère à café (cc) = 5g (liquides) ou 3g (poudres)
+- 1 cuillère à soupe (cs) = 15g (liquides) ou 10g (poudres)
+- 1 verre = 200ml pour les liquides
+- 1 bol = 300ml pour soupe/bouillon, 300g pour solides
+- 1 tasse = 150ml pour café/thé/tisane/infusion, 250ml pour autres boissons, 250g pour solides
+- 1 poignée = 30g
+- 1 tranche = 30g (pain) ou 50g (viande/fromage)
+- 1 portion = 150g (viande/poisson), 100g (légumes), ou 200ml (liquides)
+- 1 filet = 150g
+Multiplie par la quantité indiquée (ex: "2 cuillères à soupe d'huile" = 30ml). Pour l'huile, retourne le volume en ml; la conversion nutritionnelle sera faite ensuite.
+
+Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks:
+{"foods": [{"name": "mot clé principal", "grams": nombre}]}
+Exemples de portions standards: un oeuf = 55g, un yaourt = 125g, une portion de fromage = 30g, un croissant = 50g, une tranche de pain = 30g, une portion de baguette = 60g, un bol de céréales = 40g, une banane = 120g, une pomme = 150g, une orange = 150g, un kiwi = 80g, une portion de fraises = 150g, une carotte = 80g, une tomate = 120g, une courgette = 200g, une portion de poulet = 150g, une portion de saumon = 150g, un steak = 150g, deux tranches de jambon = 45g, une noix de beurre = 10g, une cuillère d'huile = 10ml, une poignée de noix = 30g, un verre de lait = 200ml, une tasse de café = 150ml, un bol de soupe = 300ml, un verre de jus d'orange = 200ml.
+
+Exemples de conversion:
+- "2 cuillères à soupe d'huile d'olive" → {"name": "huile olive", "grams": 30}
+- "un oeuf" → {"name": "oeuf", "grams": 55}
+- "une banane" → {"name": "banane", "grams": 120}
+- "1 bol de flocons d'avoine" → {"name": "flocons avoine", "grams": 300}
+- "1 verre de lait" → {"name": "lait", "grams": 200}
+- "une tasse de café" → {"name": "café", "grams": 150}
+- "un bol de soupe" → {"name": "soupe", "grams": 300}
+- "un verre de jus d'orange" → {"name": "jus orange", "grams": 200}
+- "une poignée de noix" → {"name": "noix", "grams": 30}`,
+          },
           { role: "user", content: transcript },
         ],
-        temperature: 0.2,
-        max_tokens: 700,
-        response_format: { type: "json_object" },
+        temperature: 0.3,
+        max_tokens: 500,
       }),
     });
 
@@ -126,6 +78,7 @@ serve(async (req) => {
 
     const result = await response.json();
     const content = result.choices?.[0]?.message?.content?.trim();
+
     if (!content) {
       return new Response(JSON.stringify({ error: "Pas de réponse IA" }), {
         status: 500,
@@ -133,6 +86,7 @@ serve(async (req) => {
       });
     }
 
+    // Parse the JSON response
     let parsed;
     try {
       parsed = JSON.parse(content);
@@ -150,13 +104,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Normalize confidence values
-    parsed.foods = parsed.foods.map((f: any) => ({
-      name: String(f.name || "").trim(),
-      grams: Number(f.grams) || 100,
-      confidence: ["high", "medium", "low"].includes(f.confidence) ? f.confidence : "medium",
-    })).filter((f: any) => f.name.length > 0);
 
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

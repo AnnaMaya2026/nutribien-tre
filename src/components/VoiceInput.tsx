@@ -5,20 +5,16 @@ import { scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { getDefaultPortion } from "@/lib/portionUnits";
 import { toast } from "sonner";
 
-export type VoiceConfidence = "high" | "medium" | "low";
-
 export interface VoiceMatch {
   food: CiqualFood;
   grams: number;
   scaled: ReturnType<typeof scaleCiqual>;
-  confidence?: VoiceConfidence;
 }
 
 export interface VoiceCandidate {
   name: string;
   grams: number;
   candidates: CiqualFood[];
-  confidence?: VoiceConfidence;
 }
 
 interface VoiceInputProps {
@@ -128,11 +124,11 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
 
           // Always show picker if more than 1 result
           if (mapped.length > 1 && onCandidates) {
-            allCandidates.push({ name: item.name, grams, candidates: mapped, confidence: item.confidence });
+            allCandidates.push({ name: item.name, grams, candidates: mapped });
           } else {
             // Only 1 result — add directly
             const food = mapped[0];
-            directMatches.push({ food, grams, scaled: scaleCiqual(food, grams), confidence: item.confidence });
+            directMatches.push({ food, grams, scaled: scaleCiqual(food, grams) });
           }
         } catch {
           toast.error(`Erreur pour "${item.name}"`);
