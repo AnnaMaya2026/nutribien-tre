@@ -28,6 +28,7 @@ export default function DiagnosisPage() {
         const { data, error } = await supabase.functions.invoke("generate-diagnosis", { body: {} });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
+        if (!data?.insights || !Array.isArray(data.insights)) throw new Error("Invalid response");
         setData(data as Diagnosis);
       } catch (e: any) {
         console.error(e);
