@@ -76,6 +76,8 @@ export default function ChatPage() {
   const recognitionRef = useRef<any>(null);
   const autoReadRef = useRef(autoRead);
   const [savedMenuIds, setSavedMenuIds] = useState<Set<number>>(new Set());
+  const [detailModal, setDetailModal] = useState<{ mode: "recommendation" | "food"; payload: string } | null>(null);
+
 
   useEffect(() => {
     autoReadRef.current = autoRead;
@@ -464,12 +466,42 @@ export default function ChatPage() {
               >
                 {msg.from === "ai" ? (
                   <div className="prose prose-sm prose-pink max-w-none [&>p]:m-0">
-                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    <ReactMarkdown
+                      components={{
+                        a: ({ href, children }) => {
+                          if (href?.startsWith("sophie-food:")) {
+                            const food = decodeURIComponent(href.slice("sophie-food:".length));
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => setDetailModal({ mode: "food", payload: food })}
+                                className="inline-flex items-baseline gap-0.5 text-pink-deep font-medium underline decoration-dotted hover:text-pink-deep/80"
+                              >
+                                ❓{children}
+                              </button>
+                            );
+                          }
+                          return <a href={href} target="_blank" rel="noreferrer">{children}</a>;
+                        },
+                      }}
+                    >
+                      {annotateUnknownFoods(msg.text)}
+                    </ReactMarkdown>
                   </div>
                 ) : (
                   msg.text
                 )}
               </div>
+              {/* En savoir plus button for AI messages (skip welcome id=0) */}
+              {msg.from === "ai" && msg.id !== 0 && (
+                <button
+                  onClick={() => setDetailModal({ mode: "recommendation", payload: msg.text })}
+                  className="self-start flex items-center gap-1.5 text-xs text-pink-deep hover:text-pink-deep/80 transition-colors px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/15 font-medium"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>🔍 En savoir plus</span>
+                </button>
+              )}
               {/* TTS button for AI messages */}
               {msg.from === "ai" && (
                 <button
