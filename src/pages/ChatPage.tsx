@@ -449,6 +449,12 @@ export default function ChatPage() {
       </div>
 
       <SophieHistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />
+      <SophieDetailModal
+        open={!!detailModal}
+        mode={detailModal?.mode ?? "recommendation"}
+        payload={detailModal?.payload ?? ""}
+        onClose={() => setDetailModal(null)}
+      />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-56">
