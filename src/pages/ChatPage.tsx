@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, User, Loader2, Volume2, Pause, Mic, MicOff, Clock, Trash2, Save, ClipboardList } from "lucide-react";
+import { Send, User, Loader2, Volume2, Pause, Mic, MicOff, Clock, Trash2, Save, ClipboardList, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import SophieHistoryDrawer from "@/components/SophieHistoryDrawer";
 import SophieAvatar from "@/components/SophieAvatar";
+import SophieDetailModal from "@/components/SophieDetailModal";
 import { useAuth } from "@/hooks/useAuth";
 import MedicalDisclaimerBanner from "@/components/MedicalDisclaimerBanner";
 
@@ -17,6 +18,31 @@ const containsMenu = (text: string) => {
   const matches = MENU_KEYWORDS.filter((k) => lower.includes(k));
   return matches.length >= 2; // at least 2 distinct meal markers to qualify as a menu
 };
+
+// Mots/aliments inhabituels que l'utilisatrice peut ne pas connaître
+const UNKNOWN_FOODS = [
+  "natto", "tempeh", "miso", "kéfir", "kombucha", "spiruline", "chlorella",
+  "maca", "ashwagandha", "wakamé", "wakame", "équol", "equol", "resvératrol",
+  "resveratrol", "graines de chanvre", "psyllium", "açaï", "acai", "moringa",
+  "kuzu", "umeboshi", "tamari", "shiitake", "maïtake", "reishi",
+];
+
+// Insère des liens markdown [food](sophie-food:food) sur les mots inconnus (1ère occurrence)
+function annotateUnknownFoods(text: string): string {
+  let out = text;
+  const seen = new Set<string>();
+  for (const food of UNKNOWN_FOODS) {
+    if (seen.has(food.toLowerCase())) continue;
+    const escaped = food.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(`(?<![\\[\\w])(${escaped})(?!\\w)`, "i");
+    if (re.test(out)) {
+      out = out.replace(re, (m) => `[${m}](sophie-food:${food})`);
+      seen.add(food.toLowerCase());
+    }
+  }
+  return out;
+}
+
 
 interface Message {
   id: number;
