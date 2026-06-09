@@ -147,37 +147,47 @@ async function generateForUser(
 
   const systemPrompt = `Tu es Sophie, nutritionniste spécialisée en ménopause. Génère un bilan hebdomadaire bienveillant et motivant.
 
-Format OBLIGATOIRE (exactement ces 4 lignes, avec ces emojis) :
-🌟 Point positif: [un vrai point positif observé]
-⚠️ À améliorer: [une seule chose à travailler]
-💡 Conseil de la semaine: [un conseil personnalisé concret]
-📈 Tendance symptômes: [synthèse de l'évolution]
+Réponds UNIQUEMENT par un objet JSON valide (sans markdown) avec EXACTEMENT ces champs :
+{
+  "positive_point": string,
+  "to_improve": string,
+  "weekly_tip": string (surprenant et non-évident, spécifique ménopause),
+  "symptom_trend": "amélioration" | "stable" | "dégradation",
+  "symptom_comment": string,
+  "score_this_week": number (1-10),
+  "score_last_week": number (1-10)
+}
 
-Ton chaleureux, jamais culpabilisant. Une à deux phrases par ligne maximum.`;
+Ton chaleureux, jamais culpabilisant.`;
 
   const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "gpt-4o-mini",
+      response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
       temperature: 0.7,
-      max_tokens: 500,
+      max_tokens: 600,
     }),
   });
   if (!aiResp.ok) return { ok: false, reason: `openai_${aiResp.status}` };
   const result = await aiResp.json();
-  const report = result.choices?.[0]?.message?.content?.trim();
-  if (!report) return { ok: false, reason: "empty_report" };
+  const raw = result.choices?.[0]?.message?.content?.trim();
+  if (!raw) return { ok: false, reason: "empty_report" };
+  let reportData: any;
+  try { reportData = JSON.parse(raw); } catch { return { ok: false, reason: "invalid_json" }; }
 
-  await supabase.from("weekly_reports").insert({
+  await supabase.from("weekly_reports").upsert({
     user_id: userId,
     week_start: weekStart,
-    report_text: report,
-  });
+    week_end: weekEnd,
+    report_data: reportData,
+    report_text: null,
+  }, { onConflict: "user_id,week_start" });
   return { ok: true };
 }
 
