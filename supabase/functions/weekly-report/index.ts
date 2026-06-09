@@ -64,14 +64,26 @@ serve(async (req) => {
 
     const { data: existing } = await supabase
       .from("weekly_reports")
-      .select("report_text, week_start, created_at")
+      .select("report_text, report_data, week_start, week_end, created_at")
       .eq("user_id", user.id)
       .eq("week_start", weekStart)
       .maybeSingle();
 
-    if (existing?.report_text) {
-      return new Response(JSON.stringify({ report: existing.report_text, week_start: weekStart, week_end: weekEnd, cached: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (existing?.report_data) {
+      return new Response(JSON.stringify({ report_data: existing.report_data, week_start: weekStart, week_end: weekEnd, cached: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Also load previous week's report to compare scores
+    const prevMonday = new Date(lastMonday);
+    prevMonday.setDate(lastMonday.getDate() - 7);
+    const prevWeekStart = toKey(prevMonday);
+    const { data: prevReport } = await supabase
+      .from("weekly_reports")
+      .select("report_data")
+      .eq("user_id", user.id)
+      .eq("week_start", prevWeekStart)
+      .maybeSingle();
+    const prevScore = (prevReport?.report_data as any)?.score_this_week ?? null;
 
     const [profileRes, foodRes, symptomRes, routineDefRes, routineLogsRes, habitDefRes, habitLogsRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", user.id).single(),
@@ -183,27 +195,35 @@ serve(async (req) => {
 - Routines: ${routineCompliance.length ? routineCompliance.join(", ") : "aucune routine"}
 - Habitudes: ${habitSummary.length ? habitSummary.join(", ") : "aucune habitude"}`;
 
-    const systemPrompt = `Tu es Sophie, nutritionniste spécialisée en ménopause. Génère un bilan hebdomadaire bienveillant et motivant.
+    const systemPrompt = `Tu es Sophie, nutritionniste spécialisée en ménopause. Génère un bilan hebdomadaire bienveillant et motivant basé sur les données fournies.
 
-Format OBLIGATOIRE (exactement ces 4 lignes, avec ces emojis) :
-🌟 Point positif: [un vrai point positif observé]
-⚠️ À améliorer: [une seule chose à travailler]
-💡 Conseil de la semaine: [un conseil personnalisé concret]
-📈 Tendance symptômes: [synthèse de l'évolution]
+Réponds UNIQUEMENT par un objet JSON valide (sans markdown, sans backticks) avec EXACTEMENT ces champs :
+{
+  "positive_point": string (1 vraie réussite observée, concrète),
+  "to_improve": string (1 seule chose concrète à améliorer),
+  "weekly_tip": string (conseil SURPRENANT et non-évident, original, pas banal, spécifique à la ménopause),
+  "symptom_trend": "amélioration" | "stable" | "dégradation",
+  "symptom_comment": string (1-2 phrases sur l'évolution des symptômes),
+  "score_this_week": number entre 1 et 10 (note globale de la semaine),
+  "score_last_week": number entre 1 et 10 (estime la note de la semaine précédente d'après le contexte ou répète celle fournie)
+}
 
-Ton chaleureux, jamais culpabilisant. Une à deux phrases par ligne maximum.`;
+Ton chaleureux, jamais culpabilisant. Phrases courtes.`;
+
+    const userPromptJson = `${userPrompt}\n- Score de la semaine précédente (déjà calculé): ${prevScore ?? "inconnu"}`;
 
     const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: "user", content: userPromptJson },
         ],
         temperature: 0.7,
-        max_tokens: 500,
+        max_tokens: 600,
       }),
     });
 
@@ -214,18 +234,27 @@ Ton chaleureux, jamais culpabilisant. Une à deux phrases par ligne maximum.`;
     }
 
     const result = await aiResp.json();
-    const report = result.choices?.[0]?.message?.content?.trim();
-    if (!report) {
+    const raw = result.choices?.[0]?.message?.content?.trim();
+    if (!raw) {
       return new Response(JSON.stringify({ error: "Réponse IA vide" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    let reportData: any;
+    try { reportData = JSON.parse(raw); } catch {
+      return new Response(JSON.stringify({ error: "JSON invalide" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (prevScore !== null && typeof prevScore === "number") {
+      reportData.score_last_week = prevScore;
+    }
 
-    await supabase.from("weekly_reports").insert({
+    await supabase.from("weekly_reports").upsert({
       user_id: user.id,
       week_start: weekStart,
-      report_text: report,
-    });
+      week_end: weekEnd,
+      report_data: reportData,
+      report_text: null,
+    }, { onConflict: "user_id,week_start" });
 
-    return new Response(JSON.stringify({ report, week_start: weekStart, week_end: weekEnd, cached: false }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ report_data: reportData, week_start: weekStart, week_end: weekEnd, cached: false }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("weekly-report error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erreur inconnue" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
