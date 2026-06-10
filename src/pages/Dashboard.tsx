@@ -470,6 +470,9 @@ export default function Dashboard() {
 
       {/* Weight tracker */}
       <WeightTracker />
+
+      {/* Tomorrow teaser */}
+      <TomorrowPreview />
     </div>
   );
 }
