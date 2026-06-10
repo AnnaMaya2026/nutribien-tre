@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Send, User, Loader2, Volume2, Pause, Mic, MicOff, Clock, Trash2, Save, ClipboardList } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -45,6 +45,7 @@ export default function ChatPage() {
   const [limitReached, setLimitReached] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recognitionRef = useRef<any>(null);
@@ -425,6 +426,23 @@ export default function ChatPage() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-56">
         <MedicalDisclaimerBanner />
+        {(location.state as any)?.eveningMessage && (
+          <div className="bg-gradient-to-br from-indigo-50 via-card to-pink-50 dark:from-indigo-950/30 dark:to-pink-950/20 rounded-2xl p-4 border border-indigo-300/30 animate-fade-in">
+            <div className="flex items-center gap-2 mb-2">
+              <SophieAvatar size={28} />
+              <p className="text-sm font-bold text-foreground">🌙 Message du soir de Sophie</p>
+            </div>
+            <p className="text-sm text-foreground mb-2">{(location.state as any).eveningMessage.summary}</p>
+            <div className="rounded-xl bg-card/60 p-3 mb-2">
+              <p className="text-xs font-semibold text-pink-deep mb-1">💡 Observation</p>
+              <p className="text-sm text-foreground">{(location.state as any).eveningMessage.insight}</p>
+            </div>
+            <div className="rounded-xl bg-amber-100/60 dark:bg-amber-900/20 p-3">
+              <p className="text-xs font-semibold text-amber-700 mb-1">🎯 Défi pour demain</p>
+              <p className="text-sm text-foreground">{(location.state as any).eveningMessage.challenge}</p>
+            </div>
+          </div>
+        )}
         {messages.map((msg) => (
           <div key={msg.id} className={`flex gap-2 ${msg.from === "user" ? "justify-end" : ""} animate-fade-in`}>
             {msg.from === "ai" && <SophieAvatar size={28} className="mt-1" />}

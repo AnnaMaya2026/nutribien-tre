@@ -16,6 +16,10 @@ import WellnessScoreCard from "@/components/WellnessScoreCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
 import HelpCarousel from "@/components/HelpCarousel";
 import MedicalDisclaimerBanner from "@/components/MedicalDisclaimerBanner";
+import StreakCard from "@/components/StreakCard";
+import DailyChallengeCard from "@/components/DailyChallengeCard";
+import SophieEveningBanner from "@/components/SophieEveningBanner";
+import TomorrowPreview from "@/components/TomorrowPreview";
 import { ChevronDown, ChevronUp, LogOut, UserCircle2 } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
@@ -301,6 +305,15 @@ export default function Dashboard() {
       {/* Wellness score (always visible, estimated for new users) */}
       <WellnessScoreCard />
 
+      {/* Streak counter + weekly calendar */}
+      <StreakCard />
+
+      {/* Sophie evening proactive message (after 7pm) */}
+      <SophieEveningBanner />
+
+      {/* Daily challenge (after 8am) */}
+      <DailyChallengeCard />
+
       {/* Daily evening recap (visible after 8pm) */}
       <DailyRecapCard />
 
@@ -457,6 +470,9 @@ export default function Dashboard() {
 
       {/* Weight tracker */}
       <WeightTracker />
+
+      {/* Tomorrow teaser */}
+      <TomorrowPreview />
     </div>
   );
 }

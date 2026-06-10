@@ -86,6 +86,39 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_challenges: {
+        Row: {
+          challenge_date: string
+          challenge_text: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          nutrient_key: string | null
+          user_id: string
+        }
+        Insert: {
+          challenge_date?: string
+          challenge_text: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          nutrient_key?: string | null
+          user_id: string
+        }
+        Update: {
+          challenge_date?: string
+          challenge_text?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          nutrient_key?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_recaps: {
         Row: {
           created_at: string
@@ -437,7 +470,9 @@ export type Database = {
         Row: {
           activity_level: string | null
           age: number | null
+          best_streak: number
           created_at: string
+          current_streak: number
           custom_symptoms: string[] | null
           daily_calorie_goal: number | null
           daily_message_count: number
@@ -453,6 +488,7 @@ export type Database = {
           hydration_goal: number | null
           id: string
           last_message_date: string | null
+          last_streak_date: string | null
           main_symptom: string | null
           medical_disclaimer_dismissed: boolean
           menopause_stage: string | null
@@ -471,7 +507,9 @@ export type Database = {
         Insert: {
           activity_level?: string | null
           age?: number | null
+          best_streak?: number
           created_at?: string
+          current_streak?: number
           custom_symptoms?: string[] | null
           daily_calorie_goal?: number | null
           daily_message_count?: number
@@ -487,6 +525,7 @@ export type Database = {
           hydration_goal?: number | null
           id?: string
           last_message_date?: string | null
+          last_streak_date?: string | null
           main_symptom?: string | null
           medical_disclaimer_dismissed?: boolean
           menopause_stage?: string | null
@@ -505,7 +544,9 @@ export type Database = {
         Update: {
           activity_level?: string | null
           age?: number | null
+          best_streak?: number
           created_at?: string
+          current_streak?: number
           custom_symptoms?: string[] | null
           daily_calorie_goal?: number | null
           daily_message_count?: number
@@ -521,6 +562,7 @@ export type Database = {
           hydration_goal?: number | null
           id?: string
           last_message_date?: string | null
+          last_streak_date?: string | null
           main_symptom?: string | null
           medical_disclaimer_dismissed?: boolean
           menopause_stage?: string | null
@@ -680,6 +722,39 @@ export type Database = {
           message?: string
           pinned?: boolean
           role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sophie_evening_messages: {
+        Row: {
+          challenge: string
+          created_at: string
+          id: string
+          insight: string
+          message_date: string
+          seen: boolean
+          summary: string
+          user_id: string
+        }
+        Insert: {
+          challenge: string
+          created_at?: string
+          id?: string
+          insight: string
+          message_date?: string
+          seen?: boolean
+          summary: string
+          user_id: string
+        }
+        Update: {
+          challenge?: string
+          created_at?: string
+          id?: string
+          insight?: string
+          message_date?: string
+          seen?: boolean
+          summary?: string
           user_id?: string
         }
         Relationships: []
