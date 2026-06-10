@@ -305,6 +305,15 @@ export default function Dashboard() {
       {/* Wellness score (always visible, estimated for new users) */}
       <WellnessScoreCard />
 
+      {/* Streak counter + weekly calendar */}
+      <StreakCard />
+
+      {/* Sophie evening proactive message (after 7pm) */}
+      <SophieEveningBanner />
+
+      {/* Daily challenge (after 8am) */}
+      <DailyChallengeCard />
+
       {/* Daily evening recap (visible after 8pm) */}
       <DailyRecapCard />
 
