@@ -809,6 +809,7 @@ export type Database = {
           habit_emoji: string | null
           habit_key: string
           habit_name: string
+          habit_type: string
           id: string
           sort_order: number
           symptom_warning: string | null
@@ -822,6 +823,7 @@ export type Database = {
           habit_emoji?: string | null
           habit_key: string
           habit_name: string
+          habit_type?: string
           id?: string
           sort_order?: number
           symptom_warning?: string | null
@@ -835,6 +837,7 @@ export type Database = {
           habit_emoji?: string | null
           habit_key?: string
           habit_name?: string
+          habit_type?: string
           id?: string
           sort_order?: number
           symptom_warning?: string | null
