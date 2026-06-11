@@ -63,7 +63,14 @@ export function useHabits() {
         .eq("user_id", user.id)
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return (data || []) as UserHabit[];
+      return (data || []).map((row: any) => ({
+        ...row,
+        habit_type: detectHabitType(
+          row.habit_key,
+          row.habit_name,
+          (row.habit_type as HabitType) || "limiter"
+        ),
+      })) as UserHabit[];
     },
     enabled: !!user,
   });
