@@ -65,11 +65,9 @@ export function useHabits() {
       if (error) throw error;
       return (data || []).map((row: any) => ({
         ...row,
-        habit_type: detectHabitType(
-          row.habit_key,
-          row.habit_name,
-          (row.habit_type as HabitType) || "limiter"
-        ),
+        habit_type:
+          (row.habit_type as HabitType) ||
+          detectHabitType(row.habit_key, row.habit_name),
       })) as UserHabit[];
     },
     enabled: !!user,
