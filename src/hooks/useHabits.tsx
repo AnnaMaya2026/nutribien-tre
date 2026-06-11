@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { DEFAULT_HABITS } from "@/lib/defaultHabits";
 
+export type HabitType = "limiter" | "atteindre";
+
 export type UserHabit = {
   id: string;
   habit_key: string;
@@ -14,7 +16,25 @@ export type UserHabit = {
   symptom_warning: string | null;
   active: boolean;
   sort_order: number;
+  habit_type: HabitType;
 };
+
+// Auto-detect type from name/key when DB row is missing the column or
+// when a legacy default of "limiter" doesn't fit the habit.
+export function detectHabitType(
+  key: string,
+  name: string,
+  fallback: HabitType = "limiter"
+): HabitType {
+  const text = `${key} ${name}`.toLowerCase();
+  if (/(eau|hydrat|activit|sport|l[ée]gume|fruit|marche|step)/.test(text)) {
+    return "atteindre";
+  }
+  if (/(caf[ée]|alcool|[ée]cran|[ée]pic|sucre|soda|bi[èe]re|vin)/.test(text)) {
+    return "limiter";
+  }
+  return fallback;
+}
 
 export type HabitLog = {
   id: string;
