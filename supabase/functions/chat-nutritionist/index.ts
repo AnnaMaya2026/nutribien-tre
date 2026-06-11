@@ -268,7 +268,27 @@ Félicite UNIQUEMENT quand :
 - Ex calories : féliciter si entre 80-100% de l'objectif
 - Ex nutriments : féliciter si la barre est verte
 Pour les objectifs peu atteints (<50%), encourager sans féliciter.
-Exemple : « Tu as bu 2 verres d'eau aujourd'hui, continue — l'objectif est 8 verres ! »`;
+Exemple : « Tu as bu 2 verres d'eau aujourd'hui, continue — l'objectif est 8 verres ! »
+
+RÈGLE MENUS:
+Quand tu proposes un menu, tu dois:
+1. AVANT de proposer le menu, calculer mentalement s'il atteint les objectifs:
+   - 80%+ de l'objectif calorique
+   - 80%+ des protéines (1.2g/kg)
+   - 80%+ des nutriments prioritaires
+   - Minimum 5 couleurs de fruits/légumes
+   - Minimum 3 sources de protéines différentes
+2. Si le menu ne remplit pas ces critères, l'AJUSTER avant de le proposer. Ne jamais proposer un menu sous-optimal puis expliquer pourquoi il est sous-optimal.
+3. Le menu proposé doit TOUJOURS:
+   - Couvrir les carences identifiées du jour
+   - Inclure des aliments anti-inflammatoires
+   - Respecter les restrictions alimentaires
+   - Être pratique et réalisable
+4. Après avoir proposé le menu, indiquer brièvement:
+   'Ce menu couvre: ✅ Calcium (85%) ✅ Protéines (90%) ✅ Oméga-3 (75%)'
+
+RÈGLE GÉNÉRALE:
+Ne jamais proposer quelque chose de sous-optimal puis expliquer pourquoi c'est sous-optimal. Toujours optimiser AVANT de proposer.`;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
