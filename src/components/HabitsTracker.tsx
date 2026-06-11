@@ -449,6 +449,7 @@ function AddHabitModal({
   const [emoji, setEmoji] = useState("");
   const [goal, setGoal] = useState("1");
   const [unit, setUnit] = useState("fois");
+  const [habitType, setHabitType] = useState<"limiter" | "atteindre">("limiter");
 
   const submit = async () => {
     if (!name.trim()) return;
@@ -457,12 +458,14 @@ function AddHabitModal({
       habit_emoji: emoji.trim() || "•",
       goal: Number(goal) || 0,
       unit: unit.trim() || "fois",
+      habit_type: habitType,
     });
     toast.success("Habitude ajoutée ✓");
     setName("");
     setEmoji("");
     setGoal("1");
     setUnit("fois");
+    setHabitType("limiter");
     onOpenChange(false);
   };
 
@@ -474,6 +477,33 @@ function AddHabitModal({
         </DialogHeader>
         <div className="space-y-3">
           <div>
+            <label className="text-xs text-muted-foreground block mb-2">Ce suivi est pour :</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setHabitType("limiter")}
+                className={`py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  habitType === "limiter"
+                    ? "bg-warning text-white shadow-sm"
+                    : "bg-muted text-foreground hover:bg-warning/10"
+                }`}
+              >
+                🚫 Réduire / Limiter
+              </button>
+              <button
+                type="button"
+                onClick={() => setHabitType("atteindre")}
+                className={`py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  habitType === "atteindre"
+                    ? "bg-progress-high text-white shadow-sm"
+                    : "bg-muted text-foreground hover:bg-progress-high/10"
+                }`}
+              >
+                ✅ Atteindre / Augmenter
+              </button>
+            </div>
+          </div>
+          <div>
             <label className="text-xs text-muted-foreground block mb-1">Nom</label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Soda" />
           </div>
@@ -483,7 +513,9 @@ function AddHabitModal({
               <Input value={emoji} onChange={(e) => setEmoji(e.target.value)} placeholder="🥤" />
             </div>
             <div className="w-24">
-              <label className="text-xs text-muted-foreground block mb-1">Limite/jour</label>
+              <label className="text-xs text-muted-foreground block mb-1">
+                {habitType === "atteindre" ? "Objectif/jour" : "Limite/jour"}
+              </label>
               <Input
                 type="number"
                 min="0"
