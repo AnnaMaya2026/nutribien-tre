@@ -83,6 +83,8 @@ export function isOilFoodName(_foodName: string): boolean {
 
 export function isLiquidFoodName(foodName: string): boolean {
   const normalized = normalizeFoodName(foodName);
+  // STRICT: solid override always wins, even if "lait", "eau"… appears in name
+  if (SOLID_WORDS.some((w) => hasWord(normalized, w))) return false;
   return LIQUID_WORDS.some((w) => hasWord(normalized, w));
 }
 
