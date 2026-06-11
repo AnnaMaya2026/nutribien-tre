@@ -162,6 +162,7 @@ export function useHabits() {
       habit_emoji: string;
       goal: number;
       unit: string;
+      habit_type: HabitType;
     }) => {
       if (!user) throw new Error("Not authenticated");
       const habit_key = `custom_${Date.now()}`;
@@ -172,9 +173,10 @@ export function useHabits() {
         habit_emoji: h.habit_emoji || "•",
         goal: h.goal,
         unit: h.unit || "fois",
+        habit_type: h.habit_type,
         active: true,
         sort_order: habits.length,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["user_habits", user?.id] }),
