@@ -260,9 +260,8 @@ function HabitCard({ habit }: { habit: UserHabit }) {
     (l) => l.habit_key === habit.habit_key && l.logged_at === today
   );
   const count = todayLog?.count ?? 0;
-  const color = statusColor(count, habit.goal);
-  const exceeded = habit.goal === 0 ? count > 0 : count > habit.goal;
-  const reachedLimit = habit.goal > 0 && count === habit.goal;
+  const goal = habit.goal;
+  const isAtteindre = habit.habit_type === "atteindre";
 
   // Build 7-day chart data
   const chartData = useMemo(() => {
@@ -279,38 +278,54 @@ function HabitCard({ habit }: { habit: UserHabit }) {
     return days;
   }, [logs, habit.habit_key]);
 
+  // Status differs by type
+  // - limiter : under = green, over = orange
+  // - atteindre : under = blue, met = green, over = green (celebration)
+  let color: "progress-high" | "warning" | "primary";
+  if (isAtteindre) {
+    color = count >= goal ? "progress-high" : "primary";
+  } else {
+    color = goal > 0 && count > goal ? "warning" : "progress-high";
+  }
+
   const handleInc = () => {
     const next = count + 1;
     setCount.mutate({ habit, count: next });
-    if (habit.goal > 0 && next > habit.goal && habit.symptom_warning) {
-      toast.warning(
-        `⚠️ Tu as dépassé ton objectif ${habit.habit_name.toLowerCase()} aujourd'hui — ${habit.symptom_warning}`
-      );
-    } else if (habit.goal === 0 && next === 1 && habit.symptom_warning) {
-      toast.warning(
-        `⚠️ ${habit.habit_name} : ${habit.symptom_warning}`
-      );
+    if (isAtteindre) {
+      if (next === goal) {
+        toast.success("🎉 Objectif atteint ! Bravo 💚");
+      }
+    } else {
+      if (goal > 0 && next > goal && habit.symptom_warning) {
+        toast.warning(
+          `⚠️ Tu as dépassé ton objectif ${habit.habit_name.toLowerCase()} aujourd'hui — ${habit.symptom_warning}`
+        );
+      }
     }
   };
 
   const colorClass =
-    color === "destructive"
-      ? "text-destructive"
-      : color === "warning"
+    color === "warning"
       ? "text-warning"
+      : color === "primary"
+      ? "text-primary"
       : "text-progress-high";
   const bgClass =
-    color === "destructive"
-      ? "bg-destructive"
-      : color === "warning"
+    color === "warning"
       ? "bg-warning"
+      : color === "primary"
+      ? "bg-primary"
       : "bg-progress-high";
   const strokeColor =
-    color === "destructive"
-      ? "hsl(var(--destructive))"
-      : color === "warning"
+    color === "warning"
       ? "hsl(var(--warning))"
+      : color === "primary"
+      ? "hsl(var(--primary))"
       : "hsl(var(--progress-high))";
+
+  const goalLabel = isAtteindre
+    ? `Objectif : ${goal} ${habit.unit}/jour`
+    : `Objectif : max ${goal} ${habit.unit}/jour`;
 
   return (
     <div className="bg-card rounded-2xl p-4 card-soft">
@@ -321,9 +336,7 @@ function HabitCard({ habit }: { habit: UserHabit }) {
             <p className="text-sm font-semibold text-foreground truncate">
               {habit.habit_name}
             </p>
-            <p className="text-[10px] text-muted-foreground">
-              Objectif : max {habit.goal} {habit.unit}/jour
-            </p>
+            <p className="text-[10px] text-muted-foreground">{goalLabel}</p>
           </div>
         </div>
         <button
@@ -348,7 +361,9 @@ function HabitCard({ habit }: { habit: UserHabit }) {
           <Minus className="w-4 h-4" />
         </button>
         <div className="flex-1 text-center">
-          <p className={`text-3xl font-bold ${colorClass}`}>{count}</p>
+          <p className={`text-3xl font-bold ${colorClass}`}>
+            {isAtteindre ? `${count}/${goal}` : count}
+          </p>
           <p className="text-[10px] text-muted-foreground">{habit.unit}</p>
         </div>
         <button
@@ -360,30 +375,50 @@ function HabitCard({ habit }: { habit: UserHabit }) {
       </div>
 
       {/* Progress bar */}
-      {habit.goal > 0 && (
+      {goal > 0 && (
         <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden mb-2">
           <div
             className={`h-full ${bgClass} transition-all`}
-            style={{ width: `${Math.min(100, (count / habit.goal) * 100)}%` }}
+            style={{ width: `${Math.min(100, (count / goal) * 100)}%` }}
           />
         </div>
       )}
 
-      {exceeded && (
-        <div className="flex items-start gap-1.5 mb-2 text-[10px] text-destructive">
-          <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-0.5" />
-          <span>Objectif dépassé</span>
-        </div>
-      )}
-      {reachedLimit && !exceeded && (
-        <p className="text-[10px] text-warning mb-2">Limite atteinte</p>
+      {/* Status messages */}
+      {isAtteindre ? (
+        <>
+          {count < goal && (
+            <p className="text-[10px] text-primary mb-2">
+              🔵 {count}/{goal} {habit.unit} — continuez !
+            </p>
+          )}
+          {count === goal && (
+            <p className="text-[10px] text-progress-high mb-2">
+              🟢 Objectif atteint ! 💚
+            </p>
+          )}
+          {count > goal && (
+            <p className="text-[10px] text-progress-high mb-2">
+              🟢 Super ! Vous dépassez votre objectif 🎉
+            </p>
+          )}
+        </>
+      ) : (
+        <>
+          {goal > 0 && count > goal && (
+            <div className="flex items-start gap-1.5 mb-2 text-[10px] text-warning">
+              <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-0.5" />
+              <span>🟠 Objectif dépassé ⚠️</span>
+            </div>
+          )}
+        </>
       )}
 
       {/* 7-day mini chart */}
       <div className="h-10 -mx-1">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
-            <YAxis hide domain={[0, Math.max(habit.goal + 1, ...chartData.map((d) => d.count), 1)]} />
+            <YAxis hide domain={[0, Math.max(goal + 1, ...chartData.map((d) => d.count), 1)]} />
             <Line
               type="monotone"
               dataKey="count"
@@ -414,6 +449,7 @@ function AddHabitModal({
   const [emoji, setEmoji] = useState("");
   const [goal, setGoal] = useState("1");
   const [unit, setUnit] = useState("fois");
+  const [habitType, setHabitType] = useState<"limiter" | "atteindre">("limiter");
 
   const submit = async () => {
     if (!name.trim()) return;
@@ -422,12 +458,14 @@ function AddHabitModal({
       habit_emoji: emoji.trim() || "•",
       goal: Number(goal) || 0,
       unit: unit.trim() || "fois",
+      habit_type: habitType,
     });
     toast.success("Habitude ajoutée ✓");
     setName("");
     setEmoji("");
     setGoal("1");
     setUnit("fois");
+    setHabitType("limiter");
     onOpenChange(false);
   };
 
@@ -439,6 +477,33 @@ function AddHabitModal({
         </DialogHeader>
         <div className="space-y-3">
           <div>
+            <label className="text-xs text-muted-foreground block mb-2">Ce suivi est pour :</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setHabitType("limiter")}
+                className={`py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  habitType === "limiter"
+                    ? "bg-warning text-white shadow-sm"
+                    : "bg-muted text-foreground hover:bg-warning/10"
+                }`}
+              >
+                🚫 Réduire / Limiter
+              </button>
+              <button
+                type="button"
+                onClick={() => setHabitType("atteindre")}
+                className={`py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  habitType === "atteindre"
+                    ? "bg-progress-high text-white shadow-sm"
+                    : "bg-muted text-foreground hover:bg-progress-high/10"
+                }`}
+              >
+                ✅ Atteindre / Augmenter
+              </button>
+            </div>
+          </div>
+          <div>
             <label className="text-xs text-muted-foreground block mb-1">Nom</label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Soda" />
           </div>
@@ -448,7 +513,9 @@ function AddHabitModal({
               <Input value={emoji} onChange={(e) => setEmoji(e.target.value)} placeholder="🥤" />
             </div>
             <div className="w-24">
-              <label className="text-xs text-muted-foreground block mb-1">Limite/jour</label>
+              <label className="text-xs text-muted-foreground block mb-1">
+                {habitType === "atteindre" ? "Objectif/jour" : "Limite/jour"}
+              </label>
               <Input
                 type="number"
                 min="0"

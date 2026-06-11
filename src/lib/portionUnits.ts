@@ -1,22 +1,42 @@
 // Strict whitelist: ONLY these standalone words trigger ml.
-// Everything else (vegetables cooked or raw, fruits, meat, fish, dairy
-// solids, oils, water, cooked dishes...) is saved and displayed in grams.
 const LIQUID_WORDS = [
-  "lait",
-  "laits",
+  "lait", "laits",
   "jus",
-  "cafe",
-  "cafes",
-  "the",
-  "thes",
-  "soda",
-  "sodas",
-  "biere",
-  "bieres",
-  "vin",
-  "vins",
-  "smoothie",
-  "smoothies",
+  "cafe", "cafes",
+  "the", "thes",
+  "soda", "sodas",
+  "biere", "bieres",
+  "vin", "vins",
+  "smoothie", "smoothies",
+  "eau", "eaux",
+];
+
+// STRICT solid override: even if a liquid word appears in the name
+// (e.g. "Feta au lait de brebis"), these foods MUST always be in grams.
+const SOLID_WORDS = [
+  // Cheeses
+  "fromage", "fromages", "feta", "brie", "camembert", "gruyere", "emmental",
+  "emmenthal", "chevre", "roquefort", "comte", "mozzarella", "parmesan",
+  "ricotta", "cheddar", "reblochon", "munster", "tomme", "raclette", "edam",
+  "gouda", "mascarpone", "burrata", "halloumi", "pecorino", "manchego",
+  // Dairy solids
+  "yaourt", "yaourts", "skyr", "faisselle",
+  // Meats / fish / eggs / charcuterie
+  "poulet", "boeuf", "porc", "agneau", "veau", "dinde", "canard", "lapin",
+  "jambon", "bacon", "saucisse", "saucisson", "steak", "viande", "viandes",
+  "saumon", "thon", "cabillaud", "morue", "sardine", "maquereau", "truite",
+  "crevette", "crevettes", "poisson", "poissons", "oeuf", "oeufs",
+  // Cooking descriptors (force solid)
+  "emiette", "rape", "tranche", "grille", "cuit", "cuite", "roti", "fume",
+  "cru", "crue",
+  // Grains / legumes
+  "pain", "pains", "riz", "pates", "quinoa", "boulgour", "semoule",
+  "lentille", "lentilles", "pois", "haricot", "haricots", "feve",
+  "cereale", "cereales", "avoine", "ble", "epeautre",
+  // Other solids
+  "tofu", "tempeh", "seitan", "noix", "amande", "amandes", "noisette",
+  "noisettes", "graine", "graines", "biscuit", "biscuits", "gateau",
+  "chocolat", "beurre", "huile", "olive", "olives",
 ];
 
 const STANDARD_PORTIONS = [
@@ -63,6 +83,8 @@ export function isOilFoodName(_foodName: string): boolean {
 
 export function isLiquidFoodName(foodName: string): boolean {
   const normalized = normalizeFoodName(foodName);
+  // STRICT: solid override always wins, even if "lait", "eau"… appears in name
+  if (SOLID_WORDS.some((w) => hasWord(normalized, w))) return false;
   return LIQUID_WORDS.some((w) => hasWord(normalized, w));
 }
 

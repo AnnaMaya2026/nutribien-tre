@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { DEFAULT_HABITS } from "@/lib/defaultHabits";
 
+export type HabitType = "limiter" | "atteindre";
+
 export type UserHabit = {
   id: string;
   habit_key: string;
@@ -14,7 +16,25 @@ export type UserHabit = {
   symptom_warning: string | null;
   active: boolean;
   sort_order: number;
+  habit_type: HabitType;
 };
+
+// Auto-detect type from name/key when DB row is missing the column or
+// when a legacy default of "limiter" doesn't fit the habit.
+export function detectHabitType(
+  key: string,
+  name: string,
+  fallback: HabitType = "limiter"
+): HabitType {
+  const text = `${key} ${name}`.toLowerCase();
+  if (/(eau|hydrat|activit|sport|l[ée]gume|fruit|marche|step)/.test(text)) {
+    return "atteindre";
+  }
+  if (/(caf[ée]|alcool|[ée]cran|[ée]pic|sucre|soda|bi[èe]re|vin)/.test(text)) {
+    return "limiter";
+  }
+  return fallback;
+}
 
 export type HabitLog = {
   id: string;
@@ -43,7 +63,12 @@ export function useHabits() {
         .eq("user_id", user.id)
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return (data || []) as UserHabit[];
+      return (data || []).map((row: any) => ({
+        ...row,
+        habit_type:
+          (row.habit_type as HabitType) ||
+          detectHabitType(row.habit_key, row.habit_name),
+      })) as UserHabit[];
     },
     enabled: !!user,
   });
@@ -137,6 +162,7 @@ export function useHabits() {
       habit_emoji: string;
       goal: number;
       unit: string;
+      habit_type: HabitType;
     }) => {
       if (!user) throw new Error("Not authenticated");
       const habit_key = `custom_${Date.now()}`;
@@ -147,9 +173,10 @@ export function useHabits() {
         habit_emoji: h.habit_emoji || "•",
         goal: h.goal,
         unit: h.unit || "fois",
+        habit_type: h.habit_type,
         active: true,
         sort_order: habits.length,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["user_habits", user?.id] }),
