@@ -5,49 +5,67 @@ import { getDisplayName } from "@/lib/displayName";
 import { Heart, ChevronLeft, ChevronRight, X } from "lucide-react";
 import confetti from "canvas-confetti";
 
-const buildSteps = (name: string) => [
+interface Step {
+  type: "welcome" | "info" | "action" | "final";
+  title: string;
+  subtitle: string;
+  image?: string;
+  buttonLabel?: string;
+  navigateTo?: string;
+}
+
+const buildSteps = (name: string): Step[] => [
   {
-    type: "welcome" as const,
+    type: "welcome",
     title: name ? `Bienvenue ${name} ! 💗` : "Bienvenue dans NutriMéno ! 💗",
     subtitle: "Découvrez en 30 secondes comment NutriMéno va vous accompagner",
   },
   {
-    type: "info" as const,
+    type: "info",
     title: "Votre tableau de bord 📊",
     subtitle: "Suivez vos calories et nutriments clés en temps réel, adaptés à vos besoins ménopausiques.",
   },
   {
-    type: "info" as const,
+    type: "info",
     title: "Journal alimentaire 🍽️",
     subtitle:
       "• Dictez vos repas à la voix 🎤\n• Scannez les codes-barres 📷\n• Recherchez manuellement vos aliments",
   },
   {
-    type: "info" as const,
+    type: "info",
     title: "Idées repas ✨",
     subtitle:
       "Trouvez des idées de repas :\n• Par ingrédients du frigo\n• Par recette\n• Pour combler vos manques\n• Pour atténuer vos symptômes",
   },
   {
-    type: "info" as const,
+    type: "info",
     title: "Sophie, votre nutritionniste 💬",
     subtitle:
       "Posez vos questions à Sophie, votre nutritionniste IA spécialisée en ménopause — elle vous répond et vous parle 🎙️",
   },
   {
-    type: "info" as const,
+    type: "action",
+    title: "Sophie crée votre menu 🍽️",
+    subtitle:
+      "Demandez à Sophie votre menu du jour adapté à vos besoins nutritionnels.\nAjoutez-le directement dans votre journal alimentaire en 1 clic !\nVos apports sont analysés instantanément. ✨",
+    image: "/help/sophie.png",
+    buttonLabel: "Essayer avec Sophie →",
+    navigateTo: "/chat",
+  },
+  {
+    type: "info",
     title: "Suivi des symptômes 📈",
     subtitle:
       "Évaluez vos symptômes chaque jour et observez leur évolution dans le temps pour mieux les comprendre.",
   },
   {
-    type: "info" as const,
+    type: "info",
     title: "Notes, Routines & Habitudes 📝",
     subtitle:
       "• Notez vos événements de vie\n• Créez vos routines quotidiennes (compléments, sport...)\n• Suivez vos habitudes à surveiller (café, alcool, hydratation...)",
   },
   {
-    type: "final" as const,
+    type: "final",
     title: "Vous êtes prête ! 🎉",
     subtitle: "NutriMéno va vous accompagner chaque jour pour mieux vivre votre ménopause grâce à la nutrition 💗",
   },
@@ -135,19 +153,34 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
           </div>
         )}
 
-        {currentStep.type === "info" && (
+        {(currentStep.type === "info" || currentStep.type === "action") && (
           <div className="bg-white rounded-3xl p-8 max-w-sm mx-auto text-center shadow-2xl">
+            {currentStep.image && (
+              <img
+                src={currentStep.image}
+                alt={currentStep.title}
+                className="w-24 h-24 mx-auto mb-4 rounded-2xl object-cover"
+              />
+            )}
             <h2 className="text-xl font-bold text-foreground mb-3">{currentStep.title}</h2>
             <p className="text-muted-foreground text-sm mb-6 whitespace-pre-line text-left leading-relaxed">{currentStep.subtitle}</p>
-            <button
-              onClick={goNext}
-              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition"
-            >
-              Suivant →
-            </button>
+            {currentStep.navigateTo ? (
+              <button
+                onClick={() => { completeOnboarding(); window.location.href = currentStep.navigateTo!; }}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition"
+              >
+                {currentStep.buttonLabel || "Suivant →"}
+              </button>
+            ) : (
+              <button
+                onClick={goNext}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition"
+              >
+                Suivant →
+              </button>
+            )}
           </div>
         )}
-
 
         {currentStep.type === "final" && (
           <div className="bg-white rounded-3xl p-8 max-w-sm mx-auto text-center shadow-2xl">
