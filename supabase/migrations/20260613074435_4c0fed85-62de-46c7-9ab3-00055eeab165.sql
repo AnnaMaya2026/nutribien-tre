@@ -1,0 +1,1 @@
+UPDATE public.food_logs SET vitamin_d = ROUND((vitamin_d / 40)::numeric, 2) WHERE vitamin_d > 50;
