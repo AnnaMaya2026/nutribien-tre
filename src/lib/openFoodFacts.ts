@@ -44,7 +44,12 @@ function parseProduct(p: OFFProduct): ParsedFood | null {
     carbs_100g: n(p.nutriments.carbohydrates_100g),
     fats_100g: n(p.nutriments.fat_100g),
     calcium_100g: n(p.nutriments.calcium_100g),
-    vitamin_d_100g: n(p.nutriments["vitamin-d_100g"]),
+    // OpenFoodFacts reports vitamin D inconsistently — sometimes IU instead of µg.
+    // No real food exceeds ~50µg/100g, so values above are treated as IU (1 IU = 0.025 µg → /40).
+    vitamin_d_100g: (() => {
+      const v = n(p.nutriments["vitamin-d_100g"]);
+      return v > 50 ? +(v / 40).toFixed(2) : v;
+    })(),
     magnesium_100g: n(p.nutriments.magnesium_100g),
     iron_100g: n(p.nutriments.iron_100g),
     omega3_100g: n(p.nutriments["omega-3-fat_100g"]),

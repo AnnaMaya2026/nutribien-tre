@@ -36,17 +36,87 @@ serve(async (req) => {
     }
 
     const p: any = profile || {};
-    const summary = `Prénom: ${p.display_name || "inconnu"}, Âge: ${p.age ?? "?"}, Stade: ${p.menopause_stage ?? "?"}, Symptômes: ${(p.symptoms || []).join(", ") || "aucun"}, Activité: ${p.activity_level ?? "?"}`;
-    const prompt = `Tu es Sophie, nutritionniste spécialisée en ménopause avec une expertise pointue. L'utilisatrice vient de créer son compte.
-Son profil: ${summary}.
 
-Génère un premier message chaleureux qui:
-- Mentionne UN fait nutritionnel surprenant lié à ses symptômes spécifiques
-- Pose UNE question qui montre une vraie expertise (pas "mangez-vous équilibré?")
-- Exemple de bonne question: "Est-ce que vous prenez votre vitamine D avec un repas contenant des graisses? Sans ça, l'absorption chute de 50%"
+    // Récupère les TOP 2 symptômes de l'utilisatrice avec leur score
+    const SYMPTOM_LABELS: Record<string, string> = {
+      fatigue: "fatigue",
+      bouffees_chaleur: "bouffées de chaleur",
+      insomnie: "insomnie",
+      sautes_humeur: "sautes d'humeur",
+      anxiete: "anxiété",
+      douleurs_articulaires: "douleurs articulaires",
+      prise_poids: "prise de poids",
+      brouillard_mental: "brouillard mental",
+      secheresse: "sécheresse",
+      libido: "baisse de libido",
+    };
 
-Max 3 phrases. Ton chaleureux mais expert.
-Jamais banal. Jamais évident.`;
+    const { data: recentLogs } = await supabase
+      .from("symptom_logs")
+      .select("symptom_scores, fatigue, bouffees_chaleur, insomnie, sautes_humeur, logged_at")
+      .eq("user_id", user.id)
+      .order("logged_at", { ascending: false })
+      .limit(14);
+
+    const scoreSum: Record<string, { total: number; count: number }> = {};
+    for (const log of recentLogs || []) {
+      const scores: Record<string, number> = {
+        ...(log.symptom_scores || {}),
+        fatigue: log.fatigue ?? undefined,
+        bouffees_chaleur: log.bouffees_chaleur ?? undefined,
+        insomnie: log.insomnie ?? undefined,
+        sautes_humeur: log.sautes_humeur ?? undefined,
+      } as any;
+      for (const [k, v] of Object.entries(scores)) {
+        if (typeof v !== "number" || v <= 0) continue;
+        if (!scoreSum[k]) scoreSum[k] = { total: 0, count: 0 };
+        scoreSum[k].total += v;
+        scoreSum[k].count += 1;
+      }
+    }
+
+    let top = Object.entries(scoreSum)
+      .map(([k, s]) => ({ key: k, avg: s.total / s.count }))
+      .sort((a, b) => b.avg - a.avg)
+      .slice(0, 2);
+
+    // Fallback : utilise les symptômes déclarés dans le profil
+    if (top.length < 2) {
+      const declared: string[] = (p.symptoms || []).filter(
+        (s: string) => !top.some((t) => t.key === s)
+      );
+      for (const s of declared) {
+        if (top.length >= 2) break;
+        top.push({ key: s, avg: 5 });
+      }
+    }
+
+    if (top.length === 0) {
+      const message = `Bonjour ${p.display_name || ""} 👋 Je suis Sophie, votre nutritionniste spécialisée en ménopause. Pour démarrer, dites-moi : quel symptôme vous gêne le plus en ce moment ?`.trim();
+      await supabase.from("profiles").update({ sophie_first_message: message }).eq("user_id", user.id);
+      return new Response(JSON.stringify({ message }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const sympText = top
+      .map((t) => `${SYMPTOM_LABELS[t.key] || t.key} (${t.avg.toFixed(1)}/10)`)
+      .join(" et ");
+
+    const prompt = `Tu es Sophie, nutritionniste spécialisée en ménopause. L'utilisatrice ${p.display_name ? `(${p.display_name})` : ""} vient de créer son compte.
+
+Génère un message d'accueil pour une femme dont les symptômes principaux sont : ${sympText}.
+
+Le message doit :
+- Mentionner DIRECTEMENT ses symptômes (${top.map((t) => SYMPTOM_LABELS[t.key] || t.key).join(", ")}) par leur nom
+- Proposer un angle nutritionnel SPÉCIFIQUE à CES symptômes (pas générique)
+- Poser UNE question d'expert ciblée sur ces symptômes
+- Max 3 phrases, ton chaleureux mais expert
+
+INTERDICTIONS ABSOLUES :
+- Ne JAMAIS parler d'oméga-3 / poissons gras / douleurs articulaires si ce n'est pas dans ses symptômes
+- Ne JAMAIS mentionner d'autres symptômes que les siens
+- Pas de message générique réutilisable pour une autre utilisatrice`;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
