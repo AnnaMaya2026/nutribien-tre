@@ -414,11 +414,20 @@ function HabitCard({ habit }: { habit: UserHabit }) {
         </>
       ) : (
         <>
-          {goal > 0 && count > goal && (
+          {goal > 0 && count > goal && count - goal <= 2 && (
             <div className="flex items-start gap-1.5 mb-2 text-[10px] text-warning">
               <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-0.5" />
-              <span>🟠 Objectif dépassé ⚠️</span>
+              <span>🟠 Attention : +{count - goal} au-dessus de l'objectif</span>
             </div>
+          )}
+          {goal > 0 && count - goal >= 3 && (
+            <div className="flex items-start gap-1.5 mb-2 text-[10px] text-destructive">
+              <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-0.5" />
+              <span>🔴 Dépassement important : +{count - goal} au-dessus de l'objectif</span>
+            </div>
+          )}
+          {goal > 0 && count <= goal && count > 0 && (
+            <p className="text-[10px] text-primary mb-2">🔵 Objectif respecté</p>
           )}
         </>
       )}
