@@ -279,13 +279,16 @@ function HabitCard({ habit }: { habit: UserHabit }) {
   }, [logs, habit.habit_key]);
 
   // Status differs by type
-  // - limiter : under = green, over = orange
-  // - atteindre : under = blue, met = green, over = green (celebration)
-  let color: "progress-high" | "warning" | "primary";
+  // - limiter : ≤ goal = blue (primary), 1-2 over = orange (warning), 3+ over = red (destructive)
+  // - atteindre : under = blue, met/over = green (celebration)
+  let color: "progress-high" | "warning" | "primary" | "destructive";
   if (isAtteindre) {
     color = count >= goal ? "progress-high" : "primary";
   } else {
-    color = goal > 0 && count > goal ? "warning" : "progress-high";
+    const over = count - goal;
+    if (over >= 3) color = "destructive";
+    else if (over >= 1) color = "warning";
+    else color = "primary";
   }
 
   const handleInc = () => {
@@ -296,7 +299,7 @@ function HabitCard({ habit }: { habit: UserHabit }) {
         toast.success("🎉 Objectif atteint ! Bravo 💚");
       }
     } else {
-      if (goal > 0 && next > goal && habit.symptom_warning) {
+      if (goal > 0 && next === goal + 1 && habit.symptom_warning) {
         toast.warning(
           `⚠️ Tu as dépassé ton objectif ${habit.habit_name.toLowerCase()} aujourd'hui — ${habit.symptom_warning}`
         );
@@ -305,19 +308,25 @@ function HabitCard({ habit }: { habit: UserHabit }) {
   };
 
   const colorClass =
-    color === "warning"
+    color === "destructive"
+      ? "text-destructive"
+      : color === "warning"
       ? "text-warning"
       : color === "primary"
       ? "text-primary"
       : "text-progress-high";
   const bgClass =
-    color === "warning"
+    color === "destructive"
+      ? "bg-destructive"
+      : color === "warning"
       ? "bg-warning"
       : color === "primary"
       ? "bg-primary"
       : "bg-progress-high";
   const strokeColor =
-    color === "warning"
+    color === "destructive"
+      ? "hsl(var(--destructive))"
+      : color === "warning"
       ? "hsl(var(--warning))"
       : color === "primary"
       ? "hsl(var(--primary))"
