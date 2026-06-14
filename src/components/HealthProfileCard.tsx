@@ -73,7 +73,7 @@ export default function HealthProfileCard() {
           </div>
           <div className="min-w-0">
             <h3 className="text-sm font-semibold text-foreground">
-              Mes problèmes de santé à surveiller
+              Mes priorités bien-être
             </h3>
             <p className="text-[11px] text-muted-foreground">
               {count > 0

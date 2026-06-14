@@ -322,6 +322,15 @@ export function RoutinesTracker() {
   };
 
   const handleTest = async (r: Routine) => {
+    const key = "nutrimeno:test-notif-explained";
+    const hasSeen = localStorage.getItem(key);
+    if (!hasSeen) {
+      toast.info(
+        "Ceci envoie une notification test immédiate pour vérifier que vos rappels fonctionnent correctement.",
+        { duration: 4000 }
+      );
+      localStorage.setItem(key, "true");
+    }
     const ok = await sendTestNotification(r.name);
     if (ok) {
       toast.success("Notification de test envoyée 🔔");
@@ -500,7 +509,7 @@ export function RoutinesTracker() {
                         title="Envoyer une notification de test"
                       >
                         <BellRing className="w-3 h-3" />
-                        Tester
+                        🔔 Test rappel
                       </button>
                     )}
                     <button
