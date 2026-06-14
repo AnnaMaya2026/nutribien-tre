@@ -346,7 +346,7 @@ export default function ProfilePage() {
 
         {/* Santé & restrictions */}
         <Section title="Santé & restrictions">
-          <Field label="Problèmes de santé à surveiller">
+          <Field label="Priorités bien-être">
             <div className="flex flex-wrap gap-2">
               {HEALTH_CONDITIONS.map((c) => (
                 <button

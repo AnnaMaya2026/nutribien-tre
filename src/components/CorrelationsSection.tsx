@@ -55,6 +55,10 @@ export default function CorrelationsSection() {
         supabase.from("habit_logs").select("habit_key, logged_at, count").eq("user_id", user.id).gte("logged_at", sinceKey),
       ]);
 
+      const foodDates = new Set((foods.data || []).map((f) => f.logged_at));
+      const symptomDates = new Set((symptoms.data || []).map((s) => s.logged_at));
+      const overlapCount = Array.from(foodDates).filter((d) => symptomDates.has(d)).length;
+
       return {
         foods: foods.data || [],
         symptoms: symptoms.data || [],
@@ -62,6 +66,7 @@ export default function CorrelationsSection() {
         routineLogs: routineLogs.data || [],
         habits: habits.data || [],
         habitLogs: habitLogs.data || [],
+        overlapCount,
       };
     },
     enabled: !!user,
@@ -151,14 +156,12 @@ export default function CorrelationsSection() {
   }, [data]);
 
   if (isLoading) return null;
-  const enoughData = (data?.symptoms.length ?? 0) >= 7;
+  if ((data?.overlapCount ?? 0) < 7) return null;
 
   return (
     <section className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
       <h3 className="text-base font-semibold text-foreground mb-3">🔗 Corrélations détectées</h3>
-      {!enoughData ? (
-        <p className="text-sm text-muted-foreground">🔍 Continue le suivi quelques jours pour voir apparaître les corrélations !</p>
-      ) : correlations.length === 0 ? (
+      {correlations.length === 0 ? (
         <p className="text-sm text-muted-foreground">Aucune corrélation marquante détectée sur les 30 derniers jours.</p>
       ) : (
         <ul className="space-y-2">
