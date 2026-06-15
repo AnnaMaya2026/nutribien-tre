@@ -8,6 +8,7 @@ import { searchRecipes, Recipe } from "@/lib/recipes";
 import { RecipeCard } from "@/components/RecipeCard";
 import { SymptomReliefTab } from "@/components/SymptomReliefTab";
 import { NutrientGapTab } from "@/components/NutrientGapTab";
+import { getNutrientColor } from "@/lib/utils";
 import { ChefHat, Leaf, AlertTriangle, Search, Loader2, UtensilsCrossed } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
