@@ -288,7 +288,7 @@ export default function RepasPage() {
                       <span className="text-xs text-muted-foreground">{gap.label}</span>
                       <div className="flex items-center gap-2">
                         <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-warning transition-all" style={{ width: `${gap.pct}%` }} />
+                          <div className={`h-full rounded-full transition-all ${getNutrientColor(gap.pct).bg}`} style={{ width: `${gap.pct}%` }} />
                         </div>
                         <span className="text-[10px] text-muted-foreground w-8 text-right">{gap.pct}%</span>
                       </div>
