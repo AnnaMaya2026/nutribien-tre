@@ -5,6 +5,7 @@ import { searchByNutrient, CiqualFood } from "@/lib/ciqual";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { isFoodAllowed, getAlternativesForRestrictions, getDietaryLabels } from "@/lib/dietaryRestrictions";
+import { getNutrientColor } from "@/lib/utils";
 import { Loader2, Sparkles, ChevronLeft, RotateCw, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -133,7 +134,7 @@ export function NutrientGapTab() {
             <h2 className="text-lg font-bold text-foreground">{selected.label}</h2>
           </div>
           <p className="text-xs text-muted-foreground">
-            Vous êtes à <span className="font-semibold text-warning">{selected.pct}%</span> de votre objectif quotidien
+            Vous êtes à <span className={`font-semibold ${getNutrientColor(selected.pct).text}`}>{selected.pct}%</span> de votre objectif quotidien
             ({Math.round(selected.current)}{selected.unit} / {selected.target}{selected.unit})
           </p>
         </div>
@@ -270,7 +271,7 @@ export function NutrientGapTab() {
             </div>
             <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full bg-warning transition-all"
+                className={`h-full rounded-full transition-all ${getNutrientColor(gap.pct).bg}`}
                 style={{ width: `${Math.min(gap.pct, 100)}%` }}
               />
             </div>
