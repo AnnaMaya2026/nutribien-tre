@@ -79,6 +79,7 @@ export default {
           low: "hsl(var(--progress-low))",
           mid: "hsl(var(--progress-mid))",
           high: "hsl(var(--progress-high))",
+          exceeded: "hsl(var(--progress-exceeded))",
         },
       },
       borderRadius: {
