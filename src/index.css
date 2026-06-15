@@ -59,6 +59,7 @@
     --progress-low: 0 72% 55%;
     --progress-mid: 35 80% 55%;
     --progress-high: 145 50% 45%;
+    --progress-exceeded: 210 70% 55%;
   }
 
   .dark {
@@ -104,6 +105,7 @@
     --progress-low: 0 62% 45%;
     --progress-mid: 35 70% 50%;
     --progress-high: 145 40% 40%;
+    --progress-exceeded: 210 60% 60%;
   }
 }
 
