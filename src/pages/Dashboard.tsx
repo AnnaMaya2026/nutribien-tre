@@ -6,6 +6,7 @@ import { useRoutines, getSupplementContributions } from "@/hooks/useRoutines";
 import DateSelector from "@/components/DateSelector";
 import NutrientInfo, { NutrientKey } from "@/components/NutrientInfo";
 import { DAILY_TARGETS } from "@/lib/mockData";
+import { getNutrientColor } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
@@ -36,15 +37,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-function getNutrientColor(pct: number, _isMicro = false) {
-  // Unified color logic for both macros and micros:
-  // < 50% red, 50-80% orange, 80-100% green, > 100% blue
-  if (pct > 100) return { bg: "bg-blue-500", text: "text-blue-500", emoji: "💧" };
-  if (pct >= 80) return { bg: "bg-green-500", text: "text-green-500", emoji: "🟢" };
-  if (pct >= 50) return { bg: "bg-orange-500", text: "text-orange-500", emoji: "🟠" };
-  return { bg: "bg-red-500", text: "text-red-500", emoji: "🔴" };
-}
 
 function getCalorieColor(pct: number) {
   if (pct > 110) return { stroke: "hsl(0, 70%, 55%)", text: "text-red-500", emoji: "🔴" };
@@ -81,8 +73,8 @@ function ProgressBar({
   const foodPct = Math.min((value / max) * 100, 100);
   const totalPct = Math.min(rawPct, 100);
   const supplementPct = Math.max(0, totalPct - foodPct);
-  const { text, emoji } = getNutrientColor(rawPct, isMicro);
-  const foodColor = getNutrientColor((value / max) * 100, isMicro).bg;
+  const { text, emoji } = getNutrientColor(rawPct);
+  const foodColor = getNutrientColor((value / max) * 100).bg;
   return (
     <div className="space-y-1">
       <div className="flex justify-between items-center text-[15px]">
@@ -358,7 +350,7 @@ export default function Dashboard() {
           ].map((m) => {
             const rawPct = (m.value / m.max) * 100;
             const barPct = Math.min(rawPct, 100);
-            const { bg, text, emoji } = getNutrientColor(rawPct, m.isMicro);
+            const { bg, text, emoji } = getNutrientColor(rawPct);
             return (
               <div key={m.label} className="text-center">
                 <div className="text-sm text-muted-foreground mb-1 inline-flex items-center justify-center gap-1">
