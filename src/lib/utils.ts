@@ -5,6 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Threshold above which a nutrient percentage is considered aberrant
+ *  (likely a unit-conversion error in the underlying data).
+ */
+export const ABERRANT_PCT = 500;
+export function isAberrantPct(pct: number) {
+  return !isFinite(pct) || pct > ABERRANT_PCT;
+}
+export const ABERRANT_LABEL = "Valeur aberrante — données en cours de vérification";
+
 /** Nutrient progress bar color logic:
  *  0-50%   → red (insufficient)
  *  50-80%  → orange (getting there)

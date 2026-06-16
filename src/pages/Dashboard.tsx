@@ -6,7 +6,7 @@ import { useRoutines, getSupplementContributions } from "@/hooks/useRoutines";
 import DateSelector from "@/components/DateSelector";
 import NutrientInfo, { NutrientKey } from "@/components/NutrientInfo";
 import { DAILY_TARGETS } from "@/lib/mockData";
-import { getNutrientColor } from "@/lib/utils";
+import { getNutrientColor, isAberrantPct, ABERRANT_PCT, ABERRANT_LABEL } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
@@ -70,10 +70,12 @@ function ProgressBar({
 }) {
   const totalValue = value + (supplementAmount || 0);
   const rawPct = (totalValue / max) * 100;
-  const foodPct = Math.min((value / max) * 100, 100);
-  const totalPct = Math.min(rawPct, 100);
+  const aberrant = isAberrantPct(rawPct);
+  const cappedPct = aberrant ? 100 : Math.min(rawPct, ABERRANT_PCT);
+  const foodPct = aberrant ? 0 : Math.min((value / max) * 100, 100);
+  const totalPct = aberrant ? 0 : Math.min(rawPct, 100);
   const supplementPct = Math.max(0, totalPct - foodPct);
-  const { text, emoji } = getNutrientColor(rawPct);
+  const { text, emoji } = getNutrientColor(aberrant ? 0 : rawPct);
   const foodColor = getNutrientColor((value / max) * 100).bg;
   return (
     <div className="space-y-1">
@@ -82,31 +84,39 @@ function ProgressBar({
           {label}
           {nutrient && <NutrientInfo nutrient={nutrient} />}
         </span>
-        <span className={`font-semibold ${text} text-right`}>
-          {emoji} {Math.round(totalValue)}/{maxPrefix || ""}
-          {max}
-          {unit}
-        </span>
-      </div>
-      <div className="h-2 bg-muted rounded-full overflow-hidden flex">
-        <div
-          className={`h-full transition-all duration-500 ${foodColor}`}
-          style={{ width: `${foodPct}%` }}
-        />
-        {supplementPct > 0 && (
-          <div
-            className="h-full transition-all duration-500 bg-amber-400"
-            style={{ width: `${supplementPct}%` }}
-            title="Contribution des compléments"
-          />
+        {aberrant ? (
+          <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400 text-right">
+            ⚠️ {ABERRANT_LABEL}
+          </span>
+        ) : (
+          <span className={`font-semibold ${text} text-right`}>
+            {emoji} {Math.round(totalValue)}/{maxPrefix || ""}
+            {max}
+            {unit}
+          </span>
         )}
       </div>
-      {supplementAmount ? (
+      {!aberrant && (
+        <div className="h-2 bg-muted rounded-full overflow-hidden flex">
+          <div
+            className={`h-full transition-all duration-500 ${foodColor}`}
+            style={{ width: `${foodPct}%` }}
+          />
+          {supplementPct > 0 && (
+            <div
+              className="h-full transition-all duration-500 bg-amber-400"
+              style={{ width: `${supplementPct}%` }}
+              title="Contribution des compléments"
+            />
+          )}
+        </div>
+      )}
+      {supplementAmount && !aberrant ? (
         <p className="text-[11px] text-amber-600 dark:text-amber-400">
           💊 Compléments: +{Math.round(supplementAmount)}{supplementUnit || unit}
         </p>
       ) : null}
-      {hint && (
+      {hint && !aberrant && (
         <p className="text-[11px] text-muted-foreground italic">{hint}</p>
       )}
     </div>
