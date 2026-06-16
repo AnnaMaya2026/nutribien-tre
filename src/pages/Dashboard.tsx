@@ -6,7 +6,7 @@ import { useRoutines, getSupplementContributions } from "@/hooks/useRoutines";
 import DateSelector from "@/components/DateSelector";
 import NutrientInfo, { NutrientKey } from "@/components/NutrientInfo";
 import { DAILY_TARGETS } from "@/lib/mockData";
-import { getNutrientColor } from "@/lib/utils";
+import { getNutrientColor, isAberrantPct, ABERRANT_PCT, ABERRANT_LABEL } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
