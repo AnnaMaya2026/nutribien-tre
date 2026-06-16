@@ -176,6 +176,7 @@ export default function MicronutrientTrendChart() {
           ))}
         </LineChart>
       </ResponsiveContainer>
+      )}
 
       {/* Clickable legend */}
       <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
