@@ -47,7 +47,7 @@ export default function MicronutrientTrendChart() {
     enabled: !!user,
   });
 
-  const chartData = useMemo(() => {
+  const { chartData, hasData } = useMemo(() => {
     // Aggregate per day
     const byDay: Record<string, Record<string, number>> = {};
     logs.forEach((log) => {
@@ -66,18 +66,27 @@ export default function MicronutrientTrendChart() {
       days.push(d.toISOString().split("T")[0]);
     }
 
-    return days.map((date) => {
+    let anyValue = false;
+    const data = days.map((date) => {
       const d = new Date(date);
       const label = `${d.getDate()}/${d.getMonth() + 1}`;
       const totals = byDay[date];
       const point: any = { date, label };
       if (totals) {
         NUTRIENTS.forEach((n) => {
-          point[n.key] = Math.round((totals[n.key] / n.target) * 100);
+          const pct = Math.round((totals[n.key] / n.target) * 100);
+          // Exclude aberrant values from chart (likely unit-conversion error)
+          if (pct > 500 || !isFinite(pct)) {
+            point[n.key] = null;
+          } else {
+            point[n.key] = pct;
+            if (pct > 0) anyValue = true;
+          }
         });
       }
       return point;
     });
+    return { chartData: data, hasData: anyValue };
   }, [logs, period]);
 
   const toggleNutrient = (key: string) => {
