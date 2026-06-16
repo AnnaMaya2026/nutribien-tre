@@ -137,6 +137,11 @@ export default function MicronutrientTrendChart() {
         ))}
       </div>
 
+      {!hasData ? (
+        <div className="h-[180px] flex items-center justify-center text-center text-xs text-muted-foreground px-4">
+          Pas encore assez de données pour afficher l'évolution.
+        </div>
+      ) : (
       <ResponsiveContainer width="100%" height={180}>
         <LineChart data={chartData}>
           <XAxis
@@ -148,6 +153,7 @@ export default function MicronutrientTrendChart() {
           />
           <YAxis
             domain={[0, 150]}
+            allowDataOverflow
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
