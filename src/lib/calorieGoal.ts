@@ -66,7 +66,7 @@ export function calculateCalorieGoal(params: {
   const bmr = calculateBMR(params);
   const level = getActivityLevel(params.activityLevel);
   const tdee = bmr * level.factor;
-  const final = Math.round(tdee / 10) * 10;
+  const final = Math.round(tdee);
   if (typeof window !== "undefined") {
     console.log("[calorieGoal]", {
       weight: params.weight,
