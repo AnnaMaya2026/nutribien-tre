@@ -5,28 +5,28 @@ export const ACTIVITY_LEVELS = [
   {
     value: "sedentaire",
     label: "Sédentaire",
-    factor: 1.4,
+    factor: 1.2,
     minCalories: 1800,
     description: "Peu ou pas d'exercice",
   },
   {
     value: "leger",
     label: "Légèrement actif",
-    factor: 1.6,
+    factor: 1.375,
     minCalories: 2000,
     description: "1-3 fois/semaine",
   },
   {
     value: "modere",
     label: "Modérément actif",
-    factor: 1.8,
+    factor: 1.55,
     minCalories: 2300,
     description: "3-5 fois/semaine",
   },
   {
     value: "actif",
     label: "Très actif",
-    factor: 2.0,
+    factor: 1.725,
     minCalories: 2400,
     description: "6-7 fois/semaine",
   },
@@ -35,8 +35,14 @@ export const ACTIVITY_LEVELS = [
 export type ActivityLevel = typeof ACTIVITY_LEVELS[number]["value"];
 
 export function getActivityLevel(level?: string | null) {
-  return ACTIVITY_LEVELS.find((a) => a.value === level) ?? ACTIVITY_LEVELS[0];
+  const normalized = (level || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  return (
+    ACTIVITY_LEVELS.find((a) => a.value === normalized) ?? ACTIVITY_LEVELS[0]
+  );
 }
+
 
 export function getActivityFactor(level?: string | null): number {
   return getActivityLevel(level).factor;
