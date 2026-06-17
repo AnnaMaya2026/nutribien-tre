@@ -1,33 +1,29 @@
 // Calcul de l'objectif calorique journalier selon Mifflin-St Jeor (femmes)
-// puis multiplication par un facteur d'activité (NAP) et application de planchers minimums.
+// puis multiplication par un facteur d'activité (NAP).
 
 export const ACTIVITY_LEVELS = [
   {
     value: "sedentaire",
     label: "Sédentaire",
     factor: 1.2,
-    minCalories: 1800,
     description: "Peu ou pas d'exercice",
   },
   {
     value: "leger",
     label: "Légèrement actif",
     factor: 1.375,
-    minCalories: 2000,
     description: "1-3 fois/semaine",
   },
   {
     value: "modere",
     label: "Modérément actif",
     factor: 1.55,
-    minCalories: 2300,
     description: "3-5 fois/semaine",
   },
   {
     value: "actif",
     label: "Très actif",
     factor: 1.725,
-    minCalories: 2400,
     description: "6-7 fois/semaine",
   },
 ] as const;
@@ -60,7 +56,7 @@ export function calculateBMR(params: {
   return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
 }
 
-/** TDEE = BMR × NAP, puis plancher minimum selon niveau d'activité. */
+/** TDEE = BMR × NAP, sans plancher minimum. */
 export function calculateCalorieGoal(params: {
   weight?: number | null;
   height?: number | null;
@@ -70,8 +66,7 @@ export function calculateCalorieGoal(params: {
   const bmr = calculateBMR(params);
   const level = getActivityLevel(params.activityLevel);
   const tdee = bmr * level.factor;
-  const withFloor = Math.max(level.minCalories, tdee);
-  const final = Math.round(withFloor / 10) * 10;
+  const final = Math.round(tdee);
   if (typeof window !== "undefined") {
     console.log("[calorieGoal]", {
       weight: params.weight,
@@ -105,3 +100,4 @@ export function calculateFatsGoal(tdee: number): number {
 export const FIBRES_GOAL_MIN = 25;
 export const FIBRES_GOAL_MAX = 25;
 export const FIBRES_GOAL = 25;
+
