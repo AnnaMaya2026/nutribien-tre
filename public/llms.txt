@@ -1,16 +1,19 @@
 # NutriMéno
-Application nutritionnelle pour femmes ménopausées (45+).
 
-## Fonctionnalités
-- Suivi calories et 13 micronutriments
-- Journal alimentaire avec saisie vocale
-- Sophie, nutritionniste IA spécialisée
-- Suivi symptômes ménopause
-- Suggestions de repas personnalisées
-- Routines et habitudes
+> Application nutritionnelle personnalisée pour les femmes en péri-ménopause, ménopause et post-ménopause (45+). Suivi des apports, des symptômes et accompagnement par Sophie, nutritionniste IA spécialisée.
 
-## Public cible
-Femmes de 45 ans et plus, en périménopause ou ménopause.
+NutriMéno aide les femmes à adapter leur alimentation à la ménopause : suivi des calories et de 13 micronutriments clés (calcium, vitamine D, oméga-3, phytoestrogènes, etc.), journal alimentaire avec saisie vocale, suggestions de repas personnalisées, suivi des symptômes et conseils via Sophie, une nutritionniste IA spécialisée.
+
+## Pages
+
+- [Accueil](/): Présentation de l'application et inscription.
+- [Conditions d'utilisation](/cgu): Conditions générales d'utilisation.
+- [Politique de confidentialité](/confidentialite): RGPD et gestion des données personnelles.
+
+## Optional
+
+- [Connexion](/auth): Connexion à un compte existant.
 
 ## Tarification
-7 jours gratuits, puis 7.99€/mois
+
+7 jours d'essai gratuits, puis 7,99 €/mois.
