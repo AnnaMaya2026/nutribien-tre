@@ -1,4 +1,4 @@
-// Calcul de l'objectif calorique journalier selon Mifflin-St Jeor (femmes)
+// Calcul de l'objectif calorique journalier selon Harris-Benedict (femmes)
 // puis multiplication par un facteur d'activité (NAP).
 
 export const ACTIVITY_LEVELS = [
@@ -44,7 +44,7 @@ export function getActivityFactor(level?: string | null): number {
   return getActivityLevel(level).factor;
 }
 
-/** Mifflin-St Jeor pour une femme : 10·poids + 6.25·taille − 5·âge − 161 */
+/** Harris-Benedict pour une femme : 655 + (9,6 × poids) + (1,8 × taille) − (4,7 × âge) */
 export function calculateBMR(params: {
   weight?: number | null;
   height?: number | null;
@@ -53,7 +53,7 @@ export function calculateBMR(params: {
   const weight = Number(params.weight) || 60;
   const height = Number(params.height) || 165;
   const age = Number(params.age) || 50;
-  return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
+  return Math.round(655 + 9.6 * weight + 1.8 * height - 4.7 * age);
 }
 
 /** TDEE = BMR × NAP, sans plancher minimum. */
