@@ -51,7 +51,7 @@ export const PRIORITY_NUTRIENTS: Record<SymptomKey, string> = {
 };
 
 export function calcCalories(age: number, weight: number, height: number) {
-  const bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+  const bmr = 655 + 9.6 * weight + 1.8 * height - 4.7 * age;
   return Math.round(bmr * 1.4);
 }
 
