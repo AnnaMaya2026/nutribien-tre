@@ -113,22 +113,24 @@ export default function ProfilePage() {
         height: height ? Number(height) : null,
         age: age ? Number(age) : null,
         activityLevel,
+        objective,
       }),
-    [weight, height, age, activityLevel]
+    [weight, height, age, activityLevel, objective]
   );
   const computedProteinGoal = useMemo(
-    () => calculateProteinGoal(weight ? Number(weight) : null),
-    [weight]
+    () => calculateProteinGoal(computedCalorieGoal, objective),
+    [computedCalorieGoal, objective]
   );
   const computedCarbsGoal = useMemo(
-    () => calculateCarbsGoal(computedCalorieGoal),
-    [computedCalorieGoal]
+    () => calculateCarbsGoal(computedCalorieGoal, objective),
+    [computedCalorieGoal, objective]
   );
   const computedFatsGoal = useMemo(
-    () => calculateFatsGoal(computedCalorieGoal),
-    [computedCalorieGoal]
+    () => calculateFatsGoal(computedCalorieGoal, objective),
+    [computedCalorieGoal, objective]
   );
   const activityInfo = useMemo(() => getActivityLevel(activityLevel), [activityLevel]);
+  const objectiveInfo = useMemo(() => getObjective(objective), [objective]);
 
   const toggle = (list: string[], setter: (v: string[]) => void, value: string) => {
     setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
