@@ -20,12 +20,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   ACTIVITY_LEVELS,
+  OBJECTIVES,
   calculateCalorieGoal,
   calculateProteinGoal,
   calculateBMR,
   calculateCarbsGoal,
   calculateFatsGoal,
   getActivityLevel,
+  getObjective,
   FIBRES_GOAL_MIN,
   FIBRES_GOAL_MAX,
 } from "@/lib/calorieGoal";
