@@ -363,17 +363,17 @@ export default function ProfilePage() {
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Protéines</div>
               <div className="text-lg font-bold text-foreground">{computedProteinGoal} g</div>
-              <div className="text-[10px] text-muted-foreground">1.2g × kg de poids</div>
+              <div className="text-[10px] text-muted-foreground">{objective === "perte_poids" ? "32%" : objective === "gain_muscle" ? "30%" : objective === "osseux" ? "35%" : "27%"} des calories</div>
             </div>
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Glucides</div>
               <div className="text-lg font-bold text-foreground">{computedCarbsGoal} g</div>
-              <div className="text-[10px] text-muted-foreground">50% des calories</div>
+              <div className="text-[10px] text-muted-foreground">{objective === "perte_poids" ? "42%" : "48%"} des calories</div>
             </div>
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Lipides</div>
               <div className="text-lg font-bold text-foreground">{computedFatsGoal} g</div>
-              <div className="text-[10px] text-muted-foreground">30% des calories</div>
+              <div className="text-[10px] text-muted-foreground">22% des calories</div>
             </div>
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Fibres</div>
