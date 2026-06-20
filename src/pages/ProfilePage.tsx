@@ -20,12 +20,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   ACTIVITY_LEVELS,
+  OBJECTIVES,
   calculateCalorieGoal,
   calculateProteinGoal,
   calculateBMR,
   calculateCarbsGoal,
   calculateFatsGoal,
   getActivityLevel,
+  getObjective,
   FIBRES_GOAL_MIN,
   FIBRES_GOAL_MAX,
 } from "@/lib/calorieGoal";
@@ -66,6 +68,7 @@ export default function ProfilePage() {
   const [weight, setWeight] = useState<string>("");
   const [height, setHeight] = useState<string>("");
   const [activityLevel, setActivityLevel] = useState<string>("sedentaire");
+  const [objective, setObjective] = useState<string>("maintenir");
   const [menopauseStage, setMenopauseStage] = useState<string>("");
   const [healthConditions, setHealthConditions] = useState<string[]>([]);
   const [dietPrefs, setDietPrefs] = useState<string[]>([]);
@@ -85,6 +88,7 @@ export default function ProfilePage() {
     setWeight(p.weight != null ? String(p.weight) : "");
     setHeight(p.height != null ? String(p.height) : "");
     setActivityLevel(p.activity_level ?? "sedentaire");
+    setObjective(p.objective ?? "maintenir");
     setMenopauseStage(p.menopause_stage ?? "");
     setHealthConditions(p.health_conditions ?? []);
     const diet = splitDietary(p.dietary_preferences);
@@ -109,22 +113,24 @@ export default function ProfilePage() {
         height: height ? Number(height) : null,
         age: age ? Number(age) : null,
         activityLevel,
+        objective,
       }),
-    [weight, height, age, activityLevel]
+    [weight, height, age, activityLevel, objective]
   );
   const computedProteinGoal = useMemo(
-    () => calculateProteinGoal(weight ? Number(weight) : null),
-    [weight]
+    () => calculateProteinGoal(computedCalorieGoal, objective),
+    [computedCalorieGoal, objective]
   );
   const computedCarbsGoal = useMemo(
-    () => calculateCarbsGoal(computedCalorieGoal),
-    [computedCalorieGoal]
+    () => calculateCarbsGoal(computedCalorieGoal, objective),
+    [computedCalorieGoal, objective]
   );
   const computedFatsGoal = useMemo(
-    () => calculateFatsGoal(computedCalorieGoal),
-    [computedCalorieGoal]
+    () => calculateFatsGoal(computedCalorieGoal, objective),
+    [computedCalorieGoal, objective]
   );
   const activityInfo = useMemo(() => getActivityLevel(activityLevel), [activityLevel]);
+  const objectiveInfo = useMemo(() => getObjective(objective), [objective]);
 
   const toggle = (list: string[], setter: (v: string[]) => void, value: string) => {
     setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
@@ -142,10 +148,32 @@ export default function ProfilePage() {
       height: height ? Number(height) : null,
       age: age ? Number(age) : null,
       activityLevel: newLevel,
+      objective,
     });
     try {
       await updateProfile.mutateAsync({
         activity_level: newLevel,
+        daily_calorie_goal: newGoal,
+      } as any);
+      toast.success(`Objectif mis à jour : ${newGoal} kcal/jour`);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Auto-save when objective changes
+  const handleObjectiveChange = async (newObjective: string) => {
+    setObjective(newObjective);
+    const newGoal = calculateCalorieGoal({
+      weight: weight ? Number(weight) : null,
+      height: height ? Number(height) : null,
+      age: age ? Number(age) : null,
+      activityLevel,
+      objective: newObjective,
+    });
+    try {
+      await updateProfile.mutateAsync({
+        objective: newObjective,
         daily_calorie_goal: newGoal,
       } as any);
       toast.success(`Objectif mis à jour : ${newGoal} kcal/jour`);
@@ -177,6 +205,7 @@ export default function ProfilePage() {
         weight: weight ? Number(weight) : null,
         height: height ? Number(height) : null,
         activity_level: activityLevel,
+        objective: objective || null,
         menopause_stage: menopauseStage || null,
         health_conditions: healthConditions,
         dietary_preferences: buildDietary(dietPrefs, dietOther),
@@ -276,6 +305,26 @@ export default function ProfilePage() {
             </div>
           </Field>
 
+          <Field label="Votre objectif">
+            <div className="grid grid-cols-2 gap-2">
+              {OBJECTIVES.map((obj) => (
+                <button
+                  key={obj.value}
+                  type="button"
+                  onClick={() => handleObjectiveChange(obj.value)}
+                  className={`p-3 rounded-lg text-left text-sm transition-all border ${
+                    objective === obj.value
+                      ? "bg-primary/15 border-primary text-foreground"
+                      : "bg-background border-border text-foreground hover:border-primary/50"
+                  }`}
+                >
+                  <div className="font-medium">{obj.label}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{obj.description}</div>
+                </button>
+              ))}
+            </div>
+          </Field>
+
           <Field label="Stade ménopause">
             <div className="grid grid-cols-3 gap-2">
               {MENOPAUSE_STAGES.map((s) => (
@@ -303,7 +352,10 @@ export default function ProfilePage() {
             <div className="text-2xl font-bold text-foreground">{computedCalorieGoal} kcal/jour</div>
             <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
               Basé sur votre métabolisme de base de <strong>{computedBMR} kcal</strong> ×
-              niveau d'activité <strong>{activityInfo.label.toLowerCase()}</strong> (×{activityInfo.factor}).
+              niveau d'activité <strong>{activityInfo.label.toLowerCase()}</strong> (×{activityInfo.factor})
+              {objective !== "maintenir" && (
+                <> · objectif <strong>{objectiveInfo.label.toLowerCase()}</strong></>
+              )}.
             </div>
           </div>
 
@@ -311,17 +363,17 @@ export default function ProfilePage() {
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Protéines</div>
               <div className="text-lg font-bold text-foreground">{computedProteinGoal} g</div>
-              <div className="text-[10px] text-muted-foreground">1.2g × kg de poids</div>
+              <div className="text-[10px] text-muted-foreground">{objective === "perte_poids" ? "32%" : objective === "gain_muscle" ? "30%" : objective === "osseux" ? "35%" : "27%"} des calories</div>
             </div>
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Glucides</div>
               <div className="text-lg font-bold text-foreground">{computedCarbsGoal} g</div>
-              <div className="text-[10px] text-muted-foreground">50% des calories</div>
+              <div className="text-[10px] text-muted-foreground">{objective === "perte_poids" ? "42%" : "48%"} des calories</div>
             </div>
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Lipides</div>
               <div className="text-lg font-bold text-foreground">{computedFatsGoal} g</div>
-              <div className="text-[10px] text-muted-foreground">30% des calories</div>
+              <div className="text-[10px] text-muted-foreground">22% des calories</div>
             </div>
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Fibres</div>
