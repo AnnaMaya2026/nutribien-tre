@@ -1,5 +1,5 @@
 // Calcul de l'objectif calorique journalier selon Harris-Benedict (femmes)
-// puis multiplication par un facteur d'activité (NAP).
+// puis multiplication par un facteur d'activité (NAP) et ajustement selon l'objectif.
 
 export const ACTIVITY_LEVELS = [
   {
@@ -30,6 +30,15 @@ export const ACTIVITY_LEVELS = [
 
 export type ActivityLevel = typeof ACTIVITY_LEVELS[number]["value"];
 
+export const OBJECTIVES = [
+  { value: "maintenir", label: "Maintien", description: "Conserver mon poids actuel" },
+  { value: "perte_poids", label: "Perte de poids", description: "Déficit calorique modéré (-300 kcal)" },
+  { value: "gain_muscle", label: "Gain musculaire", description: "Surplus calorique modéré (+300 kcal)" },
+  { value: "osseux", label: "Santé osseuse", description: "Apports riches en protéines & calcium" },
+] as const;
+
+export type Objective = typeof OBJECTIVES[number]["value"];
+
 export function getActivityLevel(level?: string | null) {
   const normalized = (level || "")
     .normalize("NFD")
@@ -39,6 +48,9 @@ export function getActivityLevel(level?: string | null) {
   );
 }
 
+export function getObjective(value?: string | null) {
+  return OBJECTIVES.find((o) => o.value === (value || "")) ?? OBJECTIVES[0];
+}
 
 export function getActivityFactor(level?: string | null): number {
   return getActivityLevel(level).factor;
@@ -56,16 +68,25 @@ export function calculateBMR(params: {
   return Math.round(655 + 9.6 * weight + 1.8 * height - 4.7 * age);
 }
 
-/** TDEE = BMR × NAP, sans plancher minimum. */
+/** TDEE = BMR × NAP, ajusté selon l'objectif. Pas de plancher. */
 export function calculateCalorieGoal(params: {
   weight?: number | null;
   height?: number | null;
   age?: number | null;
   activityLevel?: string | null;
+  objective?: string | null;
 }): number {
   const bmr = calculateBMR(params);
   const level = getActivityLevel(params.activityLevel);
-  const tdee = bmr * level.factor;
+  let tdee = bmr * level.factor;
+
+  const objective = params.objective || "maintenir";
+  if (objective === "perte_poids") {
+    tdee -= 300;
+  } else if (objective === "gain_muscle") {
+    tdee += 300;
+  }
+
   const final = Math.round(tdee);
   if (typeof window !== "undefined") {
     console.log("[calorieGoal]", {
@@ -73,27 +94,34 @@ export function calculateCalorieGoal(params: {
       height: params.height,
       age: params.age,
       activity_level: params.activityLevel,
+      objective,
       BMR: bmr,
       NAP: level.factor,
-      TDEE: Math.round(tdee),
-      final,
+      TDEE: final,
     });
   }
   return final;
 }
 
-export function calculateProteinGoal(weightKg?: number | null): number {
-  return Math.max(1, Math.round((Number(weightKg) || 60) * 1.2));
+/** Protéines (g) = (TDEE × %protéines) / 4  —  ajusté selon objectif */
+export function calculateProteinGoal(tdee: number, objective?: string | null): number {
+  const obj = objective || "maintenir";
+  let proteinPercent = 0.27; // standard
+  if (obj === "perte_poids") proteinPercent = 0.32;
+  else if (obj === "gain_muscle") proteinPercent = 0.30;
+  else if (obj === "osseux") proteinPercent = 0.35;
+  return Math.round((tdee * proteinPercent) / 4);
 }
 
-/** Glucides (g) = (TDEE × 0.50) / 4 */
-export function calculateCarbsGoal(tdee: number): number {
-  return Math.round((tdee * 0.5) / 4);
+/** Glucides (g) = (TDEE × %) / 4  —  42% si perte de poids, sinon 48% */
+export function calculateCarbsGoal(tdee: number, objective?: string | null): number {
+  const carbsPercent = (objective || "maintenir") === "perte_poids" ? 0.42 : 0.48;
+  return Math.round((tdee * carbsPercent) / 4);
 }
 
-/** Lipides (g) = (TDEE × 0.30) / 9 */
-export function calculateFatsGoal(tdee: number): number {
-  return Math.round((tdee * 0.3) / 9);
+/** Lipides (g) = (TDEE × 0.22) / 9 — fixe pour équilibre hormonal */
+export function calculateFatsGoal(tdee: number, _objective?: string | null): number {
+  return Math.round((tdee * 0.22) / 9);
 }
 
 /** Fibres : recommandation fixe 25g/jour. */
