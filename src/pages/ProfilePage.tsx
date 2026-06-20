@@ -68,6 +68,7 @@ export default function ProfilePage() {
   const [weight, setWeight] = useState<string>("");
   const [height, setHeight] = useState<string>("");
   const [activityLevel, setActivityLevel] = useState<string>("sedentaire");
+  const [objective, setObjective] = useState<string>("maintenir");
   const [menopauseStage, setMenopauseStage] = useState<string>("");
   const [healthConditions, setHealthConditions] = useState<string[]>([]);
   const [dietPrefs, setDietPrefs] = useState<string[]>([]);
