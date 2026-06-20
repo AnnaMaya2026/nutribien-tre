@@ -148,10 +148,32 @@ export default function ProfilePage() {
       height: height ? Number(height) : null,
       age: age ? Number(age) : null,
       activityLevel: newLevel,
+      objective,
     });
     try {
       await updateProfile.mutateAsync({
         activity_level: newLevel,
+        daily_calorie_goal: newGoal,
+      } as any);
+      toast.success(`Objectif mis à jour : ${newGoal} kcal/jour`);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Auto-save when objective changes
+  const handleObjectiveChange = async (newObjective: string) => {
+    setObjective(newObjective);
+    const newGoal = calculateCalorieGoal({
+      weight: weight ? Number(weight) : null,
+      height: height ? Number(height) : null,
+      age: age ? Number(age) : null,
+      activityLevel,
+      objective: newObjective,
+    });
+    try {
+      await updateProfile.mutateAsync({
+        objective: newObjective,
         daily_calorie_goal: newGoal,
       } as any);
       toast.success(`Objectif mis à jour : ${newGoal} kcal/jour`);
