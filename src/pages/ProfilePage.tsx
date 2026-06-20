@@ -205,6 +205,7 @@ export default function ProfilePage() {
         weight: weight ? Number(weight) : null,
         height: height ? Number(height) : null,
         activity_level: activityLevel,
+        objective: objective || null,
         menopause_stage: menopauseStage || null,
         health_conditions: healthConditions,
         dietary_preferences: buildDietary(dietPrefs, dietOther),
