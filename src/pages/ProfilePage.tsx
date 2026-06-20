@@ -352,7 +352,10 @@ export default function ProfilePage() {
             <div className="text-2xl font-bold text-foreground">{computedCalorieGoal} kcal/jour</div>
             <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
               Basé sur votre métabolisme de base de <strong>{computedBMR} kcal</strong> ×
-              niveau d'activité <strong>{activityInfo.label.toLowerCase()}</strong> (×{activityInfo.factor}).
+              niveau d'activité <strong>{activityInfo.label.toLowerCase()}</strong> (×{activityInfo.factor})
+              {objective !== "maintenir" && (
+                <> · objectif <strong>{objectiveInfo.label.toLowerCase()}</strong></>
+              )}.
             </div>
           </div>
 
