@@ -88,6 +88,7 @@ export default function ProfilePage() {
     setWeight(p.weight != null ? String(p.weight) : "");
     setHeight(p.height != null ? String(p.height) : "");
     setActivityLevel(p.activity_level ?? "sedentaire");
+    setObjective(p.objective ?? "maintenir");
     setMenopauseStage(p.menopause_stage ?? "");
     setHealthConditions(p.health_conditions ?? []);
     const diet = splitDietary(p.dietary_preferences);
