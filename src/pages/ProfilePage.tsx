@@ -305,6 +305,26 @@ export default function ProfilePage() {
             </div>
           </Field>
 
+          <Field label="Votre objectif">
+            <div className="grid grid-cols-2 gap-2">
+              {OBJECTIVES.map((obj) => (
+                <button
+                  key={obj.value}
+                  type="button"
+                  onClick={() => handleObjectiveChange(obj.value)}
+                  className={`p-3 rounded-lg text-left text-sm transition-all border ${
+                    objective === obj.value
+                      ? "bg-primary/15 border-primary text-foreground"
+                      : "bg-background border-border text-foreground hover:border-primary/50"
+                  }`}
+                >
+                  <div className="font-medium">{obj.label}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{obj.description}</div>
+                </button>
+              ))}
+            </div>
+          </Field>
+
           <Field label="Stade ménopause">
             <div className="grid grid-cols-3 gap-2">
               {MENOPAUSE_STAGES.map((s) => (
