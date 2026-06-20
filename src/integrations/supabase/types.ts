@@ -493,6 +493,7 @@ export type Database = {
           medical_disclaimer_dismissed: boolean
           menopause_stage: string | null
           nutritional_diagnosis: Json | null
+          objective: string | null
           onboarding_completed: boolean | null
           profile_completed: boolean | null
           seen_diagnosis: boolean | null
@@ -530,6 +531,7 @@ export type Database = {
           medical_disclaimer_dismissed?: boolean
           menopause_stage?: string | null
           nutritional_diagnosis?: Json | null
+          objective?: string | null
           onboarding_completed?: boolean | null
           profile_completed?: boolean | null
           seen_diagnosis?: boolean | null
@@ -567,6 +569,7 @@ export type Database = {
           medical_disclaimer_dismissed?: boolean
           menopause_stage?: string | null
           nutritional_diagnosis?: Json | null
+          objective?: string | null
           onboarding_completed?: boolean | null
           profile_completed?: boolean | null
           seen_diagnosis?: boolean | null
