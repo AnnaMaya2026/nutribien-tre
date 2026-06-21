@@ -2,7 +2,8 @@ import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
-import { DEFAULT_HABITS } from "@/lib/defaultHabits";
+import { DEFAULT_HABITS, getDefaultHabits } from "@/lib/defaultHabits";
+import { calculateHydration } from "@/lib/habitsCalculator";
 
 export type HabitType = "limiter" | "atteindre";
 
