@@ -288,6 +288,21 @@ export default function JournalPage() {
     items: logs.filter((l) => l.meal_type === m.value),
   }));
 
+  // Daily targets from profile → per-meal targets (25/35/30/10 for cal/gluc/lip, 20/35/30/15 for prot)
+  const p = profile as any;
+  const dailyCalories = calculateCalorieGoal({
+    weight: p?.weight,
+    height: p?.height,
+    age: p?.age,
+    activityLevel: p?.activity_level,
+    objective: p?.objective,
+  });
+  const dailyProteins = calculateProteinGoal(dailyCalories, p?.objective);
+  const dailyCarbs = calculateCarbsGoal(dailyCalories, p?.objective);
+  const dailyFats = calculateFatsGoal(dailyCalories, p?.objective);
+  const mealTargets = calculateMealTargets(dailyCalories, dailyProteins, dailyCarbs, dailyFats);
+  const targetByMeal = Object.fromEntries(mealTargets.map((t) => [t.key, t]));
+
   const hasAnyLogs = logs.length > 0;
 
   return (
