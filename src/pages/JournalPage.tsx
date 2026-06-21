@@ -19,12 +19,15 @@ import { useProfile } from "@/hooks/useProfile";
 import { detectRestrictionWarning } from "@/lib/dietaryRestrictions";
 import { formatPortion, formatStandardPortionHint, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 import { isIndustrialFood } from "@/lib/industrialFood";
+import { calculateMealTargets } from "@/utils/mealTargetsCalculator";
+import { calculateCalorieGoal, calculateProteinGoal, calculateCarbsGoal, calculateFatsGoal } from "@/lib/calorieGoal";
+import MealProgressBlock from "@/components/MealProgressBlock";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
-  { value: "dejeuner", label: "☀️ Déjeuner" },
+  { value: "dejeuner", label: "🍽️ Déjeuner" },
   { value: "diner", label: "🌙 Dîner" },
-  { value: "collation", label: "🍎 Collation" },
+  { value: "collation", label: "☕ Collation" },
 ];
 
 export default function JournalPage() {
@@ -285,6 +288,21 @@ export default function JournalPage() {
     items: logs.filter((l) => l.meal_type === m.value),
   }));
 
+  // Daily targets from profile → per-meal targets (25/35/30/10 for cal/gluc/lip, 20/35/30/15 for prot)
+  const p = profile as any;
+  const dailyCalories = calculateCalorieGoal({
+    weight: p?.weight,
+    height: p?.height,
+    age: p?.age,
+    activityLevel: p?.activity_level,
+    objective: p?.objective,
+  });
+  const dailyProteins = calculateProteinGoal(dailyCalories, p?.objective);
+  const dailyCarbs = calculateCarbsGoal(dailyCalories, p?.objective);
+  const dailyFats = calculateFatsGoal(dailyCalories, p?.objective);
+  const mealTargets = calculateMealTargets(dailyCalories, dailyProteins, dailyCarbs, dailyFats);
+  const targetByMeal = Object.fromEntries(mealTargets.map((t) => [t.key, t]));
+
   const hasAnyLogs = logs.length > 0;
 
   return (
@@ -512,6 +530,20 @@ export default function JournalPage() {
                   </button>
                 </div>
               </div>
+              {expandedMeals[meal.value] && targetByMeal[meal.value] && (
+                <MealProgressBlock
+                  target={targetByMeal[meal.value]}
+                  consumed={meal.items.reduce(
+                    (acc, l) => ({
+                      calories: acc.calories + (l.calories || 0),
+                      proteins: acc.proteins + (l.proteins || 0),
+                      carbs: acc.carbs + (l.carbs || 0),
+                      fats: acc.fats + (l.fats || 0),
+                    }),
+                    { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+                  )}
+                />
+              )}
               {expandedMeals[meal.value] && meal.items.length > 0 && (
                 <div className="px-4 pb-3 space-y-2">
                   {meal.items.map((log) => (
