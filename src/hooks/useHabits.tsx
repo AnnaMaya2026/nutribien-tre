@@ -52,6 +52,24 @@ export function useHabits() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const today = new Date().toISOString().split("T")[0];
+  const [weightKg, setWeightKg] = useState<number | undefined>(undefined);
+  const [weightLoaded, setWeightLoaded] = useState(false);
+
+  // Fetch user's weight once so hydration can be tailored to body weight.
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("weight")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data, error }) => {
+        setWeightLoaded(true);
+        if (error) return;
+        const w = data?.weight ? Number(data.weight) : undefined;
+        setWeightKg(w && w > 0 ? w : undefined);
+      });
+  }, [user]);
 
   // 1. Fetch user habit definitions
   const { data: habits = [], isLoading: loadingHabits } = useQuery({
