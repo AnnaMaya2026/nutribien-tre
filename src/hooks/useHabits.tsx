@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
-import { DEFAULT_HABITS } from "@/lib/defaultHabits";
+import { DEFAULT_HABITS, getDefaultHabits } from "@/lib/defaultHabits";
+import { calculateHydration } from "@/lib/habitsCalculator";
 
 export type HabitType = "limiter" | "atteindre";
 
@@ -51,6 +52,24 @@ export function useHabits() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const today = new Date().toISOString().split("T")[0];
+  const [weightKg, setWeightKg] = useState<number | undefined>(undefined);
+  const [weightLoaded, setWeightLoaded] = useState(false);
+
+  // Fetch user's weight once so hydration can be tailored to body weight.
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("weight")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data, error }) => {
+        setWeightLoaded(true);
+        if (error) return;
+        const w = data?.weight ? Number(data.weight) : undefined;
+        setWeightKg(w && w > 0 ? w : undefined);
+      });
+  }, [user]);
 
   // 1. Fetch user habit definitions
   const { data: habits = [], isLoading: loadingHabits } = useQuery({
@@ -73,12 +92,13 @@ export function useHabits() {
     enabled: !!user,
   });
 
-  // 2. Seed defaults on first use
+  // 2. Seed defaults on first use (hydration is tailored to current weight)
   useEffect(() => {
-    if (!user || loadingHabits) return;
+    if (!user || loadingHabits || !weightLoaded) return;
     if (habits.length > 0) return;
     (async () => {
-      const rows = DEFAULT_HABITS.map((h, i) => ({
+      const defaults = getDefaultHabits(weightKg);
+      const rows = defaults.map((h, i) => ({
         user_id: user.id,
         habit_key: h.habit_key,
         habit_name: h.habit_name,
@@ -92,7 +112,27 @@ export function useHabits() {
       await supabase.from("user_habits").insert(rows);
       qc.invalidateQueries({ queryKey: ["user_habits", user.id] });
     })();
-  }, [user, habits.length, loadingHabits, qc]);
+  }, [user, habits.length, loadingHabits, qc, weightKg, weightLoaded]);
+
+  // 2b. Keep existing hydration goal in sync with profile weight changes
+  useEffect(() => {
+    if (!user || loadingHabits || !weightLoaded || weightKg === undefined) return;
+    const hydrationHabit = habits.find((h) => h.habit_key === "hydratation");
+    if (!hydrationHabit) return;
+    const { target } = calculateHydration(weightKg);
+    if (hydrationHabit.goal === target) return;
+    (async () => {
+      const waterLiters = Number((weightKg * 0.035).toFixed(1));
+      await supabase
+        .from("user_habits")
+        .update({
+          goal: target,
+          unit: `${target} verres/jour (${waterLiters}L)`,
+        })
+        .eq("id", hydrationHabit.id);
+      qc.invalidateQueries({ queryKey: ["user_habits", user.id] });
+    })();
+  }, [user, habits, loadingHabits, qc, weightKg, weightLoaded]);
 
   // 3. Fetch last 7 days of habit logs
   const sevenDaysAgo = (() => {

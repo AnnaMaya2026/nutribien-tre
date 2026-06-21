@@ -1,4 +1,6 @@
 // Default "bad habits" suggested to every user on first visit to the Habitudes tab.
+import { calculateHydration } from "./habitsCalculator";
+
 export type DefaultHabit = {
   habit_key: string;
   habit_name: string;
@@ -7,6 +9,17 @@ export type DefaultHabit = {
   unit: string;
   symptom_warning?: string;
 };
+
+export function getDefaultHabits(weightKg?: number): DefaultHabit[] {
+  if (!weightKg || weightKg <= 0) return DEFAULT_HABITS;
+  const hydration = calculateHydration(weightKg);
+  return DEFAULT_HABITS.map((habit) =>
+    habit.habit_key === "hydratation"
+      ? { ...habit, goal: hydration.target, unit: hydration.label }
+      : habit
+  );
+}
+
 
 export const DEFAULT_HABITS: DefaultHabit[] = [
   {
