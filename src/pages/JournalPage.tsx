@@ -530,6 +530,20 @@ export default function JournalPage() {
                   </button>
                 </div>
               </div>
+              {expandedMeals[meal.value] && targetByMeal[meal.value] && (
+                <MealProgressBlock
+                  target={targetByMeal[meal.value]}
+                  consumed={meal.items.reduce(
+                    (acc, l) => ({
+                      calories: acc.calories + (l.calories || 0),
+                      proteins: acc.proteins + (l.proteins || 0),
+                      carbs: acc.carbs + (l.carbs || 0),
+                      fats: acc.fats + (l.fats || 0),
+                    }),
+                    { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+                  )}
+                />
+              )}
               {expandedMeals[meal.value] && meal.items.length > 0 && (
                 <div className="px-4 pb-3 space-y-2">
                   {meal.items.map((log) => (
