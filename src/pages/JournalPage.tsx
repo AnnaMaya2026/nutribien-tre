@@ -25,9 +25,9 @@ import MealProgressBlock from "@/components/MealProgressBlock";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
-  { value: "dejeuner", label: "☀️ Déjeuner" },
+  { value: "dejeuner", label: "🍽️ Déjeuner" },
   { value: "diner", label: "🌙 Dîner" },
-  { value: "collation", label: "🍎 Collation" },
+  { value: "collation", label: "☕ Collation" },
 ];
 
 export default function JournalPage() {
