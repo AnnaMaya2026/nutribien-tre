@@ -19,6 +19,9 @@ import { useProfile } from "@/hooks/useProfile";
 import { detectRestrictionWarning } from "@/lib/dietaryRestrictions";
 import { formatPortion, formatStandardPortionHint, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 import { isIndustrialFood } from "@/lib/industrialFood";
+import { calculateMealTargets } from "@/utils/mealTargetsCalculator";
+import { calculateCalorieGoal, calculateProteinGoal, calculateCarbsGoal, calculateFatsGoal } from "@/lib/calorieGoal";
+import MealProgressBlock from "@/components/MealProgressBlock";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
