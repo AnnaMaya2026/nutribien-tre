@@ -13,6 +13,8 @@ import {
   weekCompletionCount,
   type Routine,
 } from "@/hooks/useRoutines";
+import { useSelectedDate } from "@/hooks/useSelectedDate";
+import DateSelector from "@/components/DateSelector";
 import {
   requestNotificationPermission,
   scheduleAllReminders,
