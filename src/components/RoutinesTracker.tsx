@@ -225,6 +225,7 @@ function RoutineForm({
 export function RoutinesTracker() {
   const { routines, logs, addRoutine, updateRoutine, deleteRoutine, toggleToday, isLoading } =
     useRoutines();
+  const { selectedDate, selectedDateStr, isToday } = useSelectedDate();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Routine | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm());
@@ -234,18 +235,21 @@ export function RoutinesTracker() {
     scheduleAllReminders(routines as any);
   }, [routines]);
 
-  const today = new Date().toISOString().split("T")[0];
   const completedTodayIds = useMemo(
     () =>
       new Set(
-        logs.filter((l) => l.logged_at === today && l.completed).map((l) => l.routine_id)
+        logs.filter((l) => l.logged_at === selectedDateStr && l.completed).map((l) => l.routine_id)
       ),
-    [logs, today]
+    [logs, selectedDateStr]
   );
 
   const completedCount = routines.filter((r) => completedTodayIds.has(r.id)).length;
   const total = routines.length;
   const pct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+
+  const dateLabel = isToday
+    ? "Aujourd'hui"
+    : selectedDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 
   const handleAdd = async () => {
     if (!form.name.trim()) return;
