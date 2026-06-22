@@ -355,6 +355,8 @@ export function RoutinesTracker() {
 
   return (
     <div className="space-y-4 animate-fade-in">
+      <DateSelector />
+
       {/* Summary card */}
       {total > 0 && (
         <div className="bg-card rounded-2xl p-4 card-soft">
