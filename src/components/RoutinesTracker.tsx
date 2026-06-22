@@ -360,7 +360,7 @@ export function RoutinesTracker() {
         <div className="bg-card rounded-2xl p-4 card-soft">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-semibold text-foreground">
-              Aujourd'hui : {completedCount}/{total} routines complétées{" "}
+              {dateLabel} : {completedCount}/{total} routines complétées{" "}
               {completedCount === total && "✅"}
             </p>
             <span className="text-xs text-muted-foreground">{pct}%</span>
