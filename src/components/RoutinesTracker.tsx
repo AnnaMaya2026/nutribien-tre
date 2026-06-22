@@ -460,7 +460,7 @@ export function RoutinesTracker() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() =>
-                      toggleToday.mutate({ routineId: r.id, completed: !done })
+                      toggleToday.mutate({ routineId: r.id, completed: !done, date: selectedDateStr })
                     }
                     className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
                       done
