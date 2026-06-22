@@ -60,8 +60,6 @@ export const ROUTINE_FREQUENCIES = [
   { value: "hebdomadaire", label: "Hebdomadaire" },
 ];
 
-const todayStr = () => new Date().toISOString().split("T")[0];
-
 export function useRoutines() {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -182,9 +180,8 @@ export function useRoutines() {
   });
 
   const toggleToday = useMutation({
-    mutationFn: async ({ routineId, completed }: { routineId: string; completed: boolean }) => {
+    mutationFn: async ({ routineId, completed, date }: { routineId: string; completed: boolean; date: string }) => {
       if (!userId) throw new Error("not authenticated");
-      const date = todayStr();
       if (completed) {
         const { error } = await (supabase as any)
           .from("routine_logs")

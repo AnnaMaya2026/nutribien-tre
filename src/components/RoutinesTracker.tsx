@@ -13,6 +13,8 @@ import {
   weekCompletionCount,
   type Routine,
 } from "@/hooks/useRoutines";
+import { useSelectedDate } from "@/hooks/useSelectedDate";
+import DateSelector from "@/components/DateSelector";
 import {
   requestNotificationPermission,
   scheduleAllReminders,
@@ -223,6 +225,7 @@ function RoutineForm({
 export function RoutinesTracker() {
   const { routines, logs, addRoutine, updateRoutine, deleteRoutine, toggleToday, isLoading } =
     useRoutines();
+  const { selectedDate, selectedDateStr, isToday } = useSelectedDate();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Routine | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm());
@@ -232,18 +235,21 @@ export function RoutinesTracker() {
     scheduleAllReminders(routines as any);
   }, [routines]);
 
-  const today = new Date().toISOString().split("T")[0];
   const completedTodayIds = useMemo(
     () =>
       new Set(
-        logs.filter((l) => l.logged_at === today && l.completed).map((l) => l.routine_id)
+        logs.filter((l) => l.logged_at === selectedDateStr && l.completed).map((l) => l.routine_id)
       ),
-    [logs, today]
+    [logs, selectedDateStr]
   );
 
   const completedCount = routines.filter((r) => completedTodayIds.has(r.id)).length;
   const total = routines.length;
   const pct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+
+  const dateLabel = isToday
+    ? "Aujourd'hui"
+    : selectedDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 
   const handleAdd = async () => {
     if (!form.name.trim()) return;
@@ -349,12 +355,14 @@ export function RoutinesTracker() {
 
   return (
     <div className="space-y-4 animate-fade-in">
+      <DateSelector />
+
       {/* Summary card */}
       {total > 0 && (
         <div className="bg-card rounded-2xl p-4 card-soft">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-semibold text-foreground">
-              Aujourd'hui : {completedCount}/{total} routines complétées{" "}
+              {dateLabel} : {completedCount}/{total} routines complétées{" "}
               {completedCount === total && "✅"}
             </p>
             <span className="text-xs text-muted-foreground">{pct}%</span>
@@ -454,7 +462,7 @@ export function RoutinesTracker() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() =>
-                      toggleToday.mutate({ routineId: r.id, completed: !done })
+                      toggleToday.mutate({ routineId: r.id, completed: !done, date: selectedDateStr })
                     }
                     className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
                       done
