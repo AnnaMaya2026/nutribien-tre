@@ -25,7 +25,7 @@ import { ChevronDown, ChevronUp, LogOut, UserCircle2 } from "lucide-react";
 import { getDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { formatPortion } from "@/lib/portionUnits";
+
 import { calculateMealTargets } from "@/utils/mealTargetsCalculator";
 import { calculateCalorieGoal, calculateProteinGoal, calculateCarbsGoal, calculateFatsGoal } from "@/lib/calorieGoal";
 import MealProgressBlock from "@/components/MealProgressBlock";
