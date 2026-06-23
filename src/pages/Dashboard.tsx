@@ -155,12 +155,12 @@ function getProducePortions(logs: any[]) {
   }, 0);
 }
 
-const MEAL_LABELS: Record<string, string> = {
-  "petit-dejeuner": "🌅 Petit-déj",
-  dejeuner: "☀️ Déjeuner",
-  diner: "🌙 Dîner",
-  collation: "🍎 Collation",
-};
+const MEAL_TYPES = [
+  { value: "petit-dejeuner", label: "🌅 Petit-déj" },
+  { value: "dejeuner", label: "☀️ Déjeuner" },
+  { value: "diner", label: "🌙 Dîner" },
+  { value: "collation", label: "🍎 Collation" },
+];
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
