@@ -181,13 +181,33 @@ export default function Dashboard() {
     if (!c) return 0;
     return c.amount / divisor;
   };
-  const [showMealBreakdown, setShowMealBreakdown] = useState(false);
+  const [openMeals, setOpenMeals] = useState<Record<string, boolean>>({
+    "petit-dejeuner": false,
+    dejeuner: false,
+    diner: false,
+    collation: false,
+  });
   const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
 
   const calorieGoal = profile?.daily_calorie_goal || 1800;
   const proteinGoal = Math.max(1, Math.round(Number(profile?.weight || 60) * 1.2));
   const vitaminDGoal = getVitaminDGoal(profile?.age);
   const firstName = getDisplayName((profile as any)?.display_name, user?.email);
+
+  // Per-meal targets based on profile goals
+  const p = profile as any;
+  const dailyCalories = calculateCalorieGoal({
+    weight: p?.weight,
+    height: p?.height,
+    age: p?.age,
+    activityLevel: p?.activity_level,
+    objective: p?.objective,
+  });
+  const dailyProteins = calculateProteinGoal(dailyCalories, p?.objective);
+  const dailyCarbs = calculateCarbsGoal(dailyCalories, p?.objective);
+  const dailyFats = calculateFatsGoal(dailyCalories, p?.objective);
+  const mealTargets = calculateMealTargets(dailyCalories, dailyProteins, dailyCarbs, dailyFats);
+  const targetByMeal = Object.fromEntries(mealTargets.map((t) => [t.key, t]));
 
   const totals = logs.reduce(
     (acc, log: any) => ({
@@ -217,17 +237,26 @@ export default function Dashboard() {
   const antioxidantTone = antioxidantScore >= 5 ? "text-green-500" : antioxidantScore >= 3 ? "text-orange-500" : "text-red-500";
 
   const mealBreakdown = useMemo(() => {
-    const meals: Record<string, number> = {};
-    logs.forEach((log) => {
-      const mt = log.meal_type || "autre";
-      meals[mt] = (meals[mt] || 0) + (log.calories || 0);
+    return MEAL_TYPES.map((mt) => {
+      const items = logs.filter((log) => (log.meal_type || "autre") === mt.value);
+      const consumed = items.reduce(
+        (acc, log) => ({
+          calories: acc.calories + (log.calories || 0),
+          proteins: acc.proteins + (log.proteins || 0),
+          carbs: acc.carbs + (log.carbs || 0),
+          fats: acc.fats + (log.fats || 0),
+        }),
+        { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+      );
+      return {
+        key: mt.value,
+        label: mt.label,
+        items,
+        consumed,
+        target: targetByMeal[mt.value],
+      };
     });
-    return Object.entries(meals).map(([key, cal]) => ({
-      label: MEAL_LABELS[key] || key,
-      calories: Math.round(cal),
-      portions: logs.filter((log) => (log.meal_type || "autre") === key).map((log) => formatPortion(log.food_name, log.portion_size)).join(" · "),
-    }));
-  }, [logs]);
+  }, [logs, targetByMeal]);
 
   const chartData = (() => {
     const days: Record<string, number> = {};
