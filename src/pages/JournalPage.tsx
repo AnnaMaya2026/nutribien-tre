@@ -46,7 +46,7 @@ export default function JournalPage() {
   const [mealType, setMealType] = useState("dejeuner");
   const [showSearch, setShowSearch] = useState(false);
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({
-    "petit-dejeuner": true, dejeuner: true, diner: true, collation: true,
+    "petit-dejeuner": false, dejeuner: false, diner: false, collation: false,
   });
   const [expandedLogs, setExpandedLogs] = useState<Record<string, boolean>>({});
   const [voiceMatches, setVoiceMatches] = useState<VoiceMatch[] | null>(null);
