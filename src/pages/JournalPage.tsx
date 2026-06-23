@@ -522,8 +522,8 @@ export default function JournalPage() {
                       <Star className="w-4 h-4" />
                     </button>
                   )}
-                  <span className="text-sm font-semibold text-primary-foreground bg-primary/20 px-2.5 py-1 rounded-full">
-                    {meal.items.reduce((s, l) => s + (l.calories || 0), 0)} kcal
+                  <span className="text-xs font-semibold text-primary-foreground bg-primary/20 px-2.5 py-1 rounded-full">
+                    {Math.round(meal.items.reduce((s, l) => s + (l.calories || 0), 0))} kcal · {Math.round(meal.items.reduce((s, l) => s + (l.proteins || 0), 0))}P · {Math.round(meal.items.reduce((s, l) => s + (l.carbs || 0), 0))}G · {Math.round(meal.items.reduce((s, l) => s + (l.fats || 0), 0))}L
                   </span>
                   <button onClick={() => toggleMeal(meal.value)}>
                     {expandedMeals[meal.value] ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
