@@ -421,24 +421,28 @@ export default function Dashboard() {
           ⚠️ Ces recommandations sont indicatives. Consultez votre médecin pour un suivi personnalisé.
         </p>
 
-        {/* Meal breakdown toggle */}
-        {mealBreakdown.length > 0 && (
-          <div className="mt-4">
-            <button onClick={() => setShowMealBreakdown(!showMealBreakdown)} className="flex items-center gap-1 text-xs text-primary-foreground bg-primary/20 px-3 py-1 rounded-full mx-auto">
-              Détail par repas {showMealBreakdown ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
-            {showMealBreakdown && (
-              <div className="mt-3 space-y-1.5">
-                {mealBreakdown.map((m) => (
-                  <div key={m.label} className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2">
-                    <span className="text-xs text-foreground">{m.label}</span>
-                    <span className="text-xs font-semibold text-foreground">{m.calories} kcal{m.portions ? ` · ${m.portions}` : ""}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        {/* Meal breakdown accordions */}
+        <div className="mt-4 space-y-2">
+          {mealBreakdown.map((meal) => (
+            <div key={meal.key} className="bg-muted/30 rounded-xl overflow-hidden">
+              <button
+                onClick={() => setOpenMeals((prev) => ({ ...prev, [meal.key]: !prev[meal.key] }))}
+                className="w-full flex items-center justify-between px-3 py-2.5"
+              >
+                <span className="text-sm font-medium text-foreground">{meal.label}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-primary-foreground bg-primary/20 px-2 py-1 rounded-full">
+                    {Math.round(meal.consumed.calories)} kcal · {Math.round(meal.consumed.proteins)}P · {Math.round(meal.consumed.carbs)}G · {Math.round(meal.consumed.fats)}L
+                  </span>
+                  {openMeals[meal.key] ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                </div>
+              </button>
+              {openMeals[meal.key] && meal.target && (
+                <MealProgressBlock target={meal.target} consumed={meal.consumed} />
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Micronutrients */}
