@@ -35,6 +35,7 @@ const SEO = {
   notes: { title: "Journal personnel — NutriMéno", description: "Notes, routines et habitudes pour votre bien-être", path: "/notes" },
   menus: { title: "Menus sauvegardés — NutriMéno", description: "Retrouvez vos menus et plans de repas favoris", path: "/menus" },
   profil: { title: "Mon profil — NutriMéno", description: "Gérez votre profil et vos préférences nutritionnelles", path: "/profil" },
+  ration: { title: "Comprendre ta ration — NutriMéno", description: "Explication pédagogique de ton calcul calorique personnalisé", path: "/ration" },
   cgu: { title: "Conditions d'utilisation — NutriMéno", description: "Conditions générales d'utilisation de NutriMéno", path: "/cgu" },
   confidentialite: { title: "Politique de confidentialité — NutriMéno", description: "Politique de confidentialité et RGPD de NutriMéno", path: "/confidentialite" },
   reset: { title: "Réinitialiser le mot de passe — NutriMéno", description: "Réinitialisez votre mot de passe NutriMéno", path: "/reset-password" },
