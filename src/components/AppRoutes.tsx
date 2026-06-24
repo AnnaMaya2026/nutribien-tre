@@ -97,6 +97,7 @@ function ProtectedLayout() {
         <Route path="/notes" element={withSEO(SEO.notes, <PersonalJournalPage />)} />
         <Route path="/menus" element={withSEO(SEO.menus, <SavedMenusPage />)} />
         <Route path="/profil" element={withSEO(SEO.profil, <ProfilePage />)} />
+        <Route path="/ration" element={withSEO(SEO.ration, <RationExplainerPage />)} />
         <Route path="/cgu" element={withSEO(SEO.cgu, <TermsPage />)} />
         <Route path="/confidentialite" element={withSEO(SEO.confidentialite, <PrivacyPage />)} />
         <Route path="/reset-password" element={withSEO(SEO.reset, <ResetPasswordPage />)} />
