@@ -420,6 +420,12 @@ export default function Dashboard() {
         <p className="mt-2 text-[11px] text-muted-foreground text-center">
           ⚠️ Ces recommandations sont indicatives. Consultez votre médecin pour un suivi personnalisé.
         </p>
+        <button
+          onClick={() => navigate("/ration")}
+          className="mt-3 w-full text-sm text-pink-deep font-medium underline-offset-4 hover:underline"
+        >
+          💡 Comprendre ta ration — Comment c'est calculé ?
+        </button>
 
         {/* Meal breakdown accordions */}
         <div className="mt-4 space-y-2">

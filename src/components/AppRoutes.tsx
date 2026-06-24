@@ -15,6 +15,7 @@ import SymptomHistoryPage from "@/pages/SymptomHistoryPage";
 import PersonalJournalPage from "@/pages/PersonalJournalPage";
 import SavedMenusPage from "@/pages/SavedMenusPage";
 import ProfilePage from "@/pages/ProfilePage";
+import RationExplainerPage from "@/pages/RationExplainerPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import DiagnosisPage from "@/pages/DiagnosisPage";
 import TermsPage from "@/pages/TermsPage";
@@ -34,6 +35,7 @@ const SEO = {
   notes: { title: "Journal personnel — NutriMéno", description: "Notes, routines et habitudes pour votre bien-être", path: "/notes" },
   menus: { title: "Menus sauvegardés — NutriMéno", description: "Retrouvez vos menus et plans de repas favoris", path: "/menus" },
   profil: { title: "Mon profil — NutriMéno", description: "Gérez votre profil et vos préférences nutritionnelles", path: "/profil" },
+  ration: { title: "Comprendre ta ration — NutriMéno", description: "Explication pédagogique de ton calcul calorique personnalisé", path: "/ration" },
   cgu: { title: "Conditions d'utilisation — NutriMéno", description: "Conditions générales d'utilisation de NutriMéno", path: "/cgu" },
   confidentialite: { title: "Politique de confidentialité — NutriMéno", description: "Politique de confidentialité et RGPD de NutriMéno", path: "/confidentialite" },
   reset: { title: "Réinitialiser le mot de passe — NutriMéno", description: "Réinitialisez votre mot de passe NutriMéno", path: "/reset-password" },
@@ -95,6 +97,7 @@ function ProtectedLayout() {
         <Route path="/notes" element={withSEO(SEO.notes, <PersonalJournalPage />)} />
         <Route path="/menus" element={withSEO(SEO.menus, <SavedMenusPage />)} />
         <Route path="/profil" element={withSEO(SEO.profil, <ProfilePage />)} />
+        <Route path="/ration" element={withSEO(SEO.ration, <RationExplainerPage />)} />
         <Route path="/cgu" element={withSEO(SEO.cgu, <TermsPage />)} />
         <Route path="/confidentialite" element={withSEO(SEO.confidentialite, <PrivacyPage />)} />
         <Route path="/reset-password" element={withSEO(SEO.reset, <ResetPasswordPage />)} />
