@@ -189,12 +189,22 @@ function computeBreakdown(opts: {
   }
 
   // Top 3 suggestions
+  const consumedNames = opts.logs.map((l: any) => String(l.food_name || "").toLowerCase());
   const worstDef = deficits.sort((a, b) => a.pct - b.pct)[0];
   if (worstDef) {
     const tip = NUTRIENT_FOOD_TIPS[worstDef.key];
-    suggestions.push(
-      `Boostez votre ${NUTRIENT_LABELS[worstDef.key]} (${worstDef.pct}%) : essayez ${tip}.`
+    const tipFoods = tip.split(/,|\bou\b/).map((s) => s.trim()).filter(Boolean);
+    const remaining = tipFoods.filter(
+      (f) => !consumedNames.some((c) => c.includes(f.toLowerCase()))
     );
+    if (remaining.length > 0) {
+      const finalTip = remaining.length > 1
+        ? `${remaining.slice(0, -1).join(", ")} ou ${remaining[remaining.length - 1]}`
+        : remaining[0];
+      suggestions.push(
+        `Boostez votre ${NUTRIENT_LABELS[worstDef.key]} (${worstDef.pct}%) : essayez ${finalTip}.`
+      );
+    }
   }
   if (worstSymptom && worstSymptom.score >= 5) {
     const advice = SYMPTOM_FOOD_ADVICE[worstSymptom.key];
