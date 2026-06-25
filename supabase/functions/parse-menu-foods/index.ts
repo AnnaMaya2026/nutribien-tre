@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
     );
 
     // Ask GPT to parse menu + give per-100g estimates for every food
-    const sys = `Tu es un nutritionniste. Analyse le menu et identifie tous les aliments avec leur portion estimée en grammes. Pour chaque aliment, donne aussi des valeurs nutritionnelles ESTIMÉES par 100g (utilisées en fallback). Réponds STRICTEMENT en JSON.`;
+    const sys = `Tu es un nutritionniste. Analyse le menu et identifie TOUS les aliments EXPLICITEMENT mentionnés dans le texte, avec leur portion estimée en grammes. N'INVENTE AUCUN aliment qui n'est pas écrit dans le menu. N'EN OUBLIE AUCUN. Pour chaque aliment, donne aussi des valeurs nutritionnelles ESTIMÉES par 100g (utilisées en fallback). Réponds STRICTEMENT en JSON.`;
     const userMsg = `Menu:\n${menu_content}\n\nFormat JSON attendu:
 {
   "meals": [
