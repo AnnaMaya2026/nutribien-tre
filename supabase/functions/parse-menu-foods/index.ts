@@ -153,7 +153,9 @@ Unités: calories en kcal, macros/fibres en g, minéraux en mg (sauf vitamine_d/
         }
 
         entries.push({
-          food_name: estimated ? `${matchedName} (estimé)` : matchedName,
+          // Keep the original menu food name so the journal matches the displayed menu;
+          // CIQUAL is used only for nutrient lookup, not for renaming the food.
+          food_name: name,
           meal_type: mealType,
           portion_size: grams,
           estimated,
