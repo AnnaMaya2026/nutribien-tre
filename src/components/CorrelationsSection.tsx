@@ -87,21 +87,25 @@ export default function CorrelationsSection() {
 
     const symptomKeys = Array.from(new Set(allDates.flatMap((d) => Object.keys(scoresByDate[d] || {}))));
 
-    // For each "event" (boolean per day), compute avg symptom on days WITH vs WITHOUT
+    // For each "event" (boolean per day), compute avg symptom on days WITH vs WITHOUT.
+    // Require enough samples on both sides AND a strong delta to avoid spurious
+    // (often counter-intuitive) correlations from tiny samples.
+    const MIN_DAYS_PER_SIDE = 5;
+    const MIN_DELTA = 1.5;
     const evaluate = (eventDates: Set<string>, label: string, emoji: string, id: string): Correlation[] => {
       const out: Correlation[] = [];
       const datesWith = allDates.filter((d) => eventDates.has(d));
       const datesWithout = allDates.filter((d) => !eventDates.has(d));
-      if (datesWith.length < 3 || datesWithout.length < 3) return out;
+      if (datesWith.length < MIN_DAYS_PER_SIDE || datesWithout.length < MIN_DAYS_PER_SIDE) return out;
 
       for (const sym of symptomKeys) {
         const withScores = datesWith.map((d) => scoresByDate[d]?.[sym]).filter((v): v is number => typeof v === "number" && v > 0);
         const withoutScores = datesWithout.map((d) => scoresByDate[d]?.[sym]).filter((v): v is number => typeof v === "number" && v > 0);
-        if (withScores.length < 3 || withoutScores.length < 3) continue;
+        if (withScores.length < MIN_DAYS_PER_SIDE || withoutScores.length < MIN_DAYS_PER_SIDE) continue;
         const avgWith = withScores.reduce((a, b) => a + b, 0) / withScores.length;
         const avgWithout = withoutScores.reduce((a, b) => a + b, 0) / withoutScores.length;
         const delta = avgWith - avgWithout;
-        if (Math.abs(delta) < 1.0) continue;
+        if (Math.abs(delta) < MIN_DELTA) continue;
         const symLabel = SYMPTOM_LABEL[sym] || sym;
         if (delta < 0) {
           out.push({
