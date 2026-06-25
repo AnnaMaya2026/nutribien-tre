@@ -82,7 +82,14 @@ serve(async (req) => {
 
     const scores = (symptomLog?.symptom_scores && typeof symptomLog.symptom_scores === "object")
       ? symptomLog.symptom_scores as Record<string, number> : {};
-    const symptomSummary = Object.entries(scores).filter(([, v]) => (v as number) > 0).map(([k, v]) => `${SYMPTOM_LABELS[k] || k}: ${v}/10`);
+    const selectedSymptoms: string[] = Array.isArray(symptomLog?.selected_symptoms)
+      ? symptomLog.selected_symptoms as string[] : [];
+    const scored = Object.entries(scores).filter(([, v]) => (v as number) > 0);
+    let symptomSummary: string[] = scored.map(([k, v]) => `${SYMPTOM_LABELS[k] || k}: ${v}/10`);
+    // Fallback: user picked symptoms in the chips tab but didn't rate them.
+    if (symptomSummary.length === 0 && selectedSymptoms.length > 0) {
+      symptomSummary = selectedSymptoms.map((k) => SYMPTOM_LABELS[k] || k);
+    }
 
     const routinesDone = routineLogs.length;
     const routinesTotal = routines.length;
