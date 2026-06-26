@@ -580,6 +580,8 @@ export function HabitsTracker() {
             {habits.map((h) =>
               h.habit_key === "hydratation" ? (
                 <HydrationCard key={h.id} habit={h} />
+              ) : h.habit_key === "sommeil" ? (
+                <SleepCard key={h.id} habit={h} />
               ) : h.habit_key === "ecrans_lit" || h.goal === 0 ? (
                 <BinaryHabitCard key={h.id} habit={h} />
               ) : (
