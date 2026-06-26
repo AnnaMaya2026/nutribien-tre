@@ -252,7 +252,172 @@ function HydrationCard({ habit }: { habit: UserHabit }) {
       )}
     </div>
   );
+
+// Sleep card — track hours per night (stored as half-hours: count × 0.5 = h)
+function SleepCard({ habit }: { habit: UserHabit }) {
+  const { logs, today, setCount, deleteHabit } = useHabits();
+  const todayLog = logs.find(
+    (l) => l.habit_key === habit.habit_key && l.logged_at === today
+  );
+  const halfHours = todayLog?.count ?? 0;
+  const hours = halfHours / 2;
+  const goalH = (habit.goal || 16) / 2;
+
+  // < 6h red, 6-7h orange, ≥ 7h green
+  const color =
+    hours === 0
+      ? "muted"
+      : hours < 6
+      ? "destructive"
+      : hours < 7
+      ? "warning"
+      : "progress-high";
+  const colorText =
+    color === "destructive"
+      ? "text-destructive"
+      : color === "warning"
+      ? "text-warning"
+      : color === "progress-high"
+      ? "text-progress-high"
+      : "text-muted-foreground";
+  const colorBg =
+    color === "destructive"
+      ? "bg-destructive"
+      : color === "warning"
+      ? "bg-warning"
+      : color === "progress-high"
+      ? "bg-progress-high"
+      : "bg-muted";
+
+  const stroke =
+    color === "destructive"
+      ? "hsl(var(--destructive))"
+      : color === "warning"
+      ? "hsl(var(--warning))"
+      : "hsl(var(--progress-high))";
+
+  const setHours = (h: number) => {
+    const clamped = Math.max(0, Math.min(12, h));
+    setCount.mutate({ habit, count: Math.round(clamped * 2) });
+  };
+
+  const chartData = useMemo(() => {
+    const days: { date: string; h: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split("T")[0];
+      const log = logs.find(
+        (l) => l.habit_key === habit.habit_key && l.logged_at === dateStr
+      );
+      days.push({ date: dateStr, h: (log?.count ?? 0) / 2 });
+    }
+    return days;
+  }, [logs, habit.habit_key]);
+
+  return (
+    <div className="bg-card rounded-2xl p-4 card-soft">
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className="text-2xl">🌙</span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">
+              {habit.habit_name}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              Objectif : 7-8 heures/nuit
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            if (confirm(`Supprimer "${habit.habit_name}" ?`)) {
+              deleteHabit.mutate(habit.id);
+            }
+          }}
+          className="text-muted-foreground hover:text-destructive flex-shrink-0"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <button
+          onClick={() => setHours(hours - 0.5)}
+          disabled={hours <= 0}
+          className="w-9 h-9 rounded-full bg-muted text-foreground flex items-center justify-center disabled:opacity-30"
+        >
+          <Minus className="w-4 h-4" />
+        </button>
+        <div className="flex-1 text-center">
+          <Input
+            type="number"
+            min={0}
+            max={12}
+            step={0.5}
+            value={hours || ""}
+            onChange={(e) => setHours(Number(e.target.value) || 0)}
+            className={`text-center text-2xl font-bold h-10 ${colorText}`}
+          />
+          <p className="text-[10px] text-muted-foreground">
+            heures de sommeil
+            {hours >= 7 && " ✅"}
+          </p>
+        </div>
+        <button
+          onClick={() => setHours(hours + 0.5)}
+          className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden mb-2">
+        <div
+          className={`h-full ${colorBg} transition-all`}
+          style={{ width: `${Math.min(100, (hours / goalH) * 100)}%` }}
+        />
+      </div>
+
+      {hours > 0 && hours < 6 && (
+        <p className="text-[10px] text-destructive mb-2">
+          🔴 Moins de 6h — pense à te coucher plus tôt
+        </p>
+      )}
+      {hours >= 6 && hours < 7 && (
+        <p className="text-[10px] text-warning mb-2">
+          🟠 Presque l'objectif, continue !
+        </p>
+      )}
+      {hours >= 7 && (
+        <p className="text-[10px] text-progress-high mb-2">
+          🟢 Nuit réparatrice 💚
+        </p>
+      )}
+
+      {/* 7-day mini chart */}
+      <div className="h-10 -mx-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData}>
+            <YAxis hide domain={[0, 12]} />
+            <Line
+              type="monotone"
+              dataKey="h"
+              stroke={stroke}
+              strokeWidth={2}
+              dot={{ r: 2, fill: stroke }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex justify-between text-[9px] text-muted-foreground mt-0.5 px-1">
+        <span>il y a 7j</span>
+        <span>aujourd'hui</span>
+      </div>
+    </div>
+  );
 }
+
 
 function HabitCard({ habit }: { habit: UserHabit }) {
   const { logs, today, setCount, deleteHabit } = useHabits();
