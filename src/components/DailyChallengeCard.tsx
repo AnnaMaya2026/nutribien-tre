@@ -15,8 +15,13 @@ export default function DailyChallengeCard() {
     return () => clearInterval(t);
   }, []);
 
-  const isAfter8am = now.getHours() >= 8;
-  const today = now.toISOString().split("T")[0];
+  const hour = now.getHours();
+  const isAfter8am = hour >= 8;
+  // After 5pm local time, generate the challenge for TOMORROW.
+  const forTomorrow = hour >= 17;
+  const targetDate = new Date(now);
+  if (forTomorrow) targetDate.setDate(targetDate.getDate() + 1);
+  const targetKey = targetDate.toISOString().split("T")[0];
 
   useEffect(() => {
     if (!user || !isAfter8am) return;
@@ -25,21 +30,24 @@ export default function DailyChallengeCard() {
         .from("daily_challenges" as any)
         .select("*")
         .eq("user_id", user.id)
-        .eq("challenge_date", today)
+        .eq("challenge_date", targetKey)
         .maybeSingle();
       if (data) setChallenge(data);
+      else setChallenge(null);
     })();
-  }, [user, isAfter8am, today]);
+  }, [user, isAfter8am, targetKey]);
 
   const generate = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("daily-challenge", { body: {} });
+      const { data, error } = await supabase.functions.invoke("daily-challenge", {
+        body: { target_date: targetKey },
+      });
       if (error) throw error;
       if (data?.challenge) setChallenge(data.challenge);
     } catch (e) {
       console.error(e);
-      toast.error("Impossible de générer le défi du jour.");
+      toast.error("Impossible de générer le défi.");
     } finally {
       setLoading(false);
     }
@@ -61,11 +69,13 @@ export default function DailyChallengeCard() {
 
   if (!isAfter8am) return null;
 
+  const title = forTomorrow ? "🌅 Défi pour demain" : "🎯 Défi du jour";
+
   return (
     <div className="bg-gradient-to-br from-amber-50 via-card to-card dark:from-amber-950/20 rounded-2xl p-5 card-soft mb-4 animate-fade-in border border-amber-400/30">
       <div className="flex items-center gap-2 mb-2">
         <Target className="w-5 h-5 text-amber-600" />
-        <h3 className="text-base font-semibold text-foreground">🎯 Défi du jour</h3>
+        <h3 className="text-base font-semibold text-foreground">{title}</h3>
       </div>
 
       {!challenge && !loading && (
@@ -73,7 +83,7 @@ export default function DailyChallengeCard() {
           onClick={generate}
           className="w-full py-3 rounded-xl bg-amber-500 text-white font-semibold text-sm"
         >
-          Découvrir mon défi
+          {forTomorrow ? "Préparer mon défi de demain" : "Découvrir mon défi"}
         </button>
       )}
 
@@ -91,6 +101,10 @@ export default function DailyChallengeCard() {
             <div className="flex items-center gap-2 text-green-600 text-sm font-semibold">
               <Check className="w-4 h-4" /> Défi relevé !
             </div>
+          ) : forTomorrow ? (
+            <p className="text-xs text-muted-foreground italic">
+              Tu pourras le valider demain.
+            </p>
           ) : (
             <button
               onClick={markDone}
