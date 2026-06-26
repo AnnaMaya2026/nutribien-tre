@@ -292,6 +292,12 @@ Ton chaleureux, jamais culpabilisant. Phrases courtes.`;
     if (prevScore !== null && typeof prevScore === "number") {
       reportData.score_last_week = prevScore;
     }
+    // Attach computed deficits + curated suggestions (independent from LLM)
+    reportData.deficits = {
+      macros: macroDeficits.map((d) => ({ key: d.key, label: d.label, missing: `${Math.round(d.deficitPerDay)}${d.unit}/jour`, avg: +d.avg.toFixed(1), goal: d.goal, unit: d.unit })),
+      micros: microDeficits.map((d) => ({ key: d.key, label: d.label, missing: `${Math.round(d.deficitPerDay)}${d.unit}/jour`, avg: +d.avg.toFixed(1), goal: d.goal, unit: d.unit })),
+    };
+    reportData.suggestions = suggestions;
 
     await supabase.from("weekly_reports").upsert({
       user_id: user.id,
