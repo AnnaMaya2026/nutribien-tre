@@ -19,20 +19,33 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     if (!user) return new Response(JSON.stringify({ error: "Non autorisé" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const today = new Date().toISOString().split("T")[0];
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yKey = yesterday.toISOString().split("T")[0];
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const todayDefault = new Date().toISOString().split("T")[0];
+    const targetDate = typeof body?.target_date === "string" ? body.target_date : todayDefault;
+
+    // Reference day used for symptom/food context = day BEFORE the targeted day.
+    const refDate = new Date(targetDate + "T00:00:00");
+    refDate.setDate(refDate.getDate() - 1);
+    const yKey = refDate.toISOString().split("T")[0];
 
     const { data: existing } = await supabase
       .from("daily_challenges")
       .select("*")
       .eq("user_id", user.id)
-      .eq("challenge_date", today)
+      .eq("challenge_date", targetDate)
       .maybeSingle();
     if (existing) {
       return new Response(JSON.stringify({ challenge: existing, cached: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Last 7 challenges to avoid repetition
+    const { data: recent } = await supabase
+      .from("daily_challenges")
+      .select("challenge_text")
+      .eq("user_id", user.id)
+      .order("challenge_date", { ascending: false })
+      .limit(7);
+    const recentTexts = (recent || []).map((r: any) => r.challenge_text).filter(Boolean);
 
     const [foodRes, symptomRes] = await Promise.all([
       supabase.from("food_logs").select("*").eq("user_id", user.id).eq("logged_at", yKey),
