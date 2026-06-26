@@ -173,6 +173,56 @@ export default function WeeklyReportCard() {
                 <p>{data.symptom_comment}</p>
               </div>
 
+              {(data.deficits?.macros?.length || data.deficits?.micros?.length) ? (
+                <div className="bg-rose-50 dark:bg-rose-950/20 rounded-xl p-3">
+                  <p className="font-semibold mb-2">🎯 Tes principaux manques</p>
+                  <ul className="space-y-1">
+                    {[...(data.deficits.macros || []), ...(data.deficits.micros || [])].map((d) => (
+                      <li key={d.key} className="text-sm flex justify-between gap-2">
+                        <span>{d.label}</span>
+                        <span className="font-mono text-rose-700">−{d.missing}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {data.suggestions?.length ? (
+                <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-xl p-3">
+                  <p className="font-semibold mb-2">🥗 À privilégier cette semaine</p>
+                  <ul className="space-y-1.5">
+                    {data.suggestions.map((s) => (
+                      <li key={s.label} className="text-sm">
+                        <span className="font-medium">{s.label} :</span>{" "}
+                        <span className="text-muted-foreground">{s.foods.join(", ")}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {data.recipe?.title ? (
+                <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-3">
+                  <p className="font-semibold mb-1">🍽️ Recette suggérée — {data.recipe.title}</p>
+                  {data.recipe.ingredients?.length ? (
+                    <>
+                      <p className="text-xs font-semibold mt-2 mb-1">Ingrédients</p>
+                      <ul className="list-disc list-inside text-sm space-y-0.5">
+                        {data.recipe.ingredients.map((i, idx) => <li key={idx}>{i}</li>)}
+                      </ul>
+                    </>
+                  ) : null}
+                  {data.recipe.steps?.length ? (
+                    <>
+                      <p className="text-xs font-semibold mt-2 mb-1">Préparation</p>
+                      <ol className="list-decimal list-inside text-sm space-y-0.5">
+                        {data.recipe.steps.map((s, idx) => <li key={idx}>{s}</li>)}
+                      </ol>
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
+
               <div className="flex items-center justify-between bg-card border border-border rounded-xl p-3">
                 <div>
                   <p className="text-xs text-muted-foreground">Score semaine</p>
