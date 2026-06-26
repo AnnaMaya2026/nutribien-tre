@@ -149,7 +149,7 @@ Réponds UNIQUEMENT en JSON: { "challenge": "..." }`;
 
     const { data: inserted } = await supabase.from("daily_challenges").insert({
       user_id: user.id,
-      challenge_date: today,
+      challenge_date: targetDate,
       challenge_text: parsed.challenge,
       nutrient_key: weakest,
     }).select().single();
