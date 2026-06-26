@@ -235,6 +235,11 @@ serve(async (req) => {
 - Routines: ${routineCompliance.length ? routineCompliance.join(", ") : "aucune routine"}
 - Habitudes: ${habitSummary.length ? habitSummary.join(", ") : "aucune habitude"}`;
 
+    const deficitsForPrompt = [...macroDeficits, ...microDeficits]
+      .map((d) => `${d.label} −${Math.round(d.deficitPerDay)}${d.unit}/j`)
+      .join(", ") || "aucun manque majeur";
+    const suggestionFoods = suggestions.flatMap((s) => s.foods).slice(0, 6).join(", ");
+
     const systemPrompt = `Tu es Sophie, nutritionniste spécialisée en ménopause. Génère un bilan hebdomadaire bienveillant et motivant basé sur les données fournies.
 
 Réponds UNIQUEMENT par un objet JSON valide (sans markdown, sans backticks) avec EXACTEMENT ces champs :
@@ -245,12 +250,14 @@ Réponds UNIQUEMENT par un objet JSON valide (sans markdown, sans backticks) ave
   "symptom_trend": "amélioration" | "stable" | "dégradation",
   "symptom_comment": string (1-2 phrases sur l'évolution des symptômes),
   "score_this_week": number entre 1 et 10 (note globale de la semaine),
-  "score_last_week": number entre 1 et 10 (estime la note de la semaine précédente d'après le contexte ou répète celle fournie)
+  "score_last_week": number entre 1 et 10 (estime la note de la semaine précédente d'après le contexte ou répète celle fournie),
+  "recipe": { "title": string, "ingredients": string[] (5-7 items concis), "steps": string[] (3-5 étapes courtes) }
 }
 
+La recette DOIT combiner 2-3 des aliments suggérés (${suggestionFoods || "aliments riches en calcium, oméga-3, magnésium"}) pour compenser les principaux manques observés (${deficitsForPrompt}).
 Ton chaleureux, jamais culpabilisant. Phrases courtes.`;
 
-    const userPromptJson = `${userPrompt}\n- Score de la semaine précédente (déjà calculé): ${prevScore ?? "inconnu"}`;
+    const userPromptJson = `${userPrompt}\n- Principaux manques: ${deficitsForPrompt}\n- Score de la semaine précédente (déjà calculé): ${prevScore ?? "inconnu"}`;
 
     const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
