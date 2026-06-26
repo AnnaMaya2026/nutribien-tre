@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
     }
   ]
 }
-Unités: calories en kcal, macros/fibres en g, minéraux en mg (sauf vitamine_d/b12/k/b9 en µg, oméga3/zinc en mg). Si inconnu, mets 0.`;
+Unités STRICTES: calories=kcal, macros/fibres/oméga-3=g, calcium/magnésium/fer/zinc/potassium/vitamine_e/vitamine_b6=mg, vitamine_d/b12/k/b9=µg, phytoestrogens=mg. Si inconnu, mets 0. NE PAS donner d'oméga-3 en mg.`;
 
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
