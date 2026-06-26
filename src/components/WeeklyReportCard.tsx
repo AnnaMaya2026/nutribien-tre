@@ -12,6 +12,24 @@ import SophieAvatar from "@/components/SophieAvatar";
 import { Loader2, ArrowUp, ArrowDown, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
+interface Deficit {
+  key: string;
+  label: string;
+  missing: string;
+  avg: number;
+  goal: number;
+  unit: string;
+}
+interface Suggestion {
+  label: string;
+  missing: string;
+  foods: string[];
+}
+interface Recipe {
+  title: string;
+  ingredients: string[];
+  steps: string[];
+}
 interface ReportData {
   positive_point: string;
   to_improve: string;
@@ -20,6 +38,9 @@ interface ReportData {
   symptom_comment: string;
   score_this_week: number;
   score_last_week: number;
+  deficits?: { macros: Deficit[]; micros: Deficit[] };
+  suggestions?: Suggestion[];
+  recipe?: Recipe;
 }
 
 const trendEmoji = (t?: string) =>
