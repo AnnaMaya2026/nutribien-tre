@@ -252,6 +252,7 @@ function HydrationCard({ habit }: { habit: UserHabit }) {
       )}
     </div>
   );
+}
 
 // Sleep card — track hours per night (stored as half-hours: count × 0.5 = h)
 function SleepCard({ habit }: { habit: UserHabit }) {
