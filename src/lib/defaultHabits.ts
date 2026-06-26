@@ -32,6 +32,16 @@ export const DEFAULT_HABITS: DefaultHabit[] = [
       "une bonne hydratation aide à réduire les bouffées de chaleur et la fatigue",
   },
   {
+    habit_key: "sommeil",
+    habit_name: "Sommeil",
+    habit_emoji: "🌙",
+    // Stored as half-hours (count × 0.5 = heures) pour autoriser 7,5h sans migration.
+    goal: 16, // = 8h
+    unit: "heures",
+    symptom_warning:
+      "moins de 7h de sommeil peut aggraver fatigue, bouffées de chaleur et irritabilité",
+  },
+  {
     habit_key: "cafe",
     habit_name: "Café",
     habit_emoji: "☕",

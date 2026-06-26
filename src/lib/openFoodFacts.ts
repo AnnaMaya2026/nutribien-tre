@@ -35,26 +35,24 @@ function n(v: number | undefined): number {
   return v && isFinite(v) ? v : 0;
 }
 
+import { sanitizePer100g } from "@/lib/nutrientSanitize";
+
 function parseProduct(p: OFFProduct): ParsedFood | null {
   if (!p.product_name) return null;
+  const name = p.product_name;
   return {
-    name: p.product_name,
-    calories_100g: n(p.nutriments["energy-kcal_100g"]),
-    proteins_100g: n(p.nutriments.proteins_100g),
-    carbs_100g: n(p.nutriments.carbohydrates_100g),
-    fats_100g: n(p.nutriments.fat_100g),
-    calcium_100g: n(p.nutriments.calcium_100g),
-    // OpenFoodFacts reports vitamin D inconsistently — sometimes IU instead of µg.
-    // No real food exceeds ~50µg/100g, so values above are treated as IU (1 IU = 0.025 µg → /40).
-    vitamin_d_100g: (() => {
-      const v = n(p.nutriments["vitamin-d_100g"]);
-      return v > 50 ? +(v / 40).toFixed(2) : v;
-    })(),
-    magnesium_100g: n(p.nutriments.magnesium_100g),
-    iron_100g: n(p.nutriments.iron_100g),
-    omega3_100g: n(p.nutriments["omega-3-fat_100g"]),
-    vitamin_b12_100g: n(p.nutriments["vitamin-b12_100g"]),
-    phytoestrogens_100g: 0, // OFF doesn't track this
+    name,
+    calories_100g: sanitizePer100g("calories", n(p.nutriments["energy-kcal_100g"]), name),
+    proteins_100g: sanitizePer100g("proteins", n(p.nutriments.proteins_100g), name),
+    carbs_100g: sanitizePer100g("carbs", n(p.nutriments.carbohydrates_100g), name),
+    fats_100g: sanitizePer100g("fats", n(p.nutriments.fat_100g), name),
+    calcium_100g: sanitizePer100g("calcium", n(p.nutriments.calcium_100g), name),
+    vitamin_d_100g: sanitizePer100g("vitamin_d", n(p.nutriments["vitamin-d_100g"]), name),
+    magnesium_100g: sanitizePer100g("magnesium", n(p.nutriments.magnesium_100g), name),
+    iron_100g: sanitizePer100g("iron", n(p.nutriments.iron_100g), name),
+    omega3_100g: sanitizePer100g("omega3", n(p.nutriments["omega-3-fat_100g"]), name),
+    vitamin_b12_100g: sanitizePer100g("vitamin_b12", n(p.nutriments["vitamin-b12_100g"]), name),
+    phytoestrogens_100g: 0,
     serving_size: p.serving_size || "100g",
   };
 }

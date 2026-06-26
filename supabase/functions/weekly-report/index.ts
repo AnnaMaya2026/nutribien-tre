@@ -121,7 +121,16 @@ serve(async (req) => {
     const bestDay = dayKeys[dailyCal.indexOf(Math.max(...dailyCal))];
     const worstDay = dayKeys[dailyCal.indexOf(Math.min(...dailyCal.filter((c) => c > 0).length ? dailyCal.map((c) => c || Infinity) : dailyCal))];
 
-    // Recurring nutrient gaps (avg below 50% goal across days with data)
+    // Macro + micro goals (per day). Macros are pulled from profile when available.
+    const proteinGoal = Number((profile as any)?.daily_protein_goal) || Math.round((calorieGoal * 0.27) / 4);
+    const carbsGoal = Number((profile as any)?.daily_carbs_goal) || Math.round((calorieGoal * 0.48) / 4);
+    const fatsGoal = Number((profile as any)?.daily_fats_goal) || Math.round((calorieGoal * 0.22) / 9);
+
+    const macroGoals: Record<string, { goal: number; label: string; unit: string }> = {
+      proteins: { goal: proteinGoal, label: "Protéines", unit: "g" },
+      carbs: { goal: carbsGoal, label: "Glucides", unit: "g" },
+      fats: { goal: fatsGoal, label: "Lipides", unit: "g" },
+    };
     const nutrientGoals: Record<string, { goal: number; label: string; unit: string }> = {
       calcium: { goal: 1200, label: "Calcium", unit: "mg" },
       vitamin_d: { goal: 20, label: "Vitamine D", unit: "µg" },
@@ -130,16 +139,47 @@ serve(async (req) => {
       omega3: { goal: 2.5, label: "Oméga-3", unit: "g" },
       fibres: { goal: 25, label: "Fibres", unit: "g" },
     };
+
+    const sumFor = (k: string) => foodLogs.reduce((a, f) => a + (Number((f as any)[k]) || 0), 0);
+    const macroTotals: Record<string, number> = {};
     const nutrientTotals: Record<string, number> = {};
-    for (const f of foodLogs) {
-      for (const k of Object.keys(nutrientGoals)) {
-        nutrientTotals[k] = (nutrientTotals[k] || 0) + (Number((f as any)[k]) || 0);
-      }
-    }
-    const gaps = Object.entries(nutrientGoals)
-      .map(([k, m]) => ({ k, label: m.label, avg: (nutrientTotals[k] || 0) / 7, goal: m.goal, unit: m.unit }))
-      .filter((n) => n.avg < n.goal * 0.5)
-      .map((n) => `${n.label} (${n.avg.toFixed(1)}/${n.goal}${n.unit} en moyenne)`);
+    for (const k of Object.keys(macroGoals)) macroTotals[k] = sumFor(k);
+    for (const k of Object.keys(nutrientGoals)) nutrientTotals[k] = sumFor(k);
+
+    type Deficit = { key: string; label: string; unit: string; avg: number; goal: number; deficitPerDay: number };
+    const computeDeficits = (totals: Record<string, number>, goals: Record<string, { goal: number; label: string; unit: string }>): Deficit[] =>
+      Object.entries(goals)
+        .map(([key, m]) => {
+          const avg = (totals[key] || 0) / 7;
+          return { key, label: m.label, unit: m.unit, avg, goal: m.goal, deficitPerDay: Math.max(0, m.goal - avg) };
+        })
+        .filter((d) => d.deficitPerDay > 0)
+        .sort((a, b) => b.deficitPerDay / b.goal - a.deficitPerDay / a.goal);
+
+    const macroDeficits = computeDeficits(macroTotals, macroGoals).slice(0, 3);
+    const microDeficits = computeDeficits(nutrientTotals, nutrientGoals).slice(0, 3);
+
+    // Map deficit → suggested everyday foods.
+    const FOOD_FOR_DEFICIT: Record<string, string[]> = {
+      proteins: ["œufs", "poulet", "yaourt grec", "lentilles", "tofu"],
+      carbs: ["riz complet", "patate douce", "avoine", "quinoa"],
+      fats: ["avocat", "huile d'olive", "amandes", "noix"],
+      calcium: ["yaourt", "fromage à pâte dure", "brocoli", "sardines avec arêtes"],
+      vitamin_d: ["saumon", "jaune d'œuf", "champignons exposés au soleil"],
+      magnesium: ["amandes", "chocolat noir 70%", "épinards", "graines de courge"],
+      iron: ["lentilles", "épinards cuits", "boudin noir", "tofu ferme"],
+      omega3: ["saumon 2×/semaine", "sardines", "noix", "graines de lin moulues"],
+      fibres: ["légumineuses", "fruits rouges", "flocons d'avoine", "légumes verts"],
+    };
+    const suggestions = [...macroDeficits, ...microDeficits].map((d) => ({
+      label: d.label,
+      missing: `${Math.round(d.deficitPerDay)}${d.unit}/jour`,
+      foods: FOOD_FOR_DEFICIT[d.key] || [],
+    }));
+
+    const gaps = [...macroDeficits, ...microDeficits]
+      .filter((d) => d.avg < d.goal * 0.5)
+      .map((d) => `${d.label} (${d.avg.toFixed(1)}/${d.goal}${d.unit} en moyenne)`);
 
     // Symptom evolution: first 3 vs last 3 days
     const sumScores = (logs: any[]) => {
@@ -195,6 +235,11 @@ serve(async (req) => {
 - Routines: ${routineCompliance.length ? routineCompliance.join(", ") : "aucune routine"}
 - Habitudes: ${habitSummary.length ? habitSummary.join(", ") : "aucune habitude"}`;
 
+    const deficitsForPrompt = [...macroDeficits, ...microDeficits]
+      .map((d) => `${d.label} −${Math.round(d.deficitPerDay)}${d.unit}/j`)
+      .join(", ") || "aucun manque majeur";
+    const suggestionFoods = suggestions.flatMap((s) => s.foods).slice(0, 6).join(", ");
+
     const systemPrompt = `Tu es Sophie, nutritionniste spécialisée en ménopause. Génère un bilan hebdomadaire bienveillant et motivant basé sur les données fournies.
 
 Réponds UNIQUEMENT par un objet JSON valide (sans markdown, sans backticks) avec EXACTEMENT ces champs :
@@ -205,12 +250,14 @@ Réponds UNIQUEMENT par un objet JSON valide (sans markdown, sans backticks) ave
   "symptom_trend": "amélioration" | "stable" | "dégradation",
   "symptom_comment": string (1-2 phrases sur l'évolution des symptômes),
   "score_this_week": number entre 1 et 10 (note globale de la semaine),
-  "score_last_week": number entre 1 et 10 (estime la note de la semaine précédente d'après le contexte ou répète celle fournie)
+  "score_last_week": number entre 1 et 10 (estime la note de la semaine précédente d'après le contexte ou répète celle fournie),
+  "recipe": { "title": string, "ingredients": string[] (5-7 items concis), "steps": string[] (3-5 étapes courtes) }
 }
 
+La recette DOIT combiner 2-3 des aliments suggérés (${suggestionFoods || "aliments riches en calcium, oméga-3, magnésium"}) pour compenser les principaux manques observés (${deficitsForPrompt}).
 Ton chaleureux, jamais culpabilisant. Phrases courtes.`;
 
-    const userPromptJson = `${userPrompt}\n- Score de la semaine précédente (déjà calculé): ${prevScore ?? "inconnu"}`;
+    const userPromptJson = `${userPrompt}\n- Principaux manques: ${deficitsForPrompt}\n- Score de la semaine précédente (déjà calculé): ${prevScore ?? "inconnu"}`;
 
     const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -245,6 +292,12 @@ Ton chaleureux, jamais culpabilisant. Phrases courtes.`;
     if (prevScore !== null && typeof prevScore === "number") {
       reportData.score_last_week = prevScore;
     }
+    // Attach computed deficits + curated suggestions (independent from LLM)
+    reportData.deficits = {
+      macros: macroDeficits.map((d) => ({ key: d.key, label: d.label, missing: `${Math.round(d.deficitPerDay)}${d.unit}/jour`, avg: +d.avg.toFixed(1), goal: d.goal, unit: d.unit })),
+      micros: microDeficits.map((d) => ({ key: d.key, label: d.label, missing: `${Math.round(d.deficitPerDay)}${d.unit}/jour`, avg: +d.avg.toFixed(1), goal: d.goal, unit: d.unit })),
+    };
+    reportData.suggestions = suggestions;
 
     await supabase.from("weekly_reports").upsert({
       user_id: user.id,

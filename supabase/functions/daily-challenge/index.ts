@@ -19,20 +19,33 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     if (!user) return new Response(JSON.stringify({ error: "Non autorisé" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const today = new Date().toISOString().split("T")[0];
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yKey = yesterday.toISOString().split("T")[0];
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const todayDefault = new Date().toISOString().split("T")[0];
+    const targetDate = typeof body?.target_date === "string" ? body.target_date : todayDefault;
+
+    // Reference day used for symptom/food context = day BEFORE the targeted day.
+    const refDate = new Date(targetDate + "T00:00:00");
+    refDate.setDate(refDate.getDate() - 1);
+    const yKey = refDate.toISOString().split("T")[0];
 
     const { data: existing } = await supabase
       .from("daily_challenges")
       .select("*")
       .eq("user_id", user.id)
-      .eq("challenge_date", today)
+      .eq("challenge_date", targetDate)
       .maybeSingle();
     if (existing) {
       return new Response(JSON.stringify({ challenge: existing, cached: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Last 7 challenges to avoid repetition
+    const { data: recent } = await supabase
+      .from("daily_challenges")
+      .select("challenge_text")
+      .eq("user_id", user.id)
+      .order("challenge_date", { ascending: false })
+      .limit(7);
+    const recentTexts = (recent || []).map((r: any) => r.challenge_text).filter(Boolean);
 
     const [foodRes, symptomRes] = await Promise.all([
       supabase.from("food_logs").select("*").eq("user_id", user.id).eq("logged_at", yKey),
@@ -70,15 +83,40 @@ serve(async (req) => {
     const activeSymptoms = Object.entries(scores).filter(([, v]) => (v as number) >= 5).map(([k]) => k);
 
     const days = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
-    const month = new Date().getMonth();
+    const targetDayIdx = new Date(targetDate + "T00:00:00").getDay();
+    const month = new Date(targetDate + "T00:00:00").getMonth();
     const season = month <= 1 || month === 11 ? "hiver" : month <= 4 ? "printemps" : month <= 7 ? "été" : "automne";
+    const isForTomorrow = targetDate !== todayDefault;
+    const moment = isForTomorrow ? "demain" : "aujourd'hui";
 
-    const userPrompt = `Hier le nutriment le plus déficitaire était : ${goals[weakest].label} (${Math.round(weakestRatio * 100)}% de l'objectif atteint).
+    // Seed list of varied challenges to inspire the model and avoid loops.
+    const seedIdeas = [
+      "Marcher 15 min en extérieur après un repas",
+      "Boire 1L d'eau supplémentaire dans la journée",
+      "Manger 1 portion supplémentaire de fruits",
+      "30 secondes d'étirements au réveil",
+      "5 minutes de méditation guidée",
+      "10 minutes de yoga doux",
+      "Respiration 4-7-8 avant de dormir",
+      "10 squats en attendant le café",
+      "Ajouter 30g de graines (lin/chia) à un repas",
+      "1 poignée d'amandes en collation",
+      "Cuisiner un poisson gras (saumon, sardine)",
+      "1 portion de légumes verts à chaque repas",
+      "Couper les écrans 30 min avant le coucher",
+      "Une discussion qualité avec une personne proche",
+      "Préparer un repas 100% maison",
+    ];
+
+    const userPrompt = `Contexte: nutriment le plus déficitaire ${moment === "demain" ? "ces derniers jours" : "hier"} : ${goals[weakest].label} (${Math.round(weakestRatio * 100)}% de l'objectif atteint).
 Symptômes actuels : ${activeSymptoms.length ? activeSymptoms.join(", ") : "aucun particulier"}
-Jour: ${days[new Date().getDay()]}, saison: ${season}.
+Jour cible: ${days[targetDayIdx]}, saison: ${season}.
 
-Génère UN défi nutritionnel pour aujourd'hui, concret, simple, en 1-2 phrases courtes, motivant.
-Exemple de ton: "Aujourd'hui: ajoute 30g de graines de lin à ton yaourt — tu couvriras 50% de tes oméga-3 !"
+Idées variées possibles (à mixer/adapter, ne pas recopier mot pour mot): ${seedIdeas.join(" · ")}.
+
+Défis déjà proposés récemment (NE PAS répéter même en reformulant): ${recentTexts.length ? recentTexts.map((t) => `"${t}"`).join(" | ") : "aucun"}.
+
+Génère UN défi pour ${moment}, concret, simple, court (1-2 phrases), motivant, DIFFÉRENT des précédents, varié (nutrition / mouvement / mental / sommeil).
 Réponds UNIQUEMENT en JSON: { "challenge": "..." }`;
 
     const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -111,7 +149,7 @@ Réponds UNIQUEMENT en JSON: { "challenge": "..." }`;
 
     const { data: inserted } = await supabase.from("daily_challenges").insert({
       user_id: user.id,
-      challenge_date: today,
+      challenge_date: targetDate,
       challenge_text: parsed.challenge,
       nutrient_key: weakest,
     }).select().single();
