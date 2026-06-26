@@ -166,6 +166,11 @@ Unités STRICTES: calories=kcal, macros/fibres/oméga-3=g, calcium/magnésium/fe
           for (const k of NUTRIENT_KEYS) per100[k] = Number(est[k]) || 0;
         }
 
+        // Sanitize per-100g values (units, ceilings) BEFORE scaling.
+        for (const k of NUTRIENT_KEYS) {
+          per100[k] = sanitizePer100g(k, per100[k] || 0, matchedName);
+        }
+
         const scale = grams / 100;
         const scaled: Record<string, number> = {};
         for (const k of NUTRIENT_KEYS) {
