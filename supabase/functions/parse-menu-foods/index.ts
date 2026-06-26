@@ -15,6 +15,26 @@ const NUTRIENT_KEYS = [
   "vitamin_k", "vitamin_b6", "vitamin_b9", "vitamin_e",
 ] as const;
 
+// Per-100g ceilings — anything above is a bad-unit value and is dropped.
+const CEIL_PER_100G: Record<string, number> = {
+  calories: 900, proteins: 100, carbs: 100, fats: 100, fibres: 80,
+  calcium: 2000, vitamin_d: 100, magnesium: 1000, iron: 100, omega3: 60,
+  phytoestrogens: 1000, vitamin_b12: 100, potassium: 5000, zinc: 100,
+  vitamin_k: 1500, vitamin_b6: 10, vitamin_b9: 2000, vitamin_e: 100,
+};
+
+function sanitizePer100g(key: string, raw: number, foodName: string): number {
+  if (!isFinite(raw) || raw < 0) return 0;
+  let v = raw;
+  const isOil = /huile|oil/i.test(foodName);
+  if (key === "vitamin_d" && v > 50) v = v / 40;            // IU → µg
+  if (key === "omega3" && !isOil && v > 60) v = v / 1000;   // mg → g
+  if (key === "zinc" && v > 100) v = v / 1000;              // µg → mg
+  const ceil = CEIL_PER_100G[key];
+  if (ceil !== undefined && v > ceil) return 0;
+  return v;
+}
+
 // CIQUAL column -> food_logs column mapping (per 100g)
 const CIQUAL_MAP: Record<string, string> = {
   calories_100g: "calories",
