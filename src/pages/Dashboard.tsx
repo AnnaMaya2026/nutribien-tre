@@ -189,12 +189,10 @@ export default function Dashboard() {
   });
   const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
 
-  const calorieGoal = profile?.daily_calorie_goal || 1800;
-  const proteinGoal = Math.max(1, Math.round(Number(profile?.weight || 60) * 1.2));
   const vitaminDGoal = getVitaminDGoal(profile?.age);
   const firstName = getDisplayName((profile as any)?.display_name, user?.email);
 
-  // Per-meal targets based on profile goals
+  // Per-meal targets based on profile goals (Harris-Benedict)
   const p = profile as any;
   const dailyCalories = calculateCalorieGoal({
     weight: p?.weight,
@@ -206,6 +204,8 @@ export default function Dashboard() {
   const dailyProteins = calculateProteinGoal(dailyCalories, p?.objective);
   const dailyCarbs = calculateCarbsGoal(dailyCalories, p?.objective);
   const dailyFats = calculateFatsGoal(dailyCalories, p?.objective);
+  const calorieGoal = dailyCalories;
+  const proteinGoal = dailyProteins;
   const mealTargets = calculateMealTargets(dailyCalories, dailyProteins, dailyCarbs, dailyFats);
   const targetByMeal = Object.fromEntries(mealTargets.map((t) => [t.key, t]));
 
