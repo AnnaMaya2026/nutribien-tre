@@ -386,8 +386,8 @@ export default function Dashboard() {
         <div className="grid grid-cols-4 gap-3">
           {[
             { label: "Protéines", value: totals.proteins, max: proteinGoal, isMicro: false, key: "proteins" as NutrientKey },
-            { label: "Glucides", value: totals.carbs, max: MACRO_GOALS.carbs, isMicro: false, key: undefined },
-            { label: "Lipides", value: totals.fats, max: MACRO_GOALS.fats, isMicro: false, key: undefined },
+            { label: "Glucides", value: totals.carbs, max: dailyCarbs, isMicro: false, key: undefined },
+            { label: "Lipides", value: totals.fats, max: dailyFats, isMicro: false, key: undefined },
             { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres, isMicro: true, key: "fibres" as NutrientKey },
           ].map((m) => {
             const rawPct = (m.value / m.max) * 100;
