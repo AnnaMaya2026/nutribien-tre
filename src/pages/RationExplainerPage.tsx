@@ -162,7 +162,9 @@ export default function RationExplainerPage() {
                 {objective.value === "perte_poids"
                   ? "Légèrement réduit pour stabiliser ta glycémie. "
                   : ""}
-                Privilégie les complexes (riz brun, pâtes complètes, légumineuses).
+                Privilégie les complexes (riz brun, pâtes complètes, légumineuses). Inclure au moins <strong>25 g de fibres/jour</strong> dans ces glucides.
+                <br />
+                <span className="text-xs">Sources fibres : légumes, fruits, légumineuses, céréales complètes.</span>
               </p>
             </div>
             <div>
