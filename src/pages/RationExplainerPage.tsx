@@ -140,7 +140,7 @@ export default function RationExplainerPage() {
             </div>
             <div className="flex justify-between text-sm">
               <span>🟠 <strong>Glucides</strong></span>
-              <span className="font-mono">{carbsPct}% = <strong>{carbsG} g/jour</strong></span>
+              <span className="font-mono">{carbsPct}% = <strong>{carbsG} g/jour</strong> <span className="text-muted-foreground">(dont 25g de fibres minimum)</span></span>
             </div>
             <div className="flex justify-between text-sm">
               <span>🟡 <strong>Lipides</strong></span>
@@ -162,7 +162,9 @@ export default function RationExplainerPage() {
                 {objective.value === "perte_poids"
                   ? "Légèrement réduit pour stabiliser ta glycémie. "
                   : ""}
-                Privilégie les complexes (riz brun, pâtes complètes, légumineuses).
+                Privilégie les complexes (riz brun, pâtes complètes, légumineuses). Inclure au moins <strong>25 g de fibres/jour</strong> dans ces glucides.
+                <br />
+                <span className="text-xs">Sources fibres : légumes, fruits, légumineuses, céréales complètes.</span>
               </p>
             </div>
             <div>
