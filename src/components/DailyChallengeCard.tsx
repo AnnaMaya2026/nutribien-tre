@@ -96,7 +96,10 @@ export default function DailyChallengeCard() {
 
       {challenge && !loading && (
         <>
-          <p className="text-sm text-foreground leading-relaxed mb-3">{challenge.challenge_text}</p>
+          <p className="text-sm text-foreground leading-relaxed mb-3">
+            <span className="font-semibold">{forTomorrow ? "🌅 Demain : " : "Aujourd'hui : "}</span>
+            {challenge.challenge_text}
+          </p>
           {challenge.completed ? (
             <div className="flex items-center gap-2 text-green-600 text-sm font-semibold">
               <Check className="w-4 h-4" /> Défi relevé !
