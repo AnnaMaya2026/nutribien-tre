@@ -301,7 +301,7 @@ export default function SavedMenusPage() {
               </DialogHeader>
               <div className="flex flex-col gap-2 mt-2">
                 <button
-                  onClick={() => { closeImport(); navigate("/repas"); }}
+                  onClick={() => { closeImport(); navigate("/journal"); }}
                   className="w-full px-4 py-3 rounded-xl bg-pink-deep text-white text-sm font-medium hover:opacity-90"
                 >
                   Voir mon journal →
