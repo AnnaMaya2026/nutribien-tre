@@ -140,7 +140,7 @@ export default function RationExplainerPage() {
             </div>
             <div className="flex justify-between text-sm">
               <span>🟠 <strong>Glucides</strong></span>
-              <span className="font-mono">{carbsPct}% = <strong>{carbsG} g/jour</strong></span>
+              <span className="font-mono">{carbsPct}% = <strong>{carbsG} g/jour</strong> <span className="text-muted-foreground">(dont 25g de fibres minimum)</span></span>
             </div>
             <div className="flex justify-between text-sm">
               <span>🟡 <strong>Lipides</strong></span>
