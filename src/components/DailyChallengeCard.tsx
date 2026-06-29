@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Target, Check } from "lucide-react";
@@ -71,6 +71,14 @@ export default function DailyChallengeCard() {
 
   const title = forTomorrow ? "🌅 Défi pour demain" : "🎯 Défi du jour";
 
+  const displayText = useMemo(() => {
+    if (!challenge?.challenge_text) return "";
+    return challenge.challenge_text
+      .replace(/^\s*Aujourd['’]hui\s*[:\s]*/i, "")
+      .replace(/^\s*Demain\s*[:\s]*/i, "")
+      .trim();
+  }, [challenge?.challenge_text]);
+
   return (
     <div className="bg-gradient-to-br from-amber-50 via-card to-card dark:from-amber-950/20 rounded-2xl p-5 card-soft mb-4 animate-fade-in border border-amber-400/30">
       <div className="flex items-center gap-2 mb-2">
@@ -98,7 +106,7 @@ export default function DailyChallengeCard() {
         <>
           <p className="text-sm text-foreground leading-relaxed mb-3">
             <span className="font-semibold">{forTomorrow ? "🌅 Demain : " : "Aujourd'hui : "}</span>
-            {challenge.challenge_text}
+            {displayText}
           </p>
           {challenge.completed ? (
             <div className="flex items-center gap-2 text-green-600 text-sm font-semibold">
