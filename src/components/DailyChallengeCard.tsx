@@ -106,7 +106,7 @@ export default function DailyChallengeCard() {
         <>
           <p className="text-sm text-foreground leading-relaxed mb-3">
             <span className="font-semibold">{forTomorrow ? "🌅 Demain : " : "Aujourd'hui : "}</span>
-            {challenge.challenge_text}
+            {displayText}
           </p>
           {challenge.completed ? (
             <div className="flex items-center gap-2 text-green-600 text-sm font-semibold">
