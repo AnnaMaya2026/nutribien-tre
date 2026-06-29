@@ -14,6 +14,8 @@ const CATEGORIES = [
 
 export default function FeedbackButton() {
   const { user } = useAuth();
+  const location = useLocation();
+  const isHome = location.pathname === "/";
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [category, setCategory] = useState("suggestion");
