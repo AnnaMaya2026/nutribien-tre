@@ -407,7 +407,10 @@ export default function SymptomHistoryPage() {
   const { entries: journalEntries } = useJournalEntries();
   const { routines, logs: routineLogs } = useRoutines();
   const { habits } = useHabits();
-  const today = new Date().toISOString().split("T")[0];
+  const { selectedDateStr } = useSelectedDate();
+  // Save/read the daily bilan against the date currently selected in the global date selector,
+  // not the wall-clock day. This lets users fill in past days without timezone drift.
+  const today = selectedDateStr;
 
   // Merged symptoms list = default minus disabled + custom user-added
   const symptomsList = useMemo(() => {
