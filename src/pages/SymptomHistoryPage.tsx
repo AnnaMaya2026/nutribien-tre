@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { SymptomTipsCollapsible } from "@/components/SymptomTipsCollapsible";
 import { CustomizeSymptomsModal } from "@/components/CustomizeSymptomsModal";
 import CorrelationsSection from "@/components/CorrelationsSection";
+import DateSelector from "@/components/DateSelector";
+import { useSelectedDate } from "@/hooks/useSelectedDate";
 
 const PERIODS = [
   { value: 7, label: "7 jours" },
