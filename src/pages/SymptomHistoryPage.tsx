@@ -707,6 +707,11 @@ export default function SymptomHistoryPage() {
 
       <CustomizeSymptomsModal open={showCustomize} onOpenChange={setShowCustomize} />
 
+      {/* Global date selector — bilan saves against the selected date */}
+      <DateSelector />
+
+
+
       {/* Daily Rating — moved here as first element */}
       <DailyRating
         scores={dailyScores}
