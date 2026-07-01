@@ -452,13 +452,23 @@ export default function SymptomHistoryPage() {
     enabled: !!user,
   });
 
-  // Initialize scores from today's log
-  if (todayLog && !scoresLoaded) {
-    const existing = (todayLog.symptom_scores && typeof todayLog.symptom_scores === "object" && !Array.isArray(todayLog.symptom_scores))
-      ? todayLog.symptom_scores as SymptomScores : {};
+  // Re-hydrate scores whenever the active date (and its log) changes,
+  // so switching days in the selector shows the correct saved values.
+  useEffect(() => {
+    if (!todayLog) {
+      setDailyScores({});
+      setScoresLoaded(true);
+      return;
+    }
+    const existing =
+      todayLog.symptom_scores &&
+      typeof todayLog.symptom_scores === "object" &&
+      !Array.isArray(todayLog.symptom_scores)
+        ? (todayLog.symptom_scores as SymptomScores)
+        : {};
     setDailyScores(existing);
     setScoresLoaded(true);
-  }
+  }, [todayLog, today]);
 
   // History logs
   const { data: symptomLogs = [] } = useQuery({
