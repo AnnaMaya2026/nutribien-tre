@@ -739,6 +739,9 @@ export function HabitsTracker() {
         </p>
       </div>
 
+      <DateSelector />
+
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground text-center py-8">Chargement...</p>
       ) : (
