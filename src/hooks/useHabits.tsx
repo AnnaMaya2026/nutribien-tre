@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { DEFAULT_HABITS, getDefaultHabits } from "@/lib/defaultHabits";
 import { calculateHydration } from "@/lib/habitsCalculator";
+import { useSelectedDate } from "./useSelectedDate";
 
 export type HabitType = "limiter" | "atteindre";
 
