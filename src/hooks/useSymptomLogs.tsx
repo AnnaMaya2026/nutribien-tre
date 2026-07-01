@@ -1,13 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useSelectedDate } from "./useSelectedDate";
 
 export type SymptomScores = Record<string, number>;
 
 export function useSymptomLogs() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const today = new Date().toISOString().split("T")[0];
+  const { selectedDateStr } = useSelectedDate();
+  // "today" = the active date selected by the user in the global date selector.
+  const today = selectedDateStr;
 
   const { data: todayLog, isLoading } = useQuery({
     queryKey: ["symptom_log", user?.id, today],
