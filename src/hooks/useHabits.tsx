@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { DEFAULT_HABITS, getDefaultHabits } from "@/lib/defaultHabits";
 import { calculateHydration } from "@/lib/habitsCalculator";
+import { useSelectedDate } from "./useSelectedDate";
 
 export type HabitType = "limiter" | "atteindre";
 
@@ -51,7 +52,10 @@ export type HabitLog = {
 export function useHabits() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const today = new Date().toISOString().split("T")[0];
+  const { selectedDateStr } = useSelectedDate();
+  // "today" here means the *active* date shown in the UI (from the global date selector).
+  // Data is saved against this date so past days can be filled in without timezone drift.
+  const today = selectedDateStr;
   const [weightKg, setWeightKg] = useState<number | undefined>(undefined);
   const [weightLoaded, setWeightLoaded] = useState(false);
 
@@ -134,22 +138,24 @@ export function useHabits() {
     })();
   }, [user, habits, loadingHabits, qc, weightKg, weightLoaded]);
 
-  // 3. Fetch last 7 days of habit logs
-  const sevenDaysAgo = (() => {
+  // 3. Fetch logs covering the last 7 days AND the selected date (if further in the past),
+  // so past-day counts show up correctly when browsing history.
+  const rangeStart = (() => {
     const d = new Date();
     d.setDate(d.getDate() - 6);
-    return d.toISOString().split("T")[0];
+    const wall = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    return selectedDateStr < wall ? selectedDateStr : wall;
   })();
 
   const { data: logs = [] } = useQuery({
-    queryKey: ["habit_logs", user?.id, sevenDaysAgo],
+    queryKey: ["habit_logs", user?.id, rangeStart],
     queryFn: async () => {
       if (!user) return [] as HabitLog[];
       const { data, error } = await supabase
         .from("habit_logs")
         .select("*")
         .eq("user_id", user.id)
-        .gte("logged_at", sevenDaysAgo)
+        .gte("logged_at", rangeStart)
         .order("logged_at", { ascending: true });
       if (error) throw error;
       return (data || []) as HabitLog[];

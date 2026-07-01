@@ -3,6 +3,7 @@ import { Plus, Trash2, X, Minus, AlertTriangle, Check, XCircle, Droplet } from "
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useHabits, UserHabit } from "@/hooks/useHabits";
+import DateSelector from "@/components/DateSelector";
 
 import { LineChart, Line, ResponsiveContainer, YAxis } from "recharts";
 import { toast } from "sonner";
@@ -737,6 +738,9 @@ export function HabitsTracker() {
           Suivez vos habitudes qui peuvent aggraver vos symptômes
         </p>
       </div>
+
+      <DateSelector />
+
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground text-center py-8">Chargement...</p>

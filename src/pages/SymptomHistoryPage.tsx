@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { SymptomTipsCollapsible } from "@/components/SymptomTipsCollapsible";
 import { CustomizeSymptomsModal } from "@/components/CustomizeSymptomsModal";
 import CorrelationsSection from "@/components/CorrelationsSection";
+import DateSelector from "@/components/DateSelector";
+import { useSelectedDate } from "@/hooks/useSelectedDate";
 
 const PERIODS = [
   { value: 7, label: "7 jours" },
@@ -405,7 +407,10 @@ export default function SymptomHistoryPage() {
   const { entries: journalEntries } = useJournalEntries();
   const { routines, logs: routineLogs } = useRoutines();
   const { habits } = useHabits();
-  const today = new Date().toISOString().split("T")[0];
+  const { selectedDateStr } = useSelectedDate();
+  // Save/read the daily bilan against the date currently selected in the global date selector,
+  // not the wall-clock day. This lets users fill in past days without timezone drift.
+  const today = selectedDateStr;
 
   // Merged symptoms list = default minus disabled + custom user-added
   const symptomsList = useMemo(() => {
@@ -447,13 +452,23 @@ export default function SymptomHistoryPage() {
     enabled: !!user,
   });
 
-  // Initialize scores from today's log
-  if (todayLog && !scoresLoaded) {
-    const existing = (todayLog.symptom_scores && typeof todayLog.symptom_scores === "object" && !Array.isArray(todayLog.symptom_scores))
-      ? todayLog.symptom_scores as SymptomScores : {};
+  // Re-hydrate scores whenever the active date (and its log) changes,
+  // so switching days in the selector shows the correct saved values.
+  useEffect(() => {
+    if (!todayLog) {
+      setDailyScores({});
+      setScoresLoaded(true);
+      return;
+    }
+    const existing =
+      todayLog.symptom_scores &&
+      typeof todayLog.symptom_scores === "object" &&
+      !Array.isArray(todayLog.symptom_scores)
+        ? (todayLog.symptom_scores as SymptomScores)
+        : {};
     setDailyScores(existing);
     setScoresLoaded(true);
-  }
+  }, [todayLog, today]);
 
   // History logs
   const { data: symptomLogs = [] } = useQuery({
@@ -691,6 +706,11 @@ export default function SymptomHistoryPage() {
       <p className="text-muted-foreground text-sm mb-4">Suivez et évaluez vos symptômes au quotidien</p>
 
       <CustomizeSymptomsModal open={showCustomize} onOpenChange={setShowCustomize} />
+
+      {/* Global date selector — bilan saves against the selected date */}
+      <DateSelector />
+
+
 
       {/* Daily Rating — moved here as first element */}
       <DailyRating
