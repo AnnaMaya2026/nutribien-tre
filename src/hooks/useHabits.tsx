@@ -52,7 +52,10 @@ export type HabitLog = {
 export function useHabits() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const today = new Date().toISOString().split("T")[0];
+  const { selectedDateStr } = useSelectedDate();
+  // "today" here means the *active* date shown in the UI (from the global date selector).
+  // Data is saved against this date so past days can be filled in without timezone drift.
+  const today = selectedDateStr;
   const [weightKg, setWeightKg] = useState<number | undefined>(undefined);
   const [weightLoaded, setWeightLoaded] = useState(false);
 
