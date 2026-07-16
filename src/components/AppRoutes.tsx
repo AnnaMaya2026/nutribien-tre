@@ -18,6 +18,7 @@ import ProfilePage from "@/pages/ProfilePage";
 import RationExplainerPage from "@/pages/RationExplainerPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import DiagnosisPage from "@/pages/DiagnosisPage";
+import OAuthConsentPage from "@/pages/OAuthConsentPage";
 import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
 import BottomNav from "@/components/BottomNav";
@@ -101,6 +102,7 @@ function ProtectedLayout() {
         <Route path="/cgu" element={withSEO(SEO.cgu, <TermsPage />)} />
         <Route path="/confidentialite" element={withSEO(SEO.confidentialite, <PrivacyPage />)} />
         <Route path="/reset-password" element={withSEO(SEO.reset, <ResetPasswordPage />)} />
+        <Route path="/.lovable/oauth/consent" element={<OAuthConsentPage />} />
         <Route path="/auth" element={<Navigate to="/" replace />} />
         <Route path="/onboarding" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFound />} />
@@ -132,6 +134,7 @@ export default function AppRoutes() {
         <Route path="/auth" element={withSEO(SEO.auth, <AuthPage />)} />
         <Route path="/onboarding" element={withSEO(SEO.onboarding, <OnboardingFlow />)} />
         <Route path="/reset-password" element={withSEO(SEO.reset, <ResetPasswordPage />)} />
+        <Route path="/.lovable/oauth/consent" element={<OAuthConsentPage />} />
         <Route path="/cgu" element={withSEO(SEO.cgu, <TermsPage />)} />
         <Route path="/confidentialite" element={withSEO(SEO.confidentialite, <PrivacyPage />)} />
         <Route path="*" element={withSEO(SEO.welcome, <WelcomePage />)} />
@@ -141,6 +144,7 @@ export default function AppRoutes() {
 
   return (
     <Routes>
+      <Route path="/.lovable/oauth/consent" element={<OAuthConsentPage />} />
       <Route path="/*" element={<ProtectedLayout />} />
     </Routes>
   );
