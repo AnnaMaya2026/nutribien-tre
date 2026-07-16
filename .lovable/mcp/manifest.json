@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "sdk_version": "0.22.2",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://rxiayqubsaufrxbcmspm.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "nutrimeno-mcp",
+      "version": "0.1.0",
+      "title": "NutriMéno"
+    },
+    "tools": [
+      {
+        "name": "get_profile",
+        "title": "Voir mon profil NutriMéno",
+        "description": "Retourne le profil nutritionnel de l'utilisatrice (âge, phase de ménopause, objectifs, restrictions).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_food_logs",
+        "title": "Lister les repas loggés",
+        "description": "Liste les aliments enregistrés dans le journal de l'utilisatrice pour une plage de dates (défaut: 7 derniers jours).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string",
+              "description": "Date de début YYYY-MM-DD (incluse). Optionnel."
+            },
+            "to": {
+              "type": "string",
+              "description": "Date de fin YYYY-MM-DD (incluse). Optionnel."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991,
+              "description": "Nombre max de lignes (défaut 100)."
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "log_food",
+        "title": "Ajouter un aliment au journal",
+        "description": "Enregistre un aliment dans le journal alimentaire de l'utilisatrice avec ses macros optionnelles.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "food_name": {
+              "type": "string",
+              "description": "Nom de l'aliment."
+            },
+            "portion_size": {
+              "type": "number",
+              "description": "Quantité en grammes ou ml."
+            },
+            "meal_type": {
+              "type": "string",
+              "enum": [
+                "petit_dejeuner",
+                "dejeuner",
+                "diner",
+                "collation"
+              ],
+              "description": "Type de repas."
+            },
+            "calories": {
+              "type": "number"
+            },
+            "proteins": {
+              "type": "number"
+            },
+            "carbs": {
+              "type": "number"
+            },
+            "fats": {
+              "type": "number"
+            },
+            "logged_at": {
+              "type": "string",
+              "description": "ISO date. Défaut: maintenant."
+            }
+          },
+          "required": [
+            "food_name"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_symptom_logs",
+        "title": "Lister les symptômes enregistrés",
+        "description": "Retourne l'historique des symptômes ménopausiques (bouffées de chaleur, fatigue, insomnie, sautes d'humeur, scores personnalisés) sur une plage de dates.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string",
+              "description": "Date de début YYYY-MM-DD."
+            },
+            "to": {
+              "type": "string",
+              "description": "Date de fin YYYY-MM-DD."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_journal_entries",
+        "title": "Lister les notes du journal personnel",
+        "description": "Retourne les entrées du journal personnel de l'utilisatrice.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
