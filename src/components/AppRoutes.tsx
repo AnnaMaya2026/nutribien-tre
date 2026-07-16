@@ -144,6 +144,7 @@ export default function AppRoutes() {
 
   return (
     <Routes>
+      <Route path="/.lovable/oauth/consent" element={<OAuthConsentPage />} />
       <Route path="/*" element={<ProtectedLayout />} />
     </Routes>
   );
