@@ -34,7 +34,14 @@ export default function AuthPage() {
     const apply = async () => {
       if (!user) return;
       const raw = sessionStorage.getItem(ONBOARDING_STORAGE_KEY);
-      if (!raw) return;
+      if (!raw) {
+        // Honor ?next= redirect (used by the OAuth consent route).
+        const next = searchParams.get("next");
+        if (next && next.startsWith("/")) {
+          window.location.href = next;
+        }
+        return;
+      }
       try {
         const a: OnboardingAnswers = JSON.parse(raw);
         const calories = calculateCalorieGoal({
@@ -59,12 +66,16 @@ export default function AuthPage() {
           } as any)
           .eq("user_id", user.id);
         sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
+        const next = searchParams.get("next");
+        if (next && next.startsWith("/")) {
+          window.location.href = next;
+        }
       } catch (e) {
         console.error("Failed to apply onboarding answers", e);
       }
     };
     apply();
-  }, [user]);
+  }, [user, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
