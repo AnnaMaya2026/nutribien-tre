@@ -14,8 +14,6 @@ const CATEGORIES = [
 
 export default function FeedbackButton() {
   const { user } = useAuth();
-  const location = useLocation();
-  const isHome = location.pathname === "/";
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [category, setCategory] = useState("suggestion");
@@ -81,9 +79,7 @@ export default function FeedbackButton() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Envoyer un feedback"
-        className={`fixed bottom-24 left-4 z-40 h-11 px-4 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center gap-2 text-sm font-semibold hover:scale-105 transition-all ${
-          isHome ? "opacity-15 hover:opacity-100" : ""
-        }`}
+        className="fixed bottom-24 left-4 z-40 h-11 px-4 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center gap-2 text-sm font-semibold hover:scale-105 transition-all"
       >
         <MessageCircle className="w-4 h-4" />
         <span className="hidden sm:inline">Feedback</span>
