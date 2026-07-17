@@ -55,16 +55,60 @@ serve(async (req) => {
     let profileContext = "";
     let nutritionContext = "";
     let healthContext = "";
+    let memoryContext = "";
+    let trendsContext = "";
+    let recentConversation: Array<{ role: string; content: string }> = [];
+    let profileForMemory: any = null;
     let remaining = DAILY_LIMIT;
     const today = new Date().toISOString().split("T")[0];
     let logsRes: any = null;
 
     if (userId) {
-      const [profileRes, logsResLocal] = await Promise.all([
+      // 14-day window for trends aggregation
+      const trendsFrom = new Date(Date.now() - 14 * 86400_000).toISOString().split("T")[0];
+      // 3-day window for recent chat context
+      const chatFromIso = new Date(Date.now() - 3 * 86400_000).toISOString();
+
+      const [profileRes, logsResLocal, prevChatRes, trendsFoodRes, trendsSymptomsRes, trendsHabitsRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", userId).single(),
         supabase.from("food_logs").select("*").eq("user_id", userId).eq("logged_at", today),
+        supabase
+          .from("sophie_conversations")
+          .select("role, message, created_at")
+          .eq("user_id", userId)
+          .gte("created_at", chatFromIso)
+          .order("created_at", { ascending: false })
+          .limit(12),
+        supabase
+          .from("food_logs")
+          .select("food_name, calories, logged_at, meal_type, logged_time")
+          .eq("user_id", userId)
+          .gte("logged_at", trendsFrom),
+        supabase
+          .from("symptom_logs")
+          .select("symptom_type, severity, logged_at")
+          .eq("user_id", userId)
+          .gte("logged_at", trendsFrom),
+        supabase
+          .from("habit_logs")
+          .select("habit_key, completed, logged_at")
+          .eq("user_id", userId)
+          .gte("logged_at", trendsFrom),
       ]);
       logsRes = logsResLocal;
+
+      const profile = profileRes.data as any;
+      profileForMemory = profile;
+
+      // Recent conversation (chronological, oldest first)
+      recentConversation = (prevChatRes.data || [])
+        .slice()
+        .reverse()
+        .map((row: any) => ({
+          role: row.role === "user" ? "user" : "assistant",
+          content: String(row.message || "").slice(0, 600),
+        }));
+
 
       const profile = profileRes.data as any;
 
