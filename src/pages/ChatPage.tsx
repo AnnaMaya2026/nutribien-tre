@@ -310,11 +310,16 @@ export default function ChatPage() {
       setIsLoading(false);
     }
   };
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finalTranscriptRef = useRef<string>("");
+  const manualStopRef = useRef<boolean>(false);
+
   const toggleRecording = useCallback(() => {
     if (isRecording) {
+      // Manual stop: send immediately after brief delay
+      manualStopRef.current = true;
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       recognitionRef.current?.stop();
-      recognitionRef.current = null;
-      setIsRecording(false);
       return;
     }
 
@@ -326,38 +331,64 @@ export default function ChatPage() {
 
     const recognition = new SpeechRecognition();
     recognition.lang = "fr-FR";
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
 
-    recognition.onresult = (event: any) => {
-      const transcript = Array.from(event.results)
-        .map((r: any) => r[0].transcript)
-        .join("");
-      setInput(transcript);
+    finalTranscriptRef.current = "";
+    manualStopRef.current = false;
 
-      // Auto-send 1.5s after final result
-      if (event.results[event.results.length - 1].isFinal) {
-        setIsRecording(false);
-        const timer = setTimeout(() => {
-          // We need to trigger send via a ref-based approach
-          const sendBtn = document.getElementById("chat-send-btn");
-          sendBtn?.click();
-        }, 1500);
-        setAutoSendTimer(timer);
-      }
+    const scheduleSilenceStop = () => {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      // 4s of silence after last speech → stop and auto-send
+      silenceTimerRef.current = setTimeout(() => {
+        try { recognitionRef.current?.stop(); } catch { /* noop */ }
+      }, 4000);
     };
 
-    recognition.onerror = () => {
+    recognition.onresult = (event: any) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const res = event.results[i];
+        if (res.isFinal) {
+          finalTranscriptRef.current += res[0].transcript;
+        } else {
+          interim += res[0].transcript;
+        }
+      }
+      setInput((finalTranscriptRef.current + interim).trim());
+      scheduleSilenceStop();
+    };
+
+    recognition.onerror = (e: any) => {
+      // Ignore "no-speech" so user can keep thinking
+      if (e?.error === "no-speech" || e?.error === "aborted") return;
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       setIsRecording(false);
     };
 
     recognition.onend = () => {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       setIsRecording(false);
+      recognitionRef.current = null;
+      const finalText = finalTranscriptRef.current.trim();
+      if (finalText.length > 0) {
+        setInput(finalText);
+        const timer = setTimeout(() => {
+          const sendBtn = document.getElementById("chat-send-btn");
+          sendBtn?.click();
+        }, manualStopRef.current ? 200 : 1500);
+        setAutoSendTimer(timer);
+      }
     };
 
     recognitionRef.current = recognition;
-    recognition.start();
-    setIsRecording(true);
+    try {
+      recognition.start();
+      setIsRecording(true);
+      scheduleSilenceStop();
+    } catch {
+      setIsRecording(false);
+    }
   }, [isRecording]);
 
   const cancelAutoSend = useCallback(() => {
@@ -517,8 +548,12 @@ export default function ChatPage() {
       {/* Input */}
       <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 bg-background border-t border-border">
         {isRecording && (
-          <div className="text-center text-xs text-pink-deep animate-pulse pt-2 pb-1">
-            🎤 J'écoute... parlez maintenant
+          <div className="flex items-center justify-center gap-2 text-xs text-pink-deep pt-2 pb-1">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+            </span>
+            <span className="font-medium">J'écoute… prenez votre temps, appuyez sur le micro pour envoyer</span>
           </div>
         )}
         {autoSendTimer && (
