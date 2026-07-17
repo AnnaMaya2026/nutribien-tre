@@ -97,6 +97,85 @@ serve(async (req) => {
       ]);
       logsRes = logsResLocal;
 
+      // ============ MÉMOIRE SOPHIE ============
+      // 1. Préférences persistantes (aliments aimés/évités, notes)
+      const prefs = (profileRes.data as any)?.sophie_preferences || {};
+      const disliked: string[] = Array.isArray(prefs.disliked) ? prefs.disliked : [];
+      const liked: string[] = Array.isArray(prefs.liked) ? prefs.liked : [];
+      const avoided: string[] = Array.isArray(prefs.avoided) ? prefs.avoided : [];
+      const notes: string[] = Array.isArray(prefs.notes) ? prefs.notes : [];
+      if (disliked.length || liked.length || avoided.length || notes.length) {
+        memoryContext = `\n🧠 MÉMOIRE PERSISTANTE (préférences déclarées par l'utilisatrice au fil des échanges):
+${disliked.length ? `- N'aime pas / à éviter dans les suggestions: ${disliked.join(", ")}` : ""}
+${avoided.length ? `- Évite pour raisons personnelles: ${avoided.join(", ")}` : ""}
+${liked.length ? `- Aime particulièrement: ${liked.join(", ")}` : ""}
+${notes.length ? `- Autres notes: ${notes.join(" ; ")}` : ""}
+RÈGLE ABSOLUE: ne propose JAMAIS un aliment listé dans "n'aime pas" ou "évite". Privilégie les aliments "aime" quand c'est pertinent.`.replace(/\n\n+/g, "\n");
+      }
+
+      // 2. Tendances longue durée (calculées en JS, rafraîchies max 1x/24h)
+      const trendsUpdated = (profileRes.data as any)?.sophie_trends_updated_at;
+      const trendsSummaryDb = (profileRes.data as any)?.sophie_trends_summary;
+      const trendsFresh = trendsUpdated && (Date.now() - new Date(trendsUpdated).getTime()) < 24 * 3600_000;
+      let trendsSummary = trendsFresh && trendsSummaryDb ? trendsSummaryDb : "";
+      if (!trendsFresh) {
+        const foods = (trendsFoodRes.data || []) as any[];
+        const symptoms = (trendsSymptomsRes.data || []) as any[];
+        const habits = (trendsHabitsRes.data || []) as any[];
+        const bits: string[] = [];
+        // Late meals: dinner logged after 21:00
+        const lateDinners = foods.filter((f) => f.meal_type === "diner" && f.logged_time && f.logged_time > "21:00:00").length;
+        if (lateDinners >= 3) bits.push(`dîners tardifs récurrents (${lateDinners} après 21h sur 14j)`);
+        // Evening snacking
+        const eveSnacks = foods.filter((f) => f.meal_type === "collation" && f.logged_time && f.logged_time >= "20:00:00").length;
+        if (eveSnacks >= 3) bits.push(`grignotages en soirée fréquents (${eveSnacks} sur 14j)`);
+        // Skipped breakfast (days with no petit_dejeuner)
+        const daysWithFood = new Set(foods.map((f) => f.logged_at));
+        const daysWithBreakfast = new Set(foods.filter((f) => f.meal_type === "petit_dejeuner").map((f) => f.logged_at));
+        const skippedBreakfasts = [...daysWithFood].filter((d) => !daysWithBreakfast.has(d)).length;
+        if (skippedBreakfasts >= 4) bits.push(`petit-déjeuner sauté ${skippedBreakfasts} jours sur 14`);
+        // Top recurring symptoms
+        const symptomAvg: Record<string, { sum: number; n: number }> = {};
+        for (const s of symptoms) {
+          if (!s.symptom_type) continue;
+          const key = s.symptom_type;
+          symptomAvg[key] = symptomAvg[key] || { sum: 0, n: 0 };
+          symptomAvg[key].sum += Number(s.severity || 0);
+          symptomAvg[key].n += 1;
+        }
+        const topSymptoms = Object.entries(symptomAvg)
+          .filter(([, v]) => v.n >= 4)
+          .map(([k, v]) => ({ k, avg: v.sum / v.n }))
+          .sort((a, b) => b.avg - a.avg)
+          .slice(0, 2);
+        for (const t of topSymptoms) {
+          if (t.avg >= 5) bits.push(`symptôme récurrent: ${t.k} (intensité moyenne ${t.avg.toFixed(1)}/10)`);
+        }
+        // Habits missed
+        const habitStats: Record<string, { done: number; total: number }> = {};
+        for (const h of habits) {
+          if (!h.habit_key) continue;
+          habitStats[h.habit_key] = habitStats[h.habit_key] || { done: 0, total: 0 };
+          habitStats[h.habit_key].total += 1;
+          if (h.completed) habitStats[h.habit_key].done += 1;
+        }
+        for (const [k, v] of Object.entries(habitStats)) {
+          if (v.total >= 7 && v.done / v.total < 0.4) bits.push(`habitude "${k}" peu suivie (${v.done}/${v.total} jours)`);
+        }
+        trendsSummary = bits.length ? bits.join(" ; ") : "";
+        // Persist (fire-and-forget)
+        supabase
+          .from("profiles")
+          .update({ sophie_trends_summary: trendsSummary, sophie_trends_updated_at: new Date().toISOString() })
+          .eq("user_id", userId)
+          .then(() => {}, () => {});
+      }
+      if (trendsSummary) {
+        trendsContext = `\n📊 TENDANCES OBSERVÉES SUR LES 14 DERNIERS JOURS (à intégrer subtilement dans tes conseils quand pertinent):\n${trendsSummary}`;
+      }
+      // ========================================
+
+
       const profile = profileRes.data as any;
       profileForMemory = profile;
 
