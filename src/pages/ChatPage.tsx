@@ -548,8 +548,12 @@ export default function ChatPage() {
       {/* Input */}
       <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 bg-background border-t border-border">
         {isRecording && (
-          <div className="text-center text-xs text-pink-deep animate-pulse pt-2 pb-1">
-            🎤 J'écoute... parlez maintenant
+          <div className="flex items-center justify-center gap-2 text-xs text-pink-deep pt-2 pb-1">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+            </span>
+            <span className="font-medium">J'écoute… prenez votre temps, appuyez sur le micro pour envoyer</span>
           </div>
         )}
         {autoSendTimer && (
