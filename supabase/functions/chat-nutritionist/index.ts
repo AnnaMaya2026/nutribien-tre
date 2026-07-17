@@ -189,7 +189,6 @@ RÈGLE ABSOLUE: ne propose JAMAIS un aliment listé dans "n'aime pas" ou "évite
         }));
 
 
-      const profile = profileRes.data as any;
 
 
       // ── Daily message limit enforcement ──
