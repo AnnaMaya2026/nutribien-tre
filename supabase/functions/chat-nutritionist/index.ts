@@ -434,6 +434,14 @@ Ne jamais proposer quelque chose de sous-optimal puis expliquer pourquoi c'est s
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
+          // Historique persistant récent (max 12 msgs des 3 derniers jours) —
+          // dédupliqué avec les messages envoyés par le client cette session.
+          ...(() => {
+            const clientContents = new Set(
+              (messages as any[]).map((m) => String(m.content || "").trim()).filter(Boolean),
+            );
+            return recentConversation.filter((m) => !clientContents.has(String(m.content).trim()));
+          })(),
           ...messages,
         ],
         temperature: 0.7,
@@ -460,10 +468,56 @@ Ne jamais proposer quelque chose de sous-optimal puis expliquer pourquoi c'est s
       });
     }
 
+    // ============ EXTRACTION PRÉFÉRENCES (déclenchée uniquement si le dernier message
+    // utilisateur contient un signal de préférence, pour limiter les coûts) ============
+    try {
+      const lastUserMsg = [...(messages as any[])].reverse().find((m) => m.role === "user");
+      const userText = String(lastUserMsg?.content || "");
+      const PREF_TRIGGERS = /\b(j['e ]?aime pas|je n['e ]?aime pas|je déteste|je deteste|j['e ]?adore|j['e ]?aime|je préfère|je prefere|j['e ]?évite|j['e ]?evite|allergique|intolérant|intolerant|jamais de|pas de|sans )/i;
+      if (userId && userText && PREF_TRIGGERS.test(userText) && OPENAI_API_KEY) {
+        const extract = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              { role: "system", content: `Tu extrais les préférences alimentaires exprimées dans le message d'une utilisatrice. Réponds UNIQUEMENT en JSON strict avec ce schéma: {"disliked":[],"liked":[],"avoided":[],"notes":[]}. Mets chaque aliment en minuscules, un mot ou expression courte. "disliked"=aliments qu'elle n'aime pas / déteste. "liked"=qu'elle aime / adore. "avoided"=qu'elle évite pour raison santé/éthique. "notes"=autres préférences (ex: "préfère végétarien le soir"). Si rien à extraire, renvoie toutes les listes vides.` },
+              { role: "user", content: userText.slice(0, 500) },
+            ],
+            temperature: 0,
+            max_tokens: 200,
+            response_format: { type: "json_object" },
+          }),
+        });
+        if (extract.ok) {
+          const j = await extract.json();
+          const parsed = JSON.parse(j.choices?.[0]?.message?.content || "{}");
+          const merge = (a: string[] = [], b: string[] = []) =>
+            Array.from(new Set([...(a || []), ...((b || []).map((x) => String(x).toLowerCase().trim()))]))
+              .filter(Boolean)
+              .slice(0, 30);
+          const current = profileForMemory?.sophie_preferences || {};
+          const updated = {
+            disliked: merge(current.disliked, parsed.disliked),
+            liked: merge(current.liked, parsed.liked),
+            avoided: merge(current.avoided, parsed.avoided),
+            notes: merge(current.notes, parsed.notes),
+          };
+          const changed = JSON.stringify(updated) !== JSON.stringify(current);
+          if (changed) {
+            await supabase.from("profiles").update({ sophie_preferences: updated }).eq("user_id", userId);
+          }
+        }
+      }
+    } catch (prefErr) {
+      console.error("preference extraction failed:", prefErr);
+    }
+
     return new Response(
       JSON.stringify({ reply: content, remaining, limit: DAILY_LIMIT }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
+
   } catch (e) {
     console.error("chat-nutritionist error:", e);
     return new Response(
