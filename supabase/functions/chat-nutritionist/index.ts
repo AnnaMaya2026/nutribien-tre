@@ -55,18 +55,140 @@ serve(async (req) => {
     let profileContext = "";
     let nutritionContext = "";
     let healthContext = "";
+    let memoryContext = "";
+    let trendsContext = "";
+    let recentConversation: Array<{ role: string; content: string }> = [];
+    let profileForMemory: any = null;
     let remaining = DAILY_LIMIT;
     const today = new Date().toISOString().split("T")[0];
     let logsRes: any = null;
 
     if (userId) {
-      const [profileRes, logsResLocal] = await Promise.all([
+      // 14-day window for trends aggregation
+      const trendsFrom = new Date(Date.now() - 14 * 86400_000).toISOString().split("T")[0];
+      // 3-day window for recent chat context
+      const chatFromIso = new Date(Date.now() - 3 * 86400_000).toISOString();
+
+      const [profileRes, logsResLocal, prevChatRes, trendsFoodRes, trendsSymptomsRes, trendsHabitsRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", userId).single(),
         supabase.from("food_logs").select("*").eq("user_id", userId).eq("logged_at", today),
+        supabase
+          .from("sophie_conversations")
+          .select("role, message, created_at")
+          .eq("user_id", userId)
+          .gte("created_at", chatFromIso)
+          .order("created_at", { ascending: false })
+          .limit(12),
+        supabase
+          .from("food_logs")
+          .select("food_name, calories, logged_at, meal_type, logged_time")
+          .eq("user_id", userId)
+          .gte("logged_at", trendsFrom),
+        supabase
+          .from("symptom_logs")
+          .select("symptom_type, severity, logged_at")
+          .eq("user_id", userId)
+          .gte("logged_at", trendsFrom),
+        supabase
+          .from("habit_logs")
+          .select("habit_key, completed, logged_at")
+          .eq("user_id", userId)
+          .gte("logged_at", trendsFrom),
       ]);
       logsRes = logsResLocal;
 
+      // ============ MÉMOIRE SOPHIE ============
+      // 1. Préférences persistantes (aliments aimés/évités, notes)
+      const prefs = (profileRes.data as any)?.sophie_preferences || {};
+      const disliked: string[] = Array.isArray(prefs.disliked) ? prefs.disliked : [];
+      const liked: string[] = Array.isArray(prefs.liked) ? prefs.liked : [];
+      const avoided: string[] = Array.isArray(prefs.avoided) ? prefs.avoided : [];
+      const notes: string[] = Array.isArray(prefs.notes) ? prefs.notes : [];
+      if (disliked.length || liked.length || avoided.length || notes.length) {
+        memoryContext = `\n🧠 MÉMOIRE PERSISTANTE (préférences déclarées par l'utilisatrice au fil des échanges):
+${disliked.length ? `- N'aime pas / à éviter dans les suggestions: ${disliked.join(", ")}` : ""}
+${avoided.length ? `- Évite pour raisons personnelles: ${avoided.join(", ")}` : ""}
+${liked.length ? `- Aime particulièrement: ${liked.join(", ")}` : ""}
+${notes.length ? `- Autres notes: ${notes.join(" ; ")}` : ""}
+RÈGLE ABSOLUE: ne propose JAMAIS un aliment listé dans "n'aime pas" ou "évite". Privilégie les aliments "aime" quand c'est pertinent.`.replace(/\n\n+/g, "\n");
+      }
+
+      // 2. Tendances longue durée (calculées en JS, rafraîchies max 1x/24h)
+      const trendsUpdated = (profileRes.data as any)?.sophie_trends_updated_at;
+      const trendsSummaryDb = (profileRes.data as any)?.sophie_trends_summary;
+      const trendsFresh = trendsUpdated && (Date.now() - new Date(trendsUpdated).getTime()) < 24 * 3600_000;
+      let trendsSummary = trendsFresh && trendsSummaryDb ? trendsSummaryDb : "";
+      if (!trendsFresh) {
+        const foods = (trendsFoodRes.data || []) as any[];
+        const symptoms = (trendsSymptomsRes.data || []) as any[];
+        const habits = (trendsHabitsRes.data || []) as any[];
+        const bits: string[] = [];
+        // Late meals: dinner logged after 21:00
+        const lateDinners = foods.filter((f) => f.meal_type === "diner" && f.logged_time && f.logged_time > "21:00:00").length;
+        if (lateDinners >= 3) bits.push(`dîners tardifs récurrents (${lateDinners} après 21h sur 14j)`);
+        // Evening snacking
+        const eveSnacks = foods.filter((f) => f.meal_type === "collation" && f.logged_time && f.logged_time >= "20:00:00").length;
+        if (eveSnacks >= 3) bits.push(`grignotages en soirée fréquents (${eveSnacks} sur 14j)`);
+        // Skipped breakfast (days with no petit_dejeuner)
+        const daysWithFood = new Set(foods.map((f) => f.logged_at));
+        const daysWithBreakfast = new Set(foods.filter((f) => f.meal_type === "petit_dejeuner").map((f) => f.logged_at));
+        const skippedBreakfasts = [...daysWithFood].filter((d) => !daysWithBreakfast.has(d)).length;
+        if (skippedBreakfasts >= 4) bits.push(`petit-déjeuner sauté ${skippedBreakfasts} jours sur 14`);
+        // Top recurring symptoms
+        const symptomAvg: Record<string, { sum: number; n: number }> = {};
+        for (const s of symptoms) {
+          if (!s.symptom_type) continue;
+          const key = s.symptom_type;
+          symptomAvg[key] = symptomAvg[key] || { sum: 0, n: 0 };
+          symptomAvg[key].sum += Number(s.severity || 0);
+          symptomAvg[key].n += 1;
+        }
+        const topSymptoms = Object.entries(symptomAvg)
+          .filter(([, v]) => v.n >= 4)
+          .map(([k, v]) => ({ k, avg: v.sum / v.n }))
+          .sort((a, b) => b.avg - a.avg)
+          .slice(0, 2);
+        for (const t of topSymptoms) {
+          if (t.avg >= 5) bits.push(`symptôme récurrent: ${t.k} (intensité moyenne ${t.avg.toFixed(1)}/10)`);
+        }
+        // Habits missed
+        const habitStats: Record<string, { done: number; total: number }> = {};
+        for (const h of habits) {
+          if (!h.habit_key) continue;
+          habitStats[h.habit_key] = habitStats[h.habit_key] || { done: 0, total: 0 };
+          habitStats[h.habit_key].total += 1;
+          if (h.completed) habitStats[h.habit_key].done += 1;
+        }
+        for (const [k, v] of Object.entries(habitStats)) {
+          if (v.total >= 7 && v.done / v.total < 0.4) bits.push(`habitude "${k}" peu suivie (${v.done}/${v.total} jours)`);
+        }
+        trendsSummary = bits.length ? bits.join(" ; ") : "";
+        // Persist (fire-and-forget)
+        supabase
+          .from("profiles")
+          .update({ sophie_trends_summary: trendsSummary, sophie_trends_updated_at: new Date().toISOString() })
+          .eq("user_id", userId)
+          .then(() => {}, () => {});
+      }
+      if (trendsSummary) {
+        trendsContext = `\n📊 TENDANCES OBSERVÉES SUR LES 14 DERNIERS JOURS (à intégrer subtilement dans tes conseils quand pertinent):\n${trendsSummary}`;
+      }
+      // ========================================
+
+
       const profile = profileRes.data as any;
+      profileForMemory = profile;
+
+      // Recent conversation (chronological, oldest first)
+      recentConversation = (prevChatRes.data || [])
+        .slice()
+        .reverse()
+        .map((row: any) => ({
+          role: row.role === "user" ? "user" : "assistant",
+          content: String(row.message || "").slice(0, 600),
+        }));
+
+
 
 
       // ── Daily message limit enforcement ──
@@ -199,9 +321,12 @@ Si l'utilisatrice répond oui (ou équivalent : "oui", "vas-y", "ok", "volontier
 
     const systemPrompt = `Tu es Sophie, une nutritionniste spécialisée dans la nutrition pour la ménopause. Tu as accès au profil de l'utilisatrice et à ses données nutritionnelles du jour.
 ${profileContext}
+${memoryContext}
+${trendsContext}
 ${nutritionContext}
 ${healthContext}
 ${industrialContext}
+
 
 Connaissances scientifiques importantes:
 - La sarcopénie (perte musculaire) s'accélère après la ménopause. Les protéines sont essentielles: objectif 1g/kg/jour minimum.
@@ -309,6 +434,14 @@ Ne jamais proposer quelque chose de sous-optimal puis expliquer pourquoi c'est s
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
+          // Historique persistant récent (max 12 msgs des 3 derniers jours) —
+          // dédupliqué avec les messages envoyés par le client cette session.
+          ...(() => {
+            const clientContents = new Set(
+              (messages as any[]).map((m) => String(m.content || "").trim()).filter(Boolean),
+            );
+            return recentConversation.filter((m) => !clientContents.has(String(m.content).trim()));
+          })(),
           ...messages,
         ],
         temperature: 0.7,
@@ -335,10 +468,56 @@ Ne jamais proposer quelque chose de sous-optimal puis expliquer pourquoi c'est s
       });
     }
 
+    // ============ EXTRACTION PRÉFÉRENCES (déclenchée uniquement si le dernier message
+    // utilisateur contient un signal de préférence, pour limiter les coûts) ============
+    try {
+      const lastUserMsg = [...(messages as any[])].reverse().find((m) => m.role === "user");
+      const userText = String(lastUserMsg?.content || "");
+      const PREF_TRIGGERS = /\b(j['e ]?aime pas|je n['e ]?aime pas|je déteste|je deteste|j['e ]?adore|j['e ]?aime|je préfère|je prefere|j['e ]?évite|j['e ]?evite|allergique|intolérant|intolerant|jamais de|pas de|sans )/i;
+      if (userId && userText && PREF_TRIGGERS.test(userText) && OPENAI_API_KEY) {
+        const extract = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              { role: "system", content: `Tu extrais les préférences alimentaires exprimées dans le message d'une utilisatrice. Réponds UNIQUEMENT en JSON strict avec ce schéma: {"disliked":[],"liked":[],"avoided":[],"notes":[]}. Mets chaque aliment en minuscules, un mot ou expression courte. "disliked"=aliments qu'elle n'aime pas / déteste. "liked"=qu'elle aime / adore. "avoided"=qu'elle évite pour raison santé/éthique. "notes"=autres préférences (ex: "préfère végétarien le soir"). Si rien à extraire, renvoie toutes les listes vides.` },
+              { role: "user", content: userText.slice(0, 500) },
+            ],
+            temperature: 0,
+            max_tokens: 200,
+            response_format: { type: "json_object" },
+          }),
+        });
+        if (extract.ok) {
+          const j = await extract.json();
+          const parsed = JSON.parse(j.choices?.[0]?.message?.content || "{}");
+          const merge = (a: string[] = [], b: string[] = []) =>
+            Array.from(new Set([...(a || []), ...((b || []).map((x) => String(x).toLowerCase().trim()))]))
+              .filter(Boolean)
+              .slice(0, 30);
+          const current = profileForMemory?.sophie_preferences || {};
+          const updated = {
+            disliked: merge(current.disliked, parsed.disliked),
+            liked: merge(current.liked, parsed.liked),
+            avoided: merge(current.avoided, parsed.avoided),
+            notes: merge(current.notes, parsed.notes),
+          };
+          const changed = JSON.stringify(updated) !== JSON.stringify(current);
+          if (changed) {
+            await supabase.from("profiles").update({ sophie_preferences: updated }).eq("user_id", userId);
+          }
+        }
+      }
+    } catch (prefErr) {
+      console.error("preference extraction failed:", prefErr);
+    }
+
     return new Response(
       JSON.stringify({ reply: content, remaining, limit: DAILY_LIMIT }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
+
   } catch (e) {
     console.error("chat-nutritionist error:", e);
     return new Response(

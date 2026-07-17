@@ -500,6 +500,9 @@ export type Database = {
           seen_welcome: boolean | null
           selected_statements: string[] | null
           sophie_first_message: string | null
+          sophie_preferences: Json
+          sophie_trends_summary: string | null
+          sophie_trends_updated_at: string | null
           symptoms: string[] | null
           updated_at: string
           user_id: string
@@ -538,6 +541,9 @@ export type Database = {
           seen_welcome?: boolean | null
           selected_statements?: string[] | null
           sophie_first_message?: string | null
+          sophie_preferences?: Json
+          sophie_trends_summary?: string | null
+          sophie_trends_updated_at?: string | null
           symptoms?: string[] | null
           updated_at?: string
           user_id: string
@@ -576,6 +582,9 @@ export type Database = {
           seen_welcome?: boolean | null
           selected_statements?: string[] | null
           sophie_first_message?: string | null
+          sophie_preferences?: Json
+          sophie_trends_summary?: string | null
+          sophie_trends_updated_at?: string | null
           symptoms?: string[] | null
           updated_at?: string
           user_id?: string
