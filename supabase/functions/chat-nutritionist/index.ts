@@ -321,9 +321,12 @@ Si l'utilisatrice répond oui (ou équivalent : "oui", "vas-y", "ok", "volontier
 
     const systemPrompt = `Tu es Sophie, une nutritionniste spécialisée dans la nutrition pour la ménopause. Tu as accès au profil de l'utilisatrice et à ses données nutritionnelles du jour.
 ${profileContext}
+${memoryContext}
+${trendsContext}
 ${nutritionContext}
 ${healthContext}
 ${industrialContext}
+
 
 Connaissances scientifiques importantes:
 - La sarcopénie (perte musculaire) s'accélère après la ménopause. Les protéines sont essentielles: objectif 1g/kg/jour minimum.
