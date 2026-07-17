@@ -135,9 +135,11 @@ Rappelle si pertinent : "Ces conseils ne remplacent pas un suivi médical."`;
         }), { calories: 0, proteins: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, fibres: 0, potassium: 0, zinc: 0, vitamin_k: 0, vitamin_b6: 0, vitamin_b9: 0, vitamin_e: 0 });
 
         const calorieGoal = profile?.daily_calorie_goal || 1800;
+        const caloriesRemaining = Math.max(0, calorieGoal - Math.round(totals.calories));
         nutritionContext = `
 Données nutritionnelles du jour:
 - Calories consommées: ${Math.round(totals.calories)} kcal / ${calorieGoal} kcal
+- ⚡ CALORIES RESTANTES AUJOURD'HUI: ${caloriesRemaining} kcal (budget maximal pour toute suggestion de repas/collation)
 - Protéines: ${Math.round(totals.proteins)}g / 60g
 - Calcium: ${Math.round(totals.calcium)}mg / 1200mg
 - Vitamine D: ${totals.vitamin_d.toFixed(1)}µg / 20µg
@@ -149,9 +151,16 @@ Données nutritionnelles du jour:
 - Vitamine K: ${totals.vitamin_k.toFixed(1)}µg / 90µg
 - Vitamine B6: ${totals.vitamin_b6.toFixed(2)}mg / 1.5mg
 - Vitamine B9 (folate): ${Math.round(totals.vitamin_b9)}µg / 400µg
-- Vitamine E: ${totals.vitamin_e.toFixed(1)}mg / 12mg`;
+- Vitamine E: ${totals.vitamin_e.toFixed(1)}mg / 12mg
+
+RÈGLE BUDGET CALORIQUE (STRICTE):
+Quand tu proposes un repas, une collation ou un menu, l'apport calorique total NE DOIT JAMAIS dépasser ${caloriesRemaining} kcal (les calories restantes du jour).
+- Si ${caloriesRemaining} < 150 kcal : propose uniquement une collation très légère (tisane, quelques légumes crus, 1 petit fruit) et signale gentiment que le budget calorique du jour est presque atteint.
+- Si ${caloriesRemaining} ≥ 150 kcal : propose un repas/collation dont le total estimé reste ≤ ${caloriesRemaining} kcal et indique explicitement l'estimation calorique (ex: "≈ ${Math.min(caloriesRemaining, 350)} kcal").
+- Ne propose JAMAIS un plat estimé au-dessus de ce budget en te justifiant après coup.`;
       } else {
-        nutritionContext = "\nAucun aliment enregistré aujourd'hui.";
+        const calorieGoalNoLogs = profile?.daily_calorie_goal || 1800;
+        nutritionContext = `\nAucun aliment enregistré aujourd'hui.\n⚡ CALORIES RESTANTES AUJOURD'HUI: ${calorieGoalNoLogs} kcal (budget maximal pour toute suggestion de repas).`;
       }
     }
 
