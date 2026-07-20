@@ -215,8 +215,9 @@ export default function ChatPage() {
     toast.success("Menu sauvegardé ✓");
   }, [user]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  const handleSend = async (overrideText?: string) => {
+    const textToSend = (overrideText ?? input).trim();
+    if (!textToSend || isLoading) return;
 
     if (limitReached) {
       toast.error(
@@ -225,10 +226,10 @@ export default function ChatPage() {
       return;
     }
 
-    const trimmedInput = input.trim();
+    const trimmedInput = textToSend;
     const userMsg: Message = { id: Date.now(), text: trimmedInput, from: "user" };
     setMessages((prev) => [...prev, userMsg]);
-    setInput("");
+    if (!overrideText) setInput("");
     setIsLoading(true);
 
     // Save user message
