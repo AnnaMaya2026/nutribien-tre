@@ -52,6 +52,7 @@ export default function ChatPage() {
   const recognitionRef = useRef<any>(null);
   const autoReadRef = useRef(autoRead);
   const [savedMenuIds, setSavedMenuIds] = useState<Set<number>>(new Set());
+  const [fridgeOpen, setFridgeOpen] = useState(false);
 
   useEffect(() => {
     autoReadRef.current = autoRead;
