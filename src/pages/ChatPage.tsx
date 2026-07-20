@@ -462,6 +462,7 @@ export default function ChatPage() {
       </div>
 
       <SophieHistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />
+      <FridgePhotoDialog open={fridgeOpen} onClose={() => setFridgeOpen(false)} onConfirm={handleFridgeConfirm} />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-56">
