@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Send, User, Loader2, Volume2, Pause, Mic, MicOff, Clock, Trash2, Save, ClipboardList } from "lucide-react";
+import { Send, User, Loader2, Volume2, Pause, Mic, MicOff, Clock, Trash2, Save, ClipboardList, Camera } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import SophieHistoryDrawer from "@/components/SophieHistoryDrawer";
 import SophieAvatar from "@/components/SophieAvatar";
 import { useAuth } from "@/hooks/useAuth";
 import MedicalDisclaimerBanner from "@/components/MedicalDisclaimerBanner";
+import FridgePhotoDialog from "@/components/FridgePhotoDialog";
 
 const MENU_KEYWORDS = ["petit-déjeuner", "petit déjeuner", "déjeuner", "dîner", "diner", "menu", "repas", "collation", "goûter", "souper"];
 const containsMenu = (text: string) => {
@@ -51,6 +52,7 @@ export default function ChatPage() {
   const recognitionRef = useRef<any>(null);
   const autoReadRef = useRef(autoRead);
   const [savedMenuIds, setSavedMenuIds] = useState<Set<number>>(new Set());
+  const [fridgeOpen, setFridgeOpen] = useState(false);
 
   useEffect(() => {
     autoReadRef.current = autoRead;
@@ -213,8 +215,9 @@ export default function ChatPage() {
     toast.success("Menu sauvegardé ✓");
   }, [user]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  const handleSend = async (overrideText?: string) => {
+    const textToSend = (overrideText ?? input).trim();
+    if (!textToSend || isLoading) return;
 
     if (limitReached) {
       toast.error(
@@ -223,10 +226,10 @@ export default function ChatPage() {
       return;
     }
 
-    const trimmedInput = input.trim();
+    const trimmedInput = textToSend;
     const userMsg: Message = { id: Date.now(), text: trimmedInput, from: "user" };
     setMessages((prev) => [...prev, userMsg]);
-    setInput("");
+    if (!overrideText) setInput("");
     setIsLoading(true);
 
     // Save user message
@@ -398,6 +401,12 @@ export default function ChatPage() {
     }
   }, [autoSendTimer]);
 
+  const handleFridgeConfirm = useCallback((foods: string[]) => {
+    const list = foods.join(", ");
+    const prompt = `📸 J'ai pris une photo de mon frigo / placard. Voici les aliments que j'ai actuellement sous la main :\n\n${list}\n\nPropose-moi un menu (ou le prochain repas si l'heure s'y prête) qui utilise en priorité ces aliments, en tenant compte de mes calories restantes pour aujourd'hui, de mon objectif nutritionnel en cours, et des micronutriments qu'il serait pertinent de combler ce jour-là. Si un ingrédient essentiel manque pour équilibrer, mentionne-le clairement.`;
+    handleSend(prompt);
+  }, []);
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
@@ -453,6 +462,7 @@ export default function ChatPage() {
       </div>
 
       <SophieHistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />
+      <FridgePhotoDialog open={fridgeOpen} onClose={() => setFridgeOpen(false)} onConfirm={handleFridgeConfirm} />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-56">
@@ -577,6 +587,18 @@ export default function ChatPage() {
               {isRecording ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
             </button>
             <span className="text-[10px] text-muted-foreground font-medium">Parler</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <button
+              onClick={() => setFridgeOpen(true)}
+              disabled={isLoading}
+              className="w-14 h-14 rounded-xl flex items-center justify-center bg-accent hover:bg-accent/80 text-accent-foreground shadow-md disabled:opacity-40 transition-colors"
+              title="Photo de mon frigo / placard"
+              aria-label="Photo de mon frigo ou placard"
+            >
+              <Camera className="w-6 h-6" />
+            </button>
+            <span className="text-[10px] text-muted-foreground font-medium">Frigo</span>
           </div>
           <Input
             value={input}
