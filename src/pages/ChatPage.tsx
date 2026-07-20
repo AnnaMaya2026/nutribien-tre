@@ -401,6 +401,12 @@ export default function ChatPage() {
     }
   }, [autoSendTimer]);
 
+  const handleFridgeConfirm = useCallback((foods: string[]) => {
+    const list = foods.join(", ");
+    const prompt = `📸 J'ai pris une photo de mon frigo / placard. Voici les aliments que j'ai actuellement sous la main :\n\n${list}\n\nPropose-moi un menu (ou le prochain repas si l'heure s'y prête) qui utilise en priorité ces aliments, en tenant compte de mes calories restantes pour aujourd'hui, de mon objectif nutritionnel en cours, et des micronutriments qu'il serait pertinent de combler ce jour-là. Si un ingrédient essentiel manque pour équilibrer, mentionne-le clairement.`;
+    handleSend(prompt);
+  }, []);
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
