@@ -128,8 +128,8 @@ export default function FridgePhotoDialog({ open, onClose, onConfirm }: FridgePh
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-background w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto shadow-xl">
+    <div className="fixed inset-0 z-[60] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-background w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto shadow-xl pb-[calc(96px+env(safe-area-inset-bottom))] sm:pb-0">
         <div className="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
           <h2 className="text-base font-bold text-foreground">📸 Photo de votre frigo / placard</h2>
           <button
