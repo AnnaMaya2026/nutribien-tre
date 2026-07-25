@@ -79,7 +79,7 @@ export default function FeedbackButton() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Envoyer un feedback"
-        className="fixed bottom-24 left-4 z-40 h-11 px-4 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center gap-2 text-sm font-semibold hover:scale-105 transition-all"
+        className="fixed bottom-24 left-4 z-40 h-11 px-4 rounded-full bg-primary/40 hover:bg-primary text-primary-foreground shadow-lg backdrop-blur-sm flex items-center gap-2 text-sm font-semibold hover:scale-105 transition-all"
       >
         <MessageCircle className="w-4 h-4" />
         <span className="hidden sm:inline">Feedback</span>
