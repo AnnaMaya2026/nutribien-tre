@@ -11,6 +11,8 @@ import SophieAvatar from "@/components/SophieAvatar";
 import { useAuth } from "@/hooks/useAuth";
 import MedicalDisclaimerBanner from "@/components/MedicalDisclaimerBanner";
 import FridgePhotoDialog from "@/components/FridgePhotoDialog";
+import MealPhotoDialog from "@/components/MealPhotoDialog";
+import { Utensils } from "lucide-react";
 
 const MENU_KEYWORDS = ["petit-déjeuner", "petit déjeuner", "déjeuner", "dîner", "diner", "menu", "repas", "collation", "goûter", "souper"];
 const containsMenu = (text: string) => {
@@ -53,6 +55,7 @@ export default function ChatPage() {
   const autoReadRef = useRef(autoRead);
   const [savedMenuIds, setSavedMenuIds] = useState<Set<number>>(new Set());
   const [fridgeOpen, setFridgeOpen] = useState(false);
+  const [mealPhotoOpen, setMealPhotoOpen] = useState(false);
 
   useEffect(() => {
     autoReadRef.current = autoRead;
@@ -463,6 +466,7 @@ export default function ChatPage() {
 
       <SophieHistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />
       <FridgePhotoDialog open={fridgeOpen} onClose={() => setFridgeOpen(false)} onConfirm={handleFridgeConfirm} />
+      <MealPhotoDialog open={mealPhotoOpen} onClose={() => setMealPhotoOpen(false)} />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-56">
@@ -599,6 +603,18 @@ export default function ChatPage() {
               <Camera className="w-6 h-6" />
             </button>
             <span className="text-[10px] text-muted-foreground font-medium">Frigo</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <button
+              onClick={() => setMealPhotoOpen(true)}
+              disabled={isLoading}
+              className="w-14 h-14 rounded-xl flex items-center justify-center bg-accent hover:bg-accent/80 text-accent-foreground shadow-md disabled:opacity-40 transition-colors"
+              title="Photo de mon assiette"
+              aria-label="Photo de mon assiette"
+            >
+              <Utensils className="w-6 h-6" />
+            </button>
+            <span className="text-[10px] text-muted-foreground font-medium">Assiette</span>
           </div>
           <Input
             value={input}
