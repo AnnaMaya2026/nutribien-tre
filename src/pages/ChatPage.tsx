@@ -604,6 +604,18 @@ export default function ChatPage() {
             </button>
             <span className="text-[10px] text-muted-foreground font-medium">Frigo</span>
           </div>
+          <div className="flex flex-col items-center gap-1">
+            <button
+              onClick={() => setMealPhotoOpen(true)}
+              disabled={isLoading}
+              className="w-14 h-14 rounded-xl flex items-center justify-center bg-accent hover:bg-accent/80 text-accent-foreground shadow-md disabled:opacity-40 transition-colors"
+              title="Photo de mon assiette"
+              aria-label="Photo de mon assiette"
+            >
+              <Utensils className="w-6 h-6" />
+            </button>
+            <span className="text-[10px] text-muted-foreground font-medium">Assiette</span>
+          </div>
           <Input
             value={input}
             onChange={(e) => { setInput(e.target.value); cancelAutoSend(); }}
