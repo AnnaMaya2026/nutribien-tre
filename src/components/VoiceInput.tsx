@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { getDefaultPortion } from "@/lib/portionUnits";
 import { toast } from "sonner";
+import { normalizeTranscript, pickBestAlternative } from "@/lib/speechCorrections";
+
 
 export interface VoiceMatch {
   food: CiqualFood;
