@@ -13,6 +13,8 @@ import MedicalDisclaimerBanner from "@/components/MedicalDisclaimerBanner";
 import FridgePhotoDialog from "@/components/FridgePhotoDialog";
 import MealPhotoDialog from "@/components/MealPhotoDialog";
 import { Utensils } from "lucide-react";
+import { normalizeTranscript, pickBestAlternative } from "@/lib/speechCorrections";
+
 
 const MENU_KEYWORDS = ["petit-déjeuner", "petit déjeuner", "déjeuner", "dîner", "diner", "menu", "repas", "collation", "goûter", "souper"];
 const containsMenu = (text: string) => {
