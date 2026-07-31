@@ -30,6 +30,9 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
   const [state, setState] = useState<VoiceState>("idle");
   const recognitionRef = useRef<any>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const finalTranscriptRef = useRef<string>("");
+  const manualStopRef = useRef<boolean>(false);
+
 
   const stopRecording = useCallback(() => {
     clearTimeout(timeoutRef.current);
