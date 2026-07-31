@@ -153,6 +153,7 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
 
   const toggleRecording = useCallback(() => {
     if (state === "listening") {
+      manualStopRef.current = true;
       stopRecording();
       return;
     }
@@ -164,38 +165,71 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
       return;
     }
 
+    finalTranscriptRef.current = "";
+    manualStopRef.current = false;
+
+    const scheduleSilenceStop = () => {
+      clearTimeout(timeoutRef.current);
+      // 3s de silence → on considère la dictée terminée
+      timeoutRef.current = setTimeout(() => {
+        manualStopRef.current = true;
+        stopRecording();
+      }, 3000);
+    };
+
     const recognition = new SpeechRecognition();
     recognition.lang = "fr-FR";
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 3;
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0]?.[0]?.transcript;
-      if (transcript) {
-        processTranscript(transcript);
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const res = event.results[i];
+        if (res.isFinal) {
+          finalTranscriptRef.current += pickBestAlternative(res) + " ";
+        }
+      }
+      scheduleSilenceStop();
+    };
+
+    recognition.onerror = (e: any) => {
+      if (e?.error === "no-speech" || e?.error === "aborted") return;
+      manualStopRef.current = true;
+      clearTimeout(timeoutRef.current);
+      toast.error("Erreur de reconnaissance vocale");
+      setState("idle");
+    };
+
+    recognition.onend = () => {
+      // Relance automatique tant que l'utilisatrice n'a pas arrêté
+      if (!manualStopRef.current) {
+        try {
+          recognition.start();
+          return;
+        } catch { /* fallthrough */ }
+      }
+      clearTimeout(timeoutRef.current);
+      recognitionRef.current = null;
+      const finalText = normalizeTranscript(finalTranscriptRef.current);
+      if (finalText.length > 0) {
+        processTranscript(finalText);
       } else {
         toast.error("Je n'ai pas compris, réessayez");
         setState("idle");
       }
     };
 
-    recognition.onerror = () => {
-      toast.error("Erreur de reconnaissance vocale");
-      setState("idle");
-    };
-
-    recognition.onend = () => {
-      clearTimeout(timeoutRef.current);
-    };
-
     recognitionRef.current = recognition;
-    recognition.start();
-    setState("listening");
-
-    timeoutRef.current = setTimeout(() => {
-      stopRecording();
-    }, 10000);
+    try {
+      recognition.start();
+      setState("listening");
+      scheduleSilenceStop();
+    } catch {
+      setState("idle");
+    }
   }, [state, stopRecording, processTranscript]);
+
 
   return (
     <button
