@@ -335,11 +335,6 @@ export default function ChatPage() {
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = "fr-FR";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-
     finalTranscriptRef.current = "";
     manualStopRef.current = false;
 
@@ -347,46 +342,68 @@ export default function ChatPage() {
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       // 4s of silence after last speech → stop and auto-send
       silenceTimerRef.current = setTimeout(() => {
+        manualStopRef.current = true;
         try { recognitionRef.current?.stop(); } catch { /* noop */ }
       }, 4000);
     };
 
-    recognition.onresult = (event: any) => {
-      let interim = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const res = event.results[i];
-        if (res.isFinal) {
-          finalTranscriptRef.current += res[0].transcript;
-        } else {
-          interim += res[0].transcript;
+    const createRecognition = () => {
+      const recognition = new SpeechRecognition();
+      recognition.lang = "fr-FR";
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 3;
+
+      recognition.onresult = (event: any) => {
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const res = event.results[i];
+          if (res.isFinal) {
+            finalTranscriptRef.current += pickBestAlternative(res) + " ";
+          } else {
+            interim += res[0].transcript;
+          }
         }
-      }
-      setInput((finalTranscriptRef.current + interim).trim());
-      scheduleSilenceStop();
+        setInput(normalizeTranscript(finalTranscriptRef.current + interim));
+        scheduleSilenceStop();
+      };
+
+      recognition.onerror = (e: any) => {
+        // "no-speech" / "aborted" : on laisse onend relancer la session
+        if (e?.error === "no-speech" || e?.error === "aborted") return;
+        manualStopRef.current = true;
+        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+        setIsRecording(false);
+      };
+
+      recognition.onend = () => {
+        // Chrome coupe la session toutes les ~60s ou après un silence :
+        // on relance tant que l'utilisatrice n'a pas arrêté elle-même.
+        if (!manualStopRef.current) {
+          try {
+            recognition.start();
+            return;
+          } catch { /* fallthrough */ }
+        }
+
+        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+        setIsRecording(false);
+        recognitionRef.current = null;
+        const finalText = normalizeTranscript(finalTranscriptRef.current);
+        if (finalText.length > 0) {
+          setInput(finalText);
+          const timer = setTimeout(() => {
+            const sendBtn = document.getElementById("chat-send-btn");
+            sendBtn?.click();
+          }, 1500);
+          setAutoSendTimer(timer);
+        }
+      };
+
+      return recognition;
     };
 
-    recognition.onerror = (e: any) => {
-      // Ignore "no-speech" so user can keep thinking
-      if (e?.error === "no-speech" || e?.error === "aborted") return;
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-      setIsRecording(false);
-    };
-
-    recognition.onend = () => {
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-      setIsRecording(false);
-      recognitionRef.current = null;
-      const finalText = finalTranscriptRef.current.trim();
-      if (finalText.length > 0) {
-        setInput(finalText);
-        const timer = setTimeout(() => {
-          const sendBtn = document.getElementById("chat-send-btn");
-          sendBtn?.click();
-        }, manualStopRef.current ? 200 : 1500);
-        setAutoSendTimer(timer);
-      }
-    };
-
+    const recognition = createRecognition();
     recognitionRef.current = recognition;
     try {
       recognition.start();
@@ -396,6 +413,7 @@ export default function ChatPage() {
       setIsRecording(false);
     }
   }, [isRecording]);
+
 
   const cancelAutoSend = useCallback(() => {
     if (autoSendTimer) {
