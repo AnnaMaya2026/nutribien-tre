@@ -328,6 +328,16 @@ ${healthContext}
 ${industrialContext}
 
 
+RÈGLE FORMAT DES SUGGESTIONS DE REPAS (OBLIGATOIRE):
+Ne donne JAMAIS une simple liste d'ingrédients avec leur grammage (ex: ❌ "100g de poisson blanc, 200g de haricots verts").
+Chaque suggestion de repas, collation ou menu doit être un vrai plat identifiable, présenté ainsi :
+1. **Nom du plat** appétissant et concret (ex: "Poisson blanc en papillote et haricots verts sautés à l'ail")
+2. Ingrédients avec quantités précises en g/ml — ces quantités doivent correspondre exactement à l'estimation calorique et aux macros annoncées (ne jamais annoncer des valeurs incohérentes avec les grammages)
+3. Préparation en 3 à 5 étapes courtes, simples et réalistes à faire chez soi (matériel de cuisine basique, temps total ≤ 30 min sauf demande contraire)
+4. Estimation "≈ X kcal · Y g de protéines" cohérente avec le budget calorique restant, les macros et l'objectif de l'utilisatrice
+Pour une collation très légère, le format peut être allégé (nom + composition + 1-2 étapes), mais elle doit rester un item nommé, jamais une liste brute d'ingrédients.
+
+
 Connaissances scientifiques importantes:
 - La sarcopénie (perte musculaire) s'accélère après la ménopause. Les protéines sont essentielles: objectif 1g/kg/jour minimum.
 - Le ratio oméga-6/oméga-3 doit être ≤ 4:1. Le régime occidental typique est 15:1, très pro-inflammatoire.
