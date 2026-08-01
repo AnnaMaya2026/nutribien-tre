@@ -175,11 +175,11 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
 
     const scheduleSilenceStop = () => {
       clearTimeout(timeoutRef.current);
-      // 3s de silence → on considère la dictée terminée
+      // 4s de silence prolongé → on considère la dictée terminée
       timeoutRef.current = setTimeout(() => {
         manualStopRef.current = true;
         stopRecording();
-      }, 3000);
+      }, 4000);
     };
 
     const recognition = new SpeechRecognition();
@@ -237,26 +237,50 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
 
 
   return (
-    <button
-      type="button"
-      onClick={toggleRecording}
-      disabled={state === "processing"}
-      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-        state === "listening"
-          ? "bg-primary text-primary-foreground animate-pulse shadow-lg"
-          : state === "processing"
-          ? "bg-muted text-muted-foreground"
-          : "bg-primary/10 text-pink-deep hover:bg-primary/20"
-      }`}
-      title={state === "listening" ? "Arrêter" : "Dicter un aliment"}
-    >
-      {state === "processing" ? (
-        <Loader2 className="w-5 h-5 animate-spin" />
-      ) : state === "listening" ? (
-        <MicOff className="w-5 h-5" />
-      ) : (
-        <Mic className="w-5 h-5" />
+    <div className="relative flex flex-col items-center">
+      <button
+        type="button"
+        onClick={toggleRecording}
+        disabled={state === "processing"}
+        className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+          state === "listening"
+            ? "bg-primary text-primary-foreground shadow-lg"
+            : state === "processing"
+            ? "bg-muted text-muted-foreground"
+            : "bg-primary/10 text-pink-deep hover:bg-primary/20"
+        }`}
+        title={state === "listening" ? "Appuyez pour arrêter l'enregistrement" : "Dicter un aliment"}
+        aria-label={state === "listening" ? "Arrêter l'enregistrement" : "Dicter un aliment"}
+      >
+        {state === "listening" && (
+          <span className="absolute inset-0 rounded-xl bg-primary/40 animate-ping" aria-hidden />
+        )}
+        {state === "processing" ? (
+          <Loader2 className="w-5 h-5 animate-spin" />
+        ) : state === "listening" ? (
+          <MicOff className="w-5 h-5 relative" />
+        ) : (
+          <Mic className="w-5 h-5" />
+        )}
+      </button>
+
+      {state === "listening" && (
+        <div
+          role="status"
+          className="absolute top-full mt-2 z-20 flex items-center gap-2 whitespace-nowrap rounded-full bg-primary/15 border border-primary/30 px-3 py-1 shadow-sm"
+        >
+          <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+          <span className="text-[11px] font-medium text-foreground">
+            Enregistrement en cours… appuyez pour arrêter
+          </span>
+        </div>
       )}
-    </button>
+
+      {state === "processing" && (
+        <div role="status" className="absolute top-full mt-2 z-20 whitespace-nowrap rounded-full bg-muted px-3 py-1">
+          <span className="text-[11px] text-muted-foreground">Analyse en cours…</span>
+        </div>
+      )}
+    </div>
   );
 }
