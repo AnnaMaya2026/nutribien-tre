@@ -12,6 +12,8 @@ const STOPWORDS = new Set([
 export function normalize(s: string): string {
   return s
     .toLowerCase()
+    .replace(/\u0153/g, "oe")
+    .replace(/\u00e6/g, "ae")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9 ]/g, " ")
@@ -41,13 +43,26 @@ export function tokenize(s: string): string[] {
 // Terms that indicate a processed / composed dish rather than a raw food
 const PENALTY_TERMS = [
   "preemballe", "preemballee", "prepare", "preparee", "artisanal", "artisanale",
-  "industriel", "industrielle", "surgele", "surgelee", "appertise", "appertisee",
+  "industriel", "industrielle", "surgele", "surgelee",
   "confiture", "sauce", "tartinade", "nuggets", "croquette", "muffin", "crepe",
   "tarte", "boisson", "nectar", "sirop", "coulis", "salade de", "gateau",
-  "farci", "fourre", "aromatise", "type ",
+  "farci", "fourre", "aromatise", "type ", "sucre", "sur lit de", "puree",
 ];
 
 const FRESH_RE = /\b(cru|crue|crus|crues|frais|fraiche|fraiches)\b/;
+const COOKED_RE = /\b(cuit|cuite|cuits|cuites|bouilli|bouillie|appertise|appertisee|vapeur|etuve|etuvee|precuit|precuite)\b/;
+const DRY_RE = /\b(sec|seche|seches|seche|deshydrate|deshydratee|farine|cru|crue|crus|crues|grain)\b/;
+
+// Cooking qualifiers explicitly written by the user -> we trust her wording
+const USER_QUALIFIER_RE =
+  /\b(cru|crue|crus|crues|frais|fraiche|fraiches|cuit|cuite|cuits|cuites|bouilli|bouillie|sec|seche|seches|deshydrate|appertise|appertisee|conserve|vapeur|grille|grillee|roti|rotie|poele|poelee|frit|frite|farine)\b/;
+
+// Foods that are eaten cooked: the plain name means the cooked form
+const STARCHY_RE =
+  /\b(riz|pate|pates|spaghetti|macaroni|tagliatelle|penne|semoule|couscous|boulgour|boulghour|quinoa|ble|epeautre|orge|millet|sarrasin|polenta|lentille|lentilles|pois|chiche|chiches|haricot|haricots|feve|feves|flageolet|soja|patate|pomme de terre|pommes de terre|pate a|nouille|nouilles)\b/;
+
+// Groups where the raw/fresh form is the sensible default
+const FRESH_GROUPS = ["fruits, légumes, légumineuses et oléagineux"];
 
 export interface ScoredCandidate {
   row: any;
@@ -55,7 +70,7 @@ export interface ScoredCandidate {
 }
 
 /** Score a CIQUAL row against a (raw) query name. 0..~1.5 */
-export function scoreCandidate(query: string, nom: string): number {
+export function scoreCandidate(query: string, nom: string, groupe = ""): number {
   const qTokens = tokenize(query);
   if (qTokens.length === 0) return 0;
   const qSet = new Set(qTokens);
@@ -77,13 +92,49 @@ export function scoreCandidate(query: string, nom: string): number {
   else if (head.startsWith(q)) score += 0.3;
   else if (fullNorm.startsWith(q)) score += 0.2;
 
-  // Prefer raw / fresh forms
-  if (FRESH_RE.test(fullNorm)) score += 0.15;
+  // --- Raw vs cooked preference -------------------------------------------
+  const qNorm = singularize(query);
+  const userSpecified = USER_QUALIFIER_RE.test(qNorm);
+  if (!userSpecified) {
+    const isStarchy = STARCHY_RE.test(qNorm);
+    if (isStarchy) {
+      // Cooked / canned form is what the user actually eats
+      if (COOKED_RE.test(fullNorm)) score += 0.25;
+      else if (DRY_RE.test(fullNorm)) score -= 0.6;
+    } else if (FRESH_GROUPS.includes((groupe || "").trim().toLowerCase())) {
+      // Vegetables, salads, herbs, fruits: raw / fresh is the default form
+      if (FRESH_RE.test(fullNorm)) score += 0.15;
+    }
+  } else {
+    // The user wrote a qualifier: reward rows that agree, penalise the opposite
+    const wantsCooked = /\b(cuit|cuite|cuits|cuites|bouilli|bouillie|appertise|appertisee|conserve|vapeur|grille|grillee|roti|rotie|poele|poelee|frit|frite)\b/.test(qNorm);
+    const wantsRaw = /\b(cru|crue|crus|crues|frais|fraiche|fraiches)\b/.test(qNorm);
+    if (wantsCooked) {
+      if (COOKED_RE.test(fullNorm) || /\b(grille|grillee|roti|rotie|poele|poelee|frit|frite)\b/.test(fullNorm)) score += 0.25;
+      else if (DRY_RE.test(fullNorm)) score -= 0.4;
+    } else if (wantsRaw) {
+      if (FRESH_RE.test(fullNorm)) score += 0.25;
+      else if (COOKED_RE.test(fullNorm)) score -= 0.4;
+    }
+  }
+
+  // Sub-parts / derived forms the user did not ask for
+  for (const part of ["blanc", "jaune", "poudre", "germe", "son"]) {
+    const re = new RegExp(`\\b${part}\\b`);
+    if (re.test(fullNorm) && !re.test(qNorm) && !head.includes(part)) { score -= 0.6; break; }
+  }
+
+  // Baby food is never the intended match for an adult journal entry
+  if ((groupe || "").trim().toLowerCase() === "aliments infantiles") score -= 1;
+
 
   // Penalise processed foods and composed dishes
   for (const p of PENALTY_TERMS) {
     if (fullNorm.includes(p)) { score -= 0.5; break; }
   }
+  // "appertise" is legitimate for starchy foods, penalised elsewhere
+  if (/\bappertise/.test(fullNorm) && !STARCHY_RE.test(qNorm)) score -= 0.5;
+
   // Composed dish markers ("... a la ...", "... aux ...")
   if (/\b(a la|a l|aux|au)\b/.test(fullNorm)) score -= 0.25;
 
@@ -94,6 +145,7 @@ export function scoreCandidate(query: string, nom: string): number {
 }
 
 export const CIQUAL_MATCH_THRESHOLD = 0.6;
+
 
 /**
  * Find the best CIQUAL row for a free-form food name.
@@ -135,7 +187,7 @@ export async function matchCiqual(
 
   let best: { row: any; score: number } | null = null;
   for (const row of candidates) {
-    const s = scoreCandidate(name, row.nom || "");
+    const s = scoreCandidate(name, row.nom || "", row.groupe || "");
     if (!best || s > best.score) best = { row, score: s };
   }
   if (!best || best.score < CIQUAL_MATCH_THRESHOLD) return null;

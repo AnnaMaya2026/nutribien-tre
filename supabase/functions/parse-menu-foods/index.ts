@@ -2,6 +2,7 @@
 // and nutritional values. Tries to match each food in aliments_ciqual
 // (per-100g table) and scales by grams; falls back to GPT estimates per 100g.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { matchCiqual } from "../_shared/ciqualMatch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,17 +24,20 @@ const CEIL_PER_100G: Record<string, number> = {
   vitamin_k: 1500, vitamin_b6: 10, vitamin_b9: 2000, vitamin_e: 100,
 };
 
-function sanitizePer100g(key: string, raw: number, foodName: string): number {
-  if (!isFinite(raw) || raw < 0) return 0;
-  let v = raw;
+function sanitizePer100g(key: string, raw: number | null | undefined, foodName: string): number | null {
+  if (raw === null || raw === undefined) return null;
+  const num = Number(raw);
+  if (!isFinite(num) || num < 0) return null;
+  let v = num;
   const isOil = /huile|oil/i.test(foodName);
   if (key === "vitamin_d" && v > 50) v = v / 40;            // IU → µg
   if (key === "omega3" && !isOil && v > 60) v = v / 1000;   // mg → g
   if (key === "zinc" && v > 100) v = v / 1000;              // µg → mg
   const ceil = CEIL_PER_100G[key];
-  if (ceil !== undefined && v > ceil) return 0;
+  if (ceil !== undefined && v > ceil) return null;
   return v;
 }
+
 
 // CIQUAL column -> food_logs column mapping (per 100g)
 const CIQUAL_MAP: Record<string, string> = {
@@ -138,22 +142,19 @@ Unités STRICTES: calories=kcal, macros/fibres/oméga-3=g, calcium/magnésium/fe
         const grams = Math.max(1, Number(f.grams) || 100);
         if (!name) continue;
 
-        let per100: Record<string, number> = {};
+        let per100: Record<string, number | null> = {};
         let estimated = true;
         let matchedName = name;
 
-        // Try CIQUAL match
+        // Try CIQUAL match (normalised search + lexical scoring + threshold)
         try {
-          const { data: matches } = await supabase
-            .from("aliments_ciqual")
-            .select("*")
-            .ilike("nom", `%${name}%`)
-            .limit(1);
-          if (matches && matches.length > 0) {
-            const m = matches[0] as any;
+          const match = await matchCiqual(supabase, name);
+          if (match) {
+            const m = match.row as any;
             matchedName = m.nom || name;
             for (const [col, key] of Object.entries(CIQUAL_MAP)) {
-              per100[key] = Number(m[col]) || 0;
+              const v = m[col];
+              per100[key] = v === null || v === undefined || v === "" ? null : Number(v);
             }
             estimated = false;
           }
@@ -163,19 +164,24 @@ Unités STRICTES: calories=kcal, macros/fibres/oméga-3=g, calcium/magnésium/fe
 
         if (estimated) {
           const est = f.per_100g || {};
-          for (const k of NUTRIENT_KEYS) per100[k] = Number(est[k]) || 0;
+          for (const k of NUTRIENT_KEYS) {
+            const v = (est as any)[k];
+            per100[k] = v === null || v === undefined || v === "" ? null : Number(v);
+          }
         }
 
         // Sanitize per-100g values (units, ceilings) BEFORE scaling.
         for (const k of NUTRIENT_KEYS) {
-          per100[k] = sanitizePer100g(k, per100[k] || 0, matchedName);
+          per100[k] = sanitizePer100g(k, per100[k], matchedName);
         }
 
         const scale = grams / 100;
-        const scaled: Record<string, number> = {};
+        const scaled: Record<string, number | null> = {};
         for (const k of NUTRIENT_KEYS) {
-          scaled[k] = Math.round(((per100[k] || 0) * scale) * 100) / 100;
+          const v = per100[k];
+          scaled[k] = v === null ? null : Math.round(v * scale * 100) / 100;
         }
+
 
         entries.push({
           // Keep the original menu food name so the journal matches the displayed menu;
