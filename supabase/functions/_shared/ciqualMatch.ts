@@ -164,7 +164,7 @@ export async function matchCiqual(
 
   let best: { row: any; score: number } | null = null;
   for (const row of candidates) {
-    const s = scoreCandidate(name, row.nom || "");
+    const s = scoreCandidate(name, row.nom || "", row.groupe || "");
     if (!best || s > best.score) best = { row, score: s };
   }
   if (!best || best.score < CIQUAL_MATCH_THRESHOLD) return null;
