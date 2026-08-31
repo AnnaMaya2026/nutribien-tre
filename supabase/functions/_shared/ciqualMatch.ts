@@ -118,6 +118,12 @@ export function scoreCandidate(query: string, nom: string, groupe = ""): number 
     }
   }
 
+  // Sub-parts / derived forms the user did not ask for
+  for (const part of ["blanc", "jaune", "poudre", "germe", "son", "peau", "coquille"]) {
+    const re = new RegExp(`\\b${part}\\b`);
+    if (re.test(fullNorm) && !re.test(qNorm) && !head.includes(part)) { score -= 0.3; break; }
+  }
+
   // Baby food is never the intended match for an adult journal entry
   if ((groupe || "").trim().toLowerCase() === "aliments infantiles") score -= 1;
 
