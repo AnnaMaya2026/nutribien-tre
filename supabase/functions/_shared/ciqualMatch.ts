@@ -12,6 +12,8 @@ const STOPWORDS = new Set([
 export function normalize(s: string): string {
   return s
     .toLowerCase()
+    .replace(/\u0153/g, "oe")
+    .replace(/\u00e6/g, "ae")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9 ]/g, " ")
@@ -44,7 +46,7 @@ const PENALTY_TERMS = [
   "industriel", "industrielle", "surgele", "surgelee",
   "confiture", "sauce", "tartinade", "nuggets", "croquette", "muffin", "crepe",
   "tarte", "boisson", "nectar", "sirop", "coulis", "salade de", "gateau",
-  "farci", "fourre", "aromatise", "type ",
+  "farci", "fourre", "aromatise", "type ", "sucre", "sur lit de",
 ];
 
 const FRESH_RE = /\b(cru|crue|crus|crues|frais|fraiche|fraiches)\b/;
