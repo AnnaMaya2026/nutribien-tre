@@ -2,6 +2,7 @@
 // and nutritional values. Tries to match each food in aliments_ciqual
 // (per-100g table) and scales by grams; falls back to GPT estimates per 100g.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { matchCiqual } from "../_shared/ciqualMatch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
