@@ -103,7 +103,22 @@ export function scoreCandidate(query: string, nom: string, groupe = ""): number 
       // Vegetables, salads, herbs, fruits: raw / fresh is the default form
       if (FRESH_RE.test(fullNorm)) score += 0.15;
     }
+  } else {
+    // The user wrote a qualifier: reward rows that agree, penalise the opposite
+    const wantsCooked = /\b(cuit|cuite|cuits|cuites|bouilli|bouillie|appertise|appertisee|conserve|vapeur|grille|grillee|roti|rotie|poele|poelee|frit|frite)\b/.test(qNorm);
+    const wantsRaw = /\b(cru|crue|crus|crues|frais|fraiche|fraiches)\b/.test(qNorm);
+    if (wantsCooked) {
+      if (COOKED_RE.test(fullNorm) || /\b(grille|grillee|roti|rotie|poele|poelee|frit|frite)\b/.test(fullNorm)) score += 0.25;
+      else if (DRY_RE.test(fullNorm)) score -= 0.4;
+    } else if (wantsRaw) {
+      if (FRESH_RE.test(fullNorm)) score += 0.25;
+      else if (COOKED_RE.test(fullNorm)) score -= 0.4;
+    }
   }
+
+  // Baby food is never the intended match for an adult journal entry
+  if ((groupe || "").trim().toLowerCase() === "aliments infantiles") score -= 1;
+
 
   // Penalise processed foods and composed dishes
   for (const p of PENALTY_TERMS) {
