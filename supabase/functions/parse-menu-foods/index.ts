@@ -138,22 +138,19 @@ Unités STRICTES: calories=kcal, macros/fibres/oméga-3=g, calcium/magnésium/fe
         const grams = Math.max(1, Number(f.grams) || 100);
         if (!name) continue;
 
-        let per100: Record<string, number> = {};
+        let per100: Record<string, number | null> = {};
         let estimated = true;
         let matchedName = name;
 
-        // Try CIQUAL match
+        // Try CIQUAL match (normalised search + lexical scoring + threshold)
         try {
-          const { data: matches } = await supabase
-            .from("aliments_ciqual")
-            .select("*")
-            .ilike("nom", `%${name}%`)
-            .limit(1);
-          if (matches && matches.length > 0) {
-            const m = matches[0] as any;
+          const match = await matchCiqual(supabase, name);
+          if (match) {
+            const m = match.row as any;
             matchedName = m.nom || name;
             for (const [col, key] of Object.entries(CIQUAL_MAP)) {
-              per100[key] = Number(m[col]) || 0;
+              const v = m[col];
+              per100[key] = v === null || v === undefined || v === "" ? null : Number(v);
             }
             estimated = false;
           }
@@ -163,19 +160,24 @@ Unités STRICTES: calories=kcal, macros/fibres/oméga-3=g, calcium/magnésium/fe
 
         if (estimated) {
           const est = f.per_100g || {};
-          for (const k of NUTRIENT_KEYS) per100[k] = Number(est[k]) || 0;
+          for (const k of NUTRIENT_KEYS) {
+            const v = (est as any)[k];
+            per100[k] = v === null || v === undefined || v === "" ? null : Number(v);
+          }
         }
 
         // Sanitize per-100g values (units, ceilings) BEFORE scaling.
         for (const k of NUTRIENT_KEYS) {
-          per100[k] = sanitizePer100g(k, per100[k] || 0, matchedName);
+          per100[k] = sanitizePer100g(k, per100[k], matchedName);
         }
 
         const scale = grams / 100;
-        const scaled: Record<string, number> = {};
+        const scaled: Record<string, number | null> = {};
         for (const k of NUTRIENT_KEYS) {
-          scaled[k] = Math.round(((per100[k] || 0) * scale) * 100) / 100;
+          const v = per100[k];
+          scaled[k] = v === null ? null : Math.round(v * scale * 100) / 100;
         }
+
 
         entries.push({
           // Keep the original menu food name so the journal matches the displayed menu;
