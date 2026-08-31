@@ -46,7 +46,7 @@ const PENALTY_TERMS = [
   "industriel", "industrielle", "surgele", "surgelee",
   "confiture", "sauce", "tartinade", "nuggets", "croquette", "muffin", "crepe",
   "tarte", "boisson", "nectar", "sirop", "coulis", "salade de", "gateau",
-  "farci", "fourre", "aromatise", "type ", "sucre", "sur lit de",
+  "farci", "fourre", "aromatise", "type ", "sucre", "sur lit de", "puree",
 ];
 
 const FRESH_RE = /\b(cru|crue|crus|crues|frais|fraiche|fraiches)\b/;
@@ -119,7 +119,7 @@ export function scoreCandidate(query: string, nom: string, groupe = ""): number 
   }
 
   // Sub-parts / derived forms the user did not ask for
-  for (const part of ["blanc", "jaune", "poudre", "germe", "son", "peau", "coquille"]) {
+  for (const part of ["blanc", "jaune", "poudre", "germe", "son"]) {
     const re = new RegExp(`\\b${part}\\b`);
     if (re.test(fullNorm) && !re.test(qNorm) && !head.includes(part)) { score -= 0.3; break; }
   }
