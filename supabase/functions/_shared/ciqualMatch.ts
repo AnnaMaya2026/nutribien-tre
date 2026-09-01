@@ -64,10 +64,39 @@ const STARCHY_RE =
 // Groups where the raw/fresh form is the sensible default
 const FRESH_GROUPS = ["fruits, légumes, légumineuses et oléagineux"];
 
+// --- Termes composes / prepares -------------------------------------------
+// Un appariement partiel sur un terme compose est un faux positif deguise:
+// on exige que la ligne CIQUAL couvre TOUS les tokens de contenu du terme.
+const COMPOSITION_MARKERS = [
+  "salade de", "poelee", "poele de", "saute", "sautee", "grille", "grillee",
+  "roti", "rotie", "farci", "farcie", "gratin", "puree de", "tranche de",
+  "tranches de", "filet de", "filets de", "sur lit de", "facon", "mijote",
+  "brouille", "brouillee", "wok",
+];
+
+// Mots de preparation: ils decrivent la forme, pas un ingredient a couvrir
+const MARKER_WORDS = new Set([
+  "salade", "poelee", "poele", "saute", "sautee", "grille", "grillee", "roti",
+  "rotie", "farci", "farcie", "gratin", "puree", "tranche", "tranches",
+  "filet", "filets", "lit", "facon", "mijote", "estime", "brouille", "brouillee", "wok",
+]);
+
+export function isComposedQuery(qNorm: string): boolean {
+  if (COMPOSITION_MARKERS.some((m) => qNorm.includes(m))) return true;
+  // coordination "X et Y" entre deux aliments distincts
+  const parts = qNorm.split(/\bet\b/).map((p) => p.trim()).filter(Boolean);
+  return parts.length > 1 && parts.every((p) => tokenize(p).length > 0);
+}
+
+export function contentTokens(qNorm: string): string[] {
+  return tokenize(qNorm).filter((t) => !MARKER_WORDS.has(t));
+}
+
 export interface ScoredCandidate {
   row: any;
   score: number;
 }
+
 
 /** Score a CIQUAL row against a (raw) query name. 0..~1.5 */
 export function scoreCandidate(query: string, nom: string, groupe = ""): number {
