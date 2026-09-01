@@ -147,24 +147,18 @@ export function scoreCandidate(query: string, nom: string, groupe = ""): number 
     }
   }
 
-  // Sub-parts / derived forms the user did not ask for.
-  // Only penalise when the *head* of the CIQUAL name is not the requested
-  // food itself ("Oeuf, blanc" -> tete "oeuf" = demande, on ne penalise pas
-  // le rang; "Oeufs de cabillaud" -> tete differente, on penalise).
-  const headIsRequested = headTokens.every((t) => qSet.has(t)) || head === q || head.startsWith(q);
-  if (!headIsRequested) {
-    for (const part of ["blanc", "jaune", "poudre", "germe", "son"]) {
-      const re = new RegExp(`\\b${part}\\b`);
-      if (re.test(fullNorm) && !re.test(qNorm)) { score -= 0.6; break; }
-    }
+  // Sub-parts / derived forms the user did not ask for
+  for (const part of ["blanc", "jaune", "poudre", "germe", "son"]) {
+    const re = new RegExp(`\\b${part}\\b`);
+    if (re.test(fullNorm) && !re.test(qNorm)) { score -= 0.6; break; }
   }
 
-  // Complement "X de Y" dans la tete, dont Y n'est pas demande
-  // ("oeufs de cabillaud" pour "oeufs", "salade de chou" pour "chou")
-  const compl = /\b(de|d|du|des|a|au|aux)\b/.test(nom.split(",")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
-    ? headTokens.filter((t) => !qSet.has(t))
-    : [];
-  if (compl.length > 0 && headTokens.length > qTokens.length) score -= 0.6;
+  // Complement "X de Y" dans la tete, ou Y n'est pas demande
+  // ("Oeufs de cabillaud" pour "oeufs" -> rejet ; "Huile d'olive vierge" pour
+  // "huile d'olive" -> le complement 'olive' est demande, pas de penalite).
+  const complMatch = head.match(/\b(?:de|d|du|des|au|aux|a la)\s+([a-z0-9]+)/);
+  if (complMatch && !qSet.has(singularizeWord(complMatch[1]))) score -= 0.6;
+
 
   // --- Termes composes: exiger une couverture complete ----------------------
   if (isComposedQuery(qNorm)) {
