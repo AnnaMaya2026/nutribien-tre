@@ -6,7 +6,7 @@
 const STOPWORDS = new Set([
   "de", "du", "des", "le", "la", "les", "un", "une", "et", "au", "aux",
   "a", "l", "d", "en", "sans", "avec", "ou", "pour", "sur",
-  "bio", "nature", "naturel", "100", "pur", "pure",
+  "bio", "nature", "naturel", "100", "pur", "pure", "estime", "estimee",
 ]);
 
 export function normalize(s: string): string {
@@ -46,7 +46,7 @@ const PENALTY_TERMS = [
   "industriel", "industrielle", "surgele", "surgelee",
   "confiture", "sauce", "tartinade", "nuggets", "croquette", "muffin", "crepe",
   "tarte", "boisson", "nectar", "sirop", "coulis", "salade de", "gateau",
-  "farci", "fourre", "aromatise", "type ", "sucre", "sur lit de", "puree",
+  "farci", "fourre", "aromatise", "type ", "sucre", "sur lit de", "puree", "pane",
 ];
 
 const FRESH_RE = /\b(cru|crue|crus|crues|frais|fraiche|fraiches)\b/;
