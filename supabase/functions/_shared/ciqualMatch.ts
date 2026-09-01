@@ -118,11 +118,32 @@ export function scoreCandidate(query: string, nom: string, groupe = ""): number 
     }
   }
 
-  // Sub-parts / derived forms the user did not ask for
-  for (const part of ["blanc", "jaune", "poudre", "germe", "son"]) {
-    const re = new RegExp(`\\b${part}\\b`);
-    if (re.test(fullNorm) && !re.test(qNorm) && !head.includes(part)) { score -= 0.6; break; }
+  // Sub-parts / derived forms the user did not ask for.
+  // Only penalise when the *head* of the CIQUAL name is not the requested
+  // food itself ("Oeuf, blanc" -> tete "oeuf" = demande, on ne penalise pas
+  // le rang; "Oeufs de cabillaud" -> tete differente, on penalise).
+  const headIsRequested = headTokens.every((t) => qSet.has(t)) || head === q || head.startsWith(q);
+  if (!headIsRequested) {
+    for (const part of ["blanc", "jaune", "poudre", "germe", "son"]) {
+      const re = new RegExp(`\\b${part}\\b`);
+      if (re.test(fullNorm) && !re.test(qNorm)) { score -= 0.6; break; }
+    }
   }
+
+  // Complement "X de Y" dans la tete, dont Y n'est pas demande
+  // ("oeufs de cabillaud" pour "oeufs", "salade de chou" pour "chou")
+  const compl = /\b(de|d|du|des|a|au|aux)\b/.test(nom.split(",")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
+    ? headTokens.filter((t) => !qSet.has(t))
+    : [];
+  if (compl.length > 0 && headTokens.length > qTokens.length) score -= 0.6;
+
+  // --- Termes composes: exiger une couverture complete ----------------------
+  if (isComposedQuery(qNorm)) {
+    const content = contentTokens(qNorm);
+    const covered = content.every((t) => fullNorm.includes(t));
+    if (!covered) score -= 1;
+  }
+
 
   // Baby food is never the intended match for an adult journal entry
   if ((groupe || "").trim().toLowerCase() === "aliments infantiles") score -= 1;
