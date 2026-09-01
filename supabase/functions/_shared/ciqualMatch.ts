@@ -6,7 +6,7 @@
 const STOPWORDS = new Set([
   "de", "du", "des", "le", "la", "les", "un", "une", "et", "au", "aux",
   "a", "l", "d", "en", "sans", "avec", "ou", "pour", "sur",
-  "bio", "nature", "naturel", "100", "pur", "pure",
+  "bio", "nature", "naturel", "100", "pur", "pure", "estime", "estimee",
 ]);
 
 export function normalize(s: string): string {
@@ -46,7 +46,7 @@ const PENALTY_TERMS = [
   "industriel", "industrielle", "surgele", "surgelee",
   "confiture", "sauce", "tartinade", "nuggets", "croquette", "muffin", "crepe",
   "tarte", "boisson", "nectar", "sirop", "coulis", "salade de", "gateau",
-  "farci", "fourre", "aromatise", "type ", "sucre", "sur lit de", "puree",
+  "farci", "fourre", "aromatise", "type ", "sucre", "sur lit de", "puree", "pane",
 ];
 
 const FRESH_RE = /\b(cru|crue|crus|crues|frais|fraiche|fraiches)\b/;
@@ -64,10 +64,39 @@ const STARCHY_RE =
 // Groups where the raw/fresh form is the sensible default
 const FRESH_GROUPS = ["fruits, légumes, légumineuses et oléagineux"];
 
+// --- Termes composes / prepares -------------------------------------------
+// Un appariement partiel sur un terme compose est un faux positif deguise:
+// on exige que la ligne CIQUAL couvre TOUS les tokens de contenu du terme.
+const COMPOSITION_MARKERS = [
+  "salade de", "poelee", "poele de", "saute", "sautee", "grille", "grillee",
+  "roti", "rotie", "farci", "farcie", "gratin", "puree de", "tranche de",
+  "tranches de", "filet de", "filets de", "sur lit de", "facon", "mijote",
+  "brouille", "brouillee", "wok",
+];
+
+// Mots de preparation: ils decrivent la forme, pas un ingredient a couvrir
+const MARKER_WORDS = new Set([
+  "salade", "poelee", "poele", "saute", "sautee", "grille", "grillee", "roti",
+  "rotie", "farci", "farcie", "gratin", "puree", "tranche", "tranches",
+  "filet", "filets", "lit", "facon", "mijote", "estime", "brouille", "brouillee", "wok",
+]);
+
+export function isComposedQuery(qNorm: string): boolean {
+  if (COMPOSITION_MARKERS.some((m) => qNorm.includes(m))) return true;
+  // coordination "X et Y" entre deux aliments distincts
+  const parts = qNorm.split(/\bet\b/).map((p) => p.trim()).filter(Boolean);
+  return parts.length > 1 && parts.every((p) => tokenize(p).length > 0);
+}
+
+export function contentTokens(qNorm: string): string[] {
+  return tokenize(qNorm).filter((t) => !MARKER_WORDS.has(t));
+}
+
 export interface ScoredCandidate {
   row: any;
   score: number;
 }
+
 
 /** Score a CIQUAL row against a (raw) query name. 0..~1.5 */
 export function scoreCandidate(query: string, nom: string, groupe = ""): number {
@@ -121,8 +150,23 @@ export function scoreCandidate(query: string, nom: string, groupe = ""): number 
   // Sub-parts / derived forms the user did not ask for
   for (const part of ["blanc", "jaune", "poudre", "germe", "son"]) {
     const re = new RegExp(`\\b${part}\\b`);
-    if (re.test(fullNorm) && !re.test(qNorm) && !head.includes(part)) { score -= 0.6; break; }
+    if (re.test(fullNorm) && !re.test(qNorm)) { score -= 0.6; break; }
   }
+
+  // Complement "X de Y" dans la tete, ou Y n'est pas demande
+  // ("Oeufs de cabillaud" pour "oeufs" -> rejet ; "Huile d'olive vierge" pour
+  // "huile d'olive" -> le complement 'olive' est demande, pas de penalite).
+  const complMatch = head.match(/\b(?:de|d|du|des|au|aux|a la)\s+([a-z0-9]+)/);
+  if (complMatch && !qSet.has(singularizeWord(complMatch[1]))) score -= 0.6;
+
+
+  // --- Termes composes: exiger une couverture complete ----------------------
+  if (isComposedQuery(qNorm)) {
+    const content = contentTokens(qNorm);
+    const covered = content.every((t) => fullNorm.includes(t));
+    if (!covered) score -= 1;
+  }
+
 
   // Baby food is never the intended match for an adult journal entry
   if ((groupe || "").trim().toLowerCase() === "aliments infantiles") score -= 1;
