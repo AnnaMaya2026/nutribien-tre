@@ -83,10 +83,33 @@ const MARKER_WORDS = new Set([
 
 export function isComposedQuery(qNorm: string): boolean {
   if (COMPOSITION_MARKERS.some((m) => qNorm.includes(m))) return true;
+  // garniture explicite: "omelette aux legumes", "poulet a la creme"
+  if (/\b(aux|a la|a l)\s+[a-z0-9]{3,}/.test(qNorm)) return true;
   // coordination "X et Y" entre deux aliments distincts
   const parts = qNorm.split(/\bet\b/).map((p) => p.trim()).filter(Boolean);
   return parts.length > 1 && parts.every((p) => tokenize(p).length > 0);
 }
+
+// --- Vocabulaire courant -> vocabulaire CIQUAL ------------------------------
+const SYNONYMS: [RegExp, string][] = [
+  [/\ben (conserve|boite|bocal)\b/g, "appertise"],
+  [/\bau naturel\b/g, "appertise egoutte"],
+  [/\b(congele|congelee|surgelee)\b/g, "surgele"],
+  [/\b(allege|allegee|leger|legere)\b/g, "teneur reduite"],
+  [/\bfait maison\b/g, "fait maison"],
+];
+
+// Mots qui ne sont pas des distinctions CIQUAL
+const NOISE_RE = /\b(bio|extra|premium|marque|maxi|mini)\b/g;
+
+/** Normalise un terme saisi vers le registre de la table CIQUAL. */
+export function applySynonyms(name: string): string {
+  let s = normalize(name.replace(/\([^)]*\)/g, " ")); // marques entre parentheses
+  for (const [re, rep] of SYNONYMS) s = s.replace(re, rep);
+  s = s.replace(NOISE_RE, " ");
+  return s.replace(/\s+/g, " ").trim();
+}
+
 
 export function contentTokens(qNorm: string): string[] {
   return tokenize(qNorm).filter((t) => !MARKER_WORDS.has(t));
@@ -156,7 +179,12 @@ export function scoreCandidate(query: string, nom: string, groupe = ""): number 
   // Complement "X de Y" dans la tete, ou Y n'est pas demande
   // ("Oeufs de cabillaud" pour "oeufs" -> rejet ; "Huile d'olive vierge" pour
   // "huile d'olive" -> le complement 'olive' est demande, pas de penalite).
-  const complMatch = head.match(/\b(?:de|d|du|des|au|aux|a la)\s+([a-z0-9]+)/);
+  // Les qualificatifs introduits par au/aux/a la ("Mozzarella au lait de vache")
+  // sont des precisions, pas un autre aliment: pas de penalite.
+  // On ne regarde que la partie de la tete AVANT un qualificatif au/aux/a la:
+  // "Mozzarella au lait de vache" -> prefixe "mozzarella" -> aucun complement.
+  const headPrefix = head.split(/\b(?:au|aux|a la|a l)\b/)[0];
+  const complMatch = headPrefix.match(/\b(?:de|d|du|des)\s+([a-z0-9]+)/);
   if (complMatch && !qSet.has(singularizeWord(complMatch[1]))) score -= 0.6;
 
 
@@ -176,14 +204,17 @@ export function scoreCandidate(query: string, nom: string, groupe = ""): number 
   for (const p of PENALTY_TERMS) {
     if (fullNorm.includes(p)) { score -= 0.5; break; }
   }
-  // "appertise" is legitimate for starchy foods, penalised elsewhere
-  if (/\bappertise/.test(fullNorm) && !STARCHY_RE.test(qNorm)) score -= 0.5;
+  // "appertise" is legitimate for starchy foods (or when explicitly asked),
+  // penalised elsewhere
+  if (/\bappertise/.test(fullNorm) && !STARCHY_RE.test(qNorm) && !/appertise/.test(qNorm)) score -= 0.5;
 
-  // Composed dish markers ("... a la ...", "... aux ...")
-  if (/\b(a la|a l|aux|au)\b/.test(fullNorm)) score -= 0.25;
+  // Composed dish markers ("... a la ...", "... aux ...") dans la tete,
+  // sauf quand la tete commence par le terme demande (simple precision).
+  if (/\b(a la|a l|aux|au)\b/.test(head) && !head.startsWith(q)) score -= 0.25;
 
   // Long, over-specific names are less likely to be the plain food
   if (headTokens.length > qTokens.length + 2) score -= 0.15;
+
 
   return score;
 }
@@ -199,14 +230,18 @@ export async function matchCiqual(
   supabase: any,
   name: string,
 ): Promise<{ row: any; score: number } | null> {
+  const cleaned = applySynonyms(name) || normalize(name);
   const terms: string[] = [];
-  const norm = normalize(name);
-  const sing = singularize(name);
+  const norm = normalize(cleaned);
+  const sing = singularize(cleaned);
   if (sing) terms.push(sing);
   if (norm && norm !== sing) terms.push(norm);
-  // Fallback: the longest meaningful token (e.g. "poivron" from "poivron rouge")
-  const toks = tokenize(name).sort((a, b) => b.length - a.length);
-  if (toks[0] && !terms.includes(toks[0])) terms.push(toks[0]);
+  // Fallback: chaque token de contenu (le 1er d'abord: "sardine" de
+  // "sardine appertise", puis "poivron" de "poivron rouge")
+  for (const t of tokenize(cleaned).slice(0, 3)) {
+    if (!terms.includes(t)) terms.push(t);
+  }
+
 
   const seen = new Set<number>();
   const candidates: any[] = [];
@@ -231,7 +266,7 @@ export async function matchCiqual(
 
   let best: { row: any; score: number } | null = null;
   for (const row of candidates) {
-    const s = scoreCandidate(name, row.nom || "", row.groupe || "");
+    const s = scoreCandidate(cleaned, row.nom || "", row.groupe || "");
     if (!best || s > best.score) best = { row, score: s };
   }
   if (!best || best.score < CIQUAL_MATCH_THRESHOLD) return null;
