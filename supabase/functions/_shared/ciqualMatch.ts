@@ -267,10 +267,7 @@ export async function matchCiqual(
   let best: { row: any; score: number } | null = null;
   for (const row of candidates) {
     const s = scoreCandidate(cleaned, row.nom || "", row.groupe || "");
-    // A score egal, le nom le plus court est le plus generique -> on le prefere
-    const shorter = best && s === best.score &&
-      String(row.nom || "").length < String(best.row.nom || "").length;
-    if (!best || s > best.score || shorter) best = { row, score: s };
+    if (!best || s > best.score) best = { row, score: s };
   }
   if (!best || best.score < CIQUAL_MATCH_THRESHOLD) return null;
   return best;
