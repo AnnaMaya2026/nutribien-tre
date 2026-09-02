@@ -181,7 +181,10 @@ export function scoreCandidate(query: string, nom: string, groupe = ""): number 
   // "huile d'olive" -> le complement 'olive' est demande, pas de penalite).
   // Les qualificatifs introduits par au/aux/a la ("Mozzarella au lait de vache")
   // sont des precisions, pas un autre aliment: pas de penalite.
-  const complMatch = head.match(/\b(?:de|d|du|des)\s+([a-z0-9]+)/);
+  // On ne regarde que la partie de la tete AVANT un qualificatif au/aux/a la:
+  // "Mozzarella au lait de vache" -> prefixe "mozzarella" -> aucun complement.
+  const headPrefix = head.split(/\b(?:au|aux|a la|a l)\b/)[0];
+  const complMatch = headPrefix.match(/\b(?:de|d|du|des)\s+([a-z0-9]+)/);
   if (complMatch && !qSet.has(singularizeWord(complMatch[1]))) score -= 0.6;
 
 
