@@ -433,6 +433,27 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrient_references: {
+        Row: {
+          limite_haute: number | null
+          nutrient_key: string
+          rnp_anses: number | null
+          unite: string
+        }
+        Insert: {
+          limite_haute?: number | null
+          nutrient_key: string
+          rnp_anses?: number | null
+          unite: string
+        }
+        Update: {
+          limite_haute?: number | null
+          nutrient_key?: string
+          rnp_anses?: number | null
+          unite?: string
+        }
+        Relationships: []
+      }
       nutrient_reports: {
         Row: {
           aliment_nom: string
@@ -767,6 +788,115 @@ export type Database = {
           message_date?: string
           seen?: boolean
           summary?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      supplement_logs: {
+        Row: {
+          created_at: string
+          id: string
+          logged_at: string
+          supplement_id: string
+          taken: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logged_at?: string
+          supplement_id: string
+          taken?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logged_at?: string
+          supplement_id?: string
+          taken?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplement_logs_supplement_id_fkey"
+            columns: ["supplement_id"]
+            isOneToOne: false
+            referencedRelation: "supplements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplement_nutrients: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          nutrient_key: string
+          supplement_id: string
+          unit: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          nutrient_key: string
+          supplement_id: string
+          unit?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          nutrient_key?: string
+          supplement_id?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplement_nutrients_supplement_id_fkey"
+            columns: ["supplement_id"]
+            isOneToOne: false
+            referencedRelation: "supplements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplements: {
+        Row: {
+          actif: boolean
+          created_at: string
+          dose_par_prise: number | null
+          id: string
+          marque: string | null
+          nom: string
+          source_routine_id: string | null
+          unite_dose: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          dose_par_prise?: number | null
+          id?: string
+          marque?: string | null
+          nom: string
+          source_routine_id?: string | null
+          unite_dose?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          dose_par_prise?: number | null
+          id?: string
+          marque?: string | null
+          nom?: string
+          source_routine_id?: string | null
+          unite_dose?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
