@@ -83,10 +83,33 @@ const MARKER_WORDS = new Set([
 
 export function isComposedQuery(qNorm: string): boolean {
   if (COMPOSITION_MARKERS.some((m) => qNorm.includes(m))) return true;
+  // garniture explicite: "omelette aux legumes", "poulet a la creme"
+  if (/\b(aux|a la|a l)\s+[a-z0-9]{3,}/.test(qNorm)) return true;
   // coordination "X et Y" entre deux aliments distincts
   const parts = qNorm.split(/\bet\b/).map((p) => p.trim()).filter(Boolean);
   return parts.length > 1 && parts.every((p) => tokenize(p).length > 0);
 }
+
+// --- Vocabulaire courant -> vocabulaire CIQUAL ------------------------------
+const SYNONYMS: [RegExp, string][] = [
+  [/\ben (conserve|boite|bocal)\b/g, "appertise"],
+  [/\bau naturel\b/g, "appertise egoutte"],
+  [/\b(congele|congelee|surgelee)\b/g, "surgele"],
+  [/\b(allege|allegee|leger|legere)\b/g, "teneur reduite"],
+  [/\bfait maison\b/g, "fait maison"],
+];
+
+// Mots qui ne sont pas des distinctions CIQUAL
+const NOISE_RE = /\b(bio|extra|premium|marque|maxi|mini)\b/g;
+
+/** Normalise un terme saisi vers le registre de la table CIQUAL. */
+export function applySynonyms(name: string): string {
+  let s = normalize(name.replace(/\([^)]*\)/g, " ")); // marques entre parentheses
+  for (const [re, rep] of SYNONYMS) s = s.replace(re, rep);
+  s = s.replace(NOISE_RE, " ");
+  return s.replace(/\s+/g, " ").trim();
+}
+
 
 export function contentTokens(qNorm: string): string[] {
   return tokenize(qNorm).filter((t) => !MARKER_WORDS.has(t));
