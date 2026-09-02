@@ -227,14 +227,18 @@ export async function matchCiqual(
   supabase: any,
   name: string,
 ): Promise<{ row: any; score: number } | null> {
+  const cleaned = applySynonyms(name) || normalize(name);
   const terms: string[] = [];
-  const norm = normalize(name);
-  const sing = singularize(name);
+  const norm = normalize(cleaned);
+  const sing = singularize(cleaned);
   if (sing) terms.push(sing);
   if (norm && norm !== sing) terms.push(norm);
-  // Fallback: the longest meaningful token (e.g. "poivron" from "poivron rouge")
-  const toks = tokenize(name).sort((a, b) => b.length - a.length);
-  if (toks[0] && !terms.includes(toks[0])) terms.push(toks[0]);
+  // Fallback: chaque token de contenu (le 1er d'abord: "sardine" de
+  // "sardine appertise", puis "poivron" de "poivron rouge")
+  for (const t of tokenize(cleaned).slice(0, 3)) {
+    if (!terms.includes(t)) terms.push(t);
+  }
+
 
   const seen = new Set<number>();
   const candidates: any[] = [];
