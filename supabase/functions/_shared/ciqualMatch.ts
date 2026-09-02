@@ -156,7 +156,9 @@ export function scoreCandidate(query: string, nom: string, groupe = ""): number 
   // Complement "X de Y" dans la tete, ou Y n'est pas demande
   // ("Oeufs de cabillaud" pour "oeufs" -> rejet ; "Huile d'olive vierge" pour
   // "huile d'olive" -> le complement 'olive' est demande, pas de penalite).
-  const complMatch = head.match(/\b(?:de|d|du|des|au|aux|a la)\s+([a-z0-9]+)/);
+  // Les qualificatifs introduits par au/aux/a la ("Mozzarella au lait de vache")
+  // sont des precisions, pas un autre aliment: pas de penalite.
+  const complMatch = head.match(/\b(?:de|d|du|des)\s+([a-z0-9]+)/);
   if (complMatch && !qSet.has(singularizeWord(complMatch[1]))) score -= 0.6;
 
 
@@ -176,14 +178,17 @@ export function scoreCandidate(query: string, nom: string, groupe = ""): number 
   for (const p of PENALTY_TERMS) {
     if (fullNorm.includes(p)) { score -= 0.5; break; }
   }
-  // "appertise" is legitimate for starchy foods, penalised elsewhere
-  if (/\bappertise/.test(fullNorm) && !STARCHY_RE.test(qNorm)) score -= 0.5;
+  // "appertise" is legitimate for starchy foods (or when explicitly asked),
+  // penalised elsewhere
+  if (/\bappertise/.test(fullNorm) && !STARCHY_RE.test(qNorm) && !/appertise/.test(qNorm)) score -= 0.5;
 
-  // Composed dish markers ("... a la ...", "... aux ...")
-  if (/\b(a la|a l|aux|au)\b/.test(fullNorm)) score -= 0.25;
+  // Composed dish markers ("... a la ...", "... aux ...") dans la tete,
+  // sauf quand la tete commence par le terme demande (simple precision).
+  if (/\b(a la|a l|aux|au)\b/.test(head) && !head.startsWith(q)) score -= 0.25;
 
   // Long, over-specific names are less likely to be the plain food
   if (headTokens.length > qTokens.length + 2) score -= 0.15;
+
 
   return score;
 }
