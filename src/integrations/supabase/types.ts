@@ -865,11 +865,13 @@ export type Database = {
       supplements: {
         Row: {
           actif: boolean
+          composition_incomplete: boolean
           created_at: string
           dose_par_prise: number | null
           id: string
           marque: string | null
           nom: string
+          quotidien: boolean
           source_routine_id: string | null
           unite_dose: string | null
           updated_at: string
@@ -877,11 +879,13 @@ export type Database = {
         }
         Insert: {
           actif?: boolean
+          composition_incomplete?: boolean
           created_at?: string
           dose_par_prise?: number | null
           id?: string
           marque?: string | null
           nom: string
+          quotidien?: boolean
           source_routine_id?: string | null
           unite_dose?: string | null
           updated_at?: string
@@ -889,11 +893,13 @@ export type Database = {
         }
         Update: {
           actif?: boolean
+          composition_incomplete?: boolean
           created_at?: string
           dose_par_prise?: number | null
           id?: string
           marque?: string | null
           nom?: string
+          quotidien?: boolean
           source_routine_id?: string | null
           unite_dose?: string | null
           updated_at?: string
