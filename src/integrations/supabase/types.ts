@@ -435,18 +435,21 @@ export type Database = {
       }
       nutrient_references: {
         Row: {
+          ar_etiquetage_ue: number | null
           limite_haute: number | null
           nutrient_key: string
           rnp_anses: number | null
           unite: string
         }
         Insert: {
+          ar_etiquetage_ue?: number | null
           limite_haute?: number | null
           nutrient_key: string
           rnp_anses?: number | null
           unite: string
         }
         Update: {
+          ar_etiquetage_ue?: number | null
           limite_haute?: number | null
           nutrient_key?: string
           rnp_anses?: number | null
