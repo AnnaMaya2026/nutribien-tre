@@ -800,6 +800,7 @@ export type Database = {
           created_at: string
           id: string
           logged_at: string
+          quantite: number
           supplement_id: string
           taken: boolean
           user_id: string
@@ -808,6 +809,7 @@ export type Database = {
           created_at?: string
           id?: string
           logged_at?: string
+          quantite?: number
           supplement_id: string
           taken?: boolean
           user_id: string
@@ -816,6 +818,7 @@ export type Database = {
           created_at?: string
           id?: string
           logged_at?: string
+          quantite?: number
           supplement_id?: string
           taken?: boolean
           user_id?: string
@@ -874,6 +877,7 @@ export type Database = {
           id: string
           marque: string | null
           nom: string
+          poids_dose_g: number | null
           quotidien: boolean
           source_routine_id: string | null
           unite_dose: string | null
@@ -888,6 +892,7 @@ export type Database = {
           id?: string
           marque?: string | null
           nom: string
+          poids_dose_g?: number | null
           quotidien?: boolean
           source_routine_id?: string | null
           unite_dose?: string | null
@@ -902,6 +907,7 @@ export type Database = {
           id?: string
           marque?: string | null
           nom?: string
+          poids_dose_g?: number | null
           quotidien?: boolean
           source_routine_id?: string | null
           unite_dose?: string | null
