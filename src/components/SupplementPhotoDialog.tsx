@@ -224,14 +224,33 @@ export default function SupplementPhotoDialog({
                 <Input value={marque} onChange={(e) => setMarque(e.target.value)} placeholder="Ex : Physiomance" />
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <label className="text-xs font-medium text-muted-foreground">Dose / jour</label>
+                    <label className="text-xs font-medium text-muted-foreground">Dose / jour *</label>
                     <Input value={dose} onChange={(e) => setDose(e.target.value)} inputMode="decimal" placeholder="2" />
                   </div>
                   <div className="flex-1">
-                    <label className="text-xs font-medium text-muted-foreground">Unité</label>
-                    <Input value={doseUnit} onChange={(e) => setDoseUnit(e.target.value)} placeholder="gélules" />
+                    <label className="text-xs font-medium text-muted-foreground">Unité *</label>
+                    <select
+                      value={doseUnit}
+                      onChange={(e) => setDoseUnit(e.target.value)}
+                      className="w-full h-10 rounded-md border border-input bg-background text-sm px-2"
+                    >
+                      <option value="">Choisir…</option>
+                      {DOSE_UNITS.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
+                    </select>
                   </div>
                 </div>
+                {doseUnitNeedsWeight(doseUnit) && (
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Poids d'une {doseUnit} en grammes *
+                    </label>
+                    <Input value={poidsDose} onChange={(e) => setPoidsDose(e.target.value)} inputMode="decimal" placeholder="Ex : 5" />
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Indiqué sur l'emballage. Sans ce poids, aucun calcul n'est possible.
+                    </p>
+                  </div>
+                )}
+
                 <label className="flex items-center gap-2 text-sm pt-1">
                   <input type="checkbox" checked={quotidien} onChange={(e) => setQuotidien(e.target.checked)} className="w-4 h-4" />
                   Je le prends tous les jours (pré-coché chaque jour)
