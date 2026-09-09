@@ -302,6 +302,8 @@ export function useSupplements(dateStr: string) {
     contributions,
     takenSupplements,
     isTaken,
+    takenQuantity,
+
     toggleTaken,
     addSupplement,
     setActive,
