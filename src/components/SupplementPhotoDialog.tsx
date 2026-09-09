@@ -7,7 +7,10 @@ import {
   NUTRIENT_KEY_LABELS,
   nutrientLabel,
   useSupplements,
+  DOSE_UNITS,
+  doseUnitNeedsWeight,
 } from "@/hooks/useSupplements";
+
 
 const MAX_DIM = 1400;
 const JPEG_QUALITY = 0.82;
