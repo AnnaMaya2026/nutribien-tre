@@ -87,8 +87,9 @@ export default function SupplementPhotoDialog({
 
   const reset = () => {
     setStep("capture");
-    setNom(""); setMarque(""); setDose(""); setDoseUnit("");
+    setNom(""); setMarque(""); setDose(""); setDoseUnit(""); setPoidsDose("");
     setQuotidien(true); setRows([]); setIgnored([]);
+
     setNewKey(""); setNewAmount(""); setNewUnit("mg"); setSaving(false);
   };
   const close = () => { reset(); onClose(); };
