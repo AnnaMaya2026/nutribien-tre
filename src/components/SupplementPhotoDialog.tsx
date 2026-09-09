@@ -109,7 +109,9 @@ export default function SupplementPhotoDialog({
       setNom(data?.product_name || "");
       setMarque(data?.brand || "");
       if (data?.daily_dose_count) setDose(String(data.daily_dose_count));
-      setDoseUnit(data?.dose_unit || "");
+      const detectedUnit = String(data?.dose_unit || "").toLowerCase();
+      setDoseUnit(DOSE_UNITS.some((u) => u.value === detectedUnit) ? detectedUnit : "");
+
       const nutrients = Array.isArray(data?.nutrients) ? data.nutrients : [];
       setRows(
         nutrients.map((n: any) => ({
