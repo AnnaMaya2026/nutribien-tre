@@ -70,7 +70,8 @@ export default function SupplementPhotoDialog({
   const [marque, setMarque] = useState("");
   const [dose, setDose] = useState("");
   const [doseUnit, setDoseUnit] = useState("");
-  const [quotidien, setQuotidien] = useState(true);
+  const [poidsDose, setPoidsDose] = useState("");
+
   const [rows, setRows] = useState<Row[]>([]);
   const [ignored, setIgnored] = useState<{ label: string; amount: number | null; unit: string | null }[]>([]);
   const [newKey, setNewKey] = useState("");
