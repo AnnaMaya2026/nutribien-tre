@@ -11,10 +11,25 @@ export interface Supplement {
   marque: string | null;
   dose_par_prise: number | null;
   unite_dose: string | null;
+  poids_dose_g: number | null;
   actif: boolean;
   quotidien: boolean;
   composition_incomplete: boolean;
   created_at: string;
+}
+
+/** Unités de dose autorisées. Celles marquées needsWeight exigent un poids en grammes. */
+export const DOSE_UNITS = [
+  { value: "g", label: "g", needsWeight: false },
+  { value: "ml", label: "ml", needsWeight: false },
+  { value: "dosette", label: "dosette", needsWeight: true },
+  { value: "gélule", label: "gélule", needsWeight: false },
+  { value: "comprimé", label: "comprimé", needsWeight: false },
+  { value: "cuillère", label: "cuillère", needsWeight: true },
+] as const;
+
+export function doseUnitNeedsWeight(unit: string) {
+  return DOSE_UNITS.some((u) => u.value === unit && u.needsWeight);
 }
 
 export interface SupplementNutrient {
@@ -31,7 +46,9 @@ export interface SupplementLog {
   supplement_id: string;
   logged_at: string;
   taken: boolean;
+  quantite: number;
 }
+
 
 export interface NutrientReference {
   nutrient_key: string;
@@ -161,6 +178,12 @@ export function useSupplements(dateStr: string) {
     return s.quotidien && day <= new Date().toISOString().split("T")[0];
   };
 
+  /** Quantité prise ce jour-là (nombre de doses). 1 par défaut. */
+  const takenQuantity = (s: Supplement, day: string = dateStr) => {
+    const log = logs.find((l) => l.supplement_id === s.id && l.logged_at === day);
+    return log?.quantite != null ? Number(log.quantite) : 1;
+  };
+
   const activeSupplements = supplements.filter((s) => s.actif);
 
   const takenSupplements = useMemo(
@@ -183,12 +206,12 @@ export function useSupplements(dateStr: string) {
   }, [takenSupplements, nutrientsBySupplement]);
 
   const toggleTaken = useMutation({
-    mutationFn: async ({ supplementId, taken, day }: { supplementId: string; taken: boolean; day?: string }) => {
+    mutationFn: async ({ supplementId, taken, day, quantite }: { supplementId: string; taken: boolean; day?: string; quantite?: number }) => {
       if (!userId) throw new Error("not authenticated");
       const { error } = await (supabase as any)
         .from("supplement_logs")
         .upsert(
-          { user_id: userId, supplement_id: supplementId, logged_at: day || dateStr, taken },
+          { user_id: userId, supplement_id: supplementId, logged_at: day || dateStr, taken, quantite: quantite ?? 1 },
           { onConflict: "supplement_id,logged_at" }
         );
       if (error) throw error;
@@ -201,26 +224,33 @@ export function useSupplements(dateStr: string) {
     mutationFn: async (input: {
       nom: string;
       marque?: string | null;
-      dose_par_prise?: number | null;
-      unite_dose?: string | null;
+      dose_par_prise: number;
+      unite_dose: string;
+      poids_dose_g?: number | null;
       quotidien: boolean;
       nutrients: { nutrient_key: string; amount: number; unit: string }[];
     }) => {
       if (!userId) throw new Error("not authenticated");
+      if (!(Number(input.dose_par_prise) > 0)) throw new Error("La dose est requise.");
+      if (!input.unite_dose) throw new Error("L'unité de dose est requise.");
+      if (doseUnitNeedsWeight(input.unite_dose) && !(Number(input.poids_dose_g) > 0))
+        throw new Error("Le poids en grammes d'une dose est requis pour cette unité.");
       const { data, error } = await (supabase as any)
         .from("supplements")
         .insert({
           user_id: userId,
           nom: input.nom,
           marque: input.marque || null,
-          dose_par_prise: input.dose_par_prise ?? null,
-          unite_dose: input.unite_dose || null,
+          dose_par_prise: Number(input.dose_par_prise),
+          unite_dose: input.unite_dose,
+          poids_dose_g: doseUnitNeedsWeight(input.unite_dose) ? Number(input.poids_dose_g) : null,
           actif: true,
           quotidien: input.quotidien,
         })
         .select("id")
         .single();
       if (error) throw error;
+
       if (input.nutrients.length) {
         const { error: e2 } = await (supabase as any)
           .from("supplement_nutrients")
@@ -272,6 +302,8 @@ export function useSupplements(dateStr: string) {
     contributions,
     takenSupplements,
     isTaken,
+    takenQuantity,
+
     toggleTaken,
     addSupplement,
     setActive,

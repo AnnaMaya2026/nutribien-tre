@@ -7,7 +7,10 @@ import {
   NUTRIENT_KEY_LABELS,
   nutrientLabel,
   useSupplements,
+  DOSE_UNITS,
+  doseUnitNeedsWeight,
 } from "@/hooks/useSupplements";
+
 
 const MAX_DIM = 1400;
 const JPEG_QUALITY = 0.82;
@@ -67,7 +70,10 @@ export default function SupplementPhotoDialog({
   const [marque, setMarque] = useState("");
   const [dose, setDose] = useState("");
   const [doseUnit, setDoseUnit] = useState("");
+  const [poidsDose, setPoidsDose] = useState("");
   const [quotidien, setQuotidien] = useState(true);
+
+
   const [rows, setRows] = useState<Row[]>([]);
   const [ignored, setIgnored] = useState<{ label: string; amount: number | null; unit: string | null }[]>([]);
   const [newKey, setNewKey] = useState("");
@@ -81,8 +87,9 @@ export default function SupplementPhotoDialog({
 
   const reset = () => {
     setStep("capture");
-    setNom(""); setMarque(""); setDose(""); setDoseUnit("");
+    setNom(""); setMarque(""); setDose(""); setDoseUnit(""); setPoidsDose("");
     setQuotidien(true); setRows([]); setIgnored([]);
+
     setNewKey(""); setNewAmount(""); setNewUnit("mg"); setSaving(false);
   };
   const close = () => { reset(); onClose(); };
@@ -102,7 +109,9 @@ export default function SupplementPhotoDialog({
       setNom(data?.product_name || "");
       setMarque(data?.brand || "");
       if (data?.daily_dose_count) setDose(String(data.daily_dose_count));
-      setDoseUnit(data?.dose_unit || "");
+      const detectedUnit = String(data?.dose_unit || "").toLowerCase();
+      setDoseUnit(DOSE_UNITS.some((u) => u.value === detectedUnit) ? detectedUnit : "");
+
       const nutrients = Array.isArray(data?.nutrients) ? data.nutrients : [];
       setRows(
         nutrients.map((n: any) => ({
@@ -137,6 +146,12 @@ export default function SupplementPhotoDialog({
 
   const save = async () => {
     if (!nom.trim()) return toast.error("Le nom du produit est requis.");
+    const doseNum = Number(String(dose).replace(",", "."));
+    if (!isFinite(doseNum) || doseNum <= 0) return toast.error("Indiquez la dose par jour.");
+    if (!doseUnit) return toast.error("Choisissez l'unité de la dose.");
+    const poidsNum = Number(String(poidsDose).replace(",", "."));
+    if (doseUnitNeedsWeight(doseUnit) && (!isFinite(poidsNum) || poidsNum <= 0))
+      return toast.error(`Indiquez le poids d'une ${doseUnit} en grammes : sans lui, aucun calcul n'est possible.`);
     const nutrients = rows
       .map((r) => ({ nutrient_key: r.nutrient_key, amount: Number(String(r.amount).replace(",", ".")), unit: r.unit }))
       .filter((n) => n.nutrient_key && isFinite(n.amount) && n.amount > 0);
@@ -146,8 +161,9 @@ export default function SupplementPhotoDialog({
       await addSupplement.mutateAsync({
         nom: nom.trim(),
         marque: marque.trim() || null,
-        dose_par_prise: dose ? Number(dose.replace(",", ".")) : null,
-        unite_dose: doseUnit || null,
+        dose_par_prise: doseNum,
+        unite_dose: doseUnit,
+        poids_dose_g: doseUnitNeedsWeight(doseUnit) ? poidsNum : null,
         quotidien,
         nutrients,
       });
@@ -156,6 +172,7 @@ export default function SupplementPhotoDialog({
       setSaving(false);
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -209,14 +226,33 @@ export default function SupplementPhotoDialog({
                 <Input value={marque} onChange={(e) => setMarque(e.target.value)} placeholder="Ex : Physiomance" />
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <label className="text-xs font-medium text-muted-foreground">Dose / jour</label>
+                    <label className="text-xs font-medium text-muted-foreground">Dose / jour *</label>
                     <Input value={dose} onChange={(e) => setDose(e.target.value)} inputMode="decimal" placeholder="2" />
                   </div>
                   <div className="flex-1">
-                    <label className="text-xs font-medium text-muted-foreground">Unité</label>
-                    <Input value={doseUnit} onChange={(e) => setDoseUnit(e.target.value)} placeholder="gélules" />
+                    <label className="text-xs font-medium text-muted-foreground">Unité *</label>
+                    <select
+                      value={doseUnit}
+                      onChange={(e) => setDoseUnit(e.target.value)}
+                      className="w-full h-10 rounded-md border border-input bg-background text-sm px-2"
+                    >
+                      <option value="">Choisir…</option>
+                      {DOSE_UNITS.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
+                    </select>
                   </div>
                 </div>
+                {doseUnitNeedsWeight(doseUnit) && (
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Poids d'une {doseUnit} en grammes *
+                    </label>
+                    <Input value={poidsDose} onChange={(e) => setPoidsDose(e.target.value)} inputMode="decimal" placeholder="Ex : 5" />
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Indiqué sur l'emballage. Sans ce poids, aucun calcul n'est possible.
+                    </p>
+                  </div>
+                )}
+
                 <label className="flex items-center gap-2 text-sm pt-1">
                   <input type="checkbox" checked={quotidien} onChange={(e) => setQuotidien(e.target.checked)} className="w-4 h-4" />
                   Je le prends tous les jours (pré-coché chaque jour)

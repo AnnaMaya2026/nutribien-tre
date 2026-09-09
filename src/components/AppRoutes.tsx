@@ -16,6 +16,8 @@ import PersonalJournalPage from "@/pages/PersonalJournalPage";
 import SavedMenusPage from "@/pages/SavedMenusPage";
 import ProfilePage from "@/pages/ProfilePage";
 import RationExplainerPage from "@/pages/RationExplainerPage";
+import SupplementsPage from "@/pages/SupplementsPage";
+
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import DiagnosisPage from "@/pages/DiagnosisPage";
 import OAuthConsentPage from "@/pages/OAuthConsentPage";
