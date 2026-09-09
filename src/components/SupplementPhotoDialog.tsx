@@ -144,6 +144,12 @@ export default function SupplementPhotoDialog({
 
   const save = async () => {
     if (!nom.trim()) return toast.error("Le nom du produit est requis.");
+    const doseNum = Number(String(dose).replace(",", "."));
+    if (!isFinite(doseNum) || doseNum <= 0) return toast.error("Indiquez la dose par jour.");
+    if (!doseUnit) return toast.error("Choisissez l'unité de la dose.");
+    const poidsNum = Number(String(poidsDose).replace(",", "."));
+    if (doseUnitNeedsWeight(doseUnit) && (!isFinite(poidsNum) || poidsNum <= 0))
+      return toast.error(`Indiquez le poids d'une ${doseUnit} en grammes : sans lui, aucun calcul n'est possible.`);
     const nutrients = rows
       .map((r) => ({ nutrient_key: r.nutrient_key, amount: Number(String(r.amount).replace(",", ".")), unit: r.unit }))
       .filter((n) => n.nutrient_key && isFinite(n.amount) && n.amount > 0);
@@ -153,8 +159,9 @@ export default function SupplementPhotoDialog({
       await addSupplement.mutateAsync({
         nom: nom.trim(),
         marque: marque.trim() || null,
-        dose_par_prise: dose ? Number(dose.replace(",", ".")) : null,
-        unite_dose: doseUnit || null,
+        dose_par_prise: doseNum,
+        unite_dose: doseUnit,
+        poids_dose_g: doseUnitNeedsWeight(doseUnit) ? poidsNum : null,
         quotidien,
         nutrients,
       });
@@ -163,6 +170,7 @@ export default function SupplementPhotoDialog({
       setSaving(false);
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
