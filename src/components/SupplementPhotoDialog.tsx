@@ -71,6 +71,8 @@ export default function SupplementPhotoDialog({
   const [dose, setDose] = useState("");
   const [doseUnit, setDoseUnit] = useState("");
   const [poidsDose, setPoidsDose] = useState("");
+  const [quotidien, setQuotidien] = useState(true);
+
 
   const [rows, setRows] = useState<Row[]>([]);
   const [ignored, setIgnored] = useState<{ label: string; amount: number | null; unit: string | null }[]>([]);
