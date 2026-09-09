@@ -11,10 +11,25 @@ export interface Supplement {
   marque: string | null;
   dose_par_prise: number | null;
   unite_dose: string | null;
+  poids_dose_g: number | null;
   actif: boolean;
   quotidien: boolean;
   composition_incomplete: boolean;
   created_at: string;
+}
+
+/** Unités de dose autorisées. Celles marquées needsWeight exigent un poids en grammes. */
+export const DOSE_UNITS = [
+  { value: "g", label: "g", needsWeight: false },
+  { value: "ml", label: "ml", needsWeight: false },
+  { value: "dosette", label: "dosette", needsWeight: true },
+  { value: "gélule", label: "gélule", needsWeight: false },
+  { value: "comprimé", label: "comprimé", needsWeight: false },
+  { value: "cuillère", label: "cuillère", needsWeight: true },
+] as const;
+
+export function doseUnitNeedsWeight(unit: string) {
+  return DOSE_UNITS.some((u) => u.value === unit && u.needsWeight);
 }
 
 export interface SupplementNutrient {
@@ -31,7 +46,9 @@ export interface SupplementLog {
   supplement_id: string;
   logged_at: string;
   taken: boolean;
+  quantite: number;
 }
+
 
 export interface NutrientReference {
   nutrient_key: string;
