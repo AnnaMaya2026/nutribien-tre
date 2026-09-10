@@ -196,10 +196,8 @@ export default function Dashboard() {
   const { selectedDate, selectedDateStr, isToday } = useSelectedDate();
   const { logs, weekLogs } = useFoodLogs(selectedDateStr);
   const { allRoutines, logs: routineLogs } = useRoutines();
-  const supplementContribs = useMemo(
-    () => getSupplementContributions(allRoutines as any, routineLogs as any, selectedDateStr),
-    [allRoutines, routineLogs, selectedDateStr]
-  );
+  // Compléments cochés du jour affiché, quantité saisie incluse.
+  const { contributions: supplementContribs, references: nutrientRefs } = useSupplements(selectedDateStr);
   // Convert nutrient amounts to the same unit used by the food totals.
   // Most micros are mg or µg already in the right unit; oméga-3 is stored in g
   // by food logs but supplements are typically reported in mg → convert.
@@ -208,6 +206,19 @@ export default function Dashboard() {
     if (!c) return 0;
     return c.amount / divisor;
   };
+  const supSources = (key: string, divisor = 1) =>
+    (supplementContribs[key]?.sources || []).map((s) => ({ nom: s.nom, amount: s.amount / divisor }));
+  /** Limite haute de sécurité (ANSES), dans l'unité des totaux alimentaires. */
+  const supLimit = (key: string, divisor = 1) => {
+    const l = nutrientRefs[key]?.limite_haute;
+    return l == null ? null : Number(l) / divisor;
+  };
+  /** Couverture toujours comparée à la RNP ANSES, jamais aux AR d'étiquetage. */
+  const rnpTarget = (key: string, fallback: number, divisor = 1) => {
+    const r = nutrientRefs[key]?.rnp_anses;
+    return r == null ? fallback : Number(r) / divisor;
+  };
+
   const [openMeals, setOpenMeals] = useState<Record<string, boolean>>({
     "petit-dejeuner": false,
     dejeuner: false,
