@@ -505,12 +505,13 @@ export default function Dashboard() {
 
         {showSecondaryMicros && (
           <div className="space-y-2 mt-2 pt-3 border-t border-border animate-fade-in">
-            <ProgressBar value={totals.potassium} max={DAILY_TARGETS.potassium} label="Potassium" unit="mg" isMicro nutrient="potassium" />
-            <ProgressBar value={totals.zinc} max={DAILY_TARGETS.zinc} label="Zinc" unit="mg" isMicro nutrient="zinc" supplementAmount={supBy("zinc")} supplementUnit="mg" />
-            <ProgressBar value={totals.vitamin_k} max={DAILY_TARGETS.vitamin_k} label="Vitamine K" unit="µg" isMicro nutrient="vitamin_k" />
-            <ProgressBar value={totals.vitamin_b6} max={DAILY_TARGETS.vitamin_b6} label="Vitamine B6" unit="mg" isMicro nutrient="vitamin_b6" />
-            <ProgressBar value={totals.vitamin_b9} max={DAILY_TARGETS.vitamin_b9} label="Vitamine B9 (folate)" unit="µg" isMicro nutrient="vitamin_b9" />
-            <ProgressBar value={totals.vitamin_e} max={DAILY_TARGETS.vitamin_e} label="Vitamine E" unit="mg" isMicro nutrient="vitamin_e" />
+            <ProgressBar value={totals.potassium} max={rnpTarget("potassium", DAILY_TARGETS.potassium)} label="Potassium" unit="mg" isMicro nutrient="potassium" supplementAmount={supBy("potassium")} supplementUnit="mg" supplementSources={supSources("potassium")} limit={supLimit("potassium")} />
+            <ProgressBar value={totals.zinc} max={rnpTarget("zinc", DAILY_TARGETS.zinc)} label="Zinc" unit="mg" isMicro nutrient="zinc" supplementAmount={supBy("zinc")} supplementUnit="mg" supplementSources={supSources("zinc")} limit={supLimit("zinc")} />
+            <ProgressBar value={totals.vitamin_k} max={rnpTarget("vitamin_k", DAILY_TARGETS.vitamin_k)} label="Vitamine K" unit="µg" isMicro nutrient="vitamin_k" supplementAmount={supBy("vitamin_k")} supplementUnit="µg" supplementSources={supSources("vitamin_k")} limit={supLimit("vitamin_k")} />
+            <ProgressBar value={totals.vitamin_b6} max={rnpTarget("vitamin_b6", DAILY_TARGETS.vitamin_b6)} label="Vitamine B6" unit="mg" isMicro nutrient="vitamin_b6" supplementAmount={supBy("vitamin_b6")} supplementUnit="mg" supplementSources={supSources("vitamin_b6")} limit={supLimit("vitamin_b6")} />
+            <ProgressBar value={totals.vitamin_b9} max={rnpTarget("vitamin_b9", DAILY_TARGETS.vitamin_b9)} label="Vitamine B9 (folate)" unit="µg" isMicro nutrient="vitamin_b9" supplementAmount={supBy("vitamin_b9")} supplementUnit="µg" supplementSources={supSources("vitamin_b9")} limit={supLimit("vitamin_b9")} />
+            <ProgressBar value={totals.vitamin_e} max={rnpTarget("vitamin_e", DAILY_TARGETS.vitamin_e)} label="Vitamine E" unit="mg" isMicro nutrient="vitamin_e" supplementAmount={supBy("vitamin_e")} supplementUnit="mg" supplementSources={supSources("vitamin_e")} limit={supLimit("vitamin_e")} />
+
             <div className="rounded-xl bg-muted/30 px-3 py-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium text-foreground">Score antioxydants 🫐</span>
