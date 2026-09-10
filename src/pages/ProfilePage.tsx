@@ -509,7 +509,21 @@ export default function ProfilePage() {
           </AlertDialog>
         </section>
 
+        {/* Compléments alimentaires */}
+        <section className="pt-2">
+          <button
+            onClick={() => navigate("/complements")}
+            className="w-full rounded-xl border border-border bg-card px-4 py-3 text-left hover:bg-muted/50 transition-colors"
+          >
+            <span className="text-sm font-semibold text-foreground">💊 Mes compléments</span>
+            <span className="block text-xs text-muted-foreground">
+              Ajoutez-les par photo de l'étiquette et cochez vos prises
+            </span>
+          </button>
+        </section>
+
         {/* Legal */}
+
         <section className="pt-4 text-center space-y-1">
           <div className="flex justify-center gap-4 text-xs text-muted-foreground">
             <button onClick={() => navigate("/cgu")} className="underline underline-offset-2">
