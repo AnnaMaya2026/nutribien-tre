@@ -192,18 +192,26 @@ export function useSupplements(dateStr: string) {
     [supplements, logs, dateStr]
   );
 
-  /** Apports des compléments cochés pour le jour affiché : clé → total + sources */
+  /**
+   * Apports des compléments cochés pour le jour affiché : clé → total + sources.
+   * Chaque apport est multiplié par la QUANTITÉ réellement saisie ce jour-là
+   * (une dosette ou quatre ne donnent pas le même résultat).
+   */
   const contributions = useMemo(() => {
     const out: Record<string, Contribution> = {};
     for (const s of takenSupplements) {
+      const qty = takenQuantity(s);
       for (const n of nutrientsBySupplement[s.id] || []) {
+        const amount = (Number(n.amount) || 0) * (qty > 0 ? qty : 1);
         const c = (out[n.nutrient_key] ||= { amount: 0, unit: n.unit, sources: [] });
-        c.amount += Number(n.amount) || 0;
-        c.sources.push({ nom: s.nom, amount: Number(n.amount) || 0 });
+        c.amount += amount;
+        c.sources.push({ nom: s.nom, amount });
       }
     }
     return out;
-  }, [takenSupplements, nutrientsBySupplement]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [takenSupplements, nutrientsBySupplement, logs, dateStr]);
+
 
   const toggleTaken = useMutation({
     mutationFn: async ({ supplementId, taken, day, quantite }: { supplementId: string; taken: boolean; day?: string; quantite?: number }) => {
