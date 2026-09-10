@@ -493,13 +493,14 @@ export default function Dashboard() {
       <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
         <h3 className="text-base font-semibold text-foreground mb-3">Micronutriments clés</h3>
         <div className="space-y-2">
-          <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" isMicro nutrient="calcium" supplementAmount={supBy("calcium")} supplementUnit="mg" />
-          <ProgressBar value={totals.vitamin_d} max={vitaminDGoal} label="Vitamine D" unit="µg" isMicro nutrient="vitamin_d" supplementAmount={supBy("vitamin_d")} supplementUnit="µg" />
-          <ProgressBar value={totals.magnesium} max={DAILY_TARGETS.magnesium} label="Magnésium" unit="mg" isMicro nutrient="magnesium" supplementAmount={supBy("magnesium")} supplementUnit="mg" />
-          <ProgressBar value={totals.iron} max={DAILY_TARGETS.iron} label="Fer" unit="mg" isMicro nutrient="iron" supplementAmount={supBy("iron")} supplementUnit="mg" />
-          <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro nutrient="omega3" supplementAmount={supBy("omega3", 1000)} supplementUnit="g" />
+          <ProgressBar value={totals.calcium} max={rnpTarget("calcium", DAILY_TARGETS.calcium)} label="Calcium" unit="mg" isMicro nutrient="calcium" supplementAmount={supBy("calcium")} supplementUnit="mg" supplementSources={supSources("calcium")} limit={supLimit("calcium")} />
+          <ProgressBar value={totals.vitamin_d} max={rnpTarget("vitamin_d", vitaminDGoal)} label="Vitamine D" unit="µg" isMicro nutrient="vitamin_d" supplementAmount={supBy("vitamin_d")} supplementUnit="µg" supplementSources={supSources("vitamin_d")} limit={supLimit("vitamin_d")} />
+          <ProgressBar value={totals.magnesium} max={rnpTarget("magnesium", DAILY_TARGETS.magnesium)} label="Magnésium" unit="mg" isMicro nutrient="magnesium" supplementAmount={supBy("magnesium")} supplementUnit="mg" supplementSources={supSources("magnesium")} limit={supLimit("magnesium")} />
+          <ProgressBar value={totals.iron} max={rnpTarget("iron", DAILY_TARGETS.iron)} label="Fer" unit="mg" isMicro nutrient="iron" supplementAmount={supBy("iron")} supplementUnit="mg" supplementSources={supSources("iron")} limit={supLimit("iron")} />
+          <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro nutrient="omega3" supplementAmount={supBy("omega3", 1000)} supplementUnit="g" supplementSources={supSources("omega3", 1000)} limit={supLimit("omega3", 1000)} />
           <ProgressBar value={totals.phytoestrogens} max={DAILY_TARGETS.phytoestrogens} label="Phytoestrogènes" unit="mg" isMicro nutrient="phytoestrogens" maxPrefix="~" hint="(objectif indicatif)" />
-          <ProgressBar value={totals.vitamin_b12} max={DAILY_TARGETS.vitamin_b12} label="Vitamine B12" unit="µg" isMicro nutrient="vitamin_b12" supplementAmount={supBy("vitamin_b12")} supplementUnit="µg" />
+          <ProgressBar value={totals.vitamin_b12} max={rnpTarget("vitamin_b12", DAILY_TARGETS.vitamin_b12)} label="Vitamine B12" unit="µg" isMicro nutrient="vitamin_b12" supplementAmount={supBy("vitamin_b12")} supplementUnit="µg" supplementSources={supSources("vitamin_b12")} limit={supLimit("vitamin_b12")} />
+
         </div>
 
         {showSecondaryMicros && (
