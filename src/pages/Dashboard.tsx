@@ -59,6 +59,8 @@ function ProgressBar({
   hint,
   supplementAmount,
   supplementUnit,
+  supplementSources,
+  limit,
 }: {
   value: number;
   max: number;
@@ -70,8 +72,11 @@ function ProgressBar({
   hint?: string;
   supplementAmount?: number;
   supplementUnit?: string;
+  supplementSources?: { nom: string; amount: number }[];
+  limit?: number | null;
 }) {
-  const totalValue = value + (supplementAmount || 0);
+  const supplement = supplementAmount || 0;
+  const totalValue = value + supplement;
   const rawPct = (totalValue / max) * 100;
   const aberrant = isAberrantPct(rawPct);
   const cappedPct = aberrant ? 100 : Math.min(rawPct, ABERRANT_PCT);
@@ -80,6 +85,8 @@ function ProgressBar({
   const supplementPct = Math.max(0, totalPct - foodPct);
   const { text, emoji } = getNutrientColor(aberrant ? 0 : rawPct);
   const foodColor = getNutrientColor((value / max) * 100).bg;
+  const overLimit = limit != null && !aberrant && totalValue > limit;
+  const fmt = (n: number) => (n >= 10 ? Math.round(n) : Math.round(n * 10) / 10);
   return (
     <div className="space-y-1">
       <div className="flex justify-between items-center text-[15px]">
@@ -93,7 +100,7 @@ function ProgressBar({
           </span>
         ) : (
           <span className={`font-semibold ${text} text-right`}>
-            {emoji} {Math.round(totalValue)}/{maxPrefix || ""}
+            {emoji} {fmt(totalValue)}/{maxPrefix || ""}
             {max}
             {unit}
           </span>
@@ -114,17 +121,35 @@ function ProgressBar({
           )}
         </div>
       )}
-      {supplementAmount && !aberrant ? (
-        <p className="text-[11px] text-amber-600 dark:text-amber-400">
-          💊 Compléments: +{Math.round(supplementAmount)}{supplementUnit || unit}
+      {supplement > 0 && !aberrant ? (
+        <p className="text-[11px] text-muted-foreground">
+          🍽️ Alimentation seule : <span className="font-medium">{fmt(value)}{unit}</span>
+          {max ? ` (${Math.round((value / max) * 100)}% de la RNP)` : ""}
+          {" · "}
+          <span className="text-amber-600 dark:text-amber-400">
+            💊 Compléments : +{fmt(supplement)}{supplementUnit || unit}
+          </span>
+          {" · "}
+          Total : <span className="font-medium">{fmt(totalValue)}{unit}</span>
+          {max ? ` (${Math.round(rawPct)}%)` : ""}
         </p>
       ) : null}
+      {overLimit && (
+        <p className="text-[11px] rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-1.5">
+          ℹ️ Total du jour {fmt(totalValue)}{unit}, au-dessus de la limite haute de sécurité ({limit}{unit}).
+          {supplementSources && supplementSources.length > 0 && (
+            <> Y contribuent : {supplementSources.map((s) => `${s.nom} (+${fmt(s.amount)}${supplementUnit || unit})`).join(", ")}.</>
+          )}
+          {" "}Vous pouvez espacer vos prises ; ponctuellement, ce n'est pas dangereux.
+        </p>
+      )}
       {hint && !aberrant && (
         <p className="text-[11px] text-muted-foreground italic">{hint}</p>
       )}
     </div>
   );
 }
+
 
 function formatFrenchDate(): string {
   const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
