@@ -531,7 +531,19 @@ export default function Dashboard() {
         >
           {showSecondaryMicros ? "− Réduire" : "+ Voir tous les micronutriments (6)"}
         </button>
+
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Les conseils alimentaires portent sur l'assiette seule ; le statut est évalué sur le total,
+          compléments cochés inclus. Couverture calculée sur les repères ANSES.
+        </p>
+        <button
+          onClick={() => navigate("/complements")}
+          className="mt-2 w-full text-xs font-medium text-pink-deep hover:text-primary transition-colors py-1.5 rounded-lg hover:bg-primary/5"
+        >
+          💊 Mes compléments
+        </button>
       </div>
+
 
       {/* Micronutrient trend chart */}
       <MicronutrientTrendChart />
