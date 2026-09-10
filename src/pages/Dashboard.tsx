@@ -2,7 +2,9 @@ import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
-import { useRoutines, getSupplementContributions } from "@/hooks/useRoutines";
+import { useRoutines } from "@/hooks/useRoutines";
+import { useSupplements } from "@/hooks/useSupplements";
+
 import DateSelector from "@/components/DateSelector";
 import NutrientInfo, { NutrientKey } from "@/components/NutrientInfo";
 import { DAILY_TARGETS } from "@/lib/mockData";
