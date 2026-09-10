@@ -2,7 +2,9 @@ import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
-import { useRoutines, getSupplementContributions } from "@/hooks/useRoutines";
+import { useRoutines } from "@/hooks/useRoutines";
+import { useSupplements } from "@/hooks/useSupplements";
+
 import DateSelector from "@/components/DateSelector";
 import NutrientInfo, { NutrientKey } from "@/components/NutrientInfo";
 import { DAILY_TARGETS } from "@/lib/mockData";
@@ -59,6 +61,8 @@ function ProgressBar({
   hint,
   supplementAmount,
   supplementUnit,
+  supplementSources,
+  limit,
 }: {
   value: number;
   max: number;
@@ -70,8 +74,11 @@ function ProgressBar({
   hint?: string;
   supplementAmount?: number;
   supplementUnit?: string;
+  supplementSources?: { nom: string; amount: number }[];
+  limit?: number | null;
 }) {
-  const totalValue = value + (supplementAmount || 0);
+  const supplement = supplementAmount || 0;
+  const totalValue = value + supplement;
   const rawPct = (totalValue / max) * 100;
   const aberrant = isAberrantPct(rawPct);
   const cappedPct = aberrant ? 100 : Math.min(rawPct, ABERRANT_PCT);
@@ -80,6 +87,8 @@ function ProgressBar({
   const supplementPct = Math.max(0, totalPct - foodPct);
   const { text, emoji } = getNutrientColor(aberrant ? 0 : rawPct);
   const foodColor = getNutrientColor((value / max) * 100).bg;
+  const overLimit = limit != null && !aberrant && totalValue > limit;
+  const fmt = (n: number) => (n >= 10 ? Math.round(n) : Math.round(n * 10) / 10);
   return (
     <div className="space-y-1">
       <div className="flex justify-between items-center text-[15px]">
@@ -93,7 +102,7 @@ function ProgressBar({
           </span>
         ) : (
           <span className={`font-semibold ${text} text-right`}>
-            {emoji} {Math.round(totalValue)}/{maxPrefix || ""}
+            {emoji} {fmt(totalValue)}/{maxPrefix || ""}
             {max}
             {unit}
           </span>
@@ -114,17 +123,35 @@ function ProgressBar({
           )}
         </div>
       )}
-      {supplementAmount && !aberrant ? (
-        <p className="text-[11px] text-amber-600 dark:text-amber-400">
-          💊 Compléments: +{Math.round(supplementAmount)}{supplementUnit || unit}
+      {supplement > 0 && !aberrant ? (
+        <p className="text-[11px] text-muted-foreground">
+          🍽️ Alimentation seule : <span className="font-medium">{fmt(value)}{unit}</span>
+          {max ? ` (${Math.round((value / max) * 100)}% de la RNP)` : ""}
+          {" · "}
+          <span className="text-amber-600 dark:text-amber-400">
+            💊 Compléments : +{fmt(supplement)}{supplementUnit || unit}
+          </span>
+          {" · "}
+          Total : <span className="font-medium">{fmt(totalValue)}{unit}</span>
+          {max ? ` (${Math.round(rawPct)}%)` : ""}
         </p>
       ) : null}
+      {overLimit && (
+        <p className="text-[11px] rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-1.5">
+          ℹ️ Total du jour {fmt(totalValue)}{unit}, au-dessus de la limite haute de sécurité ({limit}{unit}).
+          {supplementSources && supplementSources.length > 0 && (
+            <> Y contribuent : {supplementSources.map((s) => `${s.nom} (+${fmt(s.amount)}${supplementUnit || unit})`).join(", ")}.</>
+          )}
+          {" "}Vous pouvez espacer vos prises ; ponctuellement, ce n'est pas dangereux.
+        </p>
+      )}
       {hint && !aberrant && (
         <p className="text-[11px] text-muted-foreground italic">{hint}</p>
       )}
     </div>
   );
 }
+
 
 function formatFrenchDate(): string {
   const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
@@ -169,10 +196,8 @@ export default function Dashboard() {
   const { selectedDate, selectedDateStr, isToday } = useSelectedDate();
   const { logs, weekLogs } = useFoodLogs(selectedDateStr);
   const { allRoutines, logs: routineLogs } = useRoutines();
-  const supplementContribs = useMemo(
-    () => getSupplementContributions(allRoutines as any, routineLogs as any, selectedDateStr),
-    [allRoutines, routineLogs, selectedDateStr]
-  );
+  // Compléments cochés du jour affiché, quantité saisie incluse.
+  const { contributions: supplementContribs, references: nutrientRefs } = useSupplements(selectedDateStr);
   // Convert nutrient amounts to the same unit used by the food totals.
   // Most micros are mg or µg already in the right unit; oméga-3 is stored in g
   // by food logs but supplements are typically reported in mg → convert.
@@ -181,6 +206,19 @@ export default function Dashboard() {
     if (!c) return 0;
     return c.amount / divisor;
   };
+  const supSources = (key: string, divisor = 1) =>
+    (supplementContribs[key]?.sources || []).map((s) => ({ nom: s.nom, amount: s.amount / divisor }));
+  /** Limite haute de sécurité (ANSES), dans l'unité des totaux alimentaires. */
+  const supLimit = (key: string, divisor = 1) => {
+    const l = nutrientRefs[key]?.limite_haute;
+    return l == null ? null : Number(l) / divisor;
+  };
+  /** Couverture toujours comparée à la RNP ANSES, jamais aux AR d'étiquetage. */
+  const rnpTarget = (key: string, fallback: number, divisor = 1) => {
+    const r = nutrientRefs[key]?.rnp_anses;
+    return r == null ? fallback : Number(r) / divisor;
+  };
+
   const [openMeals, setOpenMeals] = useState<Record<string, boolean>>({
     "petit-dejeuner": false,
     dejeuner: false,
@@ -455,23 +493,25 @@ export default function Dashboard() {
       <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
         <h3 className="text-base font-semibold text-foreground mb-3">Micronutriments clés</h3>
         <div className="space-y-2">
-          <ProgressBar value={totals.calcium} max={DAILY_TARGETS.calcium} label="Calcium" unit="mg" isMicro nutrient="calcium" supplementAmount={supBy("calcium")} supplementUnit="mg" />
-          <ProgressBar value={totals.vitamin_d} max={vitaminDGoal} label="Vitamine D" unit="µg" isMicro nutrient="vitamin_d" supplementAmount={supBy("vitamin_d")} supplementUnit="µg" />
-          <ProgressBar value={totals.magnesium} max={DAILY_TARGETS.magnesium} label="Magnésium" unit="mg" isMicro nutrient="magnesium" supplementAmount={supBy("magnesium")} supplementUnit="mg" />
-          <ProgressBar value={totals.iron} max={DAILY_TARGETS.iron} label="Fer" unit="mg" isMicro nutrient="iron" supplementAmount={supBy("iron")} supplementUnit="mg" />
-          <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro nutrient="omega3" supplementAmount={supBy("omega3", 1000)} supplementUnit="g" />
+          <ProgressBar value={totals.calcium} max={rnpTarget("calcium", DAILY_TARGETS.calcium)} label="Calcium" unit="mg" isMicro nutrient="calcium" supplementAmount={supBy("calcium")} supplementUnit="mg" supplementSources={supSources("calcium")} limit={supLimit("calcium")} />
+          <ProgressBar value={totals.vitamin_d} max={rnpTarget("vitamin_d", vitaminDGoal)} label="Vitamine D" unit="µg" isMicro nutrient="vitamin_d" supplementAmount={supBy("vitamin_d")} supplementUnit="µg" supplementSources={supSources("vitamin_d")} limit={supLimit("vitamin_d")} />
+          <ProgressBar value={totals.magnesium} max={rnpTarget("magnesium", DAILY_TARGETS.magnesium)} label="Magnésium" unit="mg" isMicro nutrient="magnesium" supplementAmount={supBy("magnesium")} supplementUnit="mg" supplementSources={supSources("magnesium")} limit={supLimit("magnesium")} />
+          <ProgressBar value={totals.iron} max={rnpTarget("iron", DAILY_TARGETS.iron)} label="Fer" unit="mg" isMicro nutrient="iron" supplementAmount={supBy("iron")} supplementUnit="mg" supplementSources={supSources("iron")} limit={supLimit("iron")} />
+          <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro nutrient="omega3" supplementAmount={supBy("omega3", 1000)} supplementUnit="g" supplementSources={supSources("omega3", 1000)} limit={supLimit("omega3", 1000)} />
           <ProgressBar value={totals.phytoestrogens} max={DAILY_TARGETS.phytoestrogens} label="Phytoestrogènes" unit="mg" isMicro nutrient="phytoestrogens" maxPrefix="~" hint="(objectif indicatif)" />
-          <ProgressBar value={totals.vitamin_b12} max={DAILY_TARGETS.vitamin_b12} label="Vitamine B12" unit="µg" isMicro nutrient="vitamin_b12" supplementAmount={supBy("vitamin_b12")} supplementUnit="µg" />
+          <ProgressBar value={totals.vitamin_b12} max={rnpTarget("vitamin_b12", DAILY_TARGETS.vitamin_b12)} label="Vitamine B12" unit="µg" isMicro nutrient="vitamin_b12" supplementAmount={supBy("vitamin_b12")} supplementUnit="µg" supplementSources={supSources("vitamin_b12")} limit={supLimit("vitamin_b12")} />
+
         </div>
 
         {showSecondaryMicros && (
           <div className="space-y-2 mt-2 pt-3 border-t border-border animate-fade-in">
-            <ProgressBar value={totals.potassium} max={DAILY_TARGETS.potassium} label="Potassium" unit="mg" isMicro nutrient="potassium" />
-            <ProgressBar value={totals.zinc} max={DAILY_TARGETS.zinc} label="Zinc" unit="mg" isMicro nutrient="zinc" supplementAmount={supBy("zinc")} supplementUnit="mg" />
-            <ProgressBar value={totals.vitamin_k} max={DAILY_TARGETS.vitamin_k} label="Vitamine K" unit="µg" isMicro nutrient="vitamin_k" />
-            <ProgressBar value={totals.vitamin_b6} max={DAILY_TARGETS.vitamin_b6} label="Vitamine B6" unit="mg" isMicro nutrient="vitamin_b6" />
-            <ProgressBar value={totals.vitamin_b9} max={DAILY_TARGETS.vitamin_b9} label="Vitamine B9 (folate)" unit="µg" isMicro nutrient="vitamin_b9" />
-            <ProgressBar value={totals.vitamin_e} max={DAILY_TARGETS.vitamin_e} label="Vitamine E" unit="mg" isMicro nutrient="vitamin_e" />
+            <ProgressBar value={totals.potassium} max={rnpTarget("potassium", DAILY_TARGETS.potassium)} label="Potassium" unit="mg" isMicro nutrient="potassium" supplementAmount={supBy("potassium")} supplementUnit="mg" supplementSources={supSources("potassium")} limit={supLimit("potassium")} />
+            <ProgressBar value={totals.zinc} max={rnpTarget("zinc", DAILY_TARGETS.zinc)} label="Zinc" unit="mg" isMicro nutrient="zinc" supplementAmount={supBy("zinc")} supplementUnit="mg" supplementSources={supSources("zinc")} limit={supLimit("zinc")} />
+            <ProgressBar value={totals.vitamin_k} max={rnpTarget("vitamin_k", DAILY_TARGETS.vitamin_k)} label="Vitamine K" unit="µg" isMicro nutrient="vitamin_k" supplementAmount={supBy("vitamin_k")} supplementUnit="µg" supplementSources={supSources("vitamin_k")} limit={supLimit("vitamin_k")} />
+            <ProgressBar value={totals.vitamin_b6} max={rnpTarget("vitamin_b6", DAILY_TARGETS.vitamin_b6)} label="Vitamine B6" unit="mg" isMicro nutrient="vitamin_b6" supplementAmount={supBy("vitamin_b6")} supplementUnit="mg" supplementSources={supSources("vitamin_b6")} limit={supLimit("vitamin_b6")} />
+            <ProgressBar value={totals.vitamin_b9} max={rnpTarget("vitamin_b9", DAILY_TARGETS.vitamin_b9)} label="Vitamine B9 (folate)" unit="µg" isMicro nutrient="vitamin_b9" supplementAmount={supBy("vitamin_b9")} supplementUnit="µg" supplementSources={supSources("vitamin_b9")} limit={supLimit("vitamin_b9")} />
+            <ProgressBar value={totals.vitamin_e} max={rnpTarget("vitamin_e", DAILY_TARGETS.vitamin_e)} label="Vitamine E" unit="mg" isMicro nutrient="vitamin_e" supplementAmount={supBy("vitamin_e")} supplementUnit="mg" supplementSources={supSources("vitamin_e")} limit={supLimit("vitamin_e")} />
+
             <div className="rounded-xl bg-muted/30 px-3 py-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium text-foreground">Score antioxydants 🫐</span>
@@ -491,7 +531,19 @@ export default function Dashboard() {
         >
           {showSecondaryMicros ? "− Réduire" : "+ Voir tous les micronutriments (6)"}
         </button>
+
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Les conseils alimentaires portent sur l'assiette seule ; le statut est évalué sur le total,
+          compléments cochés inclus. Couverture calculée sur les repères ANSES.
+        </p>
+        <button
+          onClick={() => navigate("/complements")}
+          className="mt-2 w-full text-xs font-medium text-pink-deep hover:text-primary transition-colors py-1.5 rounded-lg hover:bg-primary/5"
+        >
+          💊 Mes compléments
+        </button>
       </div>
+
 
       {/* Micronutrient trend chart */}
       <MicronutrientTrendChart />
