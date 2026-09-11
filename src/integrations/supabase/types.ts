@@ -145,6 +145,8 @@ export type Database = {
       }
       favorite_meal_items: {
         Row: {
+          acides_gras_satures: number | null
+          brand: string | null
           calcium: number | null
           calories: number | null
           carbs: number | null
@@ -155,11 +157,16 @@ export type Database = {
           id: string
           iron: number | null
           magnesium: number | null
+          micros_coverage_percent: number | null
+          micros_estimes: boolean
           omega3: number | null
           phytoestrogens: number | null
           portion_size: number | null
           potassium: number | null
           proteins: number | null
+          sel: number | null
+          sodium: number | null
+          sucres: number | null
           vitamin_b12: number | null
           vitamin_b6: number | null
           vitamin_b9: number | null
@@ -169,6 +176,8 @@ export type Database = {
           zinc: number | null
         }
         Insert: {
+          acides_gras_satures?: number | null
+          brand?: string | null
           calcium?: number | null
           calories?: number | null
           carbs?: number | null
@@ -179,11 +188,16 @@ export type Database = {
           id?: string
           iron?: number | null
           magnesium?: number | null
+          micros_coverage_percent?: number | null
+          micros_estimes?: boolean
           omega3?: number | null
           phytoestrogens?: number | null
           portion_size?: number | null
           potassium?: number | null
           proteins?: number | null
+          sel?: number | null
+          sodium?: number | null
+          sucres?: number | null
           vitamin_b12?: number | null
           vitamin_b6?: number | null
           vitamin_b9?: number | null
@@ -193,6 +207,8 @@ export type Database = {
           zinc?: number | null
         }
         Update: {
+          acides_gras_satures?: number | null
+          brand?: string | null
           calcium?: number | null
           calories?: number | null
           carbs?: number | null
@@ -203,11 +219,16 @@ export type Database = {
           id?: string
           iron?: number | null
           magnesium?: number | null
+          micros_coverage_percent?: number | null
+          micros_estimes?: boolean
           omega3?: number | null
           phytoestrogens?: number | null
           portion_size?: number | null
           potassium?: number | null
           proteins?: number | null
+          sel?: number | null
+          sodium?: number | null
+          sucres?: number | null
           vitamin_b12?: number | null
           vitamin_b6?: number | null
           vitamin_b9?: number | null
@@ -279,6 +300,8 @@ export type Database = {
       }
       food_logs: {
         Row: {
+          acides_gras_satures: number | null
+          brand: string | null
           calcium: number | null
           calories: number | null
           carbs: number | null
@@ -291,11 +314,16 @@ export type Database = {
           logged_at: string
           magnesium: number | null
           meal_type: string | null
+          micros_coverage_percent: number | null
+          micros_estimes: boolean
           omega3: number | null
           phytoestrogens: number | null
           portion_size: number | null
           potassium: number | null
           proteins: number | null
+          sel: number | null
+          sodium: number | null
+          sucres: number | null
           user_id: string
           vitamin_b12: number | null
           vitamin_b6: number | null
@@ -306,6 +334,8 @@ export type Database = {
           zinc: number | null
         }
         Insert: {
+          acides_gras_satures?: number | null
+          brand?: string | null
           calcium?: number | null
           calories?: number | null
           carbs?: number | null
@@ -318,11 +348,16 @@ export type Database = {
           logged_at?: string
           magnesium?: number | null
           meal_type?: string | null
+          micros_coverage_percent?: number | null
+          micros_estimes?: boolean
           omega3?: number | null
           phytoestrogens?: number | null
           portion_size?: number | null
           potassium?: number | null
           proteins?: number | null
+          sel?: number | null
+          sodium?: number | null
+          sucres?: number | null
           user_id: string
           vitamin_b12?: number | null
           vitamin_b6?: number | null
@@ -333,6 +368,8 @@ export type Database = {
           zinc?: number | null
         }
         Update: {
+          acides_gras_satures?: number | null
+          brand?: string | null
           calcium?: number | null
           calories?: number | null
           carbs?: number | null
@@ -345,11 +382,16 @@ export type Database = {
           logged_at?: string
           magnesium?: number | null
           meal_type?: string | null
+          micros_coverage_percent?: number | null
+          micros_estimes?: boolean
           omega3?: number | null
           phytoestrogens?: number | null
           portion_size?: number | null
           potassium?: number | null
           proteins?: number | null
+          sel?: number | null
+          sodium?: number | null
+          sucres?: number | null
           user_id?: string
           vitamin_b12?: number | null
           vitamin_b6?: number | null
