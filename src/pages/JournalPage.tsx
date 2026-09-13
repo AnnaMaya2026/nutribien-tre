@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
-import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil } from "lucide-react";
+import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil, Camera } from "lucide-react";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
 import DateSelector from "@/components/DateSelector";
 import BarcodeScanner from "@/components/BarcodeScanner";
@@ -44,6 +44,7 @@ export default function JournalPage() {
   const [selectedFood, setSelectedFood] = useState<CiqualFood | null>(null);
   const [grams, setGrams] = useState(100);
   const [mealType, setMealType] = useState("dejeuner");
+  const [labelDialogOpen, setLabelDialogOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({
     "petit-dejeuner": false, dejeuner: false, diner: false, collation: false,
