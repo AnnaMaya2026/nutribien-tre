@@ -22,6 +22,7 @@ import { isIndustrialFood } from "@/lib/industrialFood";
 import { calculateMealTargets } from "@/utils/mealTargetsCalculator";
 import { calculateCalorieGoal, calculateProteinGoal, calculateCarbsGoal, calculateFatsGoal } from "@/lib/calorieGoal";
 import MealProgressBlock from "@/components/MealProgressBlock";
+import LabelPhotoDialog from "@/components/LabelPhotoDialog";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
