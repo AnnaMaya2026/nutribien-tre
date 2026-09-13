@@ -345,6 +345,15 @@ export default function JournalPage() {
             onAdd={(log) => { if (user) addLog.mutate(log); }}
             isPending={addLog.isPending}
           />
+          <button
+            onClick={() => setLabelDialogOpen(true)}
+            aria-label="Photographier une étiquette"
+            title="Photographier une étiquette"
+            className="px-3 py-3 bg-card border border-border rounded-xl flex items-center justify-center"
+          >
+            <Camera className="w-4 h-4 text-foreground" />
+          </button>
+
         </div>
       )}
 
