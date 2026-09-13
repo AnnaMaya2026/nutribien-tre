@@ -868,5 +868,13 @@ export default function JournalPage() {
         </div>
       )}
     </div>
+
+      <LabelPhotoDialog
+        open={labelDialogOpen}
+        onClose={() => setLabelDialogOpen(false)}
+        dateStr={selectedDateStr}
+        mode="product"
+        defaultMealType={mealType}
+      />
   );
 }
