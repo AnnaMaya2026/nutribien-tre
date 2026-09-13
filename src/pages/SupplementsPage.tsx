@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, Trash2, Minus, Plus, Check } from "lucide-react";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
 import DateSelector from "@/components/DateSelector";
-import SupplementPhotoDialog from "@/components/SupplementPhotoDialog";
+import LabelPhotoDialog from "@/components/LabelPhotoDialog";
 import { useSupplements, nutrientLabel, type Supplement } from "@/hooks/useSupplements";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -160,7 +160,7 @@ export default function SupplementsPage() {
         </div>
       )}
 
-      <SupplementPhotoDialog open={dialogOpen} onClose={() => setDialogOpen(false)} dateStr={dateStr} />
+      <LabelPhotoDialog open={dialogOpen} onClose={() => setDialogOpen(false)} dateStr={dateStr} mode="supplement" />
     </div>
   );
 }

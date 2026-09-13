@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
-import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil } from "lucide-react";
+import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil, Camera } from "lucide-react";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
 import DateSelector from "@/components/DateSelector";
 import BarcodeScanner from "@/components/BarcodeScanner";
@@ -22,6 +22,7 @@ import { isIndustrialFood } from "@/lib/industrialFood";
 import { calculateMealTargets } from "@/utils/mealTargetsCalculator";
 import { calculateCalorieGoal, calculateProteinGoal, calculateCarbsGoal, calculateFatsGoal } from "@/lib/calorieGoal";
 import MealProgressBlock from "@/components/MealProgressBlock";
+import LabelPhotoDialog from "@/components/LabelPhotoDialog";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -44,6 +45,7 @@ export default function JournalPage() {
   const [selectedFood, setSelectedFood] = useState<CiqualFood | null>(null);
   const [grams, setGrams] = useState(100);
   const [mealType, setMealType] = useState("dejeuner");
+  const [labelDialogOpen, setLabelDialogOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({
     "petit-dejeuner": false, dejeuner: false, diner: false, collation: false,
@@ -345,6 +347,15 @@ export default function JournalPage() {
             onAdd={(log) => { if (user) addLog.mutate(log); }}
             isPending={addLog.isPending}
           />
+          <button
+            onClick={() => setLabelDialogOpen(true)}
+            aria-label="Photographier une étiquette"
+            title="Photographier une étiquette"
+            className="px-3 py-3 bg-card border border-border rounded-xl flex items-center justify-center"
+          >
+            <Camera className="w-4 h-4 text-foreground" />
+          </button>
+
         </div>
       )}
 
@@ -856,6 +867,15 @@ export default function JournalPage() {
           </div>
         </div>
       )}
+
+      <LabelPhotoDialog
+        open={labelDialogOpen}
+        onClose={() => setLabelDialogOpen(false)}
+        dateStr={selectedDateStr}
+        mode="product"
+        defaultMealType={mealType}
+      />
     </div>
   );
+
 }
