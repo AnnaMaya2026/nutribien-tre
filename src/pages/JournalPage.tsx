@@ -867,7 +867,6 @@ export default function JournalPage() {
           </div>
         </div>
       )}
-    </div>
 
       <LabelPhotoDialog
         open={labelDialogOpen}
@@ -876,5 +875,7 @@ export default function JournalPage() {
         mode="product"
         defaultMealType={mealType}
       />
+    </div>
   );
+
 }
