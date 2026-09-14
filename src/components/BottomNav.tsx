@@ -41,10 +41,10 @@ export default function BottomNav() {
         })}
         <button
           onClick={() => setDark(!dark)}
-          className="flex flex-col items-center gap-1 px-2 py-2 text-tab-inactive min-h-[56px] shrink-0"
+          className="flex flex-col items-center gap-1 px-1 py-2 text-tab-inactive min-h-[56px] shrink-0"
         >
           {dark ? <Sun className="w-[26px] h-[26px]" /> : <Moon className="w-[26px] h-[26px]" />}
-          <span className="text-[13px] font-medium leading-none">{dark ? "Clair" : "Sombre"}</span>
+          <span className="text-[11px] font-medium leading-none">{dark ? "Clair" : "Sombre"}</span>
         </button>
       </div>
     </nav>
