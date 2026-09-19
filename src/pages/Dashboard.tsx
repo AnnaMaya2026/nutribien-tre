@@ -496,7 +496,7 @@ export default function Dashboard() {
             {supMacroSources.proteins.length > 0 && <> ; {supMacroSources.proteins.map((s) => `${s.nom} +${Math.round(s.amount)}g`).join(", ")}</>})</>
           )}
         </p>
-        {totals.proteins < proteinGoal && (
+        {totals.proteins + supMacros.proteins < proteinGoal && (
           <p className="mt-2 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
             ⚠️ Apport protéique insuffisant pour préserver votre masse musculaire. Objectif : {proteinGoal}g de protéines aujourd'hui.
           </p>
