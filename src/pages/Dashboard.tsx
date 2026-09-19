@@ -327,7 +327,7 @@ export default function Dashboard() {
     });
   })();
 
-  const calPct = (totals.calories / calorieGoal) * 100;
+  const calPct = (totalCalories / calorieGoal) * 100;
   const calColor = getCalorieColor(calPct);
   const calRingPct = Math.min(calPct, 100);
 
