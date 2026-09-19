@@ -170,13 +170,22 @@ export function useRoutines() {
 
   const deleteRoutine = useMutation({
     mutationFn: async (id: string) => {
+      // Les cochages liés doivent partir d'abord : sinon la clé étrangère
+      // bloque la suppression et rien ne se passe à l'écran.
+      const { error: logsError } = await (supabase as any)
+        .from("routine_logs")
+        .delete()
+        .eq("routine_id", id);
+      if (logsError) throw logsError;
       const { error } = await (supabase as any).from("routines").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["routines", userId] });
       qc.invalidateQueries({ queryKey: ["routine_logs", userId] });
+      toast.success("Routine supprimée");
     },
+    onError: (e: any) => toast.error(e.message || "Suppression impossible"),
   });
 
   const toggleToday = useMutation({
