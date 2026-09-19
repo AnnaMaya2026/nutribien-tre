@@ -430,42 +430,71 @@ export default function Dashboard() {
               <circle cx="50" cy="50" r="42" fill="none" stroke={calColor.stroke} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${calRingPct * 2.64} 264`} className="transition-all duration-700" />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className={`text-3xl font-bold ${calColor.text}`}>{calColor.emoji} {Math.round(totals.calories)}</span>
+              <span className={`text-3xl font-bold ${calColor.text}`}>{calColor.emoji} {Math.round(totalCalories)}</span>
               <span className="text-xs text-muted-foreground">kcal consommées</span>
               <span className="text-[10px] text-muted-foreground mt-0.5">/ {calorieGoal} kcal</span>
             </div>
           </div>
+          {supMacros.calories > 0 && (
+            <p className="mt-2 text-[11px] text-muted-foreground text-center">
+              🍽️ Alimentation seule : <span className="font-medium">{Math.round(totals.calories)} kcal</span>
+              {" · "}
+              <span className="text-amber-600 dark:text-amber-400">
+                💊 Compléments : +{Math.round(supMacros.calories)} kcal
+              </span>
+              {" · "}
+              Total : <span className="font-medium">{Math.round(totalCalories)} kcal</span>
+            </p>
+          )}
         </div>
 
         {/* Macro bars */}
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: "Protéines", value: totals.proteins, max: proteinGoal, isMicro: false, key: "proteins" as NutrientKey },
-            { label: "Glucides", value: totals.carbs, max: dailyCarbs, isMicro: false, key: undefined },
-            { label: "Lipides", value: totals.fats, max: dailyFats, isMicro: false, key: undefined },
-            { label: "Fibres", value: totals.fibres, max: MACRO_GOALS.fibres, isMicro: true, key: "fibres" as NutrientKey },
+            { label: "Protéines", food: totals.proteins, sup: supMacros.proteins, max: proteinGoal, key: "proteins" as NutrientKey },
+            { label: "Glucides", food: totals.carbs, sup: supMacros.carbs, max: dailyCarbs, key: undefined },
+            { label: "Lipides", food: totals.fats, sup: supMacros.fats, max: dailyFats, key: undefined },
+            { label: "Fibres", food: totals.fibres, sup: supMacros.fibres, max: MACRO_GOALS.fibres, key: "fibres" as NutrientKey },
           ].map((m) => {
-            const rawPct = (m.value / m.max) * 100;
-            const barPct = Math.min(rawPct, 100);
-            const { bg, text, emoji } = getNutrientColor(rawPct);
+            const value = m.food + m.sup;
+            const rawPct = (value / m.max) * 100;
+            const totalPct = Math.min(rawPct, 100);
+            const foodPct = Math.min((m.food / m.max) * 100, 100);
+            const supPct = Math.max(0, totalPct - foodPct);
+            const { text, emoji } = getNutrientColor(rawPct);
+            const foodColor = getNutrientColor((m.food / m.max) * 100).bg;
             return (
               <div key={m.label} className="text-center">
                 <div className="text-sm text-muted-foreground mb-1 inline-flex items-center justify-center gap-1">
                   {m.label}
                   {m.key && <NutrientInfo nutrient={m.key} />}
                 </div>
-                <div className={`text-lg font-bold ${text}`}>{emoji} {Math.round(m.value)}g</div>
+                <div className={`text-lg font-bold ${text}`}>{emoji} {Math.round(value)}g</div>
                 <div className="text-xs text-muted-foreground mb-1">/ {m.max}g</div>
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all duration-500 ${bg}`} style={{ width: `${barPct}%` }} />
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden flex">
+                  <div className={`h-full transition-all duration-500 ${foodColor}`} style={{ width: `${foodPct}%` }} />
+                  {supPct > 0 && (
+                    <div className="h-full transition-all duration-500 bg-amber-400" style={{ width: `${supPct}%` }} title="Contribution des compléments" />
+                  )}
                 </div>
+                {m.sup > 0 && (
+                  <div className="mt-1 text-[10px] text-muted-foreground leading-tight">
+                    🍽️ {Math.round(m.food)}g
+                    <br />
+                    <span className="text-amber-600 dark:text-amber-400">💊 +{Math.round(m.sup)}g</span>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
 
         <p className="mt-3 text-xs text-muted-foreground text-center">
-          Protéines: {Math.round(totals.proteins)}g / {proteinGoal}g (1.2g par kg de votre poids)
+          Protéines: {Math.round(totals.proteins + supMacros.proteins)}g / {proteinGoal}g (1.2g par kg de votre poids)
+          {supMacros.proteins > 0 && (
+            <> — dont <span className="text-amber-600 dark:text-amber-400">{Math.round(supMacros.proteins)}g de compléments</span> ({Math.round(totals.proteins)}g par l'alimentation
+            {supMacroSources.proteins.length > 0 && <> ; {supMacroSources.proteins.map((s) => `${s.nom} +${Math.round(s.amount)}g`).join(", ")}</>})</>
+          )}
         </p>
         {totals.proteins < proteinGoal && (
           <p className="mt-2 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
