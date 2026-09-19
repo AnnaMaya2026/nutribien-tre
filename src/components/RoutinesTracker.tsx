@@ -534,13 +534,17 @@ export function RoutinesTracker() {
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => {
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
                         if (confirm(`Supprimer la routine "${r.name}" ?`)) {
                           deleteRoutine.mutate(r.id);
                         }
                       }}
-                      className="text-muted-foreground hover:text-destructive transition-colors"
+                      className="text-muted-foreground hover:text-destructive transition-colors p-1"
                       aria-label="Supprimer"
+                      title="Supprimer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

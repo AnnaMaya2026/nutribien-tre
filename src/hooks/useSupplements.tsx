@@ -59,6 +59,10 @@ export interface NutrientReference {
 
 /** Libellés FR des clés de nutriments utilisées par les compléments. */
 export const NUTRIENT_KEY_LABELS: Record<string, string> = {
+  calories: "Calories (kcal)",
+  carbs: "Glucides",
+  fats: "Lipides",
+  fibres: "Fibres",
   calcium: "Calcium",
   magnesium: "Magnésium",
   iron: "Fer",

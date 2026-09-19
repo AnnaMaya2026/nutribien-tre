@@ -15,7 +15,7 @@ const KNOWN_KEYS = [
   "vitamin_b1", "vitamin_b2", "vitamin_b3", "vitamin_b5", "vitamin_b6",
   "vitamin_b8", "vitamin_b9", "vitamin_b12",
   "potassium", "phosphore", "iode", "manganese", "cuivre", "chrome", "molybdene",
-  "vitamin_a", "fibres",
+  "vitamin_a", "fibres", "calories", "carbs", "fats",
 ];
 
 // Synonymes d'étiquette (FR / EN / PL) → clé app
@@ -67,6 +67,10 @@ const SYNONYMS: Record<string, string> = {
   "omega 3": "omega3", "omega-3": "omega3", "oméga 3": "omega3", "oméga-3": "omega3", "epa": "omega3", "dha": "omega3",
   "proteines": "proteins", "protéines": "proteins", "protein": "proteins", "bialko": "proteins", "białko": "proteins",
   "fibres": "fibres", "fibre": "fibres", "blonnik": "fibres", "błonnik": "fibres",
+  // Macros énergétiques (poudres, substituts de repas)
+  "glucides": "carbs", "carbohydrates": "carbs", "weglowodany": "carbs", "węglowodany": "carbs",
+  "lipides": "fats", "matieres grasses": "fats", "matières grasses": "fats", "fat": "fats", "fats": "fats", "tluszcze": "fats", "tłuszcze": "fats",
+  "calories": "calories", "energie": "calories", "énergie": "calories", "valeur energetique": "calories", "valeur énergétique": "calories", "energy": "calories", "wartosc energetyczna": "calories",
 };
 
 function normalize(s: string) {
