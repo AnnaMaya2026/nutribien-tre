@@ -271,6 +271,23 @@ export default function Dashboard() {
     { calories: 0, proteins: 0, carbs: 0, fats: 0, fibres: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, phytoestrogens: 0, vitamin_b12: 0, potassium: 0, zinc: 0, vitamin_k: 0, vitamin_b6: 0, vitamin_b9: 0, vitamin_e: 0 }
   );
 
+  // Macros apportées par les compléments cochés du jour (mêmes règles que les micros).
+  const supMacros = {
+    calories: supBy("calories"),
+    proteins: supBy("proteins"),
+    carbs: supBy("carbs"),
+    fats: supBy("fats"),
+    fibres: supBy("fibres"),
+  };
+  const supMacroSources = {
+    calories: supSources("calories"),
+    proteins: supSources("proteins"),
+    carbs: supSources("carbs"),
+    fats: supSources("fats"),
+    fibres: supSources("fibres"),
+  };
+  const totalCalories = totals.calories + supMacros.calories;
+
   const antioxidantScore = getProducePortions(logs);
   const antioxidantTone = antioxidantScore >= 5 ? "text-green-500" : antioxidantScore >= 3 ? "text-orange-500" : "text-red-500";
 
