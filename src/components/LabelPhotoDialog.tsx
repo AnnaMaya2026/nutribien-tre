@@ -44,13 +44,15 @@ async function fileToCompressedDataUrl(file: File): Promise<string> {
   return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
 }
 
-type Source = "etiquette" | "converti_ar" | "manuel" | "estime" | "calcule";
+type Source = "etiquette" | "converti_ar" | "manuel" | "estime" | "calcule" | "fiche" | "ingredients";
 
 const SOURCE_LABEL: Record<Source, string> = {
   etiquette: "lu sur l'étiquette",
   converti_ar: "converti depuis le % AR",
   calcule: "calculé depuis l'étiquette",
   estime: "estimé depuis les ingrédients",
+  fiche: "lu sur la fiche",
+  ingredients: "calculé depuis les ingrédients",
   manuel: "saisie manuelle",
 };
 
