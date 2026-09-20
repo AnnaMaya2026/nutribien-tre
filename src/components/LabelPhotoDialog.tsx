@@ -120,13 +120,15 @@ export default function LabelPhotoDialog({
   open: boolean;
   onClose: () => void;
   dateStr: string;
-  mode: "supplement" | "product";
+  mode: "supplement" | "product" | "recipe";
   defaultMealType?: string;
 }) {
   const isSupplement = mode === "supplement";
+  const isRecipe = mode === "recipe";
   const { addSupplement } = useSupplements(dateStr);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { saveFavorite } = useFavoriteMeals();
 
   const [step, setStep] = useState<Step>("capture");
   const [nom, setNom] = useState("");
@@ -142,6 +144,14 @@ export default function LabelPhotoDialog({
   const [coverage, setCoverage] = useState<number | null>(null);
   const [macros, setMacros] = useState<Row[]>([]);
   const [micros, setMicros] = useState<Row[]>([]);
+  // fiche recette
+  const [servings, setServings] = useState("2");
+  const [portionsEaten, setPortionsEaten] = useState("1");
+  const [addedFat, setAddedFat] = useState("");
+  const [asFavorite, setAsFavorite] = useState(false);
+  const [manualIngredients, setManualIngredients] = useState<
+    { name: string; quantity: number | null; unit: string | null; reason: string }[]
+  >([]);
 
   const [rows, setRows] = useState<Row[]>([]);
   const [ignored, setIgnored] = useState<{ label: string; amount: number | null; unit: string | null }[]>([]);
@@ -160,6 +170,8 @@ export default function LabelPhotoDialog({
     setQuotidien(true); setRows([]); setIgnored([]);
     setPortion(""); setMealType(defaultMealType); setCoverage(null);
     setMacros([]); setMicros([]);
+    setServings("2"); setPortionsEaten("1"); setAddedFat(""); setAsFavorite(false);
+    setManualIngredients([]);
     setNewKey(""); setNewAmount(""); setNewUnit("mg"); setSaving(false);
   };
   const close = () => { reset(); onClose(); };
