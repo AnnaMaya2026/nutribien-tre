@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
+import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import {
   NUTRIENT_KEY_LABELS,
   nutrientLabel,
