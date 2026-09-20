@@ -194,11 +194,15 @@ export default function LabelPhotoDialog({
     try {
       setStep("analyzing");
       const compressed = await fileToCompressedDataUrl(file);
-      const fn = isSupplement ? "analyze-supplement-label" : "analyze-product-label";
+      const fn = isSupplement
+        ? "analyze-supplement-label"
+        : isRecipe
+          ? "analyze-recipe-card"
+          : "analyze-product-label";
       const { data, error } = await supabase.functions.invoke(fn, { body: { image: compressed } });
       if (error) throw error;
 
-      setNom(data?.product_name || "");
+      setNom(data?.product_name || data?.recipe_name || "");
       setMarque(data?.brand || "");
 
       if (isSupplement) {
