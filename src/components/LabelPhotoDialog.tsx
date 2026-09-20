@@ -224,6 +224,42 @@ export default function LabelPhotoDialog({
         else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisissez les valeurs à la main.");
         else if (nutrients.length === 0) toast.error("Aucun nutriment lu. Ajoutez-les manuellement.");
         else toast.success(`${nutrients.length} nutriment(s) lus — vérifiez chaque ligne.`);
+      } else if (isRecipe) {
+        const mp = data?.macros_per_portion || {};
+        const mi = data?.micros_per_portion || {};
+        const macroSrc = (data?.macros_source === "etiquette" ? "fiche" : "ingredients") as Source;
+        setServings(String(data?.servings || 2));
+        setPortionsEaten("1");
+        setPortion(data?.portion_grams ? String(data.portion_grams) : "");
+        setMacros(
+          MACRO_FIELDS.map((f) => {
+            const v = mp[f.key];
+            return {
+              key: f.key,
+              label: f.label,
+              amount: v === null || v === undefined ? "" : String(v),
+              unit: f.unit,
+              source: (f.key === "sodium" ? "calcule" : f.key === "sugars" || f.key === "saturated_fats" ? "fiche" : macroSrc) as Source,
+            };
+          }),
+        );
+        setMicros(
+          MICRO_FIELDS.map((f) => {
+            const v = mi[f.key];
+            return {
+              key: f.key,
+              label: f.label,
+              amount: v === null || v === undefined ? "" : String(v),
+              unit: f.unit,
+              source: "ingredients" as Source,
+            };
+          }),
+        );
+        setManualIngredients(Array.isArray(data?.needs_manual) ? data.needs_manual : []);
+        setIgnored((data?.pantry_items || []).map((l: string) => ({ label: l, amount: null, unit: null })));
+        if (data?.issue === "blurry") toast.error("Photo floue : vérifiez chaque valeur avant d'enregistrer.");
+        else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisissez les valeurs à la main.");
+        else toast.success(`Fiche lue (${data?.servings || 2} portions) — vérifiez chaque valeur.`);
       } else {
         const mp = data?.measured?.per_portion || {};
         const est = data?.estimated_micros?.per_portion || {};
