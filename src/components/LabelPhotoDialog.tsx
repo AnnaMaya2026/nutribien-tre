@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
+import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import {
   NUTRIENT_KEY_LABELS,
   nutrientLabel,
@@ -44,13 +45,15 @@ async function fileToCompressedDataUrl(file: File): Promise<string> {
   return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
 }
 
-type Source = "etiquette" | "converti_ar" | "manuel" | "estime" | "calcule";
+type Source = "etiquette" | "converti_ar" | "manuel" | "estime" | "calcule" | "fiche" | "ingredients";
 
 const SOURCE_LABEL: Record<Source, string> = {
   etiquette: "lu sur l'étiquette",
   converti_ar: "converti depuis le % AR",
   calcule: "calculé depuis l'étiquette",
   estime: "estimé depuis les ingrédients",
+  fiche: "lu sur la fiche",
+  ingredients: "calculé depuis les ingrédients",
   manuel: "saisie manuelle",
 };
 
@@ -118,13 +121,15 @@ export default function LabelPhotoDialog({
   open: boolean;
   onClose: () => void;
   dateStr: string;
-  mode: "supplement" | "product";
+  mode: "supplement" | "product" | "recipe";
   defaultMealType?: string;
 }) {
   const isSupplement = mode === "supplement";
+  const isRecipe = mode === "recipe";
   const { addSupplement } = useSupplements(dateStr);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { saveFavorite } = useFavoriteMeals();
 
   const [step, setStep] = useState<Step>("capture");
   const [nom, setNom] = useState("");
@@ -140,6 +145,14 @@ export default function LabelPhotoDialog({
   const [coverage, setCoverage] = useState<number | null>(null);
   const [macros, setMacros] = useState<Row[]>([]);
   const [micros, setMicros] = useState<Row[]>([]);
+  // fiche recette
+  const [servings, setServings] = useState("2");
+  const [portionsEaten, setPortionsEaten] = useState("1");
+  const [addedFat, setAddedFat] = useState("");
+  const [asFavorite, setAsFavorite] = useState(false);
+  const [manualIngredients, setManualIngredients] = useState<
+    { name: string; quantity: number | null; unit: string | null; reason: string }[]
+  >([]);
 
   const [rows, setRows] = useState<Row[]>([]);
   const [ignored, setIgnored] = useState<{ label: string; amount: number | null; unit: string | null }[]>([]);
@@ -158,6 +171,8 @@ export default function LabelPhotoDialog({
     setQuotidien(true); setRows([]); setIgnored([]);
     setPortion(""); setMealType(defaultMealType); setCoverage(null);
     setMacros([]); setMicros([]);
+    setServings("2"); setPortionsEaten("1"); setAddedFat(""); setAsFavorite(false);
+    setManualIngredients([]);
     setNewKey(""); setNewAmount(""); setNewUnit("mg"); setSaving(false);
   };
   const close = () => { reset(); onClose(); };
@@ -179,11 +194,15 @@ export default function LabelPhotoDialog({
     try {
       setStep("analyzing");
       const compressed = await fileToCompressedDataUrl(file);
-      const fn = isSupplement ? "analyze-supplement-label" : "analyze-product-label";
+      const fn = isSupplement
+        ? "analyze-supplement-label"
+        : isRecipe
+          ? "analyze-recipe-card"
+          : "analyze-product-label";
       const { data, error } = await supabase.functions.invoke(fn, { body: { image: compressed } });
       if (error) throw error;
 
-      setNom(data?.product_name || "");
+      setNom(data?.product_name || data?.recipe_name || "");
       setMarque(data?.brand || "");
 
       if (isSupplement) {
@@ -205,6 +224,42 @@ export default function LabelPhotoDialog({
         else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisissez les valeurs à la main.");
         else if (nutrients.length === 0) toast.error("Aucun nutriment lu. Ajoutez-les manuellement.");
         else toast.success(`${nutrients.length} nutriment(s) lus — vérifiez chaque ligne.`);
+      } else if (isRecipe) {
+        const mp = data?.macros_per_portion || {};
+        const mi = data?.micros_per_portion || {};
+        const macroSrc = (data?.macros_source === "etiquette" ? "fiche" : "ingredients") as Source;
+        setServings(String(data?.servings || 2));
+        setPortionsEaten("1");
+        setPortion(data?.portion_grams ? String(data.portion_grams) : "");
+        setMacros(
+          MACRO_FIELDS.map((f) => {
+            const v = mp[f.key];
+            return {
+              key: f.key,
+              label: f.label,
+              amount: v === null || v === undefined ? "" : String(v),
+              unit: f.unit,
+              source: (f.key === "sodium" ? "calcule" : f.key === "sugars" || f.key === "saturated_fats" ? "fiche" : macroSrc) as Source,
+            };
+          }),
+        );
+        setMicros(
+          MICRO_FIELDS.map((f) => {
+            const v = mi[f.key];
+            return {
+              key: f.key,
+              label: f.label,
+              amount: v === null || v === undefined ? "" : String(v),
+              unit: f.unit,
+              source: "ingredients" as Source,
+            };
+          }),
+        );
+        setManualIngredients(Array.isArray(data?.needs_manual) ? data.needs_manual : []);
+        setIgnored((data?.pantry_items || []).map((l: string) => ({ label: l, amount: null, unit: null })));
+        if (data?.issue === "blurry") toast.error("Photo floue : vérifiez chaque valeur avant d'enregistrer.");
+        else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisissez les valeurs à la main.");
+        else toast.success(`Fiche lue (${data?.servings || 2} portions) — vérifiez chaque valeur.`);
       } else {
         const mp = data?.measured?.per_portion || {};
         const est = data?.estimated_micros?.per_portion || {};
