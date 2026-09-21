@@ -46,6 +46,7 @@ export default function JournalPage() {
   const [grams, setGrams] = useState(100);
   const [mealType, setMealType] = useState("dejeuner");
   const [labelDialogOpen, setLabelDialogOpen] = useState(false);
+  const [recipeDialogOpen, setRecipeDialogOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({
     "petit-dejeuner": false, dejeuner: false, diner: false, collation: false,
