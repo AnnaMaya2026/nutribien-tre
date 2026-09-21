@@ -884,6 +884,14 @@ export default function JournalPage() {
         mode="product"
         defaultMealType={mealType}
       />
+      <LabelPhotoDialog
+        open={recipeDialogOpen}
+        onClose={() => setRecipeDialogOpen(false)}
+        dateStr={selectedDateStr}
+        mode="recipe"
+        defaultMealType={mealType}
+      />
+
     </div>
   );
 
