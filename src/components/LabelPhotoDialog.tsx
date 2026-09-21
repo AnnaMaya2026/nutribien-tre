@@ -465,7 +465,7 @@ export default function LabelPhotoDialog({
       <div className="bg-background w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto shadow-xl pb-[calc(96px+env(safe-area-inset-bottom))] sm:pb-0">
         <div className="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between z-10">
           <h2 className="text-base font-bold text-foreground">
-            {isSupplement ? "💊 Photo de mon complément" : "🥘 Photo de l'étiquette du plat"}
+            {isSupplement ? "💊 Photo de mon complément" : isRecipe ? "📋 Photo de ma fiche recette" : "🥘 Photo de l'étiquette du plat"}
           </h2>
           <button onClick={close} className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center" aria-label="Fermer">
             <X className="w-5 h-5" />
