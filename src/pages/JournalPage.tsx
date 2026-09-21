@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import { searchCiqual, scaleCiqual, CiqualFood } from "@/lib/ciqual";
-import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil, Camera } from "lucide-react";
+import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil, Camera, ClipboardList } from "lucide-react";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
 import DateSelector from "@/components/DateSelector";
 import BarcodeScanner from "@/components/BarcodeScanner";
@@ -46,6 +46,7 @@ export default function JournalPage() {
   const [grams, setGrams] = useState(100);
   const [mealType, setMealType] = useState("dejeuner");
   const [labelDialogOpen, setLabelDialogOpen] = useState(false);
+  const [recipeDialogOpen, setRecipeDialogOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({
     "petit-dejeuner": false, dejeuner: false, diner: false, collation: false,
@@ -354,6 +355,14 @@ export default function JournalPage() {
             className="px-3 py-3 bg-card border border-border rounded-xl flex items-center justify-center"
           >
             <Camera className="w-4 h-4 text-foreground" />
+          </button>
+          <button
+            onClick={() => setRecipeDialogOpen(true)}
+            aria-label="Photographier une fiche recette"
+            title="Photographier une fiche recette (box repas)"
+            className="px-3 py-3 bg-card border border-border rounded-xl flex items-center justify-center"
+          >
+            <ClipboardList className="w-4 h-4 text-foreground" />
           </button>
 
         </div>
@@ -875,6 +884,14 @@ export default function JournalPage() {
         mode="product"
         defaultMealType={mealType}
       />
+      <LabelPhotoDialog
+        open={recipeDialogOpen}
+        onClose={() => setRecipeDialogOpen(false)}
+        dateStr={selectedDateStr}
+        mode="recipe"
+        defaultMealType={mealType}
+      />
+
     </div>
   );
 

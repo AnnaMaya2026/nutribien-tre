@@ -387,6 +387,67 @@ export default function LabelPhotoDialog({
     }
   };
 
+  const saveRecipe = async () => {
+    if (!user) return toast.error("Connectez-vous pour enregistrer.");
+    if (!nom.trim()) return toast.error("Le nom de la recette est requis.");
+    const mult = Number(portionsEaten) || 1;
+    const fatG = numOrNull(addedFat) ?? 0;
+    const portionNum = numOrNull(portion);
+
+    const entry: Record<string, any> = {
+      user_id: user.id,
+      logged_at: dateStr,
+      food_name: nom.trim(),
+      brand: marque.trim() || null,
+      meal_type: mealType,
+      portion_size: portionNum === null ? null : Math.round(portionNum * mult + fatG),
+      micros_estimes: true,
+      micros_coverage_percent: null,
+    };
+    for (const f of MACRO_FIELDS) {
+      const row = macros.find((r) => r.key === f.key);
+      const v = row ? numOrNull(row.amount) : null;
+      entry[f.col] = v === null ? null : Math.round(v * mult * 100) / 100;
+    }
+    for (const f of MICRO_FIELDS) {
+      const row = micros.find((r) => r.key === f.key);
+      const v = row ? numOrNull(row.amount) : null;
+      entry[f.col] = v === null ? null : Math.round(v * mult * 1000) / 1000;
+    }
+    // Matières grasses ajoutées (huile) : saisie manuelle, jamais estimée
+    if (fatG > 0) {
+      entry.fats = Math.round(((entry.fats ?? 0) + fatG) * 100) / 100;
+      entry.calories = Math.round(((entry.calories ?? 0) + fatG * 9) * 100) / 100;
+    }
+    if (entry.calories === null) return toast.error("Les calories sont requises : complétez la ligne Calories.");
+
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("food_logs").insert(entry as any);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["food_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["food_logs_week"] });
+
+      if (asFavorite) {
+        const { user_id, logged_at, meal_type, micros_coverage_percent, ...rest } = entry;
+        await saveFavorite.mutateAsync({
+          name: nom.trim(),
+          meal_type: mealType,
+          items: [{ ...rest, micros_estimes: true, micros_coverage_percent: null } as any],
+        });
+        toast.success("Recette ajoutée à votre journal et à vos favoris.");
+      } else {
+        toast.success("Recette ajoutée à votre journal.");
+      }
+      close();
+    } catch (e) {
+      console.error(e);
+      toast.error("Enregistrement impossible.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const updateList = (
     setter: React.Dispatch<React.SetStateAction<Row[]>>,
     i: number,
@@ -415,7 +476,7 @@ export default function LabelPhotoDialog({
       <div className="bg-background w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto shadow-xl pb-[calc(96px+env(safe-area-inset-bottom))] sm:pb-0">
         <div className="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between z-10">
           <h2 className="text-base font-bold text-foreground">
-            {isSupplement ? "💊 Photo de mon complément" : "🥘 Photo de l'étiquette du plat"}
+            {isSupplement ? "💊 Photo de mon complément" : isRecipe ? "📋 Photo de ma fiche recette" : "🥘 Photo de l'étiquette du plat"}
           </h2>
           <button onClick={close} className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center" aria-label="Fermer">
             <X className="w-5 h-5" />
@@ -428,7 +489,9 @@ export default function LabelPhotoDialog({
               <p className="text-sm text-muted-foreground">
                 {isSupplement
                   ? "Photographiez le tableau nutritionnel au dos de la boîte. Toutes les valeurs lues vous seront présentées, modifiables, avant enregistrement."
-                  : "Photographiez le dos de l'emballage : le tableau nutritionnel et la liste d'ingrédients. Les macros sont reprises telles quelles ; les micronutriments sont estimés depuis les ingrédients. Tout reste modifiable avant enregistrement."}
+                  : isRecipe
+                    ? "Photographiez la fiche recette : le nom du plat, le nombre de portions et la liste des ingrédients avec leurs quantités. Tout est ramené à une portion, et vous pourrez ensuite dire combien vous en avez mangé."
+                    : "Photographiez le dos de l'emballage : le tableau nutritionnel et la liste d'ingrédients. Les macros sont reprises telles quelles ; les micronutriments sont estimés depuis les ingrédients. Tout reste modifiable avant enregistrement."}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => cameraRef.current?.click()} className="flex flex-col items-center gap-2 p-5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 min-h-[120px] justify-center shadow-md">
@@ -463,9 +526,9 @@ export default function LabelPhotoDialog({
 
               <div className="space-y-2">
                 <label className="text-xs font-medium text-muted-foreground">
-                  {isSupplement ? "Nom du produit" : "Nom du plat"}
+                  {isSupplement ? "Nom du produit" : isRecipe ? "Nom de la recette" : "Nom du plat"}
                 </label>
-                <Input value={nom} onChange={(e) => setNom(e.target.value)} placeholder={isSupplement ? "Ex : Ménoliance SP" : "Ex : Crevettes à l'indienne, lentilles corail"} />
+                <Input value={nom} onChange={(e) => setNom(e.target.value)} placeholder={isSupplement ? "Ex : Ménoliance SP" : isRecipe ? "Ex : Curry de crevettes et lentilles corail" : "Ex : Crevettes à l'indienne, lentilles corail"} />
                 <label className="text-xs font-medium text-muted-foreground">Marque</label>
                 <Input value={marque} onChange={(e) => setMarque(e.target.value)} placeholder={isSupplement ? "Ex : Physiomance" : "Ex : Picard"} />
 
@@ -506,8 +569,49 @@ export default function LabelPhotoDialog({
                   </>
                 ) : (
                   <>
-                    <label className="text-xs font-medium text-muted-foreground">Poids de la portion (g) *</label>
+                    {isRecipe && (
+                      <>
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Portions de la recette (indiquées sur la fiche)
+                        </label>
+                        <Input value={servings} onChange={(e) => setServings(e.target.value)} inputMode="decimal" placeholder="2" />
+                        <p className="text-[11px] text-muted-foreground">
+                          Toutes les valeurs ci-dessous sont déjà données POUR UNE portion.
+                        </p>
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground block mb-1">
+                            Combien de portions avez-vous mangé ?
+                          </label>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {["0.5", "1", "1.5", "2"].map((p) => (
+                              <button
+                                key={p}
+                                type="button"
+                                onClick={() => setPortionsEaten(p)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${portionsEaten === p ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                              >
+                                {p === "0.5" ? "une demie" : p === "1" ? "une" : p === "1.5" ? "une et demie" : "deux"}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    <label className="text-xs font-medium text-muted-foreground">
+                      {isRecipe ? "Poids d'une portion (g)" : "Poids de la portion (g) *"}
+                    </label>
                     <Input value={portion} onChange={(e) => setPortion(e.target.value)} inputMode="decimal" placeholder="Ex : 350" />
+                    {isRecipe && (
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Matières grasses ajoutées — huile, beurre (g)
+                        </label>
+                        <Input value={addedFat} onChange={(e) => setAddedFat(e.target.value)} inputMode="decimal" placeholder="Vide : à vous de le remplir" />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          La fiche ne les chiffre pas et je ne les estime pas. 1 cuillère à soupe d'huile = 10 g, 1 cuillère à café = 5 g, 1 cuillère à soupe de beurre = 15 g.
+                        </p>
+                      </div>
+                    )}
                     <div>
                       <label className="text-xs font-medium text-muted-foreground block mb-1">Repas</label>
                       <div className="flex gap-1.5 flex-wrap">
@@ -614,12 +718,39 @@ export default function LabelPhotoDialog({
                 </div>
               )}
 
+              {isRecipe && manualIngredients.length > 0 && (
+                <div className="rounded-lg border border-border p-3 text-xs">
+                  <p className="font-medium mb-1 text-foreground">Ingrédients non comptés — à saisir à la main</p>
+                  <p className="text-muted-foreground mb-2">
+                    Leur poids n'est pas connu : ils ne sont PAS inclus dans les valeurs ci-dessus. Ajoutez-les
+                    séparément depuis « Ajouter un aliment » si vous voulez les compter.
+                  </p>
+                  <ul className="space-y-1 text-muted-foreground">
+                    {manualIngredients.map((m, i) => (
+                      <li key={i}>
+                        • {m.name}
+                        {m.quantity !== null ? ` — ${m.quantity} ${m.unit || ""}` : ""} ({m.reason})
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {isRecipe && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={asFavorite} onChange={(e) => setAsFavorite(e.target.checked)} className="w-4 h-4" />
+                  Enregistrer aussi cette recette dans mes favoris
+                </label>
+              )}
+
+
+
               <div className="flex gap-2 pt-2">
                 <button onClick={() => setStep("capture")} className="flex-1 py-3 rounded-xl bg-muted text-sm font-medium">
                   <Pencil className="w-4 h-4 inline mr-1" /> Reprendre la photo
                 </button>
                 <button
-                  onClick={isSupplement ? saveSupplement : saveProduct}
+                  onClick={isSupplement ? saveSupplement : isRecipe ? saveRecipe : saveProduct}
                   disabled={saving}
                   className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-60"
                 >
