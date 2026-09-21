@@ -478,7 +478,9 @@ export default function LabelPhotoDialog({
               <p className="text-sm text-muted-foreground">
                 {isSupplement
                   ? "Photographiez le tableau nutritionnel au dos de la boîte. Toutes les valeurs lues vous seront présentées, modifiables, avant enregistrement."
-                  : "Photographiez le dos de l'emballage : le tableau nutritionnel et la liste d'ingrédients. Les macros sont reprises telles quelles ; les micronutriments sont estimés depuis les ingrédients. Tout reste modifiable avant enregistrement."}
+                  : isRecipe
+                    ? "Photographiez la fiche recette : le nom du plat, le nombre de portions et la liste des ingrédients avec leurs quantités. Tout est ramené à une portion, et vous pourrez ensuite dire combien vous en avez mangé."
+                    : "Photographiez le dos de l'emballage : le tableau nutritionnel et la liste d'ingrédients. Les macros sont reprises telles quelles ; les micronutriments sont estimés depuis les ingrédients. Tout reste modifiable avant enregistrement."}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => cameraRef.current?.click()} className="flex flex-col items-center gap-2 p-5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 min-h-[120px] justify-center shadow-md">
