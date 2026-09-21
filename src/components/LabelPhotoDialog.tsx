@@ -718,6 +718,33 @@ export default function LabelPhotoDialog({
                 </div>
               )}
 
+              {isRecipe && manualIngredients.length > 0 && (
+                <div className="rounded-lg border border-border p-3 text-xs">
+                  <p className="font-medium mb-1 text-foreground">Ingrédients non comptés — à saisir à la main</p>
+                  <p className="text-muted-foreground mb-2">
+                    Leur poids n'est pas connu : ils ne sont PAS inclus dans les valeurs ci-dessus. Ajoutez-les
+                    séparément depuis « Ajouter un aliment » si vous voulez les compter.
+                  </p>
+                  <ul className="space-y-1 text-muted-foreground">
+                    {manualIngredients.map((m, i) => (
+                      <li key={i}>
+                        • {m.name}
+                        {m.quantity !== null ? ` — ${m.quantity} ${m.unit || ""}` : ""} ({m.reason})
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {isRecipe && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={asFavorite} onChange={(e) => setAsFavorite(e.target.checked)} className="w-4 h-4" />
+                  Enregistrer aussi cette recette dans mes favoris
+                </label>
+              )}
+
+
+
               <div className="flex gap-2 pt-2">
                 <button onClick={() => setStep("capture")} className="flex-1 py-3 rounded-xl bg-muted text-sm font-medium">
                   <Pencil className="w-4 h-4 inline mr-1" /> Reprendre la photo
