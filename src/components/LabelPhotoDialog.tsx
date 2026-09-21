@@ -712,7 +712,7 @@ export default function LabelPhotoDialog({
                   <Pencil className="w-4 h-4 inline mr-1" /> Reprendre la photo
                 </button>
                 <button
-                  onClick={isSupplement ? saveSupplement : saveProduct}
+                  onClick={isSupplement ? saveSupplement : isRecipe ? saveRecipe : saveProduct}
                   disabled={saving}
                   className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-60"
                 >
