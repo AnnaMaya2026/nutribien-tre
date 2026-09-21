@@ -427,7 +427,18 @@ export default function LabelPhotoDialog({
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["food_logs"] });
       queryClient.invalidateQueries({ queryKey: ["food_logs_week"] });
-      toast.success("Recette ajoutée à votre journal.");
+
+      if (asFavorite) {
+        const { user_id, logged_at, meal_type, micros_coverage_percent, ...rest } = entry;
+        await saveFavorite.mutateAsync({
+          name: nom.trim(),
+          meal_type: mealType,
+          items: [{ ...rest, micros_estimes: true, micros_coverage_percent: null } as any],
+        });
+        toast.success("Recette ajoutée à votre journal et à vos favoris.");
+      } else {
+        toast.success("Recette ajoutée à votre journal.");
+      }
       close();
     } catch (e) {
       console.error(e);
