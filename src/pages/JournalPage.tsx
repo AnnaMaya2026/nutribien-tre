@@ -356,6 +356,14 @@ export default function JournalPage() {
           >
             <Camera className="w-4 h-4 text-foreground" />
           </button>
+          <button
+            onClick={() => setRecipeDialogOpen(true)}
+            aria-label="Photographier une fiche recette"
+            title="Photographier une fiche recette (box repas)"
+            className="px-3 py-3 bg-card border border-border rounded-xl flex items-center justify-center"
+          >
+            <ClipboardList className="w-4 h-4 text-foreground" />
+          </button>
 
         </div>
       )}
