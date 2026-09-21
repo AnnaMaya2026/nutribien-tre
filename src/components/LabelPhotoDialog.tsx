@@ -556,8 +556,49 @@ export default function LabelPhotoDialog({
                   </>
                 ) : (
                   <>
-                    <label className="text-xs font-medium text-muted-foreground">Poids de la portion (g) *</label>
+                    {isRecipe && (
+                      <>
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Portions de la recette (indiquées sur la fiche)
+                        </label>
+                        <Input value={servings} onChange={(e) => setServings(e.target.value)} inputMode="decimal" placeholder="2" />
+                        <p className="text-[11px] text-muted-foreground">
+                          Toutes les valeurs ci-dessous sont déjà données POUR UNE portion.
+                        </p>
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground block mb-1">
+                            Combien de portions avez-vous mangé ?
+                          </label>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {["0.5", "1", "1.5", "2"].map((p) => (
+                              <button
+                                key={p}
+                                type="button"
+                                onClick={() => setPortionsEaten(p)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${portionsEaten === p ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                              >
+                                {p === "0.5" ? "une demie" : p === "1" ? "une" : p === "1.5" ? "une et demie" : "deux"}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    <label className="text-xs font-medium text-muted-foreground">
+                      {isRecipe ? "Poids d'une portion (g)" : "Poids de la portion (g) *"}
+                    </label>
                     <Input value={portion} onChange={(e) => setPortion(e.target.value)} inputMode="decimal" placeholder="Ex : 350" />
+                    {isRecipe && (
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Matières grasses ajoutées — huile, beurre (g)
+                        </label>
+                        <Input value={addedFat} onChange={(e) => setAddedFat(e.target.value)} inputMode="decimal" placeholder="Vide : à vous de le remplir" />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          La fiche ne les chiffre pas et je ne les estime pas. 1 cuillère à soupe d'huile = 10 g, 1 cuillère à café = 5 g, 1 cuillère à soupe de beurre = 15 g.
+                        </p>
+                      </div>
+                    )}
                     <div>
                       <label className="text-xs font-medium text-muted-foreground block mb-1">Repas</label>
                       <div className="flex gap-1.5 flex-wrap">
