@@ -515,9 +515,9 @@ export default function LabelPhotoDialog({
 
               <div className="space-y-2">
                 <label className="text-xs font-medium text-muted-foreground">
-                  {isSupplement ? "Nom du produit" : "Nom du plat"}
+                  {isSupplement ? "Nom du produit" : isRecipe ? "Nom de la recette" : "Nom du plat"}
                 </label>
-                <Input value={nom} onChange={(e) => setNom(e.target.value)} placeholder={isSupplement ? "Ex : Ménoliance SP" : "Ex : Crevettes à l'indienne, lentilles corail"} />
+                <Input value={nom} onChange={(e) => setNom(e.target.value)} placeholder={isSupplement ? "Ex : Ménoliance SP" : isRecipe ? "Ex : Curry de crevettes et lentilles corail" : "Ex : Crevettes à l'indienne, lentilles corail"} />
                 <label className="text-xs font-medium text-muted-foreground">Marque</label>
                 <Input value={marque} onChange={(e) => setMarque(e.target.value)} placeholder={isSupplement ? "Ex : Physiomance" : "Ex : Picard"} />
 
