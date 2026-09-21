@@ -387,6 +387,56 @@ export default function LabelPhotoDialog({
     }
   };
 
+  const saveRecipe = async () => {
+    if (!user) return toast.error("Connectez-vous pour enregistrer.");
+    if (!nom.trim()) return toast.error("Le nom de la recette est requis.");
+    const mult = Number(portionsEaten) || 1;
+    const fatG = numOrNull(addedFat) ?? 0;
+    const portionNum = numOrNull(portion);
+
+    const entry: Record<string, any> = {
+      user_id: user.id,
+      logged_at: dateStr,
+      food_name: nom.trim(),
+      brand: marque.trim() || null,
+      meal_type: mealType,
+      portion_size: portionNum === null ? null : Math.round(portionNum * mult + fatG),
+      micros_estimes: true,
+      micros_coverage_percent: null,
+    };
+    for (const f of MACRO_FIELDS) {
+      const row = macros.find((r) => r.key === f.key);
+      const v = row ? numOrNull(row.amount) : null;
+      entry[f.col] = v === null ? null : Math.round(v * mult * 100) / 100;
+    }
+    for (const f of MICRO_FIELDS) {
+      const row = micros.find((r) => r.key === f.key);
+      const v = row ? numOrNull(row.amount) : null;
+      entry[f.col] = v === null ? null : Math.round(v * mult * 1000) / 1000;
+    }
+    // Matières grasses ajoutées (huile) : saisie manuelle, jamais estimée
+    if (fatG > 0) {
+      entry.fats = Math.round(((entry.fats ?? 0) + fatG) * 100) / 100;
+      entry.calories = Math.round(((entry.calories ?? 0) + fatG * 9) * 100) / 100;
+    }
+    if (entry.calories === null) return toast.error("Les calories sont requises : complétez la ligne Calories.");
+
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("food_logs").insert(entry as any);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["food_logs"] });
+      queryClient.invalidateQueries({ queryKey: ["food_logs_week"] });
+      toast.success("Recette ajoutée à votre journal.");
+      close();
+    } catch (e) {
+      console.error(e);
+      toast.error("Enregistrement impossible.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const updateList = (
     setter: React.Dispatch<React.SetStateAction<Row[]>>,
     i: number,
