@@ -6,13 +6,18 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   useRoutines,
+  useActivityMets,
+  estimateExpenditure,
+  OTHER_ACTIVITY,
   ROUTINE_CATEGORIES,
   ROUTINE_FREQUENCIES,
   SUPPLEMENT_NUTRIENTS,
   calculateStreak,
   weekCompletionCount,
   type Routine,
+  type ActivityMet,
 } from "@/hooks/useRoutines";
+import { useProfile } from "@/hooks/useProfile";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
 import DateSelector from "@/components/DateSelector";
 import {
@@ -32,6 +37,9 @@ interface FormState {
   nutrient_key: string;
   nutrient_amount: string;
   nutrient_unit: "mg" | "µg";
+  activity_key: string;
+  custom_met: string;
+  default_duration_min: string;
 }
 
 const emptyForm = (): FormState => ({
@@ -44,16 +52,22 @@ const emptyForm = (): FormState => ({
   nutrient_key: "calcium",
   nutrient_amount: "",
   nutrient_unit: "mg",
+  activity_key: "",
+  custom_met: "",
+  default_duration_min: "",
 });
 
 function RoutineForm({
   state,
   setState,
+  activities,
 }: {
   state: FormState;
   setState: (s: FormState) => void;
+  activities: ActivityMet[];
 }) {
   const isSupplement = state.category === "complement";
+  const isSport = state.category === "sport";
   return (
     <>
       <div className="mb-3">
@@ -103,6 +117,60 @@ function RoutineForm({
           ))}
         </div>
       </div>
+
+      {/* Activité sportive */}
+      {isSport && (
+        <div className="mb-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 p-3 space-y-2">
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Type d'activité</label>
+            <select
+              value={state.activity_key}
+              onChange={(e) => setState({ ...state, activity_key: e.target.value })}
+              className="w-full h-9 rounded-md bg-background border border-border px-2 text-sm"
+            >
+              <option value="">— Non précisé —</option>
+              {activities.map((a) => (
+                <option key={a.id} value={a.activite}>
+                  {a.activite}
+                </option>
+              ))}
+              <option value={OTHER_ACTIVITY}>{OTHER_ACTIVITY}</option>
+            </select>
+          </div>
+          {state.activity_key === OTHER_ACTIVITY && (
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">
+                Intensité de l'activité (MET)
+              </label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                value={state.custom_met}
+                onChange={(e) => setState({ ...state, custom_met: e.target.value })}
+                placeholder="ex : 5"
+                className="h-9 bg-background"
+              />
+            </div>
+          )}
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">
+              Durée habituelle (minutes)
+            </label>
+            <Input
+              type="number"
+              inputMode="numeric"
+              value={state.default_duration_min}
+              onChange={(e) => setState({ ...state, default_duration_min: e.target.value })}
+              placeholder="ex : 45"
+              className="h-9 bg-background"
+            />
+          </div>
+          <p className="text-[12px] text-muted-foreground leading-snug">
+            La dépense estimée s'affiche à titre d'information : elle n'augmente pas votre
+            budget calorique.
+          </p>
+        </div>
+      )}
 
       {/* Supplement nutrient */}
       {isSupplement && (
@@ -226,9 +294,42 @@ export function RoutinesTracker() {
   const { routines, logs, addRoutine, updateRoutine, deleteRoutine, toggleToday, isLoading } =
     useRoutines();
   const { selectedDate, selectedDateStr, isToday } = useSelectedDate();
+  const { data: activities = [] } = useActivityMets();
+  const { profile } = useProfile();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Routine | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm());
+  const [sportPrompt, setSportPrompt] = useState<Routine | null>(null);
+  const [sportDuration, setSportDuration] = useState("");
+
+  const weightKg = Number((profile as any)?.weight) || 0;
+
+  const metForRoutine = (r: Routine): number => {
+    if (r.activity_key === OTHER_ACTIVITY) return Number(r.custom_met) || 0;
+    const found = activities.find((a) => a.activite === r.activity_key);
+    return found ? Number(found.met) : 0;
+  };
+
+  const openSportPrompt = (r: Routine) => {
+    setSportDuration(r.default_duration_min != null ? String(r.default_duration_min) : "");
+    setSportPrompt(r);
+  };
+
+  const confirmSportCheck = () => {
+    if (!sportPrompt) return;
+    const minutes = parseFloat(sportDuration.replace(",", ".")) || 0;
+    const met = metForRoutine(sportPrompt);
+    const burned = met && weightKg && minutes ? estimateExpenditure(met, weightKg, minutes) : null;
+    toggleToday.mutate({
+      routineId: sportPrompt.id,
+      completed: true,
+      date: selectedDateStr,
+      durationMin: minutes || null,
+      metUsed: met || null,
+      caloriesBurned: burned,
+    });
+    setSportPrompt(null);
+  };
 
   // Schedule notifications for all routines with reminders
   useEffect(() => {
@@ -297,6 +398,9 @@ export function RoutinesTracker() {
       nutrient_key: r.nutrient_key || "calcium",
       nutrient_amount: r.nutrient_amount != null ? String(r.nutrient_amount) : "",
       nutrient_unit: ((r.nutrient_unit as "mg" | "µg") || def?.unit || "mg") as "mg" | "µg",
+      activity_key: r.activity_key || "",
+      custom_met: r.custom_met != null ? String(r.custom_met) : "",
+      default_duration_min: r.default_duration_min != null ? String(r.default_duration_min) : "",
     });
   };
 

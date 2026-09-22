@@ -18,6 +18,9 @@ export interface Routine {
   nutrient_key?: string | null;
   nutrient_amount?: number | null;
   nutrient_unit?: string | null;
+  activity_key?: string | null;
+  custom_met?: number | null;
+  default_duration_min?: number | null;
 }
 
 export interface RoutineLog {
@@ -26,6 +29,46 @@ export interface RoutineLog {
   routine_id: string;
   logged_at: string;
   completed: boolean;
+  duration_min?: number | null;
+  met_used?: number | null;
+  calories_burned?: number | null;
+}
+
+export interface ActivityMet {
+  id: number;
+  activite: string;
+  met: number;
+  commentaire: string | null;
+}
+
+export const OTHER_ACTIVITY = "autre activité";
+
+/** Dépense estimée par METs : MET × poids (kg) × durée (h). */
+export function estimateExpenditure(met: number, weightKg: number, minutes: number): number {
+  if (!met || !weightKg || !minutes) return 0;
+  return Math.round(met * weightKg * (minutes / 60));
+}
+
+/** Somme des dépenses estimées des séances cochées un jour donné. */
+export function getActivityExpenditure(logs: RoutineLog[], dateStr: string): number {
+  return logs
+    .filter((l) => l.logged_at === dateStr && l.completed)
+    .reduce((sum, l) => sum + (Number(l.calories_burned) || 0), 0);
+}
+
+export function useActivityMets() {
+  return useQuery({
+    queryKey: ["activity_mets"],
+    queryFn: async (): Promise<ActivityMet[]> => {
+      const { data, error } = await (supabase as any)
+        .from("activity_mets")
+        .select("*")
+        .order("met", { ascending: true });
+      if (error) throw error;
+      return (data || []) as ActivityMet[];
+    },
+    staleTime: 1000 * 60 * 60,
+  });
 }
 
 export const SUPPLEMENT_NUTRIENTS: { value: string; label: string; unit: "mg" | "µg" }[] = [
@@ -109,8 +152,12 @@ export function useRoutines() {
       nutrient_key?: string | null;
       nutrient_amount?: number | null;
       nutrient_unit?: string | null;
+      activity_key?: string | null;
+      custom_met?: number | null;
+      default_duration_min?: number | null;
     }) => {
       if (!userId) throw new Error("not authenticated");
+      const isSport = input.category === "sport";
       const { error } = await (supabase as any).from("routines").insert({
         user_id: userId,
         name: input.name,
@@ -122,6 +169,9 @@ export function useRoutines() {
         nutrient_key: input.provides_nutrient ? input.nutrient_key ?? null : null,
         nutrient_amount: input.provides_nutrient ? input.nutrient_amount ?? null : null,
         nutrient_unit: input.provides_nutrient ? input.nutrient_unit ?? null : null,
+        activity_key: isSport ? input.activity_key ?? null : null,
+        custom_met: isSport ? input.custom_met ?? null : null,
+        default_duration_min: isSport ? input.default_duration_min ?? null : null,
       });
       if (error) throw error;
     },
@@ -147,6 +197,9 @@ export function useRoutines() {
       nutrient_key?: string | null;
       nutrient_amount?: number | null;
       nutrient_unit?: string | null;
+      activity_key?: string | null;
+      custom_met?: number | null;
+      default_duration_min?: number | null;
     }) => {
       const payload: any = { ...updates };
       if (payload.reminder_enabled === false) payload.reminder_time = null;
@@ -154,6 +207,11 @@ export function useRoutines() {
         payload.nutrient_key = null;
         payload.nutrient_amount = null;
         payload.nutrient_unit = null;
+      }
+      if (payload.category && payload.category !== "sport") {
+        payload.activity_key = null;
+        payload.custom_met = null;
+        payload.default_duration_min = null;
       }
       const { error } = await (supabase as any)
         .from("routines")
@@ -189,13 +247,35 @@ export function useRoutines() {
   });
 
   const toggleToday = useMutation({
-    mutationFn: async ({ routineId, completed, date }: { routineId: string; completed: boolean; date: string }) => {
+    mutationFn: async ({
+      routineId,
+      completed,
+      date,
+      durationMin,
+      metUsed,
+      caloriesBurned,
+    }: {
+      routineId: string;
+      completed: boolean;
+      date: string;
+      durationMin?: number | null;
+      metUsed?: number | null;
+      caloriesBurned?: number | null;
+    }) => {
       if (!userId) throw new Error("not authenticated");
       if (completed) {
         const { error } = await (supabase as any)
           .from("routine_logs")
           .upsert(
-            { user_id: userId, routine_id: routineId, logged_at: date, completed: true },
+            {
+              user_id: userId,
+              routine_id: routineId,
+              logged_at: date,
+              completed: true,
+              duration_min: durationMin ?? null,
+              met_used: metUsed ?? null,
+              calories_burned: caloriesBurned ?? null,
+            },
             { onConflict: "routine_id,logged_at" }
           );
         if (error) throw error;

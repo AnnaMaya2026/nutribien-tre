@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_mets: {
+        Row: {
+          activite: string
+          commentaire: string | null
+          id: number
+          met: number
+        }
+        Insert: {
+          activite: string
+          commentaire?: string | null
+          id?: number
+          met: number
+        }
+        Update: {
+          activite?: string
+          commentaire?: string | null
+          id?: number
+          met?: number
+        }
+        Relationships: []
+      }
       aliments_ciqual: {
         Row: {
           calcium_100g: number | null
@@ -660,26 +681,35 @@ export type Database = {
       }
       routine_logs: {
         Row: {
+          calories_burned: number | null
           completed: boolean
           created_at: string
+          duration_min: number | null
           id: string
           logged_at: string
+          met_used: number | null
           routine_id: string
           user_id: string
         }
         Insert: {
+          calories_burned?: number | null
           completed?: boolean
           created_at?: string
+          duration_min?: number | null
           id?: string
           logged_at?: string
+          met_used?: number | null
           routine_id: string
           user_id: string
         }
         Update: {
+          calories_burned?: number | null
           completed?: boolean
           created_at?: string
+          duration_min?: number | null
           id?: string
           logged_at?: string
+          met_used?: number | null
           routine_id?: string
           user_id?: string
         }
@@ -696,8 +726,11 @@ export type Database = {
       routines: {
         Row: {
           active: boolean
+          activity_key: string | null
           category: string
           created_at: string
+          custom_met: number | null
+          default_duration_min: number | null
           frequency: string
           id: string
           name: string
@@ -713,8 +746,11 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          activity_key?: string | null
           category?: string
           created_at?: string
+          custom_met?: number | null
+          default_duration_min?: number | null
           frequency?: string
           id?: string
           name: string
@@ -730,8 +766,11 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          activity_key?: string | null
           category?: string
           created_at?: string
+          custom_met?: number | null
+          default_duration_min?: number | null
           frequency?: string
           id?: string
           name?: string
