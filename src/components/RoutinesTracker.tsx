@@ -32,6 +32,9 @@ interface FormState {
   nutrient_key: string;
   nutrient_amount: string;
   nutrient_unit: "mg" | "µg";
+  activity_key: string;
+  custom_met: string;
+  default_duration_min: string;
 }
 
 const emptyForm = (): FormState => ({
@@ -44,16 +47,22 @@ const emptyForm = (): FormState => ({
   nutrient_key: "calcium",
   nutrient_amount: "",
   nutrient_unit: "mg",
+  activity_key: "",
+  custom_met: "",
+  default_duration_min: "",
 });
 
 function RoutineForm({
   state,
   setState,
+  activities,
 }: {
   state: FormState;
   setState: (s: FormState) => void;
+  activities: ActivityMet[];
 }) {
   const isSupplement = state.category === "complement";
+  const isSport = state.category === "sport";
   return (
     <>
       <div className="mb-3">
