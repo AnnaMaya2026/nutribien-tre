@@ -294,9 +294,42 @@ export function RoutinesTracker() {
   const { routines, logs, addRoutine, updateRoutine, deleteRoutine, toggleToday, isLoading } =
     useRoutines();
   const { selectedDate, selectedDateStr, isToday } = useSelectedDate();
+  const { data: activities = [] } = useActivityMets();
+  const { profile } = useProfile();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Routine | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm());
+  const [sportPrompt, setSportPrompt] = useState<Routine | null>(null);
+  const [sportDuration, setSportDuration] = useState("");
+
+  const weightKg = Number((profile as any)?.weight) || 0;
+
+  const metForRoutine = (r: Routine): number => {
+    if (r.activity_key === OTHER_ACTIVITY) return Number(r.custom_met) || 0;
+    const found = activities.find((a) => a.activite === r.activity_key);
+    return found ? Number(found.met) : 0;
+  };
+
+  const openSportPrompt = (r: Routine) => {
+    setSportDuration(r.default_duration_min != null ? String(r.default_duration_min) : "");
+    setSportPrompt(r);
+  };
+
+  const confirmSportCheck = () => {
+    if (!sportPrompt) return;
+    const minutes = parseFloat(sportDuration.replace(",", ".")) || 0;
+    const met = metForRoutine(sportPrompt);
+    const burned = met && weightKg && minutes ? estimateExpenditure(met, weightKg, minutes) : null;
+    toggleToday.mutate({
+      routineId: sportPrompt.id,
+      completed: true,
+      date: selectedDateStr,
+      durationMin: minutes || null,
+      metUsed: met || null,
+      caloriesBurned: burned,
+    });
+    setSportPrompt(null);
+  };
 
   // Schedule notifications for all routines with reminders
   useEffect(() => {
