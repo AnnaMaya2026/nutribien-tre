@@ -247,13 +247,35 @@ export function useRoutines() {
   });
 
   const toggleToday = useMutation({
-    mutationFn: async ({ routineId, completed, date }: { routineId: string; completed: boolean; date: string }) => {
+    mutationFn: async ({
+      routineId,
+      completed,
+      date,
+      durationMin,
+      metUsed,
+      caloriesBurned,
+    }: {
+      routineId: string;
+      completed: boolean;
+      date: string;
+      durationMin?: number | null;
+      metUsed?: number | null;
+      caloriesBurned?: number | null;
+    }) => {
       if (!userId) throw new Error("not authenticated");
       if (completed) {
         const { error } = await (supabase as any)
           .from("routine_logs")
           .upsert(
-            { user_id: userId, routine_id: routineId, logged_at: date, completed: true },
+            {
+              user_id: userId,
+              routine_id: routineId,
+              logged_at: date,
+              completed: true,
+              duration_min: durationMin ?? null,
+              met_used: metUsed ?? null,
+              calories_burned: caloriesBurned ?? null,
+            },
             { onConflict: "routine_id,logged_at" }
           );
         if (error) throw error;
