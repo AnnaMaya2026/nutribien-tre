@@ -118,6 +118,60 @@ function RoutineForm({
         </div>
       </div>
 
+      {/* Activité sportive */}
+      {isSport && (
+        <div className="mb-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 p-3 space-y-2">
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">Type d'activité</label>
+            <select
+              value={state.activity_key}
+              onChange={(e) => setState({ ...state, activity_key: e.target.value })}
+              className="w-full h-9 rounded-md bg-background border border-border px-2 text-sm"
+            >
+              <option value="">— Non précisé —</option>
+              {activities.map((a) => (
+                <option key={a.id} value={a.activite}>
+                  {a.activite}
+                </option>
+              ))}
+              <option value={OTHER_ACTIVITY}>{OTHER_ACTIVITY}</option>
+            </select>
+          </div>
+          {state.activity_key === OTHER_ACTIVITY && (
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">
+                Intensité de l'activité (MET)
+              </label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                value={state.custom_met}
+                onChange={(e) => setState({ ...state, custom_met: e.target.value })}
+                placeholder="ex : 5"
+                className="h-9 bg-background"
+              />
+            </div>
+          )}
+          <div>
+            <label className="text-xs text-muted-foreground block mb-1">
+              Durée habituelle (minutes)
+            </label>
+            <Input
+              type="number"
+              inputMode="numeric"
+              value={state.default_duration_min}
+              onChange={(e) => setState({ ...state, default_duration_min: e.target.value })}
+              placeholder="ex : 45"
+              className="h-9 bg-background"
+            />
+          </div>
+          <p className="text-[12px] text-muted-foreground leading-snug">
+            La dépense estimée s'affiche à titre d'information : elle n'augmente pas votre
+            budget calorique.
+          </p>
+        </div>
+      )}
+
       {/* Supplement nutrient */}
       {isSupplement && (
         <div className="mb-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-3">
