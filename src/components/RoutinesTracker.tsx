@@ -6,13 +6,18 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   useRoutines,
+  useActivityMets,
+  estimateExpenditure,
+  OTHER_ACTIVITY,
   ROUTINE_CATEGORIES,
   ROUTINE_FREQUENCIES,
   SUPPLEMENT_NUTRIENTS,
   calculateStreak,
   weekCompletionCount,
   type Routine,
+  type ActivityMet,
 } from "@/hooks/useRoutines";
+import { useProfile } from "@/hooks/useProfile";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
 import DateSelector from "@/components/DateSelector";
 import {
