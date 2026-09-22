@@ -152,8 +152,12 @@ export function useRoutines() {
       nutrient_key?: string | null;
       nutrient_amount?: number | null;
       nutrient_unit?: string | null;
+      activity_key?: string | null;
+      custom_met?: number | null;
+      default_duration_min?: number | null;
     }) => {
       if (!userId) throw new Error("not authenticated");
+      const isSport = input.category === "sport";
       const { error } = await (supabase as any).from("routines").insert({
         user_id: userId,
         name: input.name,
@@ -165,6 +169,9 @@ export function useRoutines() {
         nutrient_key: input.provides_nutrient ? input.nutrient_key ?? null : null,
         nutrient_amount: input.provides_nutrient ? input.nutrient_amount ?? null : null,
         nutrient_unit: input.provides_nutrient ? input.nutrient_unit ?? null : null,
+        activity_key: isSport ? input.activity_key ?? null : null,
+        custom_met: isSport ? input.custom_met ?? null : null,
+        default_duration_min: isSport ? input.default_duration_min ?? null : null,
       });
       if (error) throw error;
     },
