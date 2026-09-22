@@ -197,6 +197,9 @@ export function useRoutines() {
       nutrient_key?: string | null;
       nutrient_amount?: number | null;
       nutrient_unit?: string | null;
+      activity_key?: string | null;
+      custom_met?: number | null;
+      default_duration_min?: number | null;
     }) => {
       const payload: any = { ...updates };
       if (payload.reminder_enabled === false) payload.reminder_time = null;
@@ -204,6 +207,11 @@ export function useRoutines() {
         payload.nutrient_key = null;
         payload.nutrient_amount = null;
         payload.nutrient_unit = null;
+      }
+      if (payload.category && payload.category !== "sport") {
+        payload.activity_key = null;
+        payload.custom_met = null;
+        payload.default_duration_min = null;
       }
       const { error } = await (supabase as any)
         .from("routines")
