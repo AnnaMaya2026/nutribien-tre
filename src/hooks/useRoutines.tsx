@@ -18,6 +18,9 @@ export interface Routine {
   nutrient_key?: string | null;
   nutrient_amount?: number | null;
   nutrient_unit?: string | null;
+  activity_key?: string | null;
+  custom_met?: number | null;
+  default_duration_min?: number | null;
 }
 
 export interface RoutineLog {
@@ -26,6 +29,46 @@ export interface RoutineLog {
   routine_id: string;
   logged_at: string;
   completed: boolean;
+  duration_min?: number | null;
+  met_used?: number | null;
+  calories_burned?: number | null;
+}
+
+export interface ActivityMet {
+  id: number;
+  activite: string;
+  met: number;
+  commentaire: string | null;
+}
+
+export const OTHER_ACTIVITY = "autre activité";
+
+/** Dépense estimée par METs : MET × poids (kg) × durée (h). */
+export function estimateExpenditure(met: number, weightKg: number, minutes: number): number {
+  if (!met || !weightKg || !minutes) return 0;
+  return Math.round(met * weightKg * (minutes / 60));
+}
+
+/** Somme des dépenses estimées des séances cochées un jour donné. */
+export function getActivityExpenditure(logs: RoutineLog[], dateStr: string): number {
+  return logs
+    .filter((l) => l.logged_at === dateStr && l.completed)
+    .reduce((sum, l) => sum + (Number(l.calories_burned) || 0), 0);
+}
+
+export function useActivityMets() {
+  return useQuery({
+    queryKey: ["activity_mets"],
+    queryFn: async (): Promise<ActivityMet[]> => {
+      const { data, error } = await (supabase as any)
+        .from("activity_mets")
+        .select("*")
+        .order("met", { ascending: true });
+      if (error) throw error;
+      return (data || []) as ActivityMet[];
+    },
+    staleTime: 1000 * 60 * 60,
+  });
 }
 
 export const SUPPLEMENT_NUTRIENTS: { value: string; label: string; unit: "mg" | "µg" }[] = [
