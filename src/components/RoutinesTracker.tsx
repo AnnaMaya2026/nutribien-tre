@@ -311,6 +311,9 @@ export function RoutinesTracker() {
       nutrient_key: r.nutrient_key || "calcium",
       nutrient_amount: r.nutrient_amount != null ? String(r.nutrient_amount) : "",
       nutrient_unit: ((r.nutrient_unit as "mg" | "µg") || def?.unit || "mg") as "mg" | "µg",
+      activity_key: r.activity_key || "",
+      custom_met: r.custom_met != null ? String(r.custom_met) : "",
+      default_duration_min: r.default_duration_min != null ? String(r.default_duration_min) : "",
     });
   };
 
