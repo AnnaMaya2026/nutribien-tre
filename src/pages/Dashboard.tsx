@@ -2,7 +2,7 @@ import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
-import { useRoutines } from "@/hooks/useRoutines";
+import { useRoutines, getActivityExpenditure } from "@/hooks/useRoutines";
 import { useSupplements } from "@/hooks/useSupplements";
 
 import DateSelector from "@/components/DateSelector";
@@ -196,6 +196,7 @@ export default function Dashboard() {
   const { selectedDate, selectedDateStr, isToday } = useSelectedDate();
   const { logs, weekLogs } = useFoodLogs(selectedDateStr);
   const { allRoutines, logs: routineLogs } = useRoutines();
+  const sportKcal = Math.round(getActivityExpenditure(routineLogs, selectedDateStr));
   // Compléments cochés du jour affiché, quantité saisie incluse.
   const { contributions: supplementContribs, references: nutrientRefs } = useSupplements(selectedDateStr);
   // Convert nutrient amounts to the same unit used by the food totals.
@@ -444,6 +445,13 @@ export default function Dashboard() {
               </span>
               {" · "}
               Total : <span className="font-medium">{Math.round(totalCalories)} kcal</span>
+            </p>
+          )}
+          {/* Purement informatif : n'entre dans aucun calcul (ni cercle, ni budget, ni total). */}
+          {sportKcal > 0 && (
+            <p className="mt-2 text-[13px] text-center text-orange-600 dark:text-orange-400">
+              🏃 Sport : ~{sportKcal} kcal{" "}
+              <span className="text-muted-foreground">(estimation)</span>
             </p>
           )}
         </div>
