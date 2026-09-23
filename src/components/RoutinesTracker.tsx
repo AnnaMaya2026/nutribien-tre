@@ -352,6 +352,18 @@ export function RoutinesTracker() {
     ? "Aujourd'hui"
     : selectedDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 
+  const sportFields = () => {
+    const isSport = form.category === "sport";
+    return {
+      activity_key: isSport ? form.activity_key || null : null,
+      custom_met:
+        isSport && form.activity_key === OTHER_ACTIVITY
+          ? parseFloat(form.custom_met.replace(",", ".")) || null
+          : null,
+      default_duration_min: isSport ? parseFloat(form.default_duration_min) || null : null,
+    };
+  };
+
   const handleAdd = async () => {
     if (!form.name.trim()) return;
     if (form.reminder_enabled) {
@@ -375,6 +387,7 @@ export function RoutinesTracker() {
           ? parseFloat(form.nutrient_amount) || null
           : null,
         nutrient_unit: form.provides_nutrient ? form.nutrient_unit : null,
+        ...sportFields(),
       },
       {
         onSuccess: () => {
@@ -421,6 +434,7 @@ export function RoutinesTracker() {
           ? parseFloat(form.nutrient_amount) || null
           : null,
         nutrient_unit: form.provides_nutrient ? form.nutrient_unit : null,
+        ...sportFields(),
       },
       {
         onSuccess: () => {
@@ -498,7 +512,7 @@ export function RoutinesTracker() {
             </button>
           </div>
 
-          <RoutineForm state={form} setState={setForm} />
+          <RoutineForm state={form} setState={setForm} activities={activities} />
 
           <button
             onClick={handleAdd}
@@ -516,7 +530,7 @@ export function RoutinesTracker() {
           <DialogHeader>
             <DialogTitle>Modifier la routine</DialogTitle>
           </DialogHeader>
-          <RoutineForm state={form} setState={setForm} />
+          <RoutineForm state={form} setState={setForm} activities={activities} />
           <div className="flex gap-2">
             <button
               onClick={() => setEditing(null)}
@@ -530,6 +544,47 @@ export function RoutinesTracker() {
               className="flex-1 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
             >
               Enregistrer
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sport duration prompt */}
+      <Dialog open={!!sportPrompt} onOpenChange={(o) => !o && setSportPrompt(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Durée de la séance</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">{sportPrompt?.name}</p>
+          <label className="text-xs text-muted-foreground block mb-1">Durée (minutes)</label>
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={sportDuration}
+            onChange={(e) => setSportDuration(e.target.value)}
+            placeholder="ex : 45"
+            className="h-10 bg-muted"
+            autoFocus
+          />
+          {sportPrompt && (() => {
+            const m = parseFloat(sportDuration.replace(",", ".")) || 0;
+            const met = metForRoutine(sportPrompt);
+            if (!met) return <p className="text-[13px] text-muted-foreground">Choisissez un type d'activité dans la routine pour obtenir une estimation.</p>;
+            if (!weightKg) return <p className="text-[13px] text-muted-foreground">Renseignez votre poids dans le profil pour obtenir une estimation.</p>;
+            return <p className="text-[13px] text-muted-foreground">Dépense estimée : ~{estimateExpenditure(met, weightKg, m)} kcal (estimation)</p>;
+          })()}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSportPrompt(null)}
+              className="flex-1 py-2.5 rounded-lg bg-muted text-muted-foreground text-sm font-medium"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={confirmSportCheck}
+              className="flex-1 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold"
+            >
+              Valider
             </button>
           </div>
         </DialogContent>
@@ -565,9 +620,13 @@ export function RoutinesTracker() {
               >
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() =>
-                      toggleToday.mutate({ routineId: r.id, completed: !done, date: selectedDateStr })
-                    }
+                    onClick={() => {
+                      if (!done && r.category === "sport") {
+                        openSportPrompt(r);
+                        return;
+                      }
+                      toggleToday.mutate({ routineId: r.id, completed: !done, date: selectedDateStr });
+                    }}
                     className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
                       done
                         ? "bg-green-500 text-white"
