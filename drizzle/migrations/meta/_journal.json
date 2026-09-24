@@ -8,6 +8,13 @@
       "when": 1790101101843,
       "tag": "0000_add_activity_mets_and_sport_duration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790275647135,
+      "tag": "0001_food_logs_ingredients",
+      "breakpoints": true
     }
   ]
 }
