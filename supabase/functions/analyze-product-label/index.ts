@@ -85,18 +85,29 @@ export async function estimateMicros(supabase: any, ingredients: { name: string;
   const unmatched: string[] = [];
   let coverage = 0;
 
-  for (const ing of ingredients) {
-    const pct = ing.percent;
-    if (!ing.name) continue;
-    if (pct === null || !isFinite(pct) || pct <= 0) {
-      unmatched.push(ing.name);
-      continue;
-    }
+  // Répartition : pourcentages déclarés ; le reste réparti dans l'ordre de la
+  // liste (ordre réglementaire décroissant), poids décroissants n, n-1, …, 1,
+  // sans jamais dépasser le dernier pourcentage déclaré qui précède.
+  const list = ingredients.filter((i) => i.name);
+  const declared = list.reduce((s, i) => s + (i.percent && i.percent > 0 ? i.percent : 0), 0);
+  const remaining = Math.max(0, 100 - declared);
+  const undeclaredIdx = list.map((i, idx) => (!i.percent || i.percent <= 0 ? idx : -1)).filter((i) => i >= 0);
+  const n = undeclaredIdx.length;
+  const weightSum = (n * (n + 1)) / 2;
+  const pcts: { value: number; inferred: boolean }[] = list.map((i) => ({ value: i.percent && i.percent > 0 ? i.percent : 0, inferred: false }));
+  undeclaredIdx.forEach((idx, rank) => {
+    pcts[idx] = { value: weightSum ? (remaining * (n - rank)) / weightSum : 0, inferred: true };
+  });
+
+  for (let i = 0; i < list.length; i++) {
+    const ing = list[i];
+    const pct = pcts[i].value;
+    if (!isFinite(pct) || pct <= 0) { unmatched.push(ing.name); continue; }
     let match: any = null;
     try { match = await matchCiqual(supabase, ing.name); } catch { match = null; }
-    if (!match) { unmatched.push(`${ing.name} (${pct}%)`); continue; }
+    if (!match) { unmatched.push(ing.name); continue; }
     coverage += pct;
-    matched.push({ name: ing.name, percent: pct, ciqual: match.row.nom, row: match.row });
+    matched.push({ name: ing.name, percent: round(pct, 1), percent_inferred: pcts[i].inferred, ciqual: match.row.nom, row: match.row });
   }
 
   const micros: Record<string, number | null> = {};
@@ -117,7 +128,7 @@ export async function estimateMicros(supabase: any, ingredients: { name: string;
   return {
     micros,
     coverage: round(coverage, 1) ?? 0,
-    matched: matched.map((m) => ({ name: m.name, percent: m.percent, ciqual: m.ciqual })),
+    matched: matched.map((m) => ({ name: m.name, percent: m.percent, percent_inferred: m.percent_inferred, ciqual: m.ciqual })),
     unmatched,
   };
 }

@@ -176,6 +176,7 @@ export type Database = {
           fibres: number | null
           food_name: string
           id: string
+          ingredients: Json | null
           iron: number | null
           magnesium: number | null
           micros_coverage_percent: number | null
@@ -207,6 +208,7 @@ export type Database = {
           fibres?: number | null
           food_name: string
           id?: string
+          ingredients?: Json | null
           iron?: number | null
           magnesium?: number | null
           micros_coverage_percent?: number | null
@@ -238,6 +240,7 @@ export type Database = {
           fibres?: number | null
           food_name?: string
           id?: string
+          ingredients?: Json | null
           iron?: number | null
           magnesium?: number | null
           micros_coverage_percent?: number | null
@@ -331,6 +334,7 @@ export type Database = {
           fibres: number | null
           food_name: string
           id: string
+          ingredients: Json | null
           iron: number | null
           logged_at: string
           magnesium: number | null
@@ -365,6 +369,7 @@ export type Database = {
           fibres?: number | null
           food_name: string
           id?: string
+          ingredients?: Json | null
           iron?: number | null
           logged_at?: string
           magnesium?: number | null
@@ -399,6 +404,7 @@ export type Database = {
           fibres?: number | null
           food_name?: string
           id?: string
+          ingredients?: Json | null
           iron?: number | null
           logged_at?: string
           magnesium?: number | null
