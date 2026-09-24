@@ -143,6 +143,7 @@ export default function LabelPhotoDialog({
   const [portion, setPortion] = useState("");
   const [mealType, setMealType] = useState(defaultMealType);
   const [coverage, setCoverage] = useState<number | null>(null);
+  const [productIngredients, setProductIngredients] = useState<{ name: string; percent: number | null }[] | null>(null);
   const [macros, setMacros] = useState<Row[]>([]);
   const [micros, setMicros] = useState<Row[]>([]);
   // fiche recette
@@ -294,6 +295,7 @@ export default function LabelPhotoDialog({
           }),
         );
         const unmatched = data?.estimated_micros?.unmatched_ingredients || [];
+        setProductIngredients(Array.isArray(data?.ingredients) ? data.ingredients : null);
         setIgnored(unmatched.map((l: string) => ({ label: l, amount: null, unit: null })));
         if (data?.issue === "blurry") toast.error("Photo floue : vérifiez chaque valeur avant d'enregistrer.");
         else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisissez les valeurs à la main.");
@@ -360,6 +362,7 @@ export default function LabelPhotoDialog({
       portion_size: portionNum,
       micros_estimes: true,
       micros_coverage_percent: coverage,
+      ingredients: productIngredients,
     };
     for (const f of MACRO_FIELDS) {
       const row = macros.find((r) => r.key === f.key);
@@ -712,7 +715,11 @@ export default function LabelPhotoDialog({
               {ignored.length > 0 && (
                 <div className="text-xs text-muted-foreground">
                   <p className="font-medium mb-1">
-                    {isSupplement ? "Non comptabilisé (information) :" : "Ingrédients non estimés (information) :"}
+                    {isSupplement
+                      ? "Non comptabilisé (information) :"
+                      : isRecipe
+                        ? "Ingrédients non estimés (information) :"
+                        : `${ignored.length} ingrédient${ignored.length > 1 ? "s" : ""} non reconnu${ignored.length > 1 ? "s" : ""} (non comptés dans les micronutriments) :`}
                   </p>
                   <p>{ignored.map((o) => `${o.label}${o.amount ? ` ${o.amount}${o.unit || ""}` : ""}`).join(" · ")}</p>
                 </div>
