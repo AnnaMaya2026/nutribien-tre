@@ -304,22 +304,44 @@ export function RoutinesTracker() {
 
   const weightKg = Number((profile as any)?.weight) || 0;
 
-  const metForRoutine = (r: Routine): number => {
-    if (r.activity_key === OTHER_ACTIVITY) return Number(r.custom_met) || 0;
-    const found = activities.find((a) => a.activite === r.activity_key);
+  const [sportActivity, setSportActivity] = useState("");
+  const [sportCustomMet, setSportCustomMet] = useState("");
+
+  const guessActivity = (name: string): string => {
+    const n = name.toLowerCase();
+    const hit = activities.find((a) => {
+      const first = a.activite.toLowerCase().split(/[\s(/]/)[0];
+      return first.length > 2 && n.includes(first);
+    });
+    return hit?.activite || "";
+  };
+
+  const metFor = (key: string, custom: string): number => {
+    if (key === OTHER_ACTIVITY) return parseFloat(custom.replace(",", ".")) || 0;
+    const found = activities.find((a) => a.activite === key);
     return found ? Number(found.met) : 0;
   };
 
   const openSportPrompt = (r: Routine) => {
-    setSportDuration(r.default_duration_min != null ? String(r.default_duration_min) : "");
+    setSportDuration(r.default_duration_min != null ? String(r.default_duration_min) : "30");
+    setSportActivity(r.activity_key || guessActivity(r.name));
+    setSportCustomMet(r.custom_met != null ? String(r.custom_met) : "");
     setSportPrompt(r);
   };
 
   const confirmSportCheck = () => {
     if (!sportPrompt) return;
     const minutes = parseFloat(sportDuration.replace(",", ".")) || 0;
-    const met = metForRoutine(sportPrompt);
+    const met = metFor(sportActivity, sportCustomMet);
     const burned = met && weightKg && minutes ? estimateExpenditure(met, weightKg, minutes) : null;
+    // Mémorise l'activité sur la routine si elle manquait ou a changé
+    if (sportActivity && sportActivity !== (sportPrompt.activity_key || "")) {
+      updateRoutine.mutate({
+        id: sportPrompt.id,
+        activity_key: sportActivity,
+        custom_met: sportActivity === OTHER_ACTIVITY ? met || null : null,
+      });
+    }
     toggleToday.mutate({
       routineId: sportPrompt.id,
       completed: true,
@@ -566,10 +588,32 @@ export function RoutinesTracker() {
             className="h-10 bg-muted"
             autoFocus
           />
+          <label className="text-xs text-muted-foreground block mb-1">Type d'activité</label>
+          <select
+            value={sportActivity}
+            onChange={(e) => setSportActivity(e.target.value)}
+            className="w-full h-10 rounded-md bg-muted px-2 text-sm text-foreground border border-border"
+          >
+            <option value="">— Choisir —</option>
+            {activities.map((a) => (
+              <option key={a.id} value={a.activite}>{a.activite}</option>
+            ))}
+            <option value={OTHER_ACTIVITY}>Autre activité</option>
+          </select>
+          {sportActivity === OTHER_ACTIVITY && (
+            <Input
+              type="number"
+              inputMode="decimal"
+              value={sportCustomMet}
+              onChange={(e) => setSportCustomMet(e.target.value)}
+              placeholder="Intensité (MET), ex : 5.5"
+              className="h-10 bg-muted"
+            />
+          )}
           {sportPrompt && (() => {
             const m = parseFloat(sportDuration.replace(",", ".")) || 0;
-            const met = metForRoutine(sportPrompt);
-            if (!met) return <p className="text-[13px] text-muted-foreground">Choisissez un type d'activité dans la routine pour obtenir une estimation.</p>;
+            const met = metFor(sportActivity, sportCustomMet);
+            if (!met) return <p className="text-[13px] text-muted-foreground">Choisissez un type d'activité pour obtenir une estimation.</p>;
             if (!weightKg) return <p className="text-[13px] text-muted-foreground">Renseignez votre poids dans le profil pour obtenir une estimation.</p>;
             return <p className="text-[13px] text-muted-foreground">Dépense estimée : ~{estimateExpenditure(met, weightKg, m)} kcal (estimation)</p>;
           })()}
@@ -656,6 +700,18 @@ export function RoutinesTracker() {
                         </span>
                       )}
                     </div>
+                    {done && r.category === "sport" && (() => {
+                      const log = logs.find(
+                        (l) => l.routine_id === r.id && l.logged_at === selectedDateStr && l.completed
+                      );
+                      if (!log?.duration_min) return null;
+                      return (
+                        <p className="text-[13px] text-orange-600 dark:text-orange-400 mt-0.5">
+                          {r.name} — {Number(log.duration_min)} min
+                          {log.calories_burned ? ` · ~${Math.round(Number(log.calories_burned))} kcal` : " · dépense non estimée"}
+                        </p>
+                      );
+                    })()}
                     <div className="flex items-center gap-3 mt-0.5">
                       {streak > 0 && (
                         <span className="text-[11px] text-orange-500 font-medium flex items-center gap-1">
