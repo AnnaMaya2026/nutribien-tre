@@ -167,7 +167,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       }
 
       // Estimate phytoestrogens from name when still missing (e.g. tofu, lin…)
-      if (!phytoestrogens) {
+      if (phytoestrogens == null) {
         phytoestrogens = estimatePhytoestrogensPer100g(productName) || null;
       }
 
@@ -193,7 +193,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
         vitamin_b6_100g: vitamin_b6,
         vitamin_b9_100g: vitamin_b9,
         vitamin_e_100g: vitamin_e,
-        microsAvailable: microsAvailable || phytoestrogens > 0,
+        microsAvailable: microsAvailable || (phytoestrogens ?? 0) > 0,
         microsSource,
         ciqualMatchName,
       });
