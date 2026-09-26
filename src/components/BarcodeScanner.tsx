@@ -7,6 +7,7 @@ import { amountToNutritionGrams, formatStandardPortionHint, getDefaultPortion, g
 import { isIndustrialFood } from "@/lib/industrialFood";
 import { estimatePhytoestrogensPer100g } from "@/lib/phytoestrogenEstimator";
 import { findCiqualMatch } from "@/lib/ciqualMatcher";
+import { scaleOrNull } from "@/lib/ciqual";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
