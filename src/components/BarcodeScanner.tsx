@@ -7,6 +7,7 @@ import { amountToNutritionGrams, formatStandardPortionHint, getDefaultPortion, g
 import { isIndustrialFood } from "@/lib/industrialFood";
 import { estimatePhytoestrogensPer100g } from "@/lib/phytoestrogenEstimator";
 import { findCiqualMatch } from "@/lib/ciqualMatcher";
+import { scaleOrNull } from "@/lib/ciqual";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -24,19 +25,19 @@ interface ScannedProduct {
   carbs_100g: number;
   fats_100g: number;
   fiber_100g: number;
-  calcium_100g: number;
-  vitamin_d_100g: number;
-  magnesium_100g: number;
-  iron_100g: number;
-  omega3_100g: number;
-  vitamin_b12_100g: number;
-  phytoestrogens_100g: number;
-  potassium_100g: number;
-  zinc_100g: number;
-  vitamin_k_100g: number;
-  vitamin_b6_100g: number;
-  vitamin_b9_100g: number;
-  vitamin_e_100g: number;
+  calcium_100g: number | null;
+  vitamin_d_100g: number | null;
+  magnesium_100g: number | null;
+  iron_100g: number | null;
+  omega3_100g: number | null;
+  vitamin_b12_100g: number | null;
+  phytoestrogens_100g: number | null;
+  potassium_100g: number | null;
+  zinc_100g: number | null;
+  vitamin_k_100g: number | null;
+  vitamin_b6_100g: number | null;
+  vitamin_b9_100g: number | null;
+  vitamin_e_100g: number | null;
   microsAvailable: boolean;
   microsSource?: "openfoodfacts" | "ciqual" | "none";
   ciqualMatchName?: string;
@@ -52,27 +53,28 @@ interface BarcodeScannerProps {
     carbs: number;
     fats: number;
     fibres: number;
-    calcium: number;
-    vitamin_d: number;
-    magnesium: number;
-    iron: number;
-    omega3: number;
-    phytoestrogens: number;
-    vitamin_b12: number;
-    potassium: number;
-    zinc: number;
-    vitamin_k: number;
-    vitamin_b6: number;
-    vitamin_b9: number;
-    vitamin_e: number;
+    calcium: number | null;
+    vitamin_d: number | null;
+    magnesium: number | null;
+    iron: number | null;
+    omega3: number | null;
+    phytoestrogens: number | null;
+    vitamin_b12: number | null;
+    potassium: number | null;
+    zinc: number | null;
+    vitamin_k: number | null;
+    vitamin_b6: number | null;
+    vitamin_b9: number | null;
+    vitamin_e: number | null;
     meal_type: string;
   }) => void;
   isPending?: boolean;
 }
 
-function n(v: number | undefined | null): number {
-  return v && isFinite(v) ? v : 0;
+function n(v: number | undefined | null): number | null {
+  return v !== undefined && v !== null && isFinite(Number(v)) ? Number(v) : null;
 }
+const macro = (v: number | undefined | null): number => (v && isFinite(v) ? v : 0);
 
 export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeScannerProps) {
   const [showScanner, setShowScanner] = useState(false);
@@ -128,9 +130,9 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       let vitamin_b6 = n(nm["vitamin-b6_100g"]);
       let vitamin_b9 = n(nm["vitamin-b9_100g"]);
       let vitamin_e = n(nm["vitamin-e_100g"]);
-      let phytoestrogens = 0;
+      let phytoestrogens: number | null = null;
       let microsAvailable =
-        calcium + vitamin_d + magnesium + iron + omega3 + vitamin_b12 > 0;
+        [calcium, vitamin_d, magnesium, iron, omega3, vitamin_b12].some((v) => v !== null);
       let microsSource: "openfoodfacts" | "ciqual" | "none" = microsAvailable
         ? "openfoodfacts"
         : "none";
@@ -142,19 +144,19 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
           const match = await findCiqualMatch(productName);
           if (match) {
             const f = match.food;
-            calcium = f.calcium_100g || 0;
-            vitamin_d = f.vitamine_d_100g || 0;
-            magnesium = f.magnesium_100g || 0;
-            iron = f.fer_100g || 0;
-            omega3 = f.omega3_total_100g || 0;
-            vitamin_b12 = f.vitamine_b12_100g || 0;
-            potassium = f.potassium_100g || 0;
-            zinc = f.zinc_100g || 0;
-            vitamin_k = f.vitamine_k_100g || 0;
-            vitamin_b6 = f.vitamine_b6_100g || 0;
-            vitamin_b9 = f.vitamine_b9_100g || 0;
-            vitamin_e = f.vitamine_e_100g || 0;
-            phytoestrogens = f.phytoestrogenes_100mg || 0;
+            calcium = f.calcium_100g ?? null;
+            vitamin_d = f.vitamine_d_100g ?? null;
+            magnesium = f.magnesium_100g ?? null;
+            iron = f.fer_100g ?? null;
+            omega3 = f.omega3_total_100g ?? null;
+            vitamin_b12 = f.vitamine_b12_100g ?? null;
+            potassium = f.potassium_100g ?? null;
+            zinc = f.zinc_100g ?? null;
+            vitamin_k = f.vitamine_k_100g ?? null;
+            vitamin_b6 = f.vitamine_b6_100g ?? null;
+            vitamin_b9 = f.vitamine_b9_100g ?? null;
+            vitamin_e = f.vitamine_e_100g ?? null;
+            phytoestrogens = f.phytoestrogenes_100mg ?? null;
             microsAvailable = true;
             microsSource = "ciqual";
             ciqualMatchName = f.nom;
@@ -165,8 +167,8 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       }
 
       // Estimate phytoestrogens from name when still missing (e.g. tofu, lin…)
-      if (!phytoestrogens) {
-        phytoestrogens = estimatePhytoestrogensPer100g(productName);
+      if (phytoestrogens == null) {
+        phytoestrogens = estimatePhytoestrogensPer100g(productName) || null;
       }
 
       setProduct({
@@ -191,7 +193,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
         vitamin_b6_100g: vitamin_b6,
         vitamin_b9_100g: vitamin_b9,
         vitamin_e_100g: vitamin_e,
-        microsAvailable: microsAvailable || phytoestrogens > 0,
+        microsAvailable: microsAvailable || (phytoestrogens ?? 0) > 0,
         microsSource,
         ciqualMatchName,
       });
@@ -309,19 +311,19 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
         carbs: Math.round((product.carbs_100g * nutritionGrams) / 100),
         fats: Math.round((product.fats_100g * nutritionGrams) / 100),
         fibres: Math.round((product.fiber_100g * nutritionGrams) / 100),
-        calcium: Math.round((product.calcium_100g * nutritionGrams) / 100),
-        vitamin_d: +((product.vitamin_d_100g * nutritionGrams) / 100).toFixed(1),
-        magnesium: Math.round((product.magnesium_100g * nutritionGrams) / 100),
-        iron: +((product.iron_100g * nutritionGrams) / 100).toFixed(1),
-        omega3: +((product.omega3_100g * nutritionGrams) / 100).toFixed(1),
-        vitamin_b12: +((product.vitamin_b12_100g * nutritionGrams) / 100).toFixed(1),
-        phytoestrogens: +((product.phytoestrogens_100g * nutritionGrams) / 100).toFixed(1),
-        potassium: Math.round((product.potassium_100g * nutritionGrams) / 100),
-        zinc: +((product.zinc_100g * nutritionGrams) / 100).toFixed(1),
-        vitamin_k: +((product.vitamin_k_100g * nutritionGrams) / 100).toFixed(1),
-        vitamin_b6: +((product.vitamin_b6_100g * nutritionGrams) / 100).toFixed(2),
-        vitamin_b9: Math.round((product.vitamin_b9_100g * nutritionGrams) / 100),
-        vitamin_e: +((product.vitamin_e_100g * nutritionGrams) / 100).toFixed(1),
+        calcium: scaleOrNull(product.calcium_100g, nutritionGrams / 100),
+        vitamin_d: scaleOrNull(product.vitamin_d_100g, nutritionGrams / 100, 1),
+        magnesium: scaleOrNull(product.magnesium_100g, nutritionGrams / 100),
+        iron: scaleOrNull(product.iron_100g, nutritionGrams / 100, 1),
+        omega3: scaleOrNull(product.omega3_100g, nutritionGrams / 100, 1),
+        vitamin_b12: scaleOrNull(product.vitamin_b12_100g, nutritionGrams / 100, 1),
+        phytoestrogens: scaleOrNull(product.phytoestrogens_100g, nutritionGrams / 100, 1),
+        potassium: scaleOrNull(product.potassium_100g, nutritionGrams / 100),
+        zinc: scaleOrNull(product.zinc_100g, nutritionGrams / 100, 1),
+        vitamin_k: scaleOrNull(product.vitamin_k_100g, nutritionGrams / 100, 1),
+        vitamin_b6: scaleOrNull(product.vitamin_b6_100g, nutritionGrams / 100, 2),
+        vitamin_b9: scaleOrNull(product.vitamin_b9_100g, nutritionGrams / 100),
+        vitamin_e: scaleOrNull(product.vitamin_e_100g, nutritionGrams / 100, 1),
       }
     : null;
 
