@@ -220,26 +220,33 @@ export async function searchByNutrient(
   return preferredResults.slice(0, limit);
 }
 
-export function scaleCiqual(food: CiqualFood, grams: number) {
+/** Scale a per-100 g value; unknown (null/undefined/NaN) stays null — never 0. */
+export function scaleOrNull(v: number | null | undefined, r: number, dec = 0): number | null {
+  if (v === null || v === undefined || !isFinite(Number(v))) return null;
+  const x = Number(v) * r;
+  return dec === 0 ? Math.round(x) : +x.toFixed(dec);
+}
+
+export function scaleCiqual(food: CiqualFood, grams: number): Record<string, any> {
   const r = amountToNutritionGrams(food.nom, grams) / 100;
   return {
     calories: Math.round(food.calories_100g * r),
     proteins: Math.round(food.proteines_100g * r),
     carbs: Math.round(food.glucides_100g * r),
     fats: Math.round(food.lipides_100g * r),
-    fibres: Math.round(food.fibres_100g * r),
-    calcium: Math.round(food.calcium_100g * r),
-    vitamin_d: +(food.vitamine_d_100g * r).toFixed(1),
-    magnesium: Math.round(food.magnesium_100g * r),
-    iron: +(food.fer_100g * r).toFixed(1),
-    omega3: +(food.omega3_total_100g * r).toFixed(1),
-    vitamin_b12: +(food.vitamine_b12_100g * r).toFixed(1),
-    phytoestrogens: +(food.phytoestrogenes_100mg * r).toFixed(1),
-    potassium: Math.round(food.potassium_100g * r),
-    zinc: +(food.zinc_100g * r).toFixed(1),
-    vitamin_k: +(food.vitamine_k_100g * r).toFixed(1),
-    vitamin_b6: +(food.vitamine_b6_100g * r).toFixed(2),
-    vitamin_b9: Math.round(food.vitamine_b9_100g * r),
-    vitamin_e: +(food.vitamine_e_100g * r).toFixed(1),
+    fibres: scaleOrNull(food.fibres_100g, r),
+    calcium: scaleOrNull(food.calcium_100g, r),
+    vitamin_d: scaleOrNull(food.vitamine_d_100g, r, 1),
+    magnesium: scaleOrNull(food.magnesium_100g, r),
+    iron: scaleOrNull(food.fer_100g, r, 1),
+    omega3: scaleOrNull(food.omega3_total_100g, r, 1),
+    vitamin_b12: scaleOrNull(food.vitamine_b12_100g, r, 1),
+    phytoestrogens: scaleOrNull(food.phytoestrogenes_100mg, r, 1),
+    potassium: scaleOrNull(food.potassium_100g, r),
+    zinc: scaleOrNull(food.zinc_100g, r, 1),
+    vitamin_k: scaleOrNull(food.vitamine_k_100g, r, 1),
+    vitamin_b6: scaleOrNull(food.vitamine_b6_100g, r, 2),
+    vitamin_b9: scaleOrNull(food.vitamine_b9_100g, r),
+    vitamin_e: scaleOrNull(food.vitamine_e_100g, r, 1),
   };
 }

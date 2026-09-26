@@ -3,29 +3,29 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface Props {
   scaled: {
-    calories: number;
-    proteins: number;
-    carbs: number;
-    fats: number;
-    fibres: number;
-    calcium: number;
-    vitamin_d: number;
-    magnesium: number;
-    iron: number;
-    omega3: number;
-    vitamin_b12: number;
-    phytoestrogens: number;
-    potassium?: number;
-    zinc?: number;
-    vitamin_k?: number;
-    vitamin_b6?: number;
-    vitamin_b9?: number;
-    vitamin_e?: number;
+    calories?: number | null;
+    proteins?: number | null;
+    carbs?: number | null;
+    fats?: number | null;
+    fibres?: number | null;
+    calcium?: number | null;
+    vitamin_d?: number | null;
+    magnesium?: number | null;
+    iron?: number | null;
+    omega3?: number | null;
+    vitamin_b12?: number | null;
+    phytoestrogens?: number | null;
+    potassium?: number | null;
+    zinc?: number | null;
+    vitamin_k?: number | null;
+    vitamin_b6?: number | null;
+    vitamin_b9?: number | null;
+    vitamin_e?: number | null;
   };
 }
 
 function fmt(v: number | null | undefined): string {
-  if (v === null || v === undefined || v === 0) return "N/A";
+  if (v === null || v === undefined || !isFinite(Number(v))) return "—";
   return String(v);
 }
 
@@ -42,8 +42,8 @@ function Section({ title, items, defaultOpen = true }: { title: string; items: {
           {items.map((item) => (
             <div key={item.label} className="flex justify-between text-xs">
               <span className="text-muted-foreground">{item.label}</span>
-              <span className={`font-medium ${item.value === "N/A" ? "text-muted-foreground/50" : "text-foreground"}`}>
-                {item.value}{item.value !== "N/A" ? ` ${item.unit}` : ""}
+              <span className={`font-medium ${item.value === "—" ? "text-muted-foreground/50" : "text-foreground"}`}>
+                {item.value}{item.value !== "—" ? ` ${item.unit}` : ""}
               </span>
             </div>
           ))}
