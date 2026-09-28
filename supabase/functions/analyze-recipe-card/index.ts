@@ -124,7 +124,12 @@ RÈGLES STRICTES:
   "name" (nom simple en français), "quantity" (nombre, null si non chiffré), "unit" ("g","ml","cl","piece","cas","cac", null si inconnu),
   "pantry" = true si l'ingrédient fait partie des "à prévoir chez vous" / non fourni dans le panier (huile, beurre, sel, poivre…).
 - N'INVENTE aucune quantité : si la fiche n'en donne pas, quantity = null.
-- "nutrition_per_portion" : recopie le tableau nutritionnel PAR PORTION s'il figure sur la fiche, sinon null pour chaque valeur.
+- Plusieurs photos peuvent être fournies (recto, verso…) : c'est UNE SEULE fiche, fusionne les informations.
+- TABLEAU NUTRITIONNEL : une fiche peut contenir plusieurs tableaux (plat complet, sauce, ingrédient isolé…). Tu dois identifier celui du PLAT COMPLET.
+  "nutrition_per_portion" = la colonne « par portion » / « par personne » DU PLAT COMPLET. Jamais la colonne « pour 100 g ». Null si absente.
+  "nutrition_per_100g" = la colonne « pour 100 g » DU PLAT COMPLET, null si absente.
+  "portion_weight_g" = le poids d'une portion écrit sur la fiche (ex. « 1 portion = 360 g »), null s'il n'est pas écrit. Ne le devine jamais.
+  "table_candidates" : si tu hésites entre plusieurs tableaux, liste-les TOUS ici (label = ce que le tableau décrit d'après la fiche, basis = "portion" ou "100g"), sinon [].
 
 Réponds STRICTEMENT en JSON:
 {
@@ -132,9 +137,13 @@ Réponds STRICTEMENT en JSON:
   "brand": string|null,
   "servings": number|null,
   "ingredients": [{"name": string, "quantity": number|null, "unit": string|null, "pantry": boolean}],
-  "nutrition_per_portion": {"calories": number|null, "proteins": number|null, "carbs": number|null, "sugars": number|null, "fats": number|null, "saturated_fats": number|null, "fibres": number|null, "salt": number|null}|null,
+  "nutrition_per_portion": NUTRI|null,
+  "nutrition_per_100g": NUTRI|null,
+  "portion_weight_g": number|null,
+  "table_candidates": [{"label": string, "basis": "portion"|"100g", "values": NUTRI}],
   "issue": null|"blurry"|"not_a_recipe"|"too_dark"
-}`;
+}
+où NUTRI = {"calories": number|null, "proteins": number|null, "carbs": number|null, "sugars": number|null, "fats": number|null, "saturated_fats": number|null, "fibres": number|null, "salt": number|null}`;
 
 export async function buildResult(supabase: any, parsed: any) {
   const servings = Math.max(1, Math.round(num(parsed?.servings) || 2));
@@ -186,7 +195,23 @@ export async function buildResult(supabase: any, parsed: any) {
     computed[key] = hasValue[key] ? round(totals[key] / servings, 3) : null;
   }
 
-  const table = parsed?.nutrition_per_portion || null;
+  // Priorité : par portion du plat complet > pour 100 g × poids réel écrit sur la fiche > rien
+  const MK = ["calories", "proteins", "carbs", "sugars", "fats", "saturated_fats", "fibres", "salt"];
+  const hasAny = (t: any) => !!t && MK.some((k) => num(t[k]) !== null);
+  const printedWeight = num(parsed?.portion_weight_g);
+  let table: any = null;
+  let tableBasis: "portion" | "100g_x_poids" | "100g_sans_poids" | null = null;
+  if (hasAny(parsed?.nutrition_per_portion)) { table = parsed.nutrition_per_portion; tableBasis = "portion"; }
+  else if (hasAny(parsed?.nutrition_per_100g)) {
+    if (printedWeight && printedWeight > 0) {
+      table = {};
+      for (const k of MK) { const v = num(parsed.nutrition_per_100g[k]); table[k] = v === null ? null : round(v * printedWeight / 100, 2); }
+      tableBasis = "100g_x_poids";
+    } else tableBasis = "100g_sans_poids";
+  }
+  const candidates = (Array.isArray(parsed?.table_candidates) ? parsed.table_candidates : [])
+    .filter((c: any) => c && hasAny(c.values))
+    .map((c: any) => ({ label: String(c.label || "Tableau"), basis: c.basis === "100g" ? "100g" : "portion", values: Object.fromEntries(MK.map((k) => [k, num(c.values[k])])) }));
   const measured: Record<string, number | null> = {};
   const MACRO_KEYS = ["calories", "proteins", "carbs", "sugars", "fats", "saturated_fats", "fibres", "salt"];
   let measuredAny = false;
@@ -203,7 +228,11 @@ export async function buildResult(supabase: any, parsed: any) {
     brand: parsed?.brand || null,
     servings,
     total_grams: round(totalGrams, 1),
-    portion_grams: round(totalGrams / servings, 1),
+    portion_grams: printedWeight && printedWeight > 0 ? printedWeight : (totalGrams > 0 ? round(totalGrams / servings, 1) : null),
+    portion_weight_printed: printedWeight && printedWeight > 0 ? printedWeight : null,
+    table_basis: tableBasis,
+    per_100g: tableBasis === "100g_sans_poids" ? Object.fromEntries(MK.map((k) => [k, num(parsed.nutrition_per_100g[k])])) : null,
+    table_candidates: candidates.length > 1 ? candidates : [],
     macros_source: measuredAny ? "etiquette" : "calcule",
     macros_per_portion: {
       calories: measuredAny ? measured.calories : computed.calories,
@@ -251,7 +280,7 @@ Deno.serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const dataUrls = list.slice(0, 2).map((i) => (i.startsWith("data:") ? i : `data:image/jpeg;base64,${i}`));
+    const dataUrls = list.slice(0, 4).map((i) => (i.startsWith("data:") ? i : `data:image/jpeg;base64,${i}`));
 
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -263,7 +292,7 @@ Deno.serve(async (req) => {
           {
             role: "user",
             content: [
-              { type: "text", text: "Lis cette fiche recette : nom, nombre de portions, ingrédients avec quantités, tableau nutritionnel s'il figure." },
+              { type: "text", text: "Lis cette fiche recette (toutes les photos = une seule fiche) : nom, nombre de portions, ingrédients avec quantités, tableau nutritionnel s'il figure." },
               ...dataUrls.map((url) => ({ type: "image_url", image_url: { url, detail: "high" } })),
             ],
           },
