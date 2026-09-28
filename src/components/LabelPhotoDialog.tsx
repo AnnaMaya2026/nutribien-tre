@@ -155,6 +155,11 @@ export default function LabelPhotoDialog({
     { name: string; quantity: number | null; unit: string | null; reason: string }[]
   >([]);
 
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [candidates, setCandidates] = useState<{ label: string; basis: string; values: Record<string, number | null> }[]>([]);
+  const [tableBasis, setTableBasis] = useState<string | null>(null);
+  const [per100, setPer100] = useState<Record<string, number | null> | null>(null);
+  const [guardChecked, setGuardChecked] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
   const [ignored, setIgnored] = useState<{ label: string; amount: number | null; unit: string | null }[]>([]);
   const [newKey, setNewKey] = useState("");
@@ -174,6 +179,7 @@ export default function LabelPhotoDialog({
     setMacros([]); setMicros([]);
     setServings("2"); setPortionsEaten("1"); setAddedFat(""); setAsFavorite(false);
     setManualIngredients([]);
+    setPhotos([]); setCandidates([]); setTableBasis(null); setPer100(null); setGuardChecked(false);
     setNewKey(""); setNewAmount(""); setNewUnit("mg"); setSaving(false);
   };
   const close = () => { reset(); onClose(); };
@@ -193,14 +199,27 @@ export default function LabelPhotoDialog({
     if (!file.type.startsWith("image/")) return toast.error("Merci de sélectionner une image.");
     if (file.size > 15 * 1024 * 1024) return toast.error("Image trop lourde (max 15 Mo).");
     try {
-      setStep("analyzing");
       const compressed = await fileToCompressedDataUrl(file);
+      if (isRecipe) {
+        setPhotos((p) => (p.length >= 4 ? p : [...p, compressed]));
+        return;
+      }
+      await analyze([compressed]);
+    } catch (e) {
+      console.error(e);
+      toast.error("Image illisible.");
+    }
+  };
+
+  const analyze = async (images: string[]) => {
+    try {
+      setStep("analyzing");
       const fn = isSupplement
         ? "analyze-supplement-label"
         : isRecipe
           ? "analyze-recipe-card"
           : "analyze-product-label";
-      const { data, error } = await supabase.functions.invoke(fn, { body: { image: compressed } });
+      const { data, error } = await supabase.functions.invoke(fn, { body: isRecipe ? { images } : { image: images[0] } });
       if (error) throw error;
 
       setNom(data?.product_name || data?.recipe_name || "");
@@ -256,6 +275,10 @@ export default function LabelPhotoDialog({
             };
           }),
         );
+        setCandidates(Array.isArray(data?.table_candidates) ? data.table_candidates : []);
+        setTableBasis(data?.table_basis || null);
+        setPer100(data?.per_100g || null);
+        setGuardChecked(false);
         setManualIngredients(Array.isArray(data?.needs_manual) ? data.needs_manual : []);
         setIgnored((data?.pantry_items || []).map((l: string) => ({ label: l, amount: null, unit: null })));
         if (data?.issue === "blurry") toast.error("Photo floue : vérifiez chaque valeur avant d'enregistrer.");
@@ -390,8 +413,48 @@ export default function LabelPhotoDialog({
     }
   };
 
+  const macroVal = (k: string) => numOrNull(macros.find((r) => r.key === k)?.amount ?? "");
+  const setMacroVal = (k: string, v: string) =>
+    setMacros((p) => p.map((x) => (x.key === k ? { ...x, amount: v, source: "manuel" } : x)));
+  const guardWarnings = (() => {
+    const w: string[] = [];
+    const kcal = macroVal("calories"), p = macroVal("proteins"), c = macroVal("carbs"), f = macroVal("fats");
+    if (kcal === null) w.push("Calories absentes : saisissez les kcal par portion.");
+    if (p !== null && c !== null && f !== null && kcal !== null && kcal > 0) {
+      const calc = p * 4 + c * 4 + f * 9;
+      const gap = Math.abs(calc - kcal) / kcal;
+      if (gap > 0.15) w.push(`Incohérence : les macros donnent ${Math.round(calc)} kcal, la fiche ${Math.round(kcal)} kcal (écart ${Math.round(gap * 100)} %).`);
+    }
+    const n = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const MEAT = /(canard|poulet|dinde|boeuf|veau|porc|agneau|jambon|lardon|saucisse|viande|steak|poisson|saumon|cabillaud|thon|crevette|merlu|colin|truite|lieu|dorade|bar |gambas|chorizo|magret|filet)/;
+    if (p !== null && p < 5 && MEAT.test(n)) w.push(`Invraisemblable : ${p} g de protéines pour un plat avec viande ou poisson. Vous avez peut-être le tableau d'un seul ingrédient ou la colonne « pour 100 g ».`);
+    if (kcal !== null && kcal > 0 && kcal < 200 && MEAT.test(n)) w.push(`${Math.round(kcal)} kcal pour une portion de plat complet paraît bas : vérifiez que c'est bien la colonne « par portion ».`);
+    if (tableBasis === "100g_sans_poids") w.push("La fiche ne donne que la colonne « pour 100 g » et pas le poids d'une portion : indiquez le poids de votre portion ci-dessus, puis appliquez le calcul.");
+    return w;
+  })();
+  const applyPer100 = () => {
+    const g = numOrNull(portion);
+    if (!per100 || g === null || g <= 0) return toast.error("Indiquez d'abord le poids d'une portion en grammes.");
+    setMacros((prev) => prev.map((x) => {
+      if (x.key === "sodium") { const s = per100.salt; return { ...x, amount: s == null ? "" : String(Math.round((s * g) / 100 / 2.54 * 1000) / 1000), source: "calcule" }; }
+      const v = per100[x.key];
+      return v === undefined ? x : { ...x, amount: v == null ? "" : String(Math.round(v * g) / 100), source: "calcule" };
+    }));
+    setTableBasis("100g_x_poids");
+  };
+  const applyCandidate = (c: { basis: string; values: Record<string, number | null> }) => {
+    if (c.basis === "100g") { setPer100(c.values); setTableBasis("100g_sans_poids"); toast.info("Tableau pour 100 g : indiquez le poids de la portion puis appliquez le calcul."); return; }
+    setMacros((prev) => prev.map((x) => {
+      if (x.key === "sodium") { const s = c.values.salt; return { ...x, amount: s == null ? "" : String(Math.round(s / 2.54 * 1000) / 1000), source: "calcule" }; }
+      const v = c.values[x.key];
+      return v === undefined ? x : { ...x, amount: v == null ? "" : String(v), source: "fiche" };
+    }));
+    setTableBasis("portion");
+  };
+
   const saveRecipe = async () => {
     if (!user) return toast.error("Connectez-vous pour enregistrer.");
+    if (!guardChecked) return toast.error("Cochez « J'ai vérifié les valeurs par portion » avant d'enregistrer.");
     if (!nom.trim()) return toast.error("Le nom de la recette est requis.");
     const mult = Number(portionsEaten) || 1;
     const fatG = numOrNull(addedFat) ?? 0;
@@ -497,18 +560,44 @@ export default function LabelPhotoDialog({
                     : "Photographiez le dos de l'emballage : le tableau nutritionnel et la liste d'ingrédients. Les macros sont reprises telles quelles ; les micronutriments sont estimés depuis les ingrédients. Tout reste modifiable avant enregistrement."}
               </p>
               <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => cameraRef.current?.click()} className="flex flex-col items-center gap-2 p-5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 min-h-[120px] justify-center shadow-md">
+                <button disabled={isRecipe && photos.length >= 4} onClick={() => cameraRef.current?.click()} className="flex flex-col items-center gap-2 p-5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 min-h-[120px] justify-center shadow-md">
                   <Camera className="w-8 h-8" /><span className="text-sm font-medium">Prendre une photo</span>
                 </button>
                 <button onClick={() => galleryRef.current?.click()} className="flex flex-col items-center gap-2 p-5 rounded-xl bg-muted hover:bg-muted/70 min-h-[120px] justify-center">
                   <ImageIcon className="w-8 h-8" /><span className="text-sm font-medium">Importer une image</span>
                 </button>
               </div>
+              {isRecipe && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">Pages photographiées : {photos.length} / 4</p>
+                  {photos.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {photos.map((ph, i) => (
+                        <div key={i} className="relative">
+                          <img src={ph} alt={`Page ${i + 1}`} className="w-full h-20 object-cover rounded-lg border border-border" />
+                          <button onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))} className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center" aria-label={`Supprimer la page ${i + 1}`}>
+                            <X className="w-4 h-4" />
+                          </button>
+                          <p className="text-xs text-center text-muted-foreground">Page {i + 1}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">Recto, puis verso. Une photo ratée : supprimez-la avec la croix et reprenez-la.</p>
+                  <button
+                    onClick={() => analyze(photos)}
+                    disabled={photos.length === 0}
+                    className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
+                  >
+                    Analyser {photos.length > 1 ? `les ${photos.length} pages ensemble` : "la fiche"}
+                  </button>
+                </div>
+              )}
               <button onClick={goManual} className="w-full text-sm text-muted-foreground underline py-2">
                 Saisir à la main plutôt
               </button>
-              <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
-              <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
+              <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ""; }} />
+              <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ""; }} />
             </>
           )}
 
@@ -744,6 +833,50 @@ export default function LabelPhotoDialog({
               )}
 
               {isRecipe && (
+                <div className="rounded-xl border-2 border-primary p-3 space-y-3">
+                  <p className="text-sm font-semibold text-foreground">Vérification avant enregistrement — pour UNE portion</p>
+                  {candidates.length > 1 && (
+                    <div className="space-y-1">
+                      <p className="text-sm text-foreground">Plusieurs tableaux lus sur la fiche : lequel est celui du plat complet ?</p>
+                      {candidates.map((c, i) => (
+                        <button key={i} onClick={() => applyCandidate(c)} className="w-full text-left p-2 rounded-lg bg-muted text-sm">
+                          {c.label} ({c.basis === "100g" ? "pour 100 g" : "par portion"}) — {c.values.calories ?? "—"} kcal, {c.values.proteins ?? "—"} g prot.
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    {[["calories", "kcal"], ["proteins", "Protéines (g)"], ["carbs", "Glucides (g)"], ["fats", "Lipides (g)"]].map(([k, l]) => (
+                      <div key={k}>
+                        <label className="text-xs font-medium text-muted-foreground">{l}</label>
+                        <Input value={macros.find((r) => r.key === k)?.amount ?? ""} onChange={(e) => setMacroVal(k, e.target.value)} inputMode="decimal" placeholder="—" />
+                      </div>
+                    ))}
+                    <div className="col-span-2">
+                      <label className="text-xs font-medium text-muted-foreground">Poids de portion retenu (g)</label>
+                      <Input value={portion} onChange={(e) => setPortion(e.target.value)} inputMode="decimal" placeholder="À indiquer" />
+                    </div>
+                  </div>
+                  {tableBasis === "100g_sans_poids" && per100 && (
+                    <button onClick={applyPer100} className="w-full py-2 rounded-lg bg-muted text-sm font-medium">
+                      Calculer depuis « pour 100 g » × poids de portion
+                    </button>
+                  )}
+                  {guardWarnings.length > 0 ? (
+                    <div className="rounded-lg bg-destructive/10 border border-destructive p-2 space-y-1">
+                      {guardWarnings.map((w, i) => <p key={i} className="text-sm text-destructive">⚠️ {w}</p>)}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">✓ Les kcal correspondent aux macros (écart ≤ 15 %).</p>
+                  )}
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <input type="checkbox" checked={guardChecked} onChange={(e) => setGuardChecked(e.target.checked)} className="w-4 h-4" />
+                    J'ai vérifié les valeurs par portion
+                  </label>
+                </div>
+              )}
+
+              {isRecipe && (
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={asFavorite} onChange={(e) => setAsFavorite(e.target.checked)} className="w-4 h-4" />
                   Enregistrer aussi cette recette dans mes favoris
@@ -753,12 +886,12 @@ export default function LabelPhotoDialog({
 
 
               <div className="flex gap-2 pt-2">
-                <button onClick={() => setStep("capture")} className="flex-1 py-3 rounded-xl bg-muted text-sm font-medium">
+                <button onClick={() => { setPhotos([]); setStep("capture"); }} className="flex-1 py-3 rounded-xl bg-muted text-sm font-medium">
                   <Pencil className="w-4 h-4 inline mr-1" /> Reprendre la photo
                 </button>
                 <button
                   onClick={isSupplement ? saveSupplement : isRecipe ? saveRecipe : saveProduct}
-                  disabled={saving}
+                  disabled={saving || (isRecipe && !guardChecked)}
                   className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-60"
                 >
                   {saving ? "Enregistrement…" : "Confirmer et enregistrer"}
