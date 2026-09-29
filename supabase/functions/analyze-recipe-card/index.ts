@@ -6,33 +6,18 @@
 // les ingrédients. Tout est divisé par le nombre de portions.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { matchCiqual } from "../_shared/ciqualMatch.ts";
+import { norm, toGrams } from "../_shared/portionWeights.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Table de poids standards — EXACTEMENT ces valeurs, aucune autre.
-// Tout ingrédient en unités absent de cette table demande une saisie manuelle.
-const STANDARD_WEIGHTS: { keywords: string[]; grams: number; label: string }[] = [
-  { keywords: ["carotte"], grams: 125, label: "carotte moyenne" },
-  { keywords: ["oignon"], grams: 110, label: "oignon moyen" },
-  { keywords: ["echalote", "échalote"], grams: 25, label: "échalote" },
-  { keywords: ["ail", "gousse d'ail", "gousse ail"], grams: 4, label: "gousse d'ail" },
-  { keywords: ["courgette"], grams: 250, label: "courgette" },
-  { keywords: ["poivron"], grams: 150, label: "poivron" },
-  { keywords: ["tomate"], grams: 120, label: "tomate" },
-  { keywords: ["pomme de terre"], grams: 150, label: "pomme de terre" },
-  { keywords: ["citron"], grams: 100, label: "citron" },
-  { keywords: ["oeuf", "œuf"], grams: 50, label: "œuf (sans coquille)" },
-];
 
-// Cuillères : uniquement les valeurs fournies
-const SPOON_WEIGHTS: { unit: string; food: RegExp; grams: number; label: string }[] = [
-  { unit: "cas", food: /huile/i, grams: 10, label: "cuillère à soupe d'huile" },
-  { unit: "cac", food: /huile/i, grams: 5, label: "cuillère à café d'huile" },
-  { unit: "cas", food: /beurre/i, grams: 15, label: "cuillère à soupe de beurre" },
-];
+
+
+
+
 
 // Ingrédients « chez soi » non quantifiés : jamais estimés
 const PANTRY = /^(huile|sel|poivre|beurre|vinaigre|epices?|épices?|eau)\b/i;
@@ -87,33 +72,8 @@ function num(v: unknown): number | null {
 const round = (v: number | null, d = 2) =>
   v === null ? null : Math.round(v * 10 ** d) / 10 ** d;
 
-const norm = (s: string) =>
-  s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-/** Convertit une quantité d'ingrédient en grammes, ou null si inconnue. */
-export function toGrams(
-  name: string,
-  quantity: number | null,
-  unit: string | null,
-): { grams: number | null; basis: string } {
-  const u = (unit || "").toLowerCase().trim();
-  if (quantity === null) return { grams: null, basis: "quantité absente" };
-  if (u === "g" || u === "gr" || u === "gramme" || u === "grammes") return { grams: quantity, basis: "grammes lus" };
-  if (u === "ml" || u === "cl" || u === "l") {
-    const ml = u === "cl" ? quantity * 10 : u === "l" ? quantity * 1000 : quantity;
-    return { grams: ml, basis: "volume lu (1 ml ≈ 1 g)" };
-  }
-  if (u === "cas" || u === "cac" || u === "cuillere" || u === "cuillère") {
-    const sp = SPOON_WEIGHTS.find((s) => s.unit === (u === "cas" || u === "cuillere" || u === "cuillère" ? "cas" : "cac") && s.food.test(name));
-    if (sp) return { grams: quantity * sp.grams, basis: sp.label };
-    return { grams: null, basis: "cuillère non listée" };
-  }
-  // Unités : table de poids standards
-  const n = norm(name);
-  const hit = STANDARD_WEIGHTS.find((w) => w.keywords.some((k) => n.includes(norm(k))));
-  if (hit) return { grams: quantity * hit.grams, basis: `${hit.label} = ${hit.grams} g` };
-  return { grams: null, basis: "poids standard inconnu" };
-}
+
 
 const SYSTEM_PROMPT = `Tu lis une FICHE RECETTE de box repas (Quitoque, HelloFresh…), pas une étiquette.
 
@@ -234,6 +194,14 @@ export async function buildResult(supabase: any, parsed: any) {
     per_100g: tableBasis === "100g_sans_poids" ? Object.fromEntries(MK.map((k) => [k, num(parsed.nutrition_per_100g[k])])) : null,
     table_candidates: candidates.length > 1 ? candidates : [],
     macros_source: measuredAny ? "etiquette" : "calcule",
+    // Quand les macros sont calculées depuis les ingrédients, tout ingrédient dont le
+    // poids est inconnu a été écarté : le total est PARTIEL, donc sous-estimé. Sans ce
+    // drapeau le client affichait un total incomplet comme s'il était complet.
+    macros_complete: measuredAny || needsManual.length === 0,
+    micros_complete: needsManual.length === 0,
+    // Renvoyé pour permettre un recalcul avec des poids saisis à la main, sans
+    // repayer une lecture d'image.
+    parsed_echo: parsed,
     macros_per_portion: {
       calories: measuredAny ? measured.calories : computed.calories,
       proteins: measuredAny ? measured.proteins : computed.proteins,
@@ -272,6 +240,38 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
+
+    // Recalcul sans nouvelle lecture d'image : le client renvoie l'analyse déjà
+    // obtenue (parsed_echo) accompagnée des poids qu'il a saisis pour les
+    // ingrédients absents de la table de poids standards.
+    if (body?.parsed && typeof body.parsed === "object") {
+      const overrides = Array.isArray(body?.ingredient_overrides) ? body.ingredient_overrides : [];
+      const parsedRe = JSON.parse(JSON.stringify(body.parsed));
+      if (Array.isArray(parsedRe.ingredients)) {
+        for (const o of overrides) {
+          const g = num(o?.grams);
+          if (g === null || g <= 0) continue;
+          const target = norm(String(o?.name || ""));
+          if (!target) continue;
+          for (const ing of parsedRe.ingredients) {
+            if (norm(String(ing?.name || "")) === target) {
+              ing.quantity = g;
+              ing.unit = "g";
+              ing.pantry = false;
+            }
+          }
+        }
+      }
+      const supabaseRe = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      const recomputed = await buildResult(supabaseRe, parsedRe);
+      return new Response(JSON.stringify(recomputed), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const list: string[] = Array.isArray(body?.images) && body.images.length
       ? body.images
       : (typeof body?.image === "string" && body.image ? [body.image] : []);

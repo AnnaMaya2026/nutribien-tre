@@ -154,6 +154,11 @@ export default function LabelPhotoDialog({
   const [manualIngredients, setManualIngredients] = useState<
     { name: string; quantity: number | null; unit: string | null; reason: string }[]
   >([]);
+  // Analyse brute renvoyée par la fonction, pour recalculer sans relire la photo
+  const [parsedEcho, setParsedEcho] = useState<any>(null);
+  // false = des ingrédients ont été écartés du calcul, les macros sont sous-estimées
+  const [macrosComplete, setMacrosComplete] = useState(true);
+  const [manualGrams, setManualGrams] = useState<Record<string, string>>({});
 
   const [photos, setPhotos] = useState<string[]>([]);
   const [candidates, setCandidates] = useState<{ label: string; basis: string; values: Record<string, number | null> }[]>([]);
@@ -211,6 +216,51 @@ export default function LabelPhotoDialog({
     }
   };
 
+  const applyRecipe = (data: any) => {
+      const mp = data?.macros_per_portion || {};
+      const mi = data?.micros_per_portion || {};
+      const macroSrc = (data?.macros_source === "etiquette" ? "fiche" : "ingredients") as Source;
+      setServings(String(data?.servings || 2));
+      setPortionsEaten("1");
+      setPortion(data?.portion_grams ? String(data.portion_grams) : "");
+      setMacros(
+        MACRO_FIELDS.map((f) => {
+          const v = mp[f.key];
+          return {
+            key: f.key,
+            label: f.label,
+            amount: v === null || v === undefined ? "" : String(v),
+            unit: f.unit,
+            source: (f.key === "sodium" ? "calcule" : f.key === "sugars" || f.key === "saturated_fats" ? "fiche" : macroSrc) as Source,
+          };
+        }),
+      );
+      setMicros(
+        MICRO_FIELDS.map((f) => {
+          const v = mi[f.key];
+          return {
+            key: f.key,
+            label: f.label,
+            amount: v === null || v === undefined ? "" : String(v),
+            unit: f.unit,
+            source: "ingredients" as Source,
+          };
+        }),
+      );
+      setCandidates(Array.isArray(data?.table_candidates) ? data.table_candidates : []);
+      setTableBasis(data?.table_basis || null);
+      setPer100(data?.per_100g || null);
+      setGuardChecked(false);
+      setManualIngredients(Array.isArray(data?.needs_manual) ? data.needs_manual : []);
+      setParsedEcho(data?.parsed_echo ?? null);
+      setMacrosComplete(data?.macros_complete !== false);
+      setManualGrams({});
+      setIgnored((data?.pantry_items || []).map((l: string) => ({ label: l, amount: null, unit: null })));
+      if (data?.issue === "blurry") toast.error("Photo floue : vérifiez chaque valeur avant d'enregistrer.");
+      else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisissez les valeurs à la main.");
+      else toast.success(`Fiche lue (${data?.servings || 2} portions) — vérifiez chaque valeur.`);
+  };
+
   const analyze = async (images: string[]) => {
     try {
       setStep("analyzing");
@@ -245,45 +295,7 @@ export default function LabelPhotoDialog({
         else if (nutrients.length === 0) toast.error("Aucun nutriment lu. Ajoutez-les manuellement.");
         else toast.success(`${nutrients.length} nutriment(s) lus — vérifiez chaque ligne.`);
       } else if (isRecipe) {
-        const mp = data?.macros_per_portion || {};
-        const mi = data?.micros_per_portion || {};
-        const macroSrc = (data?.macros_source === "etiquette" ? "fiche" : "ingredients") as Source;
-        setServings(String(data?.servings || 2));
-        setPortionsEaten("1");
-        setPortion(data?.portion_grams ? String(data.portion_grams) : "");
-        setMacros(
-          MACRO_FIELDS.map((f) => {
-            const v = mp[f.key];
-            return {
-              key: f.key,
-              label: f.label,
-              amount: v === null || v === undefined ? "" : String(v),
-              unit: f.unit,
-              source: (f.key === "sodium" ? "calcule" : f.key === "sugars" || f.key === "saturated_fats" ? "fiche" : macroSrc) as Source,
-            };
-          }),
-        );
-        setMicros(
-          MICRO_FIELDS.map((f) => {
-            const v = mi[f.key];
-            return {
-              key: f.key,
-              label: f.label,
-              amount: v === null || v === undefined ? "" : String(v),
-              unit: f.unit,
-              source: "ingredients" as Source,
-            };
-          }),
-        );
-        setCandidates(Array.isArray(data?.table_candidates) ? data.table_candidates : []);
-        setTableBasis(data?.table_basis || null);
-        setPer100(data?.per_100g || null);
-        setGuardChecked(false);
-        setManualIngredients(Array.isArray(data?.needs_manual) ? data.needs_manual : []);
-        setIgnored((data?.pantry_items || []).map((l: string) => ({ label: l, amount: null, unit: null })));
-        if (data?.issue === "blurry") toast.error("Photo floue : vérifiez chaque valeur avant d'enregistrer.");
-        else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisissez les valeurs à la main.");
-        else toast.success(`Fiche lue (${data?.servings || 2} portions) — vérifiez chaque valeur.`);
+        applyRecipe(data);
       } else {
         const mp = data?.measured?.per_portion || {};
         const est = data?.estimated_micros?.per_portion || {};
@@ -416,8 +428,39 @@ export default function LabelPhotoDialog({
   const macroVal = (k: string) => numOrNull(macros.find((r) => r.key === k)?.amount ?? "");
   const setMacroVal = (k: string, v: string) =>
     setMacros((p) => p.map((x) => (x.key === k ? { ...x, amount: v, source: "manuel" } : x)));
+  const recompute = async () => {
+    if (!parsedEcho) return toast.error("Reprenez la photo : l'analyse d'origine n'est plus disponible.");
+    const overrides = manualIngredients
+      .map((m) => ({ name: m.name, grams: numOrNull(manualGrams[m.name] ?? "") }))
+      .filter((o) => o.grams !== null && o.grams > 0);
+    if (!overrides.length) return toast.error("Indiquez au moins un poids en grammes.");
+    try {
+      setStep("analyzing");
+      const { data, error } = await supabase.functions.invoke("analyze-recipe-card", {
+        body: { parsed: parsedEcho, ingredient_overrides: overrides },
+      });
+      if (error) throw error;
+      applyRecipe(data);
+      setStep("review");
+      toast.success("Valeurs recalculées avec les poids saisis.");
+    } catch (e) {
+      console.error(e);
+      setStep("review");
+      toast.error("Recalcul impossible. Corrigez les valeurs à la main.");
+    }
+  };
+
   const guardWarnings = (() => {
     const w: string[] = [];
+    if (!macrosComplete && manualIngredients.length > 0) {
+      const names = manualIngredients.map((m) => m.name).join(", ");
+      const plural = manualIngredients.length > 1;
+      w.push(
+        `Valeurs INCOMPLÈTES : ${manualIngredients.length} ingrédient${plural ? "s" : ""} sans poids connu (${names}) ` +
+          `${plural ? "ont" : "a"} été exclu${plural ? "s" : ""} du calcul. Les valeurs ci-dessous sont donc trop basses. ` +
+          `Saisissez leur poids puis recalculez, ou corrigez les macros à la main.`,
+      );
+    }
     const kcal = macroVal("calories"), p = macroVal("proteins"), c = macroVal("carbs"), f = macroVal("fats");
     if (kcal === null) w.push("Calories absentes : saisissez les kcal par portion.");
     if (p !== null && c !== null && f !== null && kcal !== null && kcal > 0) {
@@ -815,20 +858,38 @@ export default function LabelPhotoDialog({
               )}
 
               {isRecipe && manualIngredients.length > 0 && (
-                <div className="rounded-lg border border-border p-3 text-xs">
-                  <p className="font-medium mb-1 text-foreground">Ingrédients non comptés — à saisir à la main</p>
-                  <p className="text-muted-foreground mb-2">
-                    Leur poids n'est pas connu : ils ne sont PAS inclus dans les valeurs ci-dessus. Ajoutez-les
-                    séparément depuis « Ajouter un aliment » si vous voulez les compter.
+                <div className="rounded-lg border-2 border-destructive p-3 text-xs space-y-2">
+                  <p className="font-medium text-destructive">
+                    {manualIngredients.length} ingrédient{manualIngredients.length > 1 ? "s" : ""} exclu
+                    {manualIngredients.length > 1 ? "s" : ""} du calcul — poids inconnu
                   </p>
-                  <ul className="space-y-1 text-muted-foreground">
+                  <p className="text-muted-foreground">
+                    Leur poids n'est pas dans la table de référence, ils ne sont donc PAS comptés dans les valeurs
+                    ci-dessous. Indiquez leur poids en grammes puis recalculez.
+                  </p>
+                  <div className="space-y-2">
                     {manualIngredients.map((m, i) => (
-                      <li key={i}>
-                        • {m.name}
-                        {m.quantity !== null ? ` — ${m.quantity} ${m.unit || ""}` : ""} ({m.reason})
-                      </li>
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="flex-1 text-foreground">
+                          {m.name}
+                          {m.quantity !== null ? ` — ${m.quantity} ${m.unit || ""}` : ""}
+                        </span>
+                        <Input
+                          className="w-24"
+                          inputMode="decimal"
+                          placeholder="g"
+                          value={manualGrams[m.name] ?? ""}
+                          onChange={(e) => setManualGrams((p) => ({ ...p, [m.name]: e.target.value }))}
+                        />
+                      </div>
                     ))}
-                  </ul>
+                  </div>
+                  <button onClick={recompute} className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium">
+                    Recalculer avec ces poids
+                  </button>
+                  <p className="text-muted-foreground">
+                    Vous pouvez aussi les ajouter séparément depuis « Ajouter un aliment ».
+                  </p>
                 </div>
               )}
 
