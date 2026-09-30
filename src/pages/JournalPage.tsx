@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import { searchCiqual, scaleCiqual, scaleOrNull, CiqualFood } from "@/lib/ciqual";
-import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil, Camera, ClipboardList } from "lucide-react";
+import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil, Camera } from "lucide-react";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
 import DateSelector from "@/components/DateSelector";
 import BarcodeScanner from "@/components/BarcodeScanner";
@@ -23,6 +23,7 @@ import { calculateMealTargets } from "@/utils/mealTargetsCalculator";
 import { calculateCalorieGoal, calculateProteinGoal, calculateCarbsGoal, calculateFatsGoal } from "@/lib/calorieGoal";
 import MealProgressBlock from "@/components/MealProgressBlock";
 import LabelPhotoDialog from "@/components/LabelPhotoDialog";
+import MealPhotoDialog from "@/components/MealPhotoDialog";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -47,6 +48,8 @@ export default function JournalPage() {
   const [mealType, setMealType] = useState("dejeuner");
   const [labelDialogOpen, setLabelDialogOpen] = useState(false);
   const [recipeDialogOpen, setRecipeDialogOpen] = useState(false);
+  const [photoChoiceOpen, setPhotoChoiceOpen] = useState(false);
+  const [mealPhotoOpen, setMealPhotoOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({
     "petit-dejeuner": false, dejeuner: false, diner: false, collation: false,
@@ -349,20 +352,12 @@ export default function JournalPage() {
             isPending={addLog.isPending}
           />
           <button
-            onClick={() => setLabelDialogOpen(true)}
-            aria-label="Photographier une étiquette"
-            title="Photographier une étiquette"
-            className="px-3 py-3 bg-card border border-border rounded-xl flex items-center justify-center"
+            onClick={() => setPhotoChoiceOpen(true)}
+            aria-label="Ajouter par photo"
+            className="px-3 py-3 bg-card border border-border rounded-xl flex items-center justify-center gap-1.5"
           >
             <Camera className="w-4 h-4 text-foreground" />
-          </button>
-          <button
-            onClick={() => setRecipeDialogOpen(true)}
-            aria-label="Photographier une fiche recette"
-            title="Photographier une fiche recette (box repas)"
-            className="px-3 py-3 bg-card border border-border rounded-xl flex items-center justify-center"
-          >
-            <ClipboardList className="w-4 h-4 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Photo</span>
           </button>
 
         </div>
@@ -897,6 +892,27 @@ export default function JournalPage() {
         mode="recipe"
         defaultMealType={mealType}
       />
+      <MealPhotoDialog open={mealPhotoOpen} onClose={() => setMealPhotoOpen(false)} />
+      {photoChoiceOpen && (
+        <div className="fixed inset-0 z-[60] bg-foreground/50 flex items-end sm:items-center justify-center" onClick={() => setPhotoChoiceOpen(false)}>
+          <div className="bg-background w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-4 pb-[calc(96px+env(safe-area-inset-bottom))] sm:pb-4 space-y-2" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-base font-bold text-foreground">Que voulez-vous photographier ?</h2>
+              <button onClick={() => setPhotoChoiceOpen(false)} aria-label="Fermer" className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center"><X className="w-5 h-5" /></button>
+            </div>
+            {[
+              { t: "Mon assiette", d: "un plat que j'ai cuisiné", go: () => setMealPhotoOpen(true) },
+              { t: "Une étiquette", d: "plat préparé, paquet, boîte", go: () => setLabelDialogOpen(true) },
+              { t: "Une fiche recette", d: "box repas (Quitoque, HelloFresh…)", go: () => setRecipeDialogOpen(true) },
+            ].map((o) => (
+              <button key={o.t} onClick={() => { setPhotoChoiceOpen(false); o.go(); }} className="w-full text-left p-3 rounded-xl bg-muted hover:bg-muted/70">
+                <p className="text-sm font-semibold text-foreground">{o.t}</p>
+                <p className="text-sm text-muted-foreground">{o.d}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   );
