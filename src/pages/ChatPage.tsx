@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Send, User, Loader2, Volume2, Pause, Mic, MicOff, Clock, Trash2, Save, ClipboardList, Camera } from "lucide-react";
+import { Send, User, Loader2, Volume2, Pause, Mic, MicOff, Clock, Trash2, Save, ClipboardList, Refrigerator } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
@@ -620,7 +620,7 @@ export default function ChatPage() {
               title="Photo de mon frigo / placard"
               aria-label="Photo de mon frigo ou placard"
             >
-              <Camera className="w-6 h-6" />
+              <Refrigerator className="w-6 h-6" />
             </button>
             <span className="text-[10px] text-muted-foreground font-medium">Frigo</span>
           </div>
