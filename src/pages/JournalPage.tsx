@@ -32,9 +32,22 @@ const MEAL_TYPES = [
   { value: "collation", label: "☕ Collation" },
 ];
 
+const MEAL_ARTICLE: Record<string, string> = {
+  "petit-dejeuner": "le petit-déjeuner",
+  dejeuner: "le déjeuner",
+  diner: "le dîner",
+  collation: "la collation",
+};
+
 export default function JournalPage() {
   const { selectedDateStr, isToday, isFuture } = useSelectedDate();
   const { logs, addLog, updateLog, deleteLog } = useFoodLogs(selectedDateStr);
+  const yesterdayStr = (() => {
+    const [y, mo, d] = selectedDateStr.split("-").map(Number);
+    const dt = new Date(y, mo - 1, d - 1);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+  })();
+  const { logs: yesterdayLogs } = useFoodLogs(yesterdayStr);
   const { favorites, saveFavorite, deleteFavorite } = useFavoriteMeals();
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -245,12 +258,11 @@ export default function JournalPage() {
     );
   };
 
-  const handleAddFavoriteToJournal = (destMeal: string) => {
-    if (!addFavTarget || !user) return;
-    const fav = favorites.find((f) => f.id === addFavTarget.favoriteId);
-    if (!fav) return;
-    fav.items.forEach((item) => {
+  // Shared: add a list of items to a meal of the selected day (used by favorites and "repeat yesterday").
+  const addItemsToMeal = (items: any[], destMeal: string, extra?: (item: any) => Record<string, any>) => {
+    items.forEach((item) => {
       addLog.mutate({
+        ...(extra ? extra(item) : {}),
         food_name: item.food_name,
         portion_size: item.portion_size,
         calories: item.calories,
@@ -272,12 +284,30 @@ export default function JournalPage() {
         vitamin_b9: (item as any).vitamin_b9 ?? null,
         vitamin_e: (item as any).vitamin_e ?? null,
         meal_type: destMeal,
-      });
+      } as any);
     });
     const label = MEAL_TYPES.find((m) => m.value === destMeal)?.label || destMeal;
-    toast.success(`${fav.items.length} aliment(s) ajouté(s) à ${label} ✓`);
+    toast.success(`${items.length} aliment(s) ajouté(s) à ${label} ✓`);
     setExpandedMeals((prev) => ({ ...prev, [destMeal]: true }));
+  };
+
+  const handleAddFavoriteToJournal = (destMeal: string) => {
+    if (!addFavTarget || !user) return;
+    const fav = favorites.find((f) => f.id === addFavTarget.favoriteId);
+    if (!fav) return;
+    addItemsToMeal(fav.items, destMeal);
     setAddFavTarget(null);
+  };
+
+  // Copy every column of yesterday's rows (micros, "estimé" marker, salt, brand...) except row metadata.
+  const handleRepeatYesterday = (mealValue: string) => {
+    if (!user) return;
+    const items = yesterdayLogs.filter((l) => l.meal_type === mealValue);
+    if (items.length === 0) return;
+    addItemsToMeal(items, mealValue, (row) => {
+      const { id, user_id, logged_at, created_at, updated_at, meal_type, ...rest } = row;
+      return rest;
+    });
   };
 
   const openSaveFavModal = (mealValue: string) => {
@@ -309,7 +339,7 @@ export default function JournalPage() {
   const mealTargets = calculateMealTargets(dailyCalories, dailyProteins, dailyCarbs, dailyFats);
   const targetByMeal = Object.fromEntries(mealTargets.map((t) => [t.key, t]));
 
-  const hasAnyLogs = logs.length > 0;
+  const hasAnyLogs = logs.length > 0 || (isToday && yesterdayLogs.length > 0);
 
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
@@ -529,14 +559,7 @@ export default function JournalPage() {
                 </button>
                 <div className="flex items-center gap-2">
                   {meal.items.length > 0 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); openSaveFavModal(meal.value); }}
-                      className="text-muted-foreground hover:text-yellow-500 transition-colors"
-                      title="Sauvegarder en favori"
-                    >
-                      <Star className="w-4 h-4" />
-                    </button>
-                  )}
+
                   <span className="text-xs font-semibold text-primary-foreground bg-primary/20 px-2.5 py-1 rounded-full">
                     {Math.round(meal.items.reduce((s, l) => s + (l.calories || 0), 0))} kcal · {Math.round(meal.items.reduce((s, l) => s + (l.proteins || 0), 0))}P · {Math.round(meal.items.reduce((s, l) => s + (l.carbs || 0), 0))}G · {Math.round(meal.items.reduce((s, l) => s + (l.fats || 0), 0))}L
                   </span>
@@ -545,6 +568,28 @@ export default function JournalPage() {
                   </button>
                 </div>
               </div>
+              {meal.items.length > 0 && (
+                <div className="px-4 pb-2 -mt-1">
+                  <button
+                    onClick={() => openSaveFavModal(meal.value)}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground border border-border rounded-full px-3 py-1 hover:bg-muted transition-colors"
+                  >
+                    <Star className="w-4 h-4" />
+                    Enregistrer comme favori
+                  </button>
+                </div>
+              )}
+              {isToday && meal.items.length === 0 && yesterdayLogs.some((l) => l.meal_type === meal.value) && (
+                <div className="px-4 pb-3 -mt-1">
+                  <button
+                    onClick={() => handleRepeatYesterday(meal.value)}
+                    disabled={addLog.isPending}
+                    className="w-full inline-flex items-center justify-center gap-2 text-sm font-semibold bg-primary text-primary-foreground rounded-xl px-3 py-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+                  >
+                    ↻ Reprendre {MEAL_ARTICLE[meal.value]} d'hier
+                  </button>
+                </div>
+              )}
               {expandedMeals[meal.value] && targetByMeal[meal.value] && (
                 <MealProgressBlock
                   target={targetByMeal[meal.value]}
