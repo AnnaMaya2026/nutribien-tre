@@ -558,8 +558,6 @@ export default function JournalPage() {
                   </span>
                 </button>
                 <div className="flex items-center gap-2">
-                  {meal.items.length > 0 && (
-
                   <span className="text-xs font-semibold text-primary-foreground bg-primary/20 px-2.5 py-1 rounded-full">
                     {Math.round(meal.items.reduce((s, l) => s + (l.calories || 0), 0))} kcal · {Math.round(meal.items.reduce((s, l) => s + (l.proteins || 0), 0))}P · {Math.round(meal.items.reduce((s, l) => s + (l.carbs || 0), 0))}G · {Math.round(meal.items.reduce((s, l) => s + (l.fats || 0), 0))}L
                   </span>
