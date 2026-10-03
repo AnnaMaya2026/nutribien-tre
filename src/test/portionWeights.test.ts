@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { STANDARD_WEIGHTS, matchesKeyword, norm, toGrams } from "../../supabase/functions/_shared/portionWeights";
+import { isIgnorableHerb, STANDARD_WEIGHTS, matchesKeyword, norm, toGrams } from "../../supabase/functions/_shared/portionWeights";
 
 /**
  * Ces tests protègent la conversion « 2 cuisses de canard » → grammes.
@@ -60,5 +60,18 @@ describe("toGrams", () => {
   it("refuse d'estimer ce qu'elle ne connaît pas", () => {
     expect(toGrams("riz basmati", 1, "piece").grams).toBeNull();
     expect(toGrams("carotte", null, "piece").grams).toBeNull();
+  });
+});
+
+describe("fiche Quitoque suprême de poulet", () => {
+  it("« Suprême de poulet » × 2 pièces donne 300 g", () => {
+    expect(toGrams("Suprêmes de poulet", 2, "piece").grams).toBe(300);
+    expect(toGrams("suprême de volaille", 1, "piece").grams).toBe(150);
+  });
+  it("le romarin « qq brins » est ignoré", () => {
+    expect(isIgnorableHerb("romarin", null, "qq brins")).toBe(true);
+    expect(isIgnorableHerb("Romarin", 2, "brins")).toBe(true);
+    expect(isIgnorableHerb("persil", 10, "g")).toBe(false);
+    expect(isIgnorableHerb("topinambours", 300, "g")).toBe(false);
   });
 });

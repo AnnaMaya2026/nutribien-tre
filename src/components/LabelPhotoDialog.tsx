@@ -231,7 +231,9 @@ export default function LabelPhotoDialog({
             label: f.label,
             amount: v === null || v === undefined ? "" : String(v),
             unit: f.unit,
-            source: (f.key === "sodium" ? "calcule" : f.key === "sugars" || f.key === "saturated_fats" ? "fiche" : macroSrc) as Source,
+            source: (f.key === "sodium" ? "calcule" : f.key === "sugars" || f.key === "saturated_fats" ? "fiche"
+              : data?.macro_sources?.[f.key] === "etiquette" ? "fiche"
+              : data?.macro_sources?.[f.key] === "calcule" ? "ingredients" : macroSrc) as Source,
           };
         }),
       );

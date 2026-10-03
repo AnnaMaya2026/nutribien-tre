@@ -6,7 +6,7 @@
 // les ingrédients. Tout est divisé par le nombre de portions.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { matchCiqual } from "../_shared/ciqualMatch.ts";
-import { norm, toGrams } from "../_shared/portionWeights.ts";
+import { isIgnorableHerb, norm, toGrams } from "../_shared/portionWeights.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -124,6 +124,7 @@ export async function buildResult(supabase: any, parsed: any) {
     const isPantry = ing?.pantry === true || PANTRY.test(norm(name));
     const quantity = num(ing?.quantity);
     if (isPantry && quantity === null) { pantryItems.push(name); continue; }
+    if (isIgnorableHerb(name, quantity, ing?.unit ?? null)) { pantryItems.push(name); continue; }
 
     const { grams, basis } = toGrams(name, quantity, ing?.unit ?? null);
     if (grams === null || grams <= 0) {
@@ -197,19 +198,24 @@ export async function buildResult(supabase: any, parsed: any) {
     // Quand les macros sont calculées depuis les ingrédients, tout ingrédient dont le
     // poids est inconnu a été écarté : le total est PARTIEL, donc sous-estimé. Sans ce
     // drapeau le client affichait un total incomplet comme s'il était complet.
-    macros_complete: measuredAny || needsManual.length === 0,
+    macros_complete: needsManual.length === 0 || ["calories", "proteins", "carbs", "fats"].every((k) => measured[k] !== null),
     micros_complete: needsManual.length === 0,
     // Renvoyé pour permettre un recalcul avec des poids saisis à la main, sans
     // repayer une lecture d'image.
     parsed_echo: parsed,
+    // Par macro : la valeur imprimée si elle existe, sinon le calcul depuis les
+    // ingrédients. Une fiche qui n'imprime que « 545 kcal » garde ses kcal et
+    // reçoit des protéines/glucides/lipides/fibres calculés.
+    macro_sources: Object.fromEntries(["calories", "proteins", "carbs", "fats", "fibres"].map((k) =>
+      [k, measured[k] !== null ? "etiquette" : (computed[k] !== null ? "calcule" : null)])),
     macros_per_portion: {
-      calories: measuredAny ? measured.calories : computed.calories,
-      proteins: measuredAny ? measured.proteins : computed.proteins,
-      carbs: measuredAny ? measured.carbs : computed.carbs,
+      calories: measured.calories ?? computed.calories,
+      proteins: measured.proteins ?? computed.proteins,
+      carbs: measured.carbs ?? computed.carbs,
       sugars: measured.sugars,
-      fats: measuredAny ? measured.fats : computed.fats,
+      fats: measured.fats ?? computed.fats,
       saturated_fats: measured.saturated_fats,
-      fibres: measuredAny && measured.fibres !== null ? measured.fibres : computed.fibres,
+      fibres: measured.fibres ?? computed.fibres,
       salt: measured.salt,
       sodium: measured.sodium,
     },

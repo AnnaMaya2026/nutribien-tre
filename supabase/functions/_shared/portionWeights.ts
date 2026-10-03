@@ -17,6 +17,8 @@ export const STANDARD_WEIGHTS: { keywords: string[]; grams: number; label: strin
   // — Viandes et volailles (à la pièce)
   { keywords: ["cuisse de canard"], grams: 200, label: "cuisse de canard" },
   { keywords: ["magret"], grams: 350, label: "magret de canard" },
+  { keywords: ["supreme de poulet"], grams: 150, label: "suprême de poulet" },
+  { keywords: ["supreme de volaille"], grams: 150, label: "suprême de volaille" },
   { keywords: ["cuisse de poulet"], grams: 150, label: "cuisse de poulet" },
   { keywords: ["blanc de poulet", "filet de poulet", "escalope de poulet"], grams: 150, label: "blanc de poulet" },
   { keywords: ["escalope de dinde", "filet de dinde"], grams: 120, label: "escalope de dinde" },
@@ -123,4 +125,19 @@ export function toGrams(
   const hit = STANDARD_WEIGHTS.find((w) => w.keywords.some((k) => matchesKeyword(n, k)));
   if (hit) return { grams: quantity * hit.grams, basis: `${hit.label} = ${hit.grams} g` };
   return { grams: null, basis: "poids standard inconnu" };
+}
+
+// Herbes et aromates : sans quantité, ou en brins / branches / pincée / bouquet,
+// ils sont ignorés comme le sel et le poivre (apport négligeable, poids inconnu).
+const HERBS = ["romarin", "thym", "persil", "basilic", "ciboulette", "coriandre", "laurier",
+  "menthe", "aneth", "estragon", "origan", "sauge", "cerfeuil"];
+const HERB_UNITS = /\b(brins?|branches?|pincees?|bouquets?|qq|quelques|feuilles?)\b/;
+
+export function isIgnorableHerb(name: string, quantity: number | null, unit: string | null): boolean {
+  const n = norm(name);
+  if (!HERBS.some((h) => matchesKeyword(n, h))) return false;
+  if (quantity === null) return true;
+  const u = norm(unit || "");
+  if (HERB_UNITS.test(u) || HERB_UNITS.test(n)) return true;
+  return !["g", "gr", "gramme", "grammes"].includes(u.trim());
 }
