@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { genericDrink, isAlcoholicDrink, stripOrigin } from "../../supabase/functions/_shared/ciqualMatch";
 import { isIgnorableHerb, STANDARD_WEIGHTS, matchesKeyword, norm, toGrams } from "../../supabase/functions/_shared/portionWeights";
 
 /**
@@ -73,5 +74,18 @@ describe("fiche Quitoque suprême de poulet", () => {
     expect(isIgnorableHerb("Romarin", 2, "brins")).toBe(true);
     expect(isIgnorableHerb("persil", 10, "g")).toBe(false);
     expect(isIgnorableHerb("topinambours", 300, "g")).toBe(false);
+  });
+});
+
+describe("vin blanc du Vaucluse IGP", () => {
+  const n = "vin blanc du Vaucluse IGP";
+  it("retire l'origine et le label", () => {
+    expect(stripOrigin(n)).toBe("vin blanc");
+    expect(stripOrigin("cuisse de canard")).toBe("cuisse de canard");
+  });
+  it("pointe vers l'entrée générique CIQUAL et est reconnu comme alcool", () => {
+    expect(genericDrink(n)).toBe("Vin blanc sec");
+    expect(isAlcoholicDrink(n)).toBe(true);
+    expect(isAlcoholicDrink("vinaigre balsamique")).toBe(false);
   });
 });

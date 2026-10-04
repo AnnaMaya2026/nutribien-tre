@@ -5,7 +5,7 @@
 // aliments_ciqual (ESTIMÉ). Les micronutriments sont toujours calculés depuis
 // les ingrédients. Tout est divisé par le nombre de portions.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { matchCiqual } from "../_shared/ciqualMatch.ts";
+import { isAlcoholicDrink, matchCiqual } from "../_shared/ciqualMatch.ts";
 import { isIgnorableHerb, norm, toGrams } from "../_shared/portionWeights.ts";
 
 const corsHeaders = {
@@ -110,7 +110,7 @@ export async function buildResult(supabase: any, parsed: any) {
   const rawIngredients = Array.isArray(parsed?.ingredients) ? parsed.ingredients : [];
 
   const counted: any[] = [];
-  const needsManual: { name: string; quantity: number | null; unit: string | null; reason: string }[] = [];
+  const needsManual: { name: string; quantity: number | null; unit: string | null; reason: string; not_found?: boolean }[] = [];
   const pantryItems: string[] = [];
   let totalGrams = 0;
 
@@ -126,7 +126,10 @@ export async function buildResult(supabase: any, parsed: any) {
     if (isPantry && quantity === null) { pantryItems.push(name); continue; }
     if (isIgnorableHerb(name, quantity, ing?.unit ?? null)) { pantryItems.push(name); continue; }
 
+    const alcohol = isAlcoholicDrink(name);
     const { grams, basis } = toGrams(name, quantity, ing?.unit ?? null);
+    // Vin, cidre, bière : macros quasi nulles, ignorés comme le sel s'ils n'ont pas de poids
+    if (alcohol && (grams === null || grams <= 0)) { pantryItems.push(name); continue; }
     if (grams === null || grams <= 0) {
       needsManual.push({ name, quantity, unit: ing?.unit ?? null, reason: basis });
       continue;
@@ -135,7 +138,8 @@ export async function buildResult(supabase: any, parsed: any) {
     let match: any = null;
     try { match = await matchCiqual(supabase, name); } catch { match = null; }
     if (!match) {
-      needsManual.push({ name, quantity, unit: ing?.unit ?? null, reason: "aliment introuvable dans la base CIQUAL" });
+      if (alcohol) { pantryItems.push(name); continue; }
+      needsManual.push({ name, quantity, unit: ing?.unit ?? null, reason: "introuvable dans la base", not_found: true } as any);
       continue;
     }
 

@@ -111,6 +111,37 @@ export function applySynonyms(name: string): string {
 }
 
 
+// Mentions d'origine ou de label : elles ne distinguent rien dans CIQUAL.
+// « vin blanc du Vaucluse IGP sec » -> « vin blanc ».
+export function stripOrigin(name: string): string {
+  let s = normalize(name);
+  s = s.replace(/\b(igp|aop|aoc|igt|doc|docg)\b/g, " ");
+  s = s.replace(/\b(sec|moelleux)\b/g, " ");
+  // « du/de la/de/des + Lieu » : uniquement quand la majuscule d'origine
+  // indique un nom propre, pour garder « cuisse de canard ».
+  const proper = name.match(/\b(?:du|de la|de l'|des|de|d')\s*[A-ZÀ-Ý][\p{L}-]*(?:\s+[A-ZÀ-Ý][\p{L}-]*)*/gu) || [];
+  for (const p of proper) s = s.replace(normalize(p), " ");
+  return s.replace(/\s+/g, " ").trim();
+}
+
+// Boissons courantes -> entrée générique CIQUAL (nom exact)
+export const GENERIC_DRINKS: [RegExp, string][] = [
+  [/^vin blanc\b/, "Vin blanc sec"],
+  [/^vin rouge\b/, "Vin rouge"],
+  [/^vin rose\b/, "Vin rosé"],
+  [/^vin\b/, "Vin (aliment moyen)"],
+  [/^cidre\b/, "Cidre (aliment moyen)"],
+  [/^biere\b/, "Bière \"coeur de marché\" (4-5° alcool)"],
+];
+
+export function genericDrink(name: string): string | null {
+  const s = stripOrigin(name);
+  for (const [re, nom] of GENERIC_DRINKS) if (re.test(s)) return nom;
+  return null;
+}
+
+export const isAlcoholicDrink = (name: string) => /^(vin|cidre|biere)\b/.test(stripOrigin(name));
+
 export function contentTokens(qNorm: string): string[] {
   return tokenize(qNorm).filter((t) => !MARKER_WORDS.has(t));
 }
@@ -230,7 +261,12 @@ export async function matchCiqual(
   supabase: any,
   name: string,
 ): Promise<{ row: any; score: number } | null> {
-  const cleaned = applySynonyms(name) || normalize(name);
+  const generic = genericDrink(name);
+  if (generic) {
+    const { data } = await supabase.from("aliments_ciqual").select("*").eq("nom", generic).limit(1);
+    if (data && data[0]) return { row: data[0], score: 1 };
+  }
+  const cleaned = applySynonyms(stripOrigin(name) || name) || normalize(name);
   const terms: string[] = [];
   const norm = normalize(cleaned);
   const sing = singularize(cleaned);
