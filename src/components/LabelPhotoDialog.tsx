@@ -152,7 +152,7 @@ export default function LabelPhotoDialog({
   const [addedFat, setAddedFat] = useState("");
   const [asFavorite, setAsFavorite] = useState(false);
   const [manualIngredients, setManualIngredients] = useState<
-    { name: string; quantity: number | null; unit: string | null; reason: string }[]
+    { name: string; quantity: number | null; unit: string | null; reason: string; not_found?: boolean }[]
   >([]);
   // Analyse brute renvoyée par la fonction, pour recalculer sans relire la photo
   const [parsedEcho, setParsedEcho] = useState<any>(null);
@@ -876,13 +876,17 @@ export default function LabelPhotoDialog({
                           {m.name}
                           {m.quantity !== null ? ` — ${m.quantity} ${m.unit || ""}` : ""}
                         </span>
-                        <Input
-                          className="w-24"
-                          inputMode="decimal"
-                          placeholder="g"
-                          value={manualGrams[m.name] ?? ""}
-                          onChange={(e) => setManualGrams((p) => ({ ...p, [m.name]: e.target.value }))}
-                        />
+                        {m.not_found ? (
+                          <span className="text-destructive font-medium">introuvable dans la base</span>
+                        ) : (
+                          <Input
+                            className="w-24"
+                            inputMode="decimal"
+                            placeholder="g"
+                            value={manualGrams[m.name] ?? ""}
+                            onChange={(e) => setManualGrams((p) => ({ ...p, [m.name]: e.target.value }))}
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
