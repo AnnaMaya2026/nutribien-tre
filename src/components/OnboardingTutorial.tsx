@@ -60,9 +60,9 @@ const buildSteps = (name: string): Step[] => [
   },
   {
     type: "info",
-    title: "Notes, Routines & Habitudes 📝",
+    title: "Notes, Sport & Habitudes 📝",
     subtitle:
-      "• Notez vos événements de vie\n• Créez vos routines quotidiennes (compléments, sport...)\n• Suivez vos habitudes à surveiller (café, alcool, hydratation...)",
+      "• Notez vos événements de vie\n• Suivez vos séances de sport (durée, calories)\n• Suivez vos habitudes à surveiller (café, alcool, hydratation...)",
   },
   {
     type: "final",

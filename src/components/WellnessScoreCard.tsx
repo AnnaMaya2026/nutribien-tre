@@ -165,12 +165,12 @@ function computeBreakdown(opts: {
   const routinePts = Math.min(2, opts.routines.completed * 0.5);
   if (opts.routines.completed > 0) {
     positives.push({
-      label: `Routines : ${opts.routines.completed}/${opts.routines.total} complétées`,
+      label: `Sport : ${opts.routines.completed}/${opts.routines.total} complétées`,
       points: routinePts,
     });
   } else if (opts.routines.total > 0) {
     negatives.push({
-      label: `Routines : 0/${opts.routines.total} complétées`,
+      label: `Sport : 0/${opts.routines.total} complétées`,
       points: 0,
     });
   }
@@ -225,7 +225,7 @@ function computeBreakdown(opts: {
     { label: "Base", points: 0 },
     { label: "Nutriments atteints", points: nutrientPts },
     { label: "Symptômes", points: symptomPts },
-    { label: "Routines", points: routinePts },
+    { label: "Sport", points: routinePts },
     { label: "Habitudes", points: habitPts },
   ];
 

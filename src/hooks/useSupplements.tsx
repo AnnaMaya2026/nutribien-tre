@@ -206,8 +206,14 @@ export function useSupplements(dateStr: string) {
     for (const s of takenSupplements) {
       const qty = takenQuantity(s);
       for (const n of nutrientsBySupplement[s.id] || []) {
-        const amount = (Number(n.amount) || 0) * (qty > 0 ? qty : 1);
-        const c = (out[n.nutrient_key] ||= { amount: 0, unit: n.unit, sources: [] });
+        // Macros : toujours en grammes. Une étiquette « 765 mg de protéines » stockée en mg
+        // était additionnée comme 765 g dans le tableau de bord.
+        const isMacro = ["proteins", "carbs", "fats", "fibres"].includes(n.nutrient_key);
+        const u = String(n.unit || "").toLowerCase();
+        const toG = isMacro ? (u === "mg" ? 0.001 : u === "µg" || u === "ug" || u === "mcg" ? 1e-6 : 1) : 1;
+        const unit = isMacro ? "g" : n.unit;
+        const amount = (Number(n.amount) || 0) * toG * (qty > 0 ? qty : 1);
+        const c = (out[n.nutrient_key] ||= { amount: 0, unit, sources: [] });
         c.amount += amount;
         c.sources.push({ nom: s.nom, amount });
       }

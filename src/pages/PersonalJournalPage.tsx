@@ -50,13 +50,13 @@ export default function PersonalJournalPage() {
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
       <h1 className="text-2xl font-bold text-foreground mb-1">
-        {tab === "notes" ? "Journal personnel" : tab === "routines" ? "Mes routines" : "Habitudes"}
+        {tab === "notes" ? "Journal personnel" : tab === "routines" ? "Mon sport" : "Habitudes"}
       </h1>
       <p className="text-muted-foreground text-sm mb-4">
         {tab === "notes"
           ? "Notez vos événements de vie et observations"
           : tab === "routines"
-          ? "Cochez vos routines quotidiennes"
+          ? "Cochez vos séances de sport"
           : "Suivez vos habitudes du quotidien"}
       </p>
 
@@ -80,7 +80,7 @@ export default function PersonalJournalPage() {
               : "text-muted-foreground"
           }`}
         >
-          ✅ Routines
+          🏃 Sport
         </button>
         <button
           onClick={() => setTab("habitudes")}

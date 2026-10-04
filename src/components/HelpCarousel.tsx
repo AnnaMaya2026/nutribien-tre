@@ -47,8 +47,8 @@ Organisez par repas et ajustez les portions`,
     image: "/help/sophie.png",
   },
   {
-    title: "Routines et habitudes",
-    text: `• Créez vos routines quotidiennes
+    title: "Sport et habitudes",
+    text: `• Suivez vos séances de sport
 • Suivez vos habitudes à surveiller
 • Corrélation avec vos symptômes`,
     image: "/help/routines_habitudes.png",

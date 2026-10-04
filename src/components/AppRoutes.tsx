@@ -35,7 +35,7 @@ const SEO = {
   repas: { title: "Suggestions de repas — NutriMéno", description: "Recettes et idées de repas adaptées à vos besoins nutritionnels", path: "/repas" },
   chat: { title: "Sophie, votre nutritionniste IA — NutriMéno", description: "Conseils nutritionnels personnalisés pour la ménopause", path: "/chat" },
   symptomes: { title: "Suivi des symptômes — NutriMéno", description: "Suivez l'évolution de vos symptômes ménopausiques", path: "/symptomes" },
-  notes: { title: "Journal personnel — NutriMéno", description: "Notes, routines et habitudes pour votre bien-être", path: "/notes" },
+  notes: { title: "Journal personnel — NutriMéno", description: "Notes, sport et habitudes pour votre bien-être", path: "/notes" },
   menus: { title: "Menus sauvegardés — NutriMéno", description: "Retrouvez vos menus et plans de repas favoris", path: "/menus" },
   profil: { title: "Mon profil — NutriMéno", description: "Gérez votre profil et vos préférences nutritionnelles", path: "/profil" },
   ration: { title: "Comprendre ta ration — NutriMéno", description: "Explication pédagogique de ton calcul calorique personnalisé", path: "/ration" },

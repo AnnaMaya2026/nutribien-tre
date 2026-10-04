@@ -44,7 +44,7 @@ interface FormState {
 
 const emptyForm = (): FormState => ({
   name: "",
-  category: "complement",
+  category: "sport",
   frequency: "quotidien",
   reminder_enabled: false,
   reminder_time: "08:00",
@@ -502,7 +502,7 @@ export function RoutinesTracker() {
         <div className="bg-card rounded-2xl p-4 card-soft">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-semibold text-foreground">
-              {dateLabel} : {completedCount}/{total} routines complétées{" "}
+              {dateLabel} : {completedCount}/{total} séances complétées{" "}
               {completedCount === total && "✅"}
             </p>
             <span className="text-xs text-muted-foreground">{pct}%</span>
@@ -520,7 +520,7 @@ export function RoutinesTracker() {
           }}
           className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 shadow-md"
         >
-          <Plus className="w-4 h-4" /> Ajouter une routine
+          <Plus className="w-4 h-4" /> Ajouter une séance
         </button>
       )}
 
@@ -528,7 +528,7 @@ export function RoutinesTracker() {
       {showForm && (
         <div className="bg-card rounded-2xl p-5 card-soft animate-fade-in">
           <div className="flex justify-between items-center mb-3">
-            <h3 className="text-sm font-semibold text-foreground">Nouvelle routine</h3>
+            <h3 className="text-sm font-semibold text-foreground">Nouvelle séance</h3>
             <button onClick={() => setShowForm(false)} aria-label="Fermer">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -550,7 +550,7 @@ export function RoutinesTracker() {
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Modifier la routine</DialogTitle>
+            <DialogTitle>Modifier la séance</DialogTitle>
           </DialogHeader>
           <RoutineForm state={form} setState={setForm} activities={activities} />
           <div className="flex gap-2">
@@ -639,8 +639,7 @@ export function RoutinesTracker() {
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="text-6xl mb-4">✅</div>
           <p className="text-sm text-muted-foreground max-w-[260px]">
-            Ajoutez vos routines (compléments, sport, méditation...) pour les suivre au
-            quotidien
+            Ajoutez vos séances de sport pour suivre leur durée et les calories dépensées
           </p>
         </div>
       ) : (
@@ -757,7 +756,7 @@ export function RoutinesTracker() {
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
-                        if (confirm(`Supprimer la routine "${r.name}" ?`)) {
+                        if (confirm(`Supprimer la séance "${r.name}" ?`)) {
                           deleteRoutine.mutate(r.id);
                         }
                       }}

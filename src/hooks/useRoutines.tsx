@@ -177,7 +177,7 @@ export function useRoutines() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["routines", userId] });
-      toast.success("Routine ajoutée");
+      toast.success("Séance ajoutée");
     },
     onError: (e: any) => toast.error(e.message || "Erreur"),
   });
@@ -221,7 +221,7 @@ export function useRoutines() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["routines", userId] });
-      toast.success("Routine modifiée");
+      toast.success("Séance modifiée");
     },
     onError: (e: any) => toast.error(e.message || "Erreur"),
   });
@@ -241,7 +241,7 @@ export function useRoutines() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["routines", userId] });
       qc.invalidateQueries({ queryKey: ["routine_logs", userId] });
-      toast.success("Routine supprimée");
+      toast.success("Séance supprimée");
     },
     onError: (e: any) => toast.error(e.message || "Suppression impossible"),
   });

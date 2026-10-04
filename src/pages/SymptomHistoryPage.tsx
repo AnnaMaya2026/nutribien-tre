@@ -289,7 +289,7 @@ function CorrelationAnalysis({
     const categories = Array.from(new Set(journalEntries.map((entry) => entry.category || "autre")));
 
     return [
-      ...routines.map((routine) => ({ id: `routine:${routine.id}`, label: `Routine · ${routine.name}`, type: "routine" as const, sourceKey: routine.id })),
+      ...routines.map((routine) => ({ id: `routine:${routine.id}`, label: `Sport · ${routine.name}`, type: "routine" as const, sourceKey: routine.id })),
       ...Array.from(habitMap.entries()).map(([key, label]) => ({ id: `habit:${key}`, label: `Habitude · ${label}`, type: "habit" as const, sourceKey: key })),
       ...categories.map((category) => ({ id: `journal:${category}`, label: `Journal · ${category}`, type: "journal" as const, sourceKey: category })),
     ];
