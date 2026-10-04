@@ -114,13 +114,12 @@ export function applySynonyms(name: string): string {
 // Mentions d'origine ou de label : elles ne distinguent rien dans CIQUAL.
 // « vin blanc du Vaucluse IGP sec » -> « vin blanc ».
 export function stripOrigin(name: string): string {
-  let s = normalize(name);
+  // « du/de la/de + Lieu » : uniquement quand la majuscule d'origine indique
+  // un nom propre, pour garder « cuisse de canard ».
+  const noPlace = name.replace(/(^|\s)(?:du|de la|de l'|des|de|d')\s*[A-ZÀ-Ý][\p{L}-]*/gu, " ");
+  let s = normalize(noPlace);
   s = s.replace(/\b(igp|aop|aoc|igt|doc|docg)\b/g, " ");
   s = s.replace(/\b(sec|moelleux)\b/g, " ");
-  // « du/de la/de/des + Lieu » : uniquement quand la majuscule d'origine
-  // indique un nom propre, pour garder « cuisse de canard ».
-  const proper = name.match(/\b(?:du|de la|de l'|des|de|d')\s*[A-ZÀ-Ý][\p{L}-]*(?:\s+[A-ZÀ-Ý][\p{L}-]*)*/gu) || [];
-  for (const p of proper) s = s.replace(normalize(p), " ");
   return s.replace(/\s+/g, " ").trim();
 }
 
