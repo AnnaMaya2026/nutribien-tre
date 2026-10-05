@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { buildSymptomContext, parisDate, symptomLabel, symptomsOfLog, SYMPTOM_RULE } from "../_shared/symptomContext.ts";
 import { buildProfileRestrictionsContext } from "../_shared/profileRestrictions.ts";
 
 const corsHeaders = {
@@ -60,12 +61,13 @@ serve(async (req) => {
     let recentConversation: Array<{ role: string; content: string }> = [];
     let profileForMemory: any = null;
     let remaining = DAILY_LIMIT;
-    const today = new Date().toISOString().split("T")[0];
+    const today = parisDate(0);
+    let symptomContext = "";
     let logsRes: any = null;
 
     if (userId) {
       // 14-day window for trends aggregation
-      const trendsFrom = new Date(Date.now() - 14 * 86400_000).toISOString().split("T")[0];
+      const trendsFrom = parisDate(-14);
       // 3-day window for recent chat context
       const chatFromIso = new Date(Date.now() - 3 * 86400_000).toISOString();
 
@@ -86,7 +88,7 @@ serve(async (req) => {
           .gte("logged_at", trendsFrom),
         supabase
           .from("symptom_logs")
-          .select("symptom_type, severity, logged_at")
+          .select("selected_symptoms, symptom_scores, fatigue, bouffees_chaleur, insomnie, sautes_humeur, logged_at")
           .eq("user_id", userId)
           .gte("logged_at", trendsFrom),
         supabase
@@ -117,6 +119,7 @@ RÈGLE ABSOLUE: ne propose JAMAIS un aliment listé dans "n'aime pas" ou "évite
       const trendsUpdated = (profileRes.data as any)?.sophie_trends_updated_at;
       const trendsSummaryDb = (profileRes.data as any)?.sophie_trends_summary;
       const trendsFresh = trendsUpdated && (Date.now() - new Date(trendsUpdated).getTime()) < 24 * 3600_000;
+      try { symptomContext = (await buildSymptomContext(supabase, userId)).text; } catch { symptomContext = "\n🩺 SYMPTÔMES : données indisponibles — ne conclus rien sur les symptômes.\n"; }
       let trendsSummary = trendsFresh && trendsSummaryDb ? trendsSummaryDb : "";
       if (!trendsFresh) {
         const foods = (trendsFoodRes.data || []) as any[];
@@ -136,12 +139,13 @@ RÈGLE ABSOLUE: ne propose JAMAIS un aliment listé dans "n'aime pas" ou "évite
         if (skippedBreakfasts >= 4) bits.push(`petit-déjeuner sauté ${skippedBreakfasts} jours sur 14`);
         // Top recurring symptoms
         const symptomAvg: Record<string, { sum: number; n: number }> = {};
-        for (const s of symptoms) {
-          if (!s.symptom_type) continue;
-          const key = s.symptom_type;
-          symptomAvg[key] = symptomAvg[key] || { sum: 0, n: 0 };
-          symptomAvg[key].sum += Number(s.severity || 0);
-          symptomAvg[key].n += 1;
+        for (const row of symptoms) {
+          for (const s of symptomsOfLog(row)) {
+            if (s.score === null) continue;
+            symptomAvg[s.key] = symptomAvg[s.key] || { sum: 0, n: 0 };
+            symptomAvg[s.key].sum += s.score;
+            symptomAvg[s.key].n += 1;
+          }
         }
         const topSymptoms = Object.entries(symptomAvg)
           .filter(([, v]) => v.n >= 4)
@@ -149,7 +153,7 @@ RÈGLE ABSOLUE: ne propose JAMAIS un aliment listé dans "n'aime pas" ou "évite
           .sort((a, b) => b.avg - a.avg)
           .slice(0, 2);
         for (const t of topSymptoms) {
-          if (t.avg >= 5) bits.push(`symptôme récurrent: ${t.k} (intensité moyenne ${t.avg.toFixed(1)}/10)`);
+          if (t.avg >= 5) bits.push(`symptôme récurrent: ${symptomLabel(t.k)} (intensité moyenne ${t.avg.toFixed(1)}/10)`);
         }
         // Habits missed
         const habitStats: Record<string, { done: number; total: number }> = {};
@@ -228,7 +232,7 @@ RÈGLE ABSOLUE: ne propose JAMAIS un aliment listé dans "n'aime pas" ou "évite
 Profil utilisatrice:
 - Prénom: ${profile.display_name || "Non renseigné"}
 - Stade: ${profile.menopause_stage || "Non renseigné"}
-- Symptômes principaux: ${(profile.symptoms || []).join(", ") || "Aucun renseigné"}
+- Symptômes déclarés au profil: ${(profile.symptoms || []).map(symptomLabel).join(", ") || "Aucun renseigné"}
 - Objectif calorique: ${profile.daily_calorie_goal || 1800} kcal
 - Régimes/restrictions alimentaires: ${restrictionsCtx.dietaryLabels.length ? restrictionsCtx.dietaryLabels.join(", ") : "Aucune"}
 
@@ -323,6 +327,8 @@ Si l'utilisatrice répond oui (ou équivalent : "oui", "vas-y", "ok", "volontier
 ${profileContext}
 ${memoryContext}
 ${trendsContext}
+${symptomContext}
+${SYMPTOM_RULE}
 ${nutritionContext}
 ${healthContext}
 ${industrialContext}
