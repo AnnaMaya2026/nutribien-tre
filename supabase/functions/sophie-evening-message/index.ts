@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { buildSymptomContext, parisDate, SYMPTOM_RULE } from "../_shared/symptomContext.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,17 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const SYMPTOM_LABELS: Record<string, string> = {
-  fatigue: "Fatigue",
-  bouffees_chaleur: "Bouffées de chaleur",
-  insomnie: "Insomnie",
-  sautes_humeur: "Sautes d'humeur",
-  prise_de_poids: "Prise de poids",
-  secheresse_cutanee: "Sécheresse cutanée",
-  douleurs_articulaires: "Douleurs articulaires",
-  brain_fog: "Troubles de la mémoire",
-  anxiete: "Anxiété",
-};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -32,7 +22,7 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     if (!user) return new Response(JSON.stringify({ error: "Non autorisé" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = parisDate(0);
 
     const { data: existing } = await supabase
       .from("sophie_evening_messages")
@@ -80,16 +70,8 @@ serve(async (req) => {
     };
     const missing = Object.values(targets).filter((t) => t.val < t.goal * 0.6).map((t) => t.label);
 
-    const scores = (symptomLog?.symptom_scores && typeof symptomLog.symptom_scores === "object")
-      ? symptomLog.symptom_scores as Record<string, number> : {};
-    const selectedSymptoms: string[] = Array.isArray(symptomLog?.selected_symptoms)
-      ? symptomLog.selected_symptoms as string[] : [];
-    const scored = Object.entries(scores).filter(([, v]) => (v as number) > 0);
-    let symptomSummary: string[] = scored.map(([k, v]) => `${SYMPTOM_LABELS[k] || k}: ${v}/10`);
-    // Fallback: user picked symptoms in the chips tab but didn't rate them.
-    if (symptomSummary.length === 0 && selectedSymptoms.length > 0) {
-      symptomSummary = selectedSymptoms.map((k) => SYMPTOM_LABELS[k] || k);
-    }
+    const symptomCtx = await buildSymptomContext(supabase, user.id);
+    void symptomLog;
 
     const routinesDone = routineLogs.length;
     const routinesTotal = routines.length;
@@ -97,7 +79,7 @@ serve(async (req) => {
     const userPrompt = `Données d'aujourd'hui :
 - Calories: ${Math.round(totals.calories)}/${calorieGoal}
 - Nutriments manquants: ${missing.length ? missing.join(", ") : "aucun"}
-- Symptômes: ${symptomSummary.length ? symptomSummary.join(", ") : "aucun symptôme déclaré"}
+${symptomCtx.text}
 - Routines complétées: ${routinesDone}/${routinesTotal}
 - Aliments enregistrés: ${foodLogs.length}`;
 
@@ -110,7 +92,9 @@ Tu DOIS répondre UNIQUEMENT en JSON valide (sans markdown ni backticks) avec ce
   "challenge": "Un défi nutritionnel concret et motivant pour demain"
 }
 
-Ton : chaleureux, encourageant, jamais culpabilisant. Phrases courtes.`;
+Ton : chaleureux, encourageant, jamais culpabilisant. Phrases courtes.
+
+${SYMPTOM_RULE}`;
 
     const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
