@@ -342,6 +342,28 @@ export default function Dashboard() {
   const calColor = getCalorieColor(calPct);
   const calRingPct = Math.min(calPct, 100);
 
+  // Exactement les valeurs affichées (alimentation + compléments cochés + plats estimés),
+  // envoyées telles quelles au récap de Sophie.
+  const recapNutrients = [
+    ["Calcium", totals.calcium + supBy("calcium"), rnpTarget("calcium", DAILY_TARGETS.calcium), "mg"],
+    ["Vitamine D", totals.vitamin_d + supBy("vitamin_d"), rnpTarget("vitamin_d", vitaminDGoal), "µg"],
+    ["Magnésium", totals.magnesium + supBy("magnesium"), rnpTarget("magnesium", DAILY_TARGETS.magnesium), "mg"],
+    ["Fer", totals.iron + supBy("iron"), rnpTarget("iron", DAILY_TARGETS.iron), "mg"],
+    ["Oméga-3", totals.omega3 + supBy("omega3", 1000), DAILY_TARGETS.omega3, "g"],
+    ["Vitamine B12", totals.vitamin_b12 + supBy("vitamin_b12"), rnpTarget("vitamin_b12", DAILY_TARGETS.vitamin_b12), "µg"],
+    ["Fibres", totals.fibres + supMacros.fibres, MACRO_GOALS.fibres, "g"],
+    ["Protéines", totals.proteins + supMacros.proteins, proteinGoal, "g"],
+  ].map(([label, value, goal, unit]) => {
+    const pct = (Number(value) / Number(goal)) * 100;
+    return { label: label as string, value: Math.round(Number(value) * 10) / 10, goal: Number(goal), unit: unit as string, reached: pct >= 80 };
+  });
+  const recapData = {
+    calories: Math.round(totalCalories),
+    calorieGoal,
+    foodCount: logs.length,
+    nutrients: recapNutrients,
+  };
+
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
       <MedicalDisclaimerBanner />
@@ -415,7 +437,7 @@ export default function Dashboard() {
       <DailyChallengeCard />
 
       {/* Daily evening recap (visible after 8pm) */}
-      <DailyRecapCard />
+      {isToday && <DailyRecapCard data={recapData} />}
 
 
       {/* Weekly report (visible from Monday) */}
