@@ -1,23 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildProfileRestrictionsContext } from "../_shared/profileRestrictions.ts";
+import { buildSymptomContext, parisDate, SYMPTOM_RULE } from "../_shared/symptomContext.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
-const SYMPTOM_LABELS: Record<string, string> = {
-  fatigue: "Fatigue",
-  bouffees_chaleur: "Bouffées de chaleur",
-  insomnie: "Insomnie",
-  sautes_humeur: "Sautes d'humeur",
-  prise_de_poids: "Prise de poids",
-  secheresse_cutanee: "Sécheresse cutanée",
-  douleurs_articulaires: "Douleurs articulaires",
-  brain_fog: "Troubles de la mémoire",
-  anxiete: "Anxiété",
 };
 
 serve(async (req) => {
@@ -47,7 +36,15 @@ serve(async (req) => {
       });
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = parisDate(0);
+    const body = await req.json().catch(() => ({}));
+    const dash = body?.dashboard;
+    if (!dash || !Array.isArray(dash.nutrients) || typeof dash.calories !== "number" || typeof dash.calorieGoal !== "number") {
+      return new Response(JSON.stringify({ error: "Données du tableau de bord manquantes" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Return cached recap if it already exists for today
     const { data: existing } = await supabase
@@ -64,86 +61,53 @@ serve(async (req) => {
       );
     }
 
-    // Aggregate today's data
-    const [profileRes, foodRes, symptomRes, habitDefRes, habitLogsRes] = await Promise.all([
+    const [profileRes, habitDefRes, habitLogsRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", user.id).single(),
-      supabase.from("food_logs").select("*").eq("user_id", user.id).eq("logged_at", today),
-      supabase.from("symptom_logs").select("*").eq("user_id", user.id).eq("logged_at", today).maybeSingle(),
       supabase.from("user_habits").select("*").eq("user_id", user.id).eq("active", true),
       supabase.from("habit_logs").select("*").eq("user_id", user.id).eq("logged_at", today),
     ]);
-
     const profile = profileRes.data;
-    const foodLogs = foodRes.data || [];
-    const symptomLog = symptomRes.data;
     const habitDefs = habitDefRes.data || [];
     const habitLogs = habitLogsRes.data || [];
 
-    const calorieGoal = profile?.daily_calorie_goal || 1800;
-    const totals = foodLogs.reduce((acc: any, l: any) => ({
-      calories: acc.calories + (l.calories || 0),
-      proteins: acc.proteins + (l.proteins || 0),
-      calcium: acc.calcium + (l.calcium || 0),
-      vitamin_d: acc.vitamin_d + (l.vitamin_d || 0),
-      magnesium: acc.magnesium + (l.magnesium || 0),
-      iron: acc.iron + (l.iron || 0),
-      omega3: acc.omega3 + (l.omega3 || 0),
-      fibres: acc.fibres + (l.fibres || 0),
-    }), { calories: 0, proteins: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, fibres: 0 });
+    // Totaux = EXACTEMENT ceux du tableau de bord (alimentation + compléments + plats estimés).
+    const fmtN = (n: any) => `${n.label} ${String(n.value).replace(".", ",")}/${String(n.goal).replace(".", ",")} ${n.unit}`;
+    const below = dash.nutrients.filter((n: any) => !n.reached);
+    const reached = dash.nutrients.filter((n: any) => n.reached);
 
-    // Missing nutrients (< 50% goal)
-    const targets: Record<string, { val: number; goal: number; unit: string; label: string }> = {
-      calcium: { val: totals.calcium, goal: 1200, unit: "mg", label: "Calcium" },
-      vitamin_d: { val: totals.vitamin_d, goal: 20, unit: "µg", label: "Vitamine D" },
-      magnesium: { val: totals.magnesium, goal: 320, unit: "mg", label: "Magnésium" },
-      iron: { val: totals.iron, goal: 18, unit: "mg", label: "Fer" },
-      omega3: { val: totals.omega3, goal: 2.5, unit: "g", label: "Oméga-3" },
-      fibres: { val: totals.fibres, goal: 25, unit: "g", label: "Fibres" },
-    };
-    const missing = Object.values(targets)
-      .filter((t) => t.val < t.goal * 0.5)
-      .map((t) => `${t.label} (${t.val.toFixed(1)}/${t.goal}${t.unit})`);
+    const symptomCtx = await buildSymptomContext(supabase, user.id);
 
-    // Symptom summary
-    const scores = (symptomLog?.symptom_scores && typeof symptomLog.symptom_scores === "object")
-      ? symptomLog.symptom_scores as Record<string, number>
-      : {};
-    const symptomSummary = Object.entries(scores)
-      .filter(([, v]) => (v as number) > 0)
-      .map(([k, v]) => `${SYMPTOM_LABELS[k] || k}: ${v}/10`);
-
-    // Habits summary
     const habitSummary = habitDefs.map((h: any) => {
       const log = habitLogs.find((l: any) => l.habit_key === h.habit_key);
       const c = log?.count ?? 0;
       if (h.habit_key === "ecrans_lit" || h.goal === 0) {
-        return `${h.habit_name}: ${c === 1 ? "respecté ✓" : c === 2 ? "non respecté ✗" : "non renseigné"}`;
+        return `${h.habit_name}: ${c === 1 ? "respecté" : c === 2 ? "non respecté" : "non renseigné"}`;
       }
-      const status = c === 0 ? "non utilisé" : c <= h.goal ? `${c}/${h.goal} ${h.unit} ✓` : `${c}/${h.goal} ${h.unit} dépassé ✗`;
-      return `${h.habit_name}: ${status}`;
+      return `${h.habit_name}: ${c}/${h.goal} ${h.unit ?? ""}`.trim();
     });
 
-    const userPrompt = `Données du jour :
-- Calories: ${Math.round(totals.calories)}/${calorieGoal} kcal
-- Nutriments manquants: ${missing.length ? missing.join(", ") : "aucun déficit majeur"}
-- Symptômes du jour: ${symptomSummary.length ? symptomSummary.join(", ") : "aucun symptôme déclaré"}
-- Habitudes: ${habitSummary.length ? habitSummary.join(", ") : "aucune habitude suivie"}
-- Aliments enregistrés: ${foodLogs.length} entrée(s)`;
+    const userPrompt = `Données du jour (identiques à l'écran de l'utilisatrice) :
+- Calories : ${dash.calories} kcal sur ${dash.calorieGoal} kcal d'objectif
+- Nutriments SOUS l'objectif : ${below.length ? below.map(fmtN).join(", ") : "AUCUN — tous les objectifs sont atteints"}
+- Nutriments atteints : ${reached.length ? reached.map(fmtN).join(", ") : "aucun"}
+${symptomCtx.text}
+- Habitudes : ${habitSummary.length ? habitSummary.join(", ") : "aucune habitude suivie"}
+- Aliments enregistrés : ${dash.foodCount} entrée(s)`;
 
     const restrictionsCtx = buildProfileRestrictionsContext(profile);
 
-    const systemPrompt = `Tu es Sophie, nutritionniste spécialisée en ménopause. Génère un bilan quotidien bienveillant et motivant basé sur les données fournies.
+    const systemPrompt = `Tu es Sophie, nutritionniste spécialisée en ménopause. Génère un bilan quotidien factuel et bienveillant basé UNIQUEMENT sur les données fournies.
 
 ${restrictionsCtx.promptBlock}
 
-Format obligatoire :
-1. Un point positif (toujours commencer par ça)
-2. Un point à améliorer demain
-3. Un conseil personnalisé pour demain
+RÈGLES ABSOLUES :
+- Calories : donne seulement le fait, sous la forme « X kcal sur Y kcal d'objectif ». N'encourage JAMAIS à manger plus ni moins, et ne félicite JAMAIS pour un nombre de calories.
+- Ne recommande un nutriment (ou des aliments riches en ce nutriment) QUE s'il figure dans « Nutriments SOUS l'objectif ». Ne parle jamais d'un nutriment atteint comme d'un manque. Si aucun n'est sous l'objectif, dis simplement que tous les objectifs nutritionnels sont atteints.
+- Aucun conseil général sans donnée précise (pas de « hydrate-toi », « dors bien »…). Ne relie un conseil à un symptôme que s'il figure dans les symptômes saisis aujourd'hui.
+- N'invente aucune donnée absente.
+${SYMPTOM_RULE}
 
-Ton : chaleureux, encourageant, jamais culpabilisant.
-Max 4-5 phrases courtes.
-IMPORTANT : Ne termine JAMAIS par des formules de politesse type "Prends soin de toi", "À demain", "Bon courage" etc.`;
+Format : 1. un fait positif réel ; 2. un point à améliorer demain seulement s'il existe un nutriment sous l'objectif ; 3. un conseil concret lié à ce nutriment. Max 4-5 phrases courtes. Ne termine JAMAIS par une formule de politesse.`;
 
     const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -157,7 +121,7 @@ IMPORTANT : Ne termine JAMAIS par des formules de politesse type "Prends soin de
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.7,
+        temperature: 0.4,
         max_tokens: 350,
       }),
     });
