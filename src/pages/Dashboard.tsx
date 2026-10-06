@@ -437,7 +437,7 @@ export default function Dashboard() {
       <DailyChallengeCard />
 
       {/* Daily evening recap (visible after 8pm) */}
-      <DailyRecapCard />
+      {isToday && <DailyRecapCard data={recapData} />}
 
 
       {/* Weekly report (visible from Monday) */}
