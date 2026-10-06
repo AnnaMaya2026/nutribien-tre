@@ -351,7 +351,7 @@ export default function Dashboard() {
     ["Fer", totals.iron + supBy("iron"), rnpTarget("iron", DAILY_TARGETS.iron), "mg"],
     ["Oméga-3", totals.omega3 + supBy("omega3", 1000), DAILY_TARGETS.omega3, "g"],
     ["Vitamine B12", totals.vitamin_b12 + supBy("vitamin_b12"), rnpTarget("vitamin_b12", DAILY_TARGETS.vitamin_b12), "µg"],
-    ["Fibres", totals.fibres + supMacros.fibres, FIBRES_GOAL, "g"],
+    ["Fibres", totals.fibres + supMacros.fibres, MACRO_GOALS.fibres, "g"],
     ["Protéines", totals.proteins + supMacros.proteins, proteinGoal, "g"],
   ].map(([label, value, goal, unit]) => {
     const pct = (Number(value) / Number(goal)) * 100;
