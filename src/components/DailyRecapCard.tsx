@@ -6,7 +6,14 @@ import SophieAvatar from "@/components/SophieAvatar";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 
-export default function DailyRecapCard() {
+export interface RecapData {
+  calories: number;
+  calorieGoal: number;
+  foodCount: number;
+  nutrients: { label: string; value: number; goal: number; unit: string; reached: boolean }[];
+}
+
+export default function DailyRecapCard({ data: recapData }: { data: RecapData }) {
   const { user } = useAuth();
   const [now, setNow] = useState(new Date());
   const [recap, setRecap] = useState<string | null>(null);
@@ -20,7 +27,7 @@ export default function DailyRecapCard() {
   }, []);
 
   const isAfter8pm = now.getHours() >= 20;
-  const today = now.toISOString().split("T")[0];
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(now);
 
   // Try to load existing recap for today
   useEffect(() => {
@@ -50,7 +57,7 @@ export default function DailyRecapCard() {
           .eq("recap_date", today);
       }
       const { data, error } = await supabase.functions.invoke("daily-recap", {
-        body: {},
+        body: { dashboard: recapData },
       });
       if (error) throw error;
       if (!data?.recap) throw new Error("Réponse vide");
