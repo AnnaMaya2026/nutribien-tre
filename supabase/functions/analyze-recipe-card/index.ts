@@ -138,7 +138,7 @@ export async function buildResult(supabase: any, parsed: any) {
     let match: any = null;
     try { match = await matchCiqual(supabase, name); } catch { match = null; }
     if (!match) {
-      if (alcohol) { pantryItems.push(name); continue; }
+      if (alcohol || isIgnorableUnmatched(grams)) { pantryItems.push(name); continue; }
       needsManual.push({ name, quantity, unit: ing?.unit ?? null, reason: "introuvable dans la base", not_found: true } as any);
       continue;
     }
