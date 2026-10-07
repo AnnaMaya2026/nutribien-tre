@@ -6,7 +6,7 @@
 // les ingrédients. Tout est divisé par le nombre de portions.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { isAlcoholicDrink, matchCiqual } from "../_shared/ciqualMatch.ts";
-import { isIgnorableHerb, norm, toGrams } from "../_shared/portionWeights.ts";
+import { isIgnorableHerb, isIgnorableUnmatched, norm, toGrams } from "../_shared/portionWeights.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -138,7 +138,7 @@ export async function buildResult(supabase: any, parsed: any) {
     let match: any = null;
     try { match = await matchCiqual(supabase, name); } catch { match = null; }
     if (!match) {
-      if (alcohol) { pantryItems.push(name); continue; }
+      if (alcohol || isIgnorableUnmatched(grams)) { pantryItems.push(name); continue; }
       needsManual.push({ name, quantity, unit: ing?.unit ?? null, reason: "introuvable dans la base", not_found: true } as any);
       continue;
     }

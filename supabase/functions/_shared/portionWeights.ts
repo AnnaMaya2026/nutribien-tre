@@ -141,3 +141,11 @@ export function isIgnorableHerb(name: string, quantity: number | null, unit: str
   if (HERB_UNITS.test(u) || HERB_UNITS.test(n)) return true;
   return !["g", "gr", "gramme", "grammes"].includes(u.trim());
 }
+
+/** Poids max (g) d'un ingrédient introuvable dans CIQUAL ignoré sans saisie, comme le sel. */
+export const MAX_IGNORED_UNMATCHED_GRAMS = 30;
+
+/** Ingrédient introuvable : ignoré (information seulement) si son poids connu est ≤ seuil. */
+export function isIgnorableUnmatched(grams: number | null): boolean {
+  return grams !== null && grams > 0 && grams <= MAX_IGNORED_UNMATCHED_GRAMS;
+}

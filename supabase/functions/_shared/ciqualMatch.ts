@@ -97,6 +97,7 @@ const SYNONYMS: [RegExp, string][] = [
   [/\b(congele|congelee|surgelee)\b/g, "surgele"],
   [/\b(allege|allegee|leger|legere)\b/g, "teneur reduite"],
   [/\bfait maison\b/g, "fait maison"],
+  [/\b(parmigiano( reggiano)?|grana padano)\b/g, "parmesan"],
 ];
 
 // Mots qui ne sont pas des distinctions CIQUAL
