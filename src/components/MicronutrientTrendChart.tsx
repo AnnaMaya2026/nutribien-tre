@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSupplements } from "@/hooks/useSupplements";
 import { DAILY_TARGETS } from "@/lib/mockData";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { TrendingUp } from "lucide-react";
@@ -13,12 +14,21 @@ const PERIODS = [
 ];
 
 const NUTRIENTS = [
-  { key: "calcium", label: "Calcium", color: "hsl(330, 60%, 65%)", target: DAILY_TARGETS.calcium },
-  { key: "vitamin_d", label: "Vitamine D", color: "hsl(45, 80%, 50%)", target: DAILY_TARGETS.vitamin_d },
-  { key: "magnesium", label: "Magnésium", color: "hsl(145, 50%, 45%)", target: DAILY_TARGETS.magnesium },
-  { key: "iron", label: "Fer", color: "hsl(0, 65%, 55%)", target: DAILY_TARGETS.iron },
-  { key: "omega3", label: "Oméga-3", color: "hsl(200, 60%, 55%)", target: DAILY_TARGETS.omega3 },
+  { key: "calcium", label: "Calcium", color: "hsl(330, 60%, 65%)", target: DAILY_TARGETS.calcium, unit: "mg" },
+  { key: "vitamin_d", label: "Vitamine D", color: "hsl(45, 80%, 50%)", target: DAILY_TARGETS.vitamin_d, unit: "µg" },
+  { key: "magnesium", label: "Magnésium", color: "hsl(145, 50%, 45%)", target: DAILY_TARGETS.magnesium, unit: "mg" },
+  { key: "iron", label: "Fer", color: "hsl(0, 65%, 55%)", target: DAILY_TARGETS.iron, unit: "mg" },
+  { key: "omega3", label: "Oméga-3", color: "hsl(200, 60%, 55%)", target: DAILY_TARGETS.omega3, unit: "g" },
 ];
+
+/** Convertit une quantité (g, mg, µg) vers l'unité du graphique. */
+const IN_GRAMS: Record<string, number> = { g: 1, mg: 1e-3, "µg": 1e-6, ug: 1e-6, mcg: 1e-6 };
+export function convertUnit(amount: number, from: string, to: string): number {
+  const f = IN_GRAMS[String(from || "").toLowerCase()];
+  const t = IN_GRAMS[to];
+  if (!f || !t) return amount;
+  return (amount * f) / t;
+}
 
 export default function MicronutrientTrendChart() {
   const { user } = useAuth();
@@ -30,6 +40,8 @@ export default function MicronutrientTrendChart() {
     d.setDate(d.getDate() - (period - 1));
     return d.toISOString().split("T")[0];
   }, [period]);
+
+  const { contributionsForDay } = useSupplements(new Date().toISOString().split("T")[0]);
 
   const { data: logs = [] } = useQuery({
     queryKey: ["food_logs_micro_trend", user?.id, startDate],
@@ -70,11 +82,18 @@ export default function MicronutrientTrendChart() {
     const data = days.map((date) => {
       const d = new Date(date);
       const label = `${d.getDate()}/${d.getMonth() + 1}`;
-      const totals = byDay[date];
+      const food = byDay[date];
+      const sup = contributionsForDay(date);
       const point: any = { date, label };
-      if (totals) {
+      const hasSup = NUTRIENTS.some((n) => sup[n.key]);
+      if (food || hasSup) {
         NUTRIENTS.forEach((n) => {
-          const pct = Math.round((totals[n.key] / n.target) * 100);
+          const f = food?.[n.key] || 0;
+          const c = sup[n.key];
+          const sAmt = c ? convertUnit(c.amount, c.unit, n.unit) : 0;
+          point[`${n.key}_food`] = Math.round((f / n.target) * 100);
+          point[`${n.key}_sup`] = Math.round((sAmt / n.target) * 100);
+          const pct = Math.round(((f + sAmt) / n.target) * 100);
           // Exclude aberrant values from chart (likely unit-conversion error)
           if (pct > 500 || !isFinite(pct)) {
             point[n.key] = null;
@@ -87,7 +106,8 @@ export default function MicronutrientTrendChart() {
       return point;
     });
     return { chartData: data, hasData: anyValue };
-  }, [logs, period]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logs, period, contributionsForDay]);
 
   const toggleNutrient = (key: string) => {
     setHidden((prev) => {
@@ -106,7 +126,14 @@ export default function MicronutrientTrendChart() {
         {payload.map((p: any) => (
           <div key={p.name} className="flex justify-between gap-3">
             <span style={{ color: p.color }}>{p.name}</span>
-            <span className="font-bold text-foreground">{p.value}%</span>
+            <span className="text-right">
+              <span className="font-bold text-foreground">{p.value}%</span>
+              {p.payload?.[`${p.dataKey}_sup`] > 0 && (
+                <span className="block text-muted-foreground">
+                  alim. {p.payload[`${p.dataKey}_food`]}% + compl. {p.payload[`${p.dataKey}_sup`]}%
+                </span>
+              )}
+            </span>
           </div>
         ))}
       </div>

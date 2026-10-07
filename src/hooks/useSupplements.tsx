@@ -323,6 +323,7 @@ export function useSupplements(dateStr: string) {
     logs,
     references,
     contributions,
+    contributionsForDay,
     takenSupplements,
     isTaken,
     takenQuantity,
