@@ -201,10 +201,10 @@ export function useSupplements(dateStr: string) {
    * Chaque apport est multiplié par la QUANTITÉ réellement saisie ce jour-là
    * (une dosette ou quatre ne donnent pas le même résultat).
    */
-  const contributions = useMemo(() => {
+  const contributionsForDay = (day: string): Record<string, Contribution> => {
     const out: Record<string, Contribution> = {};
-    for (const s of takenSupplements) {
-      const qty = takenQuantity(s);
+    for (const s of activeSupplements.filter((x) => isTaken(x, day))) {
+      const qty = takenQuantity(s, day);
       for (const n of nutrientsBySupplement[s.id] || []) {
         // Macros : toujours en grammes. Une étiquette « 765 mg de protéines » stockée en mg
         // était additionnée comme 765 g dans le tableau de bord.
@@ -219,8 +219,13 @@ export function useSupplements(dateStr: string) {
       }
     }
     return out;
+  };
+
+  const contributions = useMemo(
+    () => contributionsForDay(dateStr),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [takenSupplements, nutrientsBySupplement, logs, dateStr]);
+    [supplements, nutrientsBySupplement, logs, dateStr]
+  );
 
 
   const toggleTaken = useMutation({
