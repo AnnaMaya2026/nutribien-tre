@@ -11,8 +11,49 @@ export interface DayCell {
   status: DayStatus;
 }
 
-function toKey(d: Date) {
-  return d.toISOString().split("T")[0];
+/** Date YYYY-MM-DD à Paris, décalée de `offsetDays` jours depuis `from`. */
+export function parisKey(offsetDays = 0, from: Date = new Date()): string {
+  const d = new Date(from.getTime() + offsetDays * 86400_000);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(d);
+}
+
+/** Recule une date YYYY-MM-DD de n jours (calendrier, sans fuseau). */
+export function shiftKey(key: string, days: number): string {
+  const d = new Date(`${key}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Série de jours « complets » consécutifs, sans limite. Part d'aujourd'hui, ou d'hier si aujourd'hui n'est pas complet. */
+export function computeStreak(fullDays: Set<string>, today: string): number {
+  let cursor = fullDays.has(today) ? today : shiftKey(today, -1);
+  let n = 0;
+  while (fullDays.has(cursor)) {
+    n++;
+    cursor = shiftKey(cursor, -1);
+  }
+  return n;
+}
+
+const CHUNK_DAYS = 90;
+
+async function fetchDays(table: "food_logs" | "symptom_logs", userId: string, from: string, to: string) {
+  const days = new Set<string>();
+  const page = 1000;
+  for (let offset = 0; ; offset += page) {
+    const { data, error } = await supabase
+      .from(table)
+      .select("logged_at")
+      .eq("user_id", userId)
+      .gte("logged_at", from)
+      .lte("logged_at", to)
+      .order("logged_at", { ascending: false })
+      .range(offset, offset + page - 1);
+    if (error) throw error;
+    (data || []).forEach((r: any) => days.add(r.logged_at));
+    if (!data || data.length < page) break;
+  }
+  return days;
 }
 
 export function useStreakData() {
@@ -22,89 +63,77 @@ export function useStreakData() {
     queryKey: ["streak_data", user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const start = new Date();
-      start.setDate(start.getDate() - 29); // 30-day window
-      const startKey = toKey(start);
-
-      const [foodRes, sympRes, profileRes] = await Promise.all([
-        supabase.from("food_logs").select("logged_at").eq("user_id", user.id).gte("logged_at", startKey),
-        supabase.from("symptom_logs").select("logged_at").eq("user_id", user.id).gte("logged_at", startKey),
-        supabase.from("profiles").select("current_streak, best_streak, last_streak_date").eq("user_id", user.id).maybeSingle(),
-      ]);
-
-      const foodDays = new Set((foodRes.data || []).map((r: any) => r.logged_at));
-      const sympDays = new Set((sympRes.data || []).map((r: any) => r.logged_at));
-
-      // Build last 30 day map
+      const today = parisKey(0);
+      const full = new Set<string>();
       const dayMap: Record<string, DayStatus> = {};
-      for (let i = 29; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const k = toKey(d);
-        const f = foodDays.has(k);
-        const s = sympDays.has(k);
-        dayMap[k] = f && s ? "full" : f || s ? "partial" : "empty";
-      }
 
-      // Compute current streak: consecutive "full" days ending today (or yesterday if today not full yet)
-      const today = toKey(new Date());
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yKey = toKey(yesterday);
-
-      let currentStreak = 0;
-      let cursor = new Date();
-      // Allow today not yet full; start streak from yesterday if today is empty
-      if (dayMap[today] !== "full") cursor = yesterday;
+      // Charge par tranches de 90 jours tant que la série atteint le début de la tranche.
+      let to = today;
       while (true) {
-        const k = toKey(cursor);
-        if (dayMap[k] === "full") {
-          currentStreak += 1;
-          cursor.setDate(cursor.getDate() - 1);
-        } else break;
-        if (currentStreak >= 30) break;
-      }
-      // If today is full, prepend it (already counted in loop if it's full)
-      // The loop above also counts today if full.
-      if (dayMap[today] !== "full" && currentStreak > 0) {
-        // streak ended yesterday, not broken
+        const from = shiftKey(to, -(CHUNK_DAYS - 1));
+        const [foodDays, sympDays] = await Promise.all([
+          fetchDays("food_logs", user.id, from, to),
+          fetchDays("symptom_logs", user.id, from, to),
+        ]);
+        for (let k = to; k >= from; k = shiftKey(k, -1)) {
+          const f = foodDays.has(k);
+          const s = sympDays.has(k);
+          dayMap[k] = f && s ? "full" : f || s ? "partial" : "empty";
+          if (f && s) full.add(k);
+        }
+        const streakSoFar = computeStreak(full, today);
+        const streakStart = shiftKey(full.has(today) ? today : shiftKey(today, -1), -streakSoFar);
+        // La série s'arrête dans la tranche chargée : terminé.
+        if (streakStart >= from || foodDays.size === 0) break;
+        to = shiftKey(from, -1);
       }
 
-      const profile = profileRes.data as any;
-      const storedBest = profile?.best_streak ?? 0;
+      const currentStreak = computeStreak(full, today);
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("current_streak, best_streak, last_streak_date")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const p = profile as any;
+      const storedBest = p?.best_streak ?? 0;
       const bestStreak = Math.max(storedBest, currentStreak);
 
-      // 7-day calendar (last 7 days)
+      // Calendrier des 7 derniers jours (Paris)
       const labels = ["D", "L", "M", "M", "J", "V", "S"];
       const week: DayCell[] = [];
       for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const k = toKey(d);
-        week.push({ date: k, label: labels[d.getDay()], status: dayMap[k] || "empty" });
+        const k = shiftKey(today, -i);
+        week.push({ date: k, label: labels[new Date(`${k}T12:00:00Z`).getUTCDay()], status: dayMap[k] || "empty" });
       }
 
-      return { currentStreak, bestStreak, storedBest, week, todayStatus: dayMap[today] };
+      return {
+        currentStreak,
+        bestStreak,
+        today,
+        stored: { current: p?.current_streak ?? null, best: storedBest, date: p?.last_streak_date ?? null },
+        week,
+        todayStatus: dayMap[today],
+      };
     },
     enabled: !!user,
     staleTime: 60_000,
   });
 
-  // Sync current/best streak back to profile if changed
+  // Écrit la série du jour en base à chaque calcul (si elle a changé).
   useEffect(() => {
     if (!user || !data) return;
-    const needsUpdate = data.bestStreak > (data.storedBest || 0);
-    if (needsUpdate) {
-      supabase
-        .from("profiles")
-        .update({
-          current_streak: data.currentStreak,
-          best_streak: data.bestStreak,
-          last_streak_date: new Date().toISOString().split("T")[0],
-        } as any)
-        .eq("user_id", user.id)
-        .then(() => {});
-    }
+    const s = data.stored;
+    if (s.current === data.currentStreak && s.best === data.bestStreak && s.date === data.today) return;
+    supabase
+      .from("profiles")
+      .update({
+        current_streak: data.currentStreak,
+        best_streak: data.bestStreak,
+        last_streak_date: data.today,
+      } as any)
+      .eq("user_id", user.id)
+      .then(() => {});
   }, [user, data]);
 
   return useMemo(() => ({ ...data, isLoading }), [data, isLoading]);
