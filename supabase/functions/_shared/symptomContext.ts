@@ -72,3 +72,14 @@ export async function buildSymptomContext(supabase: any, userId: string) {
   const text = `\n🩺 SYMPTÔMES SAISIS (date de Paris)\n- Aujourd'hui (${today}) : ${todayLine}\n- 7 derniers jours :\n${pastLines}\n`;
   return { today, todaySymptoms, text };
 }
+
+/** Nettoie un texte de défi : retire « Demain : », « Aujourd'hui : » et toute ponctuation ou espace en tête. */
+export function cleanChallengeText(t: string): string {
+  let s = String(t || "").trim();
+  for (let i = 0; i < 3; i++) {
+    s = s.replace(/^\s*(demain|aujourd['’]hui)\s*[:,\-–—]?\s*/i, "").replace(/^[\s,;:.!?\-–—…·•]+/, "");
+  }
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+export const TUTOIEMENT_RULE = "TUTOIEMENT OBLIGATOIRE : tu tutoies toujours l'utilisatrice (tu, ton, ta, tes, toi), jamais de vouvoiement.";
