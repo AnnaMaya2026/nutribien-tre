@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { cleanChallengeText, parisDate, TUTOIEMENT_RULE } from "../_shared/symptomContext.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,7 +21,7 @@ serve(async (req) => {
     if (!user) return new Response(JSON.stringify({ error: "Non autorisé" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-    const todayDefault = new Date().toISOString().split("T")[0];
+    const todayDefault = parisDate(0);
     const targetDate = typeof body?.target_date === "string" ? body.target_date : todayDefault;
 
     // Reference day used for symptom/food context = day BEFORE the targeted day.
@@ -125,7 +126,7 @@ Réponds UNIQUEMENT en JSON: { "challenge": "..." }`;
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "Tu es Sophie, nutritionniste spécialisée en ménopause. Tu réponds uniquement en JSON valide, en français." },
+          { role: "system", content: `Tu es Sophie, nutritionniste spécialisée en ménopause. Tu réponds uniquement en JSON valide, en français. ${TUTOIEMENT_RULE} Le texte du défi ne commence jamais par « Demain » ni par une ponctuation.` },
           { role: "user", content: userPrompt },
         ],
         temperature: 0.85,
@@ -150,7 +151,7 @@ Réponds UNIQUEMENT en JSON: { "challenge": "..." }`;
     const { data: inserted } = await supabase.from("daily_challenges").insert({
       user_id: user.id,
       challenge_date: targetDate,
-      challenge_text: parsed.challenge,
+      challenge_text: cleanChallengeText(parsed.challenge),
       nutrient_key: weakest,
     }).select().single();
 

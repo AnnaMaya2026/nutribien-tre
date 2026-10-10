@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { buildSymptomContext, parisDate, SYMPTOM_RULE } from "../_shared/symptomContext.ts";
+import { buildSymptomContext, cleanChallengeText, parisDate, SYMPTOM_RULE, TUTOIEMENT_RULE } from "../_shared/symptomContext.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +23,18 @@ serve(async (req) => {
     if (!user) return new Response(JSON.stringify({ error: "Non autorisé" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const today = parisDate(0);
+    const tomorrow = parisDate(1);
+
+    // Source unique du défi de demain : la table des défis (celle de l'accueil).
+    const getTomorrowChallenge = async () => {
+      const { data } = await supabase
+        .from("daily_challenges")
+        .select("challenge_text")
+        .eq("user_id", user.id)
+        .eq("challenge_date", tomorrow)
+        .maybeSingle();
+      return data?.challenge_text ? cleanChallengeText(data.challenge_text) : null;
+    };
 
     const { data: existing } = await supabase
       .from("sophie_evening_messages")
@@ -31,6 +43,11 @@ serve(async (req) => {
       .eq("message_date", today)
       .maybeSingle();
     if (existing) {
+      const shared = await getTomorrowChallenge();
+      if (shared && shared !== existing.challenge) {
+        await supabase.from("sophie_evening_messages").update({ challenge: shared }).eq("id", existing.id);
+        existing.challenge = shared;
+      }
       return new Response(JSON.stringify({ message: existing, cached: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
@@ -93,6 +110,8 @@ Tu DOIS répondre UNIQUEMENT en JSON valide (sans markdown ni backticks) avec ce
 }
 
 Ton : chaleureux, encourageant, jamais culpabilisant. Phrases courtes.
+${TUTOIEMENT_RULE}
+Le défi ne commence jamais par « Demain » ni par une ponctuation.
 
 ${SYMPTOM_RULE}`;
 
@@ -120,6 +139,14 @@ ${SYMPTOM_RULE}`;
     try { parsed = JSON.parse(content); } catch {
       return new Response(JSON.stringify({ error: "Réponse IA invalide" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Un seul défi : on reprend celui de l'accueil s'il existe, sinon on enregistre celui-ci comme défi de demain.
+    let challenge = await getTomorrowChallenge();
+    if (!challenge) {
+      challenge = cleanChallengeText(parsed.challenge);
+      await supabase.from("daily_challenges").insert({ user_id: user.id, challenge_date: tomorrow, challenge_text: challenge });
+    }
+    parsed.challenge = challenge;
 
     const { data: inserted } = await supabase.from("sophie_evening_messages").insert({
       user_id: user.id,
