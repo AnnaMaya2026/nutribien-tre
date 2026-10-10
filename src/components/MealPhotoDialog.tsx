@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Camera, Image as ImageIcon, X, Plus, Loader2, Check, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { findMissingItems } from "@/lib/mealItemsMatch";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
@@ -158,6 +159,16 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
   };
 
   const askConfirm = () => {
+    // Un aliment tapé mais pas encore ajouté par « + » est ajouté automatiquement.
+    const n = newName.trim();
+    const g = Math.round(Number(newGrams) || 0);
+    if (n && g > 0) {
+      setItems((prev) => [...prev, { name: n, grams: g }]);
+      setNewName("");
+      setNewGrams("");
+      setStep("confirm");
+      return;
+    }
     if (items.length === 0) {
       toast.error("Ajoutez au moins un aliment.");
       return;
@@ -185,6 +196,7 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
 
       const loggedAt = selectedDateStr || todayStr;
       let inserted = 0;
+      const insertedNames: string[] = [];
       let totalCalories = 0;
       for (const entry of entries) {
         const { estimated, ...rest } = entry;
@@ -197,6 +209,7 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
         const { error: insErr } = await supabase.from("food_logs").insert(row);
         if (!insErr) {
           inserted += 1;
+          insertedNames.push(String(entry.food_name || ""));
           totalCalories += Number(entry.calories) || 0;
         } else {
           console.error("meal insert failed", insErr, row);
@@ -205,6 +218,12 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
 
       queryClient.invalidateQueries({ queryKey: ["food_logs"] });
       queryClient.invalidateQueries({ queryKey: ["food_logs_week"] });
+
+      // Aliments de la liste sans aucune entrée enregistrée dans le journal
+      const missing = findMissingItems(items.map((it) => it.name), insertedNames);
+      if (missing.length) {
+        toast.error(`Non enregistré${missing.length > 1 ? "s" : ""} dans le journal : ${missing.join(", ")}`, { duration: 10000 });
+      }
 
       setSummary({ count: inserted, calories: Math.round(totalCalories) });
       setStep("done");
@@ -355,6 +374,12 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
                   value={newGrams}
                   onChange={(e) => setNewGrams(e.target.value)}
                   placeholder="g"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addItem();
+                    }
+                  }}
                   className="w-20 h-11"
                 />
                 <button
@@ -368,7 +393,7 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
 
               <button
                 onClick={askConfirm}
-                disabled={items.length === 0}
+                disabled={items.length === 0 && !(newName.trim() && Number(newGrams) > 0)}
                 className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-3 font-medium shadow-md hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Check className="w-5 h-5" />
