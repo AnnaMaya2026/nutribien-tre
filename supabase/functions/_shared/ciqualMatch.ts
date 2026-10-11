@@ -153,9 +153,20 @@ export interface ScoredCandidate {
 
 
 /** Score a CIQUAL row against a (raw) query name. 0..~1.5 */
+/** « œuf(s) » seul = œuf de poule. Une ligne d'œufs de poisson n'est acceptée
+ *  que si la requête nomme le poisson (cabillaud, saumon, lompe, truite). */
+const ROE_FISH_RE = /\b(cabillaud|saumon|lompe|truite|poisson|esturgeon|hareng|caviar|tarama)\b/;
+export function isFishRoeMismatch(query: string, nom: string): boolean {
+  const q = normalize(query);
+  const n = normalize(nom);
+  if (!/\boeufs?\b/.test(n) || !ROE_FISH_RE.test(n)) return false;
+  return !/\b(cabillaud|saumon|lompe|truite)\b/.test(q);
+}
+
 export function scoreCandidate(query: string, nom: string, groupe = ""): number {
   const qTokens = tokenize(query);
   if (qTokens.length === 0) return 0;
+  if (isFishRoeMismatch(query, nom)) return -10;
   const qSet = new Set(qTokens);
 
   const fullNorm = singularize(nom);
