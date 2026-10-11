@@ -1,3 +1,4 @@
+import { isFishRoeMismatch } from "@/lib/ciqualRoe";
 import { supabase } from "@/integrations/supabase/client";
 import { amountToNutritionGrams } from "@/lib/portionUnits";
 
@@ -98,6 +99,10 @@ async function runSearch(term: string): Promise<CiqualFood[]> {
     const bNom = stripAccents(b.nom || "");
     const aScore = aNom.startsWith(lower) ? 0 : aNom.includes(` ${lower}`) ? 1 : 2;
     const bScore = bNom.startsWith(lower) ? 0 : bNom.includes(` ${lower}`) ? 1 : 2;
+    // « œuf » seul : œufs de poule avant les œufs de poisson
+    const aRoe = isFishRoeMismatch(term, a.nom || "") ? 1 : 0;
+    const bRoe = isFishRoeMismatch(term, b.nom || "") ? 1 : 0;
+    if (aRoe !== bRoe) return aRoe - bRoe;
     if (aScore !== bScore) return aScore - bScore;
     if (aNom.length !== bNom.length) return aNom.length - bNom.length;
     return aNom.localeCompare(bNom);
