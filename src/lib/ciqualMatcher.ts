@@ -1,5 +1,8 @@
 import { searchCiqual, type CiqualFood } from "@/lib/ciqual";
 
+import { isFishRoeMismatch } from "@/lib/ciqualRoe";
+export { isFishRoeMismatch };
+
 const STOPWORDS = new Set([
   "de", "du", "des", "le", "la", "les", "un", "une", "et", "au", "aux",
   "a", "l", "d", "en", "sans", "avec", "ou", "pour", "sur",
@@ -53,6 +56,7 @@ export async function findCiqualMatch(
 
   let best: { food: CiqualFood; score: number } | null = null;
   for (const c of candidates) {
+    if (isFishRoeMismatch(productName, c.nom)) continue;
     const s = similarity(productName, c.nom);
     if (!best || s > best.score) best = { food: c, score: s };
   }

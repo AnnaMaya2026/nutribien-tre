@@ -31,7 +31,7 @@ interface Message {
 
 const WELCOME: Message = {
   id: 0,
-  text: "Bonjour ! Je suis Sophie, votre nutritionniste spécialisée en ménopause. Je vois vos données nutritionnelles du jour — comment puis-je vous aider ?",
+  text: "Je suis là 🌿 Je vois tes données nutritionnelles du jour — comment puis-je t'aider ?",
   from: "ai",
 };
 
@@ -86,7 +86,13 @@ export default function ChatPage() {
         }));
         setMessages([WELCOME, ...restoredMsgs]);
       } else {
-        // No conversation yet — fetch personalized opening message
+        // Accueil personnalisé (« Bonjour …, ravie de t'accueillir ») seulement
+        // si l'utilisatrice n'a encore jamais conversé avec Sophie.
+        const { count } = await supabase
+          .from("sophie_conversations" as any)
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id);
+        if ((count ?? 0) > 0) { setRestored(true); return; }
         try {
           const { data: g } = await supabase.functions.invoke("generate-sophie-greeting", { body: {} });
           if (g?.message && typeof g.message === "string") {
@@ -226,7 +232,7 @@ export default function ChatPage() {
 
     if (limitReached) {
       toast.error(
-        "Vous avez utilisé vos 20 messages gratuits aujourd'hui 💬 Revenez demain !"
+        "Tu as utilisé tes 20 messages gratuits aujourd'hui 💬 Reviens demain !"
       );
       return;
     }
@@ -260,7 +266,7 @@ export default function ChatPage() {
           setRemaining(0);
           const limitMsg: Message = {
             id: Date.now() + 1,
-            text: "Vous avez utilisé vos 20 messages gratuits aujourd'hui 💬\n\nRevenez demain pour continuer à discuter avec Sophie !",
+            text: "Tu as utilisé tes 20 messages gratuits aujourd'hui 💬\n\nReviens demain pour continuer à discuter avec Sophie !",
             from: "ai",
           };
           setMessages((prev) => [...prev, limitMsg]);
@@ -275,7 +281,7 @@ export default function ChatPage() {
         setRemaining(0);
         const limitMsg: Message = {
           id: Date.now() + 1,
-          text: "Vous avez utilisé vos 20 messages gratuits aujourd'hui 💬\n\nRevenez demain pour continuer à discuter avec Sophie !",
+          text: "Tu as utilisé tes 20 messages gratuits aujourd'hui 💬\n\nReviens demain pour continuer à discuter avec Sophie !",
           from: "ai",
         };
         setMessages((prev) => [...prev, limitMsg]);
@@ -587,7 +593,7 @@ export default function ChatPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
             </span>
-            <span className="font-medium">J'écoute… prenez votre temps, appuyez sur le micro pour envoyer</span>
+            <span className="font-medium">J'écoute… prends ton temps, appuie sur le micro pour envoyer</span>
           </div>
         )}
         {autoSendTimer && (
@@ -640,7 +646,7 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => { setInput(e.target.value); cancelAutoSend(); }}
             onKeyDown={(e) => { if (e.key === "Enter") { cancelAutoSend(); handleSend(); } }}
-            placeholder="Posez votre question à Sophie ou dites-lui ce que vous avez dans le frigo 🥦"
+            placeholder="Pose ta question à Sophie ou dis-lui ce que tu as dans le frigo 🥦"
             className="h-14 bg-card rounded-lg flex-1"
             disabled={isLoading}
           />

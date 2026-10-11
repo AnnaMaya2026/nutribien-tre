@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildProfileRestrictionsContext } from "../_shared/profileRestrictions.ts";
-import { buildSymptomContext, parisDate, SYMPTOM_RULE } from "../_shared/symptomContext.ts";
+import { buildSymptomContext, parisDate, SYMPTOM_RULE, TUTOIEMENT_RULE } from "../_shared/symptomContext.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -97,6 +97,7 @@ ${symptomCtx.text}
     const restrictionsCtx = buildProfileRestrictionsContext(profile);
 
     const systemPrompt = `Tu es Sophie, nutritionniste spécialisée en ménopause. Génère un bilan quotidien factuel et bienveillant basé UNIQUEMENT sur les données fournies.
+${TUTOIEMENT_RULE}
 
 ${restrictionsCtx.promptBlock}
 
