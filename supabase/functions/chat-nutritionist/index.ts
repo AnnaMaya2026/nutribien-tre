@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { buildSymptomContext, parisDate, symptomLabel, symptomsOfLog, SYMPTOM_RULE } from "../_shared/symptomContext.ts";
+import { buildSymptomContext, parisDate, symptomLabel, symptomsOfLog, SYMPTOM_RULE, TUTOIEMENT_RULE } from "../_shared/symptomContext.ts";
 import { buildProfileRestrictionsContext } from "../_shared/profileRestrictions.ts";
 
 const corsHeaders = {
@@ -206,7 +206,7 @@ RÈGLE ABSOLUE: ne propose JAMAIS un aliment listé dans "n'aime pas" ou "évite
             JSON.stringify({
               error: "limit_reached",
               message:
-                "Vous avez utilisé vos 20 messages gratuits aujourd'hui 💬 Revenez demain pour continuer à discuter avec Sophie !",
+                "Tu as utilisé tes 20 messages gratuits aujourd'hui 💬 Reviens demain pour continuer à discuter avec Sophie !",
               remaining: 0,
               limit: DAILY_LIMIT,
             }),
@@ -324,6 +324,7 @@ Si l'utilisatrice répond oui (ou équivalent : "oui", "vas-y", "ok", "volontier
       : "";
 
     const systemPrompt = `Tu es Sophie, une nutritionniste spécialisée dans la nutrition pour la ménopause. Tu as accès au profil de l'utilisatrice et à ses données nutritionnelles du jour.
+${TUTOIEMENT_RULE}
 ${profileContext}
 ${memoryContext}
 ${trendsContext}
@@ -360,7 +361,7 @@ Connaissances scientifiques importantes:
 RÈGLE INSIGHTS: Ne jamais donner de conseils évidents ou déjà connus. Chaque réponse doit apporter une information surprenante mais vraie.
 
 EXEMPLES DE CE QU'IL NE FAUT PAS DIRE:
-❌ "Mangez plus de calcium pour vos os"
+❌ "Mange plus de calcium pour tes os"
 ❌ "La vitamine D est importante"
 ❌ "Buvez suffisamment d'eau"
 ❌ "Mangez équilibré"
@@ -368,7 +369,7 @@ EXEMPLES DE CE QU'IL NE FAUT PAS DIRE:
 EXEMPLES DE CE QUI FAIT L'EFFET WOW:
 ✅ "Votre fatigue n'est peut-être pas liée au manque de sommeil mais à un déficit en magnésium bisglycinate — la forme la mieux absorbée, rarement dans les compléments bon marché"
 ✅ "Le ratio oméga-6/oméga-3 dans l'alimentation occidentale est 15:1 alors que l'objectif anti-inflammatoire est 4:1 — réduire l'huile de tournesol est aussi important qu'augmenter le saumon"
-✅ "Les phytoestrogènes du soja sont métabolisés différemment selon votre microbiote — certaines femmes en tirent beaucoup de bénéfices, d'autres pas du tout"
+✅ "Les phytoestrogènes du soja sont métabolisés différemment selon ton microbiote — certaines femmes en tirent beaucoup de bénéfices, d'autres pas du tout"
 ✅ "La vitamine D seule ne suffit pas — sans vitamine K2, le calcium va dans les artères plutôt que dans les os"
 
 RÈGLES:
@@ -415,7 +416,7 @@ Exemples importants :
 - Lait de soja → SANS lactose
 - Tofu → SANS lactose
 - Tous laits végétaux → SANS lactose
-En cas de doute sur un allergène, dire : « Je vous recommande de vérifier l'étiquette du produit pour confirmer. »
+En cas de doute sur un allergène, dire : « Je te recommande de vérifier l'étiquette du produit pour confirmer. »
 
 RÈGLE FÉLICITATIONS : Ne félicite jamais pour des objectifs partiellement atteints.
 Félicite UNIQUEMENT quand :

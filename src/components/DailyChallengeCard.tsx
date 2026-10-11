@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Target, Check } from "lucide-react";
 import { toast } from "sonner";
+import { cleanChallengeText, parisDateKey, parisHour } from "@/lib/challengeText";
 
 export default function DailyChallengeCard() {
   const { user } = useAuth();
@@ -15,13 +16,12 @@ export default function DailyChallengeCard() {
     return () => clearInterval(t);
   }, []);
 
-  const hour = now.getHours();
+  const hour = parisHour(now);
   const isAfter8am = hour >= 8;
   // After 5pm local time, generate the challenge for TOMORROW.
   const forTomorrow = hour >= 17;
-  const targetDate = new Date(now);
-  if (forTomorrow) targetDate.setDate(targetDate.getDate() + 1);
-  const targetKey = targetDate.toISOString().split("T")[0];
+  const targetKey = parisDateKey(now, forTomorrow ? 1 : 0);
+  const displayText = useMemo(() => cleanChallengeText(challenge?.challenge_text), [challenge?.challenge_text]);
 
   useEffect(() => {
     if (!user || !isAfter8am) return;
@@ -71,13 +71,6 @@ export default function DailyChallengeCard() {
 
   const title = forTomorrow ? "🌅 Défi pour demain" : "🎯 Défi du jour";
 
-  const displayText = useMemo(() => {
-    if (!challenge?.challenge_text) return "";
-    return challenge.challenge_text
-      .replace(/^\s*Aujourd['’]hui\s*[:\s]*/i, "")
-      .replace(/^\s*Demain\s*[:\s]*/i, "")
-      .trim();
-  }, [challenge?.challenge_text]);
 
   return (
     <div className="bg-gradient-to-br from-amber-50 via-card to-card dark:from-amber-950/20 rounded-2xl p-5 card-soft mb-4 animate-fade-in border border-amber-400/30">

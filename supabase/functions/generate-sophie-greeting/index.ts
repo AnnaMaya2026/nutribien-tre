@@ -92,7 +92,7 @@ serve(async (req) => {
     }
 
     if (top.length === 0) {
-      const message = `Bonjour ${p.display_name || ""} 👋 Je suis Sophie, votre nutritionniste spécialisée en ménopause. Pour démarrer, dites-moi : quel symptôme vous gêne le plus en ce moment ?`.trim();
+      const message = `Bonjour ${p.display_name || ""} 👋 ravie de t'accueillir ! Je suis Sophie, ta nutritionniste spécialisée en ménopause. Pour démarrer, dis-moi : quel symptôme te gêne le plus en ce moment ?`.trim();
       await supabase.from("profiles").update({ sophie_first_message: message }).eq("user_id", user.id);
       return new Response(JSON.stringify({ message }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -112,6 +112,7 @@ Le message doit :
 - Proposer un angle nutritionnel SPÉCIFIQUE à CES symptômes (pas générique)
 - Poser UNE question d'expert ciblée sur ces symptômes
 - Max 3 phrases, ton chaleureux mais expert
+- TUTOIEMENT OBLIGATOIRE (tu, ton, ta, tes), jamais de vouvoiement
 
 INTERDICTIONS ABSOLUES :
 - Ne JAMAIS parler d'oméga-3 / poissons gras / douleurs articulaires si ce n'est pas dans ses symptômes
