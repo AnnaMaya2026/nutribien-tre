@@ -95,6 +95,10 @@ export function useFoodLogs(date?: string) {
       carbs?: number;
       fats?: number;
       fibres?: number;
+      sel?: number;
+      sodium?: number;
+      sucres?: number;
+      acides_gras_satures?: number;
       calcium?: number;
       vitamin_d?: number;
       magnesium?: number;
