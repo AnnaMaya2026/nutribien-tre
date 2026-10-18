@@ -251,6 +251,13 @@ export default function JournalPage() {
       vitamin_b6: (l as any).vitamin_b6 ?? null,
       vitamin_b9: (l as any).vitamin_b9 ?? null,
       vitamin_e: (l as any).vitamin_e ?? null,
+      sel: (l as any).sel ?? null,
+      sodium: (l as any).sodium ?? null,
+      sucres: (l as any).sucres ?? null,
+      acides_gras_satures: (l as any).acides_gras_satures ?? null,
+      brand: (l as any).brand ?? null,
+      micros_estimes: (l as any).micros_estimes ?? false,
+      micros_coverage_percent: (l as any).micros_coverage_percent ?? null,
     }));
     saveFavorite.mutate(
       { name: favName.trim(), meal_type: saveFavModal.mealType, items },
@@ -283,6 +290,13 @@ export default function JournalPage() {
         vitamin_b6: (item as any).vitamin_b6 ?? null,
         vitamin_b9: (item as any).vitamin_b9 ?? null,
         vitamin_e: (item as any).vitamin_e ?? null,
+        sel: (item as any).sel ?? null,
+        sodium: (item as any).sodium ?? null,
+        sucres: (item as any).sucres ?? null,
+        acides_gras_satures: (item as any).acides_gras_satures ?? null,
+        brand: (item as any).brand ?? null,
+        micros_estimes: (item as any).micros_estimes ?? false,
+        micros_coverage_percent: (item as any).micros_coverage_percent ?? null,
         meal_type: destMeal,
       } as any);
     });
