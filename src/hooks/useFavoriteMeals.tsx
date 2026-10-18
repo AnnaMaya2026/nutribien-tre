@@ -33,6 +33,13 @@ export interface FavoriteMealItem {
   vitamin_b6: number;
   vitamin_b9: number;
   vitamin_e: number;
+  sel: number | null;
+  sodium: number | null;
+  sucres: number | null;
+  acides_gras_satures: number | null;
+  brand: string | null;
+  micros_estimes: boolean;
+  micros_coverage_percent: number | null;
 }
 
 export function useFavoriteMeals() {
