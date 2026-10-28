@@ -131,11 +131,18 @@ export function toGrams(
 // ils sont ignorés comme le sel et le poivre (apport négligeable, poids inconnu).
 const HERBS = ["romarin", "thym", "persil", "basilic", "ciboulette", "coriandre", "laurier",
   "menthe", "aneth", "estragon", "origan", "sauge", "cerfeuil"];
-const HERB_UNITS = /\b(brins?|branches?|pincees?|bouquets?|qq|quelques|feuilles?)\b/;
+// Épices et aromates secs : même règle d'ignorance que les herbes (apport
+// négligeable quand ils ne sont pas pesés en grammes).
+const SPICES = ["cumin", "curry", "curcuma", "paprika fume", "paprika", "piment d'espelette",
+  "piment", "cannelle", "muscade", "gingembre en poudre", "cardamome", "coriandre moulue",
+  "safran", "ras el hanout", "herbes de provence", "quatre-epices", "quatre epices",
+  "garam masala"];
+const IGNORABLE_AROMATICS = [...HERBS, ...SPICES];
+const HERB_UNITS = /\b(brins?|branches?|pincees?|bouquets?|qq|quelques|feuilles?|cuilleres?)\b/;
 
 export function isIgnorableHerb(name: string, quantity: number | null, unit: string | null): boolean {
   const n = norm(name);
-  if (!HERBS.some((h) => matchesKeyword(n, h))) return false;
+  if (!IGNORABLE_AROMATICS.some((h) => matchesKeyword(n, h))) return false;
   if (quantity === null) return true;
   const u = norm(unit || "");
   if (HERB_UNITS.test(u) || HERB_UNITS.test(n)) return true;
