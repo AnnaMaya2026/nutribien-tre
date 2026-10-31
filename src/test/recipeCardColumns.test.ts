@@ -32,7 +32,9 @@ const parsed = {
 describe("fiche recette en colonnes par nombre de personnes (2 personnes)", () => {
   let r: any;
   beforeAll(async () => {
-    const { buildResult } = await import("../../supabase/functions/analyze-recipe-card/index.ts");
+    // Chemin en variable : la vérification de types de l'appli ne doit pas suivre ce fichier Deno.
+    const path = "../../supabase/functions/analyze-recipe-card/index.ts";
+    const { buildResult } = await import(/* @vite-ignore */ path);
     r = await buildResult(supabase, parsed);
   }, 60000);
 
