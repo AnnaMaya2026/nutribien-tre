@@ -84,6 +84,10 @@ RÈGLES STRICTES:
   "name" (nom simple en français), "quantity" (nombre, null si non chiffré), "unit" ("g","ml","cl","piece","cas","cac", null si inconnu),
   "pantry" = true si l'ingrédient fait partie des "à prévoir chez vous" / non fourni dans le panier (huile, beurre, sel, poivre…).
 - N'INVENTE aucune quantité : si la fiche n'en donne pas, quantity = null.
+- TABLEAU D'INGRÉDIENTS EN COLONNES PAR NOMBRE DE PERSONNES (ex. colonnes 2, 3, 4, 5, 6 personnes) : retiens UNIQUEMENT la colonne de la plus petite taille de box (le plus petit nombre de personnes) et mets ce nombre dans "servings", sauf si la fiche indique clairement un autre nombre de portions.
+- L'unité se lit dans le libellé de la ligne : « nouilles asiatiques (g) » → unit "g", « sauce soja salée (ml) » → unit "ml". Le "name" ne contient PAS cette parenthèse d'unité (« nouilles asiatiques », « sauce soja salée »).
+- Une ligne sans unité dans son libellé (« oignon jaune », « 1 ») → unit "piece".
+- Ne devine jamais une quantité : si la case de la colonne retenue est vide ou illisible, quantity = null.
 - Plusieurs photos peuvent être fournies (recto, verso…) : c'est UNE SEULE fiche, fusionne les informations.
 - TABLEAU NUTRITIONNEL : une fiche peut contenir plusieurs tableaux (plat complet, sauce, ingrédient isolé…). Tu dois identifier celui du PLAT COMPLET.
   "nutrition_per_portion" = la colonne « par portion » / « par personne » DU PLAT COMPLET. Jamais la colonne « pour 100 g ». Null si absente.
