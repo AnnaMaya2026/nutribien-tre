@@ -414,10 +414,16 @@ export default function JournalPage() {
       {/* Search */}
       {showSearch && (
         <div className="relative mb-4">
+          <button
+            onClick={() => { setShowSearch(false); setSearch(""); setSelectedFood(null); setResults([]); }}
+            className="flex items-center gap-1.5 min-h-[44px] mb-1 px-2 -mx-2 rounded-lg text-sm font-medium text-pink-deep hover:bg-muted transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Retour
+          </button>
           <div className="flex items-center gap-2 mb-2">
             <Search className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Rechercher par nom d'aliment</span>
-            <button onClick={() => { setShowSearch(false); setSearch(""); setSelectedFood(null); setResults([]); }} className="ml-auto">
+            <button onClick={() => { setShowSearch(false); setSearch(""); setSelectedFood(null); setResults([]); }} className="ml-auto min-h-[44px] min-w-[44px] flex items-center justify-center">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
