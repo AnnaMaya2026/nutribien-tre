@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import { searchCiqual, scaleCiqual, scaleOrNull, CiqualFood } from "@/lib/ciqual";
-import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil, Camera } from "lucide-react";
+import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil, Camera, ArrowLeft } from "lucide-react";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
 import DateSelector from "@/components/DateSelector";
 import BarcodeScanner from "@/components/BarcodeScanner";
@@ -381,8 +381,8 @@ export default function JournalPage() {
       )}
       {(showSearch || selectedFood || voiceMatches || voiceCandidates) && <div className="mb-3" />}
 
-      {/* Add food button */}
-      {!isFuture && !showSearch && (
+      {/* Add food buttons (kept visible while search is open) */}
+      {!isFuture && (
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setShowSearch(true)}
@@ -400,7 +400,7 @@ export default function JournalPage() {
             isPending={addLog.isPending}
           />
           <button
-            onClick={() => setPhotoChoiceOpen(true)}
+            onClick={() => { setShowSearch(false); setSearch(""); setSelectedFood(null); setResults([]); setPhotoChoiceOpen(true); }}
             aria-label="Ajouter par photo"
             className="px-3 py-3 bg-card border border-border rounded-xl flex items-center justify-center gap-1.5"
           >
