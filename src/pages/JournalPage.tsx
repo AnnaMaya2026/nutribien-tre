@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import { searchCiqual, scaleCiqual, scaleOrNull, CiqualFood } from "@/lib/ciqual";
-import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil, Camera } from "lucide-react";
+import { Search, Plus, Trash2, X, Minus, ChevronDown, ChevronUp, ArrowRightLeft, Star, Heart, Pencil, Camera, ArrowLeft } from "lucide-react";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
 import DateSelector from "@/components/DateSelector";
 import BarcodeScanner from "@/components/BarcodeScanner";
@@ -381,8 +381,8 @@ export default function JournalPage() {
       )}
       {(showSearch || selectedFood || voiceMatches || voiceCandidates) && <div className="mb-3" />}
 
-      {/* Add food button */}
-      {!isFuture && !showSearch && (
+      {/* Add food buttons (kept visible while search is open) */}
+      {!isFuture && (
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setShowSearch(true)}
@@ -400,7 +400,7 @@ export default function JournalPage() {
             isPending={addLog.isPending}
           />
           <button
-            onClick={() => setPhotoChoiceOpen(true)}
+            onClick={() => { setShowSearch(false); setSearch(""); setSelectedFood(null); setResults([]); setPhotoChoiceOpen(true); }}
             aria-label="Ajouter par photo"
             className="px-3 py-3 bg-card border border-border rounded-xl flex items-center justify-center gap-1.5"
           >
@@ -414,10 +414,16 @@ export default function JournalPage() {
       {/* Search */}
       {showSearch && (
         <div className="relative mb-4">
+          <button
+            onClick={() => { setShowSearch(false); setSearch(""); setSelectedFood(null); setResults([]); }}
+            className="flex items-center gap-1.5 min-h-[44px] mb-1 px-2 -mx-2 rounded-lg text-sm font-medium text-pink-deep hover:bg-muted transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Retour
+          </button>
           <div className="flex items-center gap-2 mb-2">
             <Search className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Rechercher par nom d'aliment</span>
-            <button onClick={() => { setShowSearch(false); setSearch(""); setSelectedFood(null); setResults([]); }} className="ml-auto">
+            <button onClick={() => { setShowSearch(false); setSearch(""); setSelectedFood(null); setResults([]); }} className="ml-auto min-h-[44px] min-w-[44px] flex items-center justify-center">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
@@ -468,12 +474,18 @@ export default function JournalPage() {
       {/* Selected food detail */}
       {selectedFood && scaled && (
         <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
+          <button
+            onClick={() => { setSelectedFood(null); setShowSearch(true); }}
+            className="flex items-center gap-1.5 min-h-[44px] mb-1 px-2 -mx-2 rounded-lg text-sm font-medium text-pink-deep hover:bg-muted transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Retour
+          </button>
           <div className="flex justify-between items-start mb-3">
             <div className="flex-1 mr-2">
               <h3 className="font-semibold text-foreground line-clamp-2">{selectedFood.nom}</h3>
               <p className="text-xs text-muted-foreground">Valeurs pour {formatPortion(selectedFood.nom, grams)}</p>
             </div>
-            <button onClick={() => { setSelectedFood(null); setSearch(""); }}>
+            <button onClick={() => { setShowSearch(false); setSearch(""); setSelectedFood(null); setResults([]); }} className="min-h-[44px] min-w-[44px] flex items-start justify-center">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
