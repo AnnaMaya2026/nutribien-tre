@@ -474,12 +474,18 @@ export default function JournalPage() {
       {/* Selected food detail */}
       {selectedFood && scaled && (
         <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
+          <button
+            onClick={() => { setSelectedFood(null); setShowSearch(true); }}
+            className="flex items-center gap-1.5 min-h-[44px] mb-1 px-2 -mx-2 rounded-lg text-sm font-medium text-pink-deep hover:bg-muted transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Retour
+          </button>
           <div className="flex justify-between items-start mb-3">
             <div className="flex-1 mr-2">
               <h3 className="font-semibold text-foreground line-clamp-2">{selectedFood.nom}</h3>
               <p className="text-xs text-muted-foreground">Valeurs pour {formatPortion(selectedFood.nom, grams)}</p>
             </div>
-            <button onClick={() => { setSelectedFood(null); setSearch(""); }}>
+            <button onClick={() => { setShowSearch(false); setSearch(""); setSelectedFood(null); setResults([]); }} className="min-h-[44px] min-w-[44px] flex items-start justify-center">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
