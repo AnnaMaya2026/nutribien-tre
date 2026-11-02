@@ -1,3 +1,4 @@
+import { spreadMultiplier } from "@/lib/supplementSpread";
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -204,8 +205,23 @@ export function useSupplements(dateStr: string) {
    */
   const contributionsForDay = (day: string): Record<string, Contribution> => {
     const out: Record<string, Contribution> = {};
-    for (const s of activeSupplements.filter((x) => isTaken(x, day))) {
-      const qty = takenQuantity(s, day);
+    for (const s of activeSupplements) {
+      const period = s.periodicite_jours;
+      const spread = period != null && period >= 2;
+      let factor: number;
+      if (spread) {
+        // Périodicité : dose étalée sur N jours, logique « quotidien pré-coché » ignorée.
+        factor = spreadMultiplier(
+          logs.filter((l) => l.supplement_id === s.id),
+          day,
+          period,
+        );
+        if (factor === 0) continue;
+      } else {
+        if (!isTaken(s, day)) continue;
+        const qty = takenQuantity(s, day);
+        factor = qty > 0 ? qty : 1;
+      }
       for (const n of nutrientsBySupplement[s.id] || []) {
         // Macros : toujours en grammes. Une étiquette « 765 mg de protéines » stockée en mg
         // était additionnée comme 765 g dans le tableau de bord.
@@ -213,7 +229,7 @@ export function useSupplements(dateStr: string) {
         const u = String(n.unit || "").toLowerCase();
         const toG = isMacro ? (u === "mg" ? 0.001 : u === "µg" || u === "ug" || u === "mcg" ? 1e-6 : 1) : 1;
         const unit = isMacro ? "g" : n.unit;
-        const amount = (Number(n.amount) || 0) * toG * (qty > 0 ? qty : 1);
+        const amount = (Number(n.amount) || 0) * toG * factor;
         const c = (out[n.nutrient_key] ||= { amount: 0, unit, sources: [] });
         c.amount += amount;
         c.sources.push({ nom: s.nom, amount });
