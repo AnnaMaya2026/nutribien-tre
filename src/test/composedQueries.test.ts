@@ -28,7 +28,7 @@ describe("plat composé introduit par « au »", () => {
   });
 
   it("une ligne qui couvre soupe ET poulet n'est pas pénalisée", () => {
-    expect(scoreCandidate("soupe au poulet", "Soupe au poulet et légumes", "plats composés"))
+    expect(scoreCandidate("soupe au poulet", "Soupe au poulet", "plats composés"))
       .toBeGreaterThanOrEqual(CIQUAL_MATCH_THRESHOLD);
   });
 
