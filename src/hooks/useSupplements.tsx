@@ -14,6 +14,7 @@ export interface Supplement {
   poids_dose_g: number | null;
   actif: boolean;
   quotidien: boolean;
+  periodicite_jours: number | null;
   composition_incomplete: boolean;
   created_at: string;
 }
