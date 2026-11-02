@@ -15,6 +15,13 @@
       "when": 1790275647135,
       "tag": "0001_food_logs_ingredients",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793649819813,
+      "tag": "0002_create_supplements_periodicite_jours",
+      "breakpoints": true
     }
   ]
 }

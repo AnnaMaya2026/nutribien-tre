@@ -964,6 +964,7 @@ export type Database = {
           id: string
           marque: string | null
           nom: string
+          periodicite_jours: number | null
           poids_dose_g: number | null
           quotidien: boolean
           source_routine_id: string | null
@@ -979,6 +980,7 @@ export type Database = {
           id?: string
           marque?: string | null
           nom: string
+          periodicite_jours?: number | null
           poids_dose_g?: number | null
           quotidien?: boolean
           source_routine_id?: string | null
@@ -994,6 +996,7 @@ export type Database = {
           id?: string
           marque?: string | null
           nom?: string
+          periodicite_jours?: number | null
           poids_dose_g?: number | null
           quotidien?: boolean
           source_routine_id?: string | null
