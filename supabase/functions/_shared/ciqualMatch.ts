@@ -83,8 +83,8 @@ const MARKER_WORDS = new Set([
 
 export function isComposedQuery(qNorm: string): boolean {
   if (COMPOSITION_MARKERS.some((m) => qNorm.includes(m))) return true;
-  // garniture explicite: "omelette aux legumes", "poulet a la creme"
-  if (/\b(aux|a la|a l)\s+[a-z0-9]{3,}/.test(qNorm)) return true;
+  // garniture explicite: "omelette aux legumes", "poulet a la creme", "soupe au poulet"
+  if (/\b(aux|au|a la|a l)\s+[a-z0-9]{3,}/.test(qNorm)) return true;
   // coordination "X et Y" entre deux aliments distincts
   const parts = qNorm.split(/\bet\b/).map((p) => p.trim()).filter(Boolean);
   return parts.length > 1 && parts.every((p) => tokenize(p).length > 0);
