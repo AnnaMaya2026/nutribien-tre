@@ -4,6 +4,8 @@ import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import {
   ACTIVITY_LEVELS,
+  PROTEIN_G_PER_KG,
+  FAT_ENERGY_SHARE,
   calculateBMR,
   calculateCalorieGoal,
   calculateCarbsGoal,
@@ -41,20 +43,11 @@ export default function RationExplainerPage() {
     objective: profile?.objective as string | null,
   });
 
-  const proteinG = calculateProteinGoal(tdee, objective.value);
-  const carbsG = calculateCarbsGoal(tdee, objective.value);
-  const fatsG = calculateFatsGoal(tdee, objective.value);
-
-  const proteinPct =
-    objective.value === "perte_poids"
-      ? 32
-      : objective.value === "gain_muscle"
-      ? 30
-      : objective.value === "osseux"
-      ? 35
-      : 27;
-  const carbsPct = objective.value === "perte_poids" ? 42 : 48;
-  const fatsPct = 22;
+  const proteinG = calculateProteinGoal(tdee, weight, objective.value);
+  const fatsG = calculateFatsGoal(tdee);
+  const carbsG = calculateCarbsGoal(tdee, proteinG, fatsG);
+  const fatsPct = FAT_ENERGY_SHARE * 100;
+  const proteinPerKg = PROTEIN_G_PER_KG.toLocaleString("fr-FR");
 
   const bmrCalc = `655 + (9.6 × ${weight}) + (1.8 × ${height}) − (4.7 × ${age})`;
   const bmrDetail = `655 + ${(9.6 * weight).toFixed(0)} + ${(1.8 * height).toFixed(0)} − ${(4.7 * age).toFixed(0)}`;
@@ -136,11 +129,11 @@ export default function RationExplainerPage() {
           <div className="rounded-xl bg-muted/40 p-4 mb-4 space-y-2">
             <div className="flex justify-between text-sm">
               <span>🔴 <strong>Protéines</strong></span>
-              <span className="font-mono">{proteinPct}% = <strong>{proteinG} g/jour</strong></span>
+              <span className="font-mono">{proteinPerKg} g/kg = <strong>{proteinG} g/jour</strong></span>
             </div>
             <div className="flex justify-between text-sm">
               <span>🟠 <strong>Glucides</strong></span>
-              <span className="font-mono">{carbsPct}% = <strong>{carbsG} g/jour</strong> <span className="text-muted-foreground">(dont 25g de fibres minimum)</span></span>
+              <span className="font-mono">Énergie restante = <strong>{carbsG} g/jour</strong> <span className="text-muted-foreground">(dont 25g de fibres minimum)</span></span>
             </div>
             <div className="flex justify-between text-sm">
               <span>🟡 <strong>Lipides</strong></span>
@@ -150,18 +143,18 @@ export default function RationExplainerPage() {
 
           <div className="space-y-3 text-sm">
             <div>
-              <div className="font-semibold mb-1">Protéines ({proteinPct}%)</div>
+              <div className="font-semibold mb-1">Protéines ({proteinPerKg} g/kg)</div>
               <p className="text-muted-foreground">
-                Plus haut que la moyenne pour préserver ta masse musculaire à la ménopause.
-                Soit environ {(proteinG / weight).toFixed(1)} g par kg de ton poids.
+                Ton poids de {weight.toLocaleString("fr-FR")} kg est multiplié par {proteinPerKg},
+                puis arrondi à l'entier : {proteinG} g par jour, quel que soit ton objectif.
               </p>
             </div>
             <div>
-              <div className="font-semibold mb-1">Glucides ({carbsPct}%)</div>
+              <div className="font-semibold mb-1">Glucides (énergie restante)</div>
               <p className="text-muted-foreground">
-                {objective.value === "perte_poids"
-                  ? "Légèrement réduit pour stabiliser ta glycémie. "
-                  : ""}
+                Le calcul est ({tdee} − {proteinG} × 4 − {fatsG} × 9) / 4,
+                arrondi à l'entier, sans descendre sous zéro.
+                {" "}
                 Privilégie les complexes (riz brun, pâtes complètes, légumineuses). Inclure au moins <strong>25 g de fibres/jour</strong> dans ces glucides.
                 <br />
                 <span className="text-xs">Sources fibres : légumes, fruits, légumineuses, céréales complètes.</span>
@@ -170,8 +163,8 @@ export default function RationExplainerPage() {
             <div>
               <div className="font-semibold mb-1">Lipides ({fatsPct}%)</div>
               <p className="text-muted-foreground">
-                Même proportion qu'une alimentation standard mais très importante pour les
-                hormones. Intègre des oméga-3 (poissons gras, noix, huile de lin).
+                {fatsPct} % de tes calories sont divisées par 9, puis arrondies à l'entier,
+                quel que soit ton objectif. Intègre des oméga-3 (poissons gras, noix, huile de lin).
               </p>
             </div>
           </div>
@@ -193,7 +186,7 @@ export default function RationExplainerPage() {
                 `(+300 kcal vs maintien, pour un surplus modéré)`}
               {objective.value === "maintenir" && `pour maintenir ton poids actuel.`}
               {objective.value === "osseux" &&
-                `avec un apport renforcé en protéines pour la santé osseuse.`}
+                `avec le même calcul des macronutriments que pour les autres objectifs.`}
             </div>
           </div>
         </section>

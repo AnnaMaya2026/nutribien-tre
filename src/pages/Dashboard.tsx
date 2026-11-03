@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 import { calculateMealTargets } from "@/utils/mealTargetsCalculator";
-import { calculateCalorieGoal, calculateProteinGoal, calculateCarbsGoal, calculateFatsGoal } from "@/lib/calorieGoal";
+import { calculateCalorieGoal, calculateProteinGoal, calculateCarbsGoal, calculateFatsGoal, PROTEIN_G_PER_KG } from "@/lib/calorieGoal";
 import MealProgressBlock from "@/components/MealProgressBlock";
 import {
   AlertDialog,
@@ -250,9 +250,9 @@ export default function Dashboard() {
     activityLevel: p?.activity_level,
     objective: p?.objective,
   });
-  const dailyProteins = calculateProteinGoal(dailyCalories, p?.objective);
-  const dailyCarbs = calculateCarbsGoal(dailyCalories, p?.objective);
-  const dailyFats = calculateFatsGoal(dailyCalories, p?.objective);
+  const dailyProteins = calculateProteinGoal(dailyCalories, p?.weight, p?.objective);
+  const dailyFats = calculateFatsGoal(dailyCalories);
+  const dailyCarbs = calculateCarbsGoal(dailyCalories, dailyProteins, dailyFats);
   const calorieGoal = dailyCalories;
   const proteinGoal = dailyProteins;
   const mealTargets = calculateMealTargets(dailyCalories, dailyProteins, dailyCarbs, dailyFats);
@@ -530,7 +530,10 @@ export default function Dashboard() {
         </div>
 
         <p className="mt-3 text-xs text-muted-foreground text-center">
-          Protéines: {Math.round(totals.proteins + supMacros.proteins)}g / {proteinGoal}g (1.2g par kg de votre poids)
+          Protéines: {Math.round(totals.proteins + supMacros.proteins)}g / {proteinGoal}g
+          {typeof p?.weight === "number" && Number.isFinite(p.weight) && p.weight > 0 && (
+            <> ({PROTEIN_G_PER_KG.toLocaleString("fr-FR")} g par kg de votre poids de {p.weight.toLocaleString("fr-FR")} kg)</>
+          )}
           {supMacros.proteins > 0 && (
             <> — dont <span className="text-amber-600 dark:text-amber-400">{Math.round(supMacros.proteins)}g de compléments</span> ({Math.round(totals.proteins)}g par l'alimentation
             {supMacroSources.proteins.length > 0 && <> ; {supMacroSources.proteins.map((s) => `${s.nom} +${Math.round(s.amount)}g`).join(", ")}</>})</>
