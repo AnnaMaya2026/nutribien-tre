@@ -268,6 +268,7 @@ export function useSupplements(dateStr: string) {
       unite_dose: string;
       poids_dose_g?: number | null;
       quotidien: boolean;
+      periodicite_jours?: number | null;
       nutrients: { nutrient_key: string; amount: number; unit: string }[];
     }) => {
       if (!userId) throw new Error("not authenticated");
@@ -286,6 +287,7 @@ export function useSupplements(dateStr: string) {
           poids_dose_g: doseUnitNeedsWeight(input.unite_dose) ? Number(input.poids_dose_g) : null,
           actif: true,
           quotidien: input.quotidien,
+          periodicite_jours: input.periodicite_jours ?? null,
         })
         .select("id")
         .single();
@@ -322,6 +324,18 @@ export function useSupplements(dateStr: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["supplements", userId] }),
   });
 
+  /** N défini : la dose est répartie sur N jours, le mode quotidien est forcé à false.
+   *  NULL : retour au mode normal (quotidien inchangé, modifiable via l'interrupteur). */
+  const setPeriodicite = useMutation({
+    mutationFn: async ({ id, jours }: { id: string; jours: number | null }) => {
+      const update: Record<string, unknown> = { periodicite_jours: jours };
+      if (jours != null) update.quotidien = false;
+      const { error } = await (supabase as any).from("supplements").update(update).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["supplements", userId] }),
+  });
+
   const deleteSupplement = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await (supabase as any).from("supplements").delete().eq("id", id);
@@ -349,6 +363,7 @@ export function useSupplements(dateStr: string) {
     addSupplement,
     setActive,
     setQuotidien,
+    setPeriodicite,
     deleteSupplement,
     isLoading: supplementsQuery.isLoading || nutrientsQuery.isLoading || logsQuery.isLoading,
   };
