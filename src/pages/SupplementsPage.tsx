@@ -28,7 +28,7 @@ function PeriodiciteBadge({ supplement, onChange }: { supplement: Supplement; on
             setValue(String(supplement.periodicite_jours));
             setEditing(true);
           }}
-          className="px-2 h-7 min-h-[44px] rounded-md border border-border text-[11px] flex items-center"
+          className="px-2 h-7 rounded-md border border-border text-[11px] flex items-center"
           aria-label={`Modifier le nombre de jours couverts de ${supplement.nom}`}
         >
           Modifier
@@ -54,14 +54,14 @@ function PeriodiciteBadge({ supplement, onChange }: { supplement: Supplement; on
           setEditing(false);
         }}
         disabled={!valid}
-        className="px-2 h-7 min-h-[44px] rounded-md bg-primary text-primary-foreground text-[11px] flex items-center disabled:opacity-50"
+        className="px-2 h-7 rounded-md bg-primary text-primary-foreground text-[11px] flex items-center disabled:opacity-50"
         aria-label="Enregistrer le nombre de jours couverts"
       >
         OK
       </button>
       <button
         onClick={() => setEditing(false)}
-        className="px-2 h-7 min-h-[44px] rounded-md bg-muted text-[11px] flex items-center"
+        className="px-2 h-7 rounded-md bg-muted text-[11px] flex items-center"
         aria-label="Annuler la modification"
       >
         Annuler
