@@ -71,7 +71,8 @@ export default function SupplementPhotoDialog({
   const [dose, setDose] = useState("");
   const [doseUnit, setDoseUnit] = useState("");
   const [poidsDose, setPoidsDose] = useState("");
-  const [quotidien, setQuotidien] = useState(true);
+  const [frequence, setFrequence] = useState<"quotidien" | "coche" | "etale">("quotidien");
+  const [joursCouverts, setJoursCouverts] = useState("30");
 
 
   const [rows, setRows] = useState<Row[]>([]);
@@ -88,7 +89,7 @@ export default function SupplementPhotoDialog({
   const reset = () => {
     setStep("capture");
     setNom(""); setMarque(""); setDose(""); setDoseUnit(""); setPoidsDose("");
-    setQuotidien(true); setRows([]); setIgnored([]);
+    setFrequence("quotidien"); setJoursCouverts("30"); setRows([]); setIgnored([]);
 
     setNewKey(""); setNewAmount(""); setNewUnit("mg"); setSaving(false);
   };
@@ -156,6 +157,12 @@ export default function SupplementPhotoDialog({
       .map((r) => ({ nutrient_key: r.nutrient_key, amount: Number(String(r.amount).replace(",", ".")), unit: r.unit }))
       .filter((n) => n.nutrient_key && isFinite(n.amount) && n.amount > 0);
     if (nutrients.length === 0) return toast.error("Ajoutez au moins un nutriment.");
+    let joursNum: number | null = null;
+    if (frequence === "etale") {
+      joursNum = Number(joursCouverts);
+      if (!Number.isInteger(joursNum) || joursNum < 2 || joursNum > 120)
+        return toast.error("Nombre de jours couverts : entre 2 et 120.");
+    }
     setSaving(true);
     try {
       await addSupplement.mutateAsync({
@@ -164,7 +171,8 @@ export default function SupplementPhotoDialog({
         dose_par_prise: doseNum,
         unite_dose: doseUnit,
         poids_dose_g: doseUnitNeedsWeight(doseUnit) ? poidsNum : null,
-        quotidien,
+        quotidien: frequence === "quotidien",
+        periodicite_jours: joursNum,
         nutrients,
       });
       close();
@@ -253,10 +261,40 @@ export default function SupplementPhotoDialog({
                   </div>
                 )}
 
-                <label className="flex items-center gap-2 text-sm pt-1">
-                  <input type="checkbox" checked={quotidien} onChange={(e) => setQuotidien(e.target.checked)} className="w-4 h-4" />
-                  Je le prends tous les jours (pré-coché chaque jour)
-                </label>
+                <div className="space-y-0.5 pt-1">
+                  <p className="text-xs font-medium text-muted-foreground">Fréquence</p>
+                  {([
+                    ["quotidien", "Tous les jours (pré-coché)"],
+                    ["coche", "Je coche les jours de prise"],
+                    ["etale", "Une dose couvre plusieurs jours"],
+                  ] as const).map(([value, label]) => (
+                    <label key={value} className="flex items-center gap-2 text-sm py-1">
+                      <input
+                        type="radio"
+                        name="frequence-complement"
+                        checked={frequence === value}
+                        onChange={() => setFrequence(value)}
+                        className="w-4 h-4"
+                      />
+                      {label}
+                    </label>
+                  ))}
+                  {frequence === "etale" && (
+                    <div className="pl-6 pt-1">
+                      <label className="text-xs font-medium text-muted-foreground" htmlFor="jours-couverts">
+                        Nombre de jours couverts (entre 2 et 120)
+                      </label>
+                      <Input
+                        id="jours-couverts"
+                        value={joursCouverts}
+                        onChange={(e) => setJoursCouverts(e.target.value)}
+                        inputMode="numeric"
+                        placeholder="30"
+                        className="w-24 h-9 mt-1"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>

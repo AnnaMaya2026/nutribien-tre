@@ -12,6 +12,64 @@ function toKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/** Complément avec périodicité : libellé « Dose répartie sur N jours » + bouton pour modifier N (2 à 120). */
+function PeriodiciteBadge({ supplement, onChange }: { supplement: Supplement; onChange: (jours: number | null) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(String(supplement.periodicite_jours));
+  const num = Number(value);
+  const valid = Number.isInteger(num) && num >= 2 && num <= 120;
+
+  if (!editing) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span>Dose répartie sur {supplement.periodicite_jours} jours</span>
+        <button
+          onClick={() => {
+            setValue(String(supplement.periodicite_jours));
+            setEditing(true);
+          }}
+          className="px-2 h-7 min-h-[44px] rounded-md border border-border text-[11px] flex items-center"
+          aria-label={`Modifier le nombre de jours couverts de ${supplement.nom}`}
+        >
+          Modifier
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <input
+        type="number"
+        value={value}
+        min={2}
+        max={120}
+        onChange={(e) => setValue(e.target.value)}
+        className="w-16 h-7 rounded-md border border-input bg-background px-1.5 text-xs"
+        aria-label="Nombre de jours couverts"
+      />
+      <button
+        onClick={() => {
+          if (!valid) return;
+          onChange(num);
+          setEditing(false);
+        }}
+        disabled={!valid}
+        className="px-2 h-7 min-h-[44px] rounded-md bg-primary text-primary-foreground text-[11px] flex items-center disabled:opacity-50"
+        aria-label="Enregistrer le nombre de jours couverts"
+      >
+        OK
+      </button>
+      <button
+        onClick={() => setEditing(false)}
+        className="px-2 h-7 min-h-[44px] rounded-md bg-muted text-[11px] flex items-center"
+        aria-label="Annuler la modification"
+      >
+        Annuler
+      </button>
+    </div>
+  );
+}
+
 export default function SupplementsPage() {
   const navigate = useNavigate();
   const { selectedDate } = useSelectedDate();
@@ -26,6 +84,7 @@ export default function SupplementsPage() {
     toggleTaken,
     setActive,
     setQuotidien,
+    setPeriodicite,
     deleteSupplement,
     isLoading,
   } = useSupplements(dateStr);
@@ -105,10 +164,14 @@ export default function SupplementsPage() {
             <Switch checked={s.actif} onCheckedChange={(v) => setActive.mutate({ id: s.id, actif: v })} />
             Actif
           </label>
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Switch checked={s.quotidien} onCheckedChange={(v) => setQuotidien.mutate({ id: s.id, quotidien: v })} />
-            Quotidien
-          </label>
+          {s.periodicite_jours != null ? (
+            <PeriodiciteBadge supplement={s} onChange={(jours) => setPeriodicite.mutate({ id: s.id, jours })} />
+          ) : (
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Switch checked={s.quotidien} onCheckedChange={(v) => setQuotidien.mutate({ id: s.id, quotidien: v })} />
+              Quotidien
+            </label>
+          )}
         </div>
       </div>
     );
