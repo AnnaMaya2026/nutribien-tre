@@ -351,9 +351,9 @@ export default function JournalPage() {
     activityLevel: p?.activity_level,
     objective: p?.objective,
   });
-  const dailyProteins = calculateProteinGoal(dailyCalories, p?.objective);
-  const dailyCarbs = calculateCarbsGoal(dailyCalories, p?.objective);
-  const dailyFats = calculateFatsGoal(dailyCalories, p?.objective);
+  const dailyProteins = calculateProteinGoal(dailyCalories, p?.weight, p?.objective);
+  const dailyFats = calculateFatsGoal(dailyCalories);
+  const dailyCarbs = calculateCarbsGoal(dailyCalories, dailyProteins, dailyFats);
   const mealTargets = calculateMealTargets(dailyCalories, dailyProteins, dailyCarbs, dailyFats);
   const targetByMeal = Object.fromEntries(mealTargets.map((t) => [t.key, t]));
 

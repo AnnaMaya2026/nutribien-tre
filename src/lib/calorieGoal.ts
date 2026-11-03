@@ -103,8 +103,14 @@ export function calculateCalorieGoal(params: {
   return final;
 }
 
-/** Protéines (g) = (TDEE × %protéines) / 4  —  ajusté selon objectif */
-export function calculateProteinGoal(tdee: number, objective?: string | null): number {
+export const PROTEIN_G_PER_KG = 1.2;
+export const FAT_ENERGY_SHARE = 0.35;
+
+/** Protéines (g) selon le poids ; ancien pourcentage si le poids est indisponible. */
+export function calculateProteinGoal(tdee: number, weight?: number | null, objective?: string | null): number {
+  if (typeof weight === "number" && Number.isFinite(weight) && weight > 0) {
+    return Math.round(weight * PROTEIN_G_PER_KG);
+  }
   const obj = objective || "maintenir";
   let proteinPercent = 0.27; // standard
   if (obj === "perte_poids") proteinPercent = 0.32;
@@ -113,15 +119,14 @@ export function calculateProteinGoal(tdee: number, objective?: string | null): n
   return Math.round((tdee * proteinPercent) / 4);
 }
 
-/** Glucides (g) = (TDEE × %) / 4  —  42% si perte de poids, sinon 48% */
-export function calculateCarbsGoal(tdee: number, objective?: string | null): number {
-  const carbsPercent = (objective || "maintenir") === "perte_poids" ? 0.42 : 0.48;
-  return Math.round((tdee * carbsPercent) / 4);
+/** Glucides (g) = énergie restante après les objectifs de protéines et de lipides. */
+export function calculateCarbsGoal(tdee: number, proteins: number, fats: number): number {
+  return Math.max(0, Math.round((tdee - proteins * 4 - fats * 9) / 4));
 }
 
-/** Lipides (g) = (TDEE × 0.22) / 9 — fixe pour équilibre hormonal */
-export function calculateFatsGoal(tdee: number, _objective?: string | null): number {
-  return Math.round((tdee * 0.22) / 9);
+/** Lipides (g) = part fixe de l'énergie / 9. */
+export function calculateFatsGoal(tdee: number): number {
+  return Math.round((tdee * FAT_ENERGY_SHARE) / 9);
 }
 
 /** Fibres : recommandation fixe 25g/jour. */

@@ -118,16 +118,16 @@ export default function ProfilePage() {
     [weight, height, age, activityLevel, objective]
   );
   const computedProteinGoal = useMemo(
-    () => calculateProteinGoal(computedCalorieGoal, objective),
-    [computedCalorieGoal, objective]
-  );
-  const computedCarbsGoal = useMemo(
-    () => calculateCarbsGoal(computedCalorieGoal, objective),
-    [computedCalorieGoal, objective]
+    () => calculateProteinGoal(computedCalorieGoal, weight ? Number(weight) : null, objective),
+    [computedCalorieGoal, weight, objective]
   );
   const computedFatsGoal = useMemo(
-    () => calculateFatsGoal(computedCalorieGoal, objective),
-    [computedCalorieGoal, objective]
+    () => calculateFatsGoal(computedCalorieGoal),
+    [computedCalorieGoal]
+  );
+  const computedCarbsGoal = useMemo(
+    () => calculateCarbsGoal(computedCalorieGoal, computedProteinGoal, computedFatsGoal),
+    [computedCalorieGoal, computedProteinGoal, computedFatsGoal]
   );
   const activityInfo = useMemo(() => getActivityLevel(activityLevel), [activityLevel]);
   const objectiveInfo = useMemo(() => getObjective(objective), [objective]);
