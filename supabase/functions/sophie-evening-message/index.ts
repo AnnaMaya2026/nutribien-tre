@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildSymptomContext, cleanChallengeText, parisDate, SYMPTOM_RULE, TUTOIEMENT_RULE } from "../_shared/symptomContext.ts";
+import { FIBRES_GOAL_G } from "../_shared/nutritionTargets.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -83,7 +84,7 @@ serve(async (req) => {
       magnesium: { val: totals.magnesium, goal: 320, label: "Magnésium" },
       iron: { val: totals.iron, goal: 18, label: "Fer" },
       omega3: { val: totals.omega3, goal: 2.5, label: "Oméga-3" },
-      fibres: { val: totals.fibres, goal: 25, label: "Fibres" },
+      fibres: { val: totals.fibres, goal: FIBRES_GOAL_G, label: "Fibres" },
     };
     const missing = Object.values(targets).filter((t) => t.val < t.goal * 0.6).map((t) => t.label);
 

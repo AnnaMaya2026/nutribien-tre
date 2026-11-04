@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { FIBRES_GOAL_G } from "../_shared/nutritionTargets.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -137,7 +138,7 @@ serve(async (req) => {
       magnesium: { goal: 320, label: "Magnésium", unit: "mg" },
       iron: { goal: 18, label: "Fer", unit: "mg" },
       omega3: { goal: 2.5, label: "Oméga-3", unit: "g" },
-      fibres: { goal: 25, label: "Fibres", unit: "g" },
+      fibres: { goal: FIBRES_GOAL_G, label: "Fibres", unit: "g" },
     };
 
     const sumFor = (k: string) => foodLogs.reduce((a, f) => a + (Number((f as any)[k]) || 0), 0);

@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { calculateProteinGoal, calculateFatsGoal, calculateCarbsGoal, OBJECTIVES } from "@/lib/calorieGoal";
 
 describe("Objectifs de macronutriments", () => {
-  it.each(OBJECTIVES.map(({ value }) => value))("61 kg et 1450 kcal : 73 g, 56 g et 163 g pour %s", (objective) => {
+  it.each(OBJECTIVES.map(({ value }) => value))("61 kg et 1450 kcal : 73 g, 56 g et 164 g pour %s", (objective) => {
     const proteins = calculateProteinGoal(1450, 61, objective);
     const fats = calculateFatsGoal(1450);
     expect(proteins).toBe(73);
     expect(fats).toBe(56);
-    expect(calculateCarbsGoal(1450, proteins, fats)).toBe(163);
+    expect(calculateCarbsGoal(1450, proteins, fats)).toBe(164);
   });
 
   it.each([

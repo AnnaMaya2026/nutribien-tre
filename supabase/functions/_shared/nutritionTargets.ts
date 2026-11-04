@@ -1,0 +1,1 @@
+export const FIBRES_GOAL_G = 30;

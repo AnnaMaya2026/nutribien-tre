@@ -129,8 +129,8 @@ export function calculateFatsGoal(tdee: number): number {
   return Math.round((tdee * FAT_ENERGY_SHARE) / 9);
 }
 
-/** Fibres : recommandation fixe 25g/jour. */
-export const FIBRES_GOAL_MIN = 25;
-export const FIBRES_GOAL_MAX = 25;
-export const FIBRES_GOAL = 25;
+/** Fibres : apport satisfaisant adulte ANSES 2016, 30 g/jour. */
+export const FIBRES_GOAL = 30;
+export const FIBRES_GOAL_MIN = FIBRES_GOAL;
+export const FIBRES_GOAL_MAX = FIBRES_GOAL;
 
