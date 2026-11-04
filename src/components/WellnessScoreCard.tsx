@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { FIBRES_GOAL } from "@/lib/calorieGoal";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useProfile } from "@/hooks/useProfile";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
@@ -23,7 +24,7 @@ const NUTRIENT_GOALS: Record<string, number> = {
   calcium: 1200,
   magnesium: 320,
   iron: 8,
-  fibres: 25,
+  fibres: FIBRES_GOAL,
   omega3: 2.0,
   zinc: 8,
   potassium: 3500,

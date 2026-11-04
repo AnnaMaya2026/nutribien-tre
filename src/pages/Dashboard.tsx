@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 import { calculateMealTargets } from "@/utils/mealTargetsCalculator";
-import { calculateCalorieGoal, calculateProteinGoal, calculateCarbsGoal, calculateFatsGoal, PROTEIN_G_PER_KG } from "@/lib/calorieGoal";
+import { calculateCalorieGoal, calculateProteinGoal, calculateCarbsGoal, calculateFatsGoal, PROTEIN_G_PER_KG, FIBRES_GOAL } from "@/lib/calorieGoal";
 import MealProgressBlock from "@/components/MealProgressBlock";
 import {
   AlertDialog,
@@ -168,7 +168,7 @@ function formatFrenchDate(): string {
 }
 
 
-const MACRO_GOALS = { proteins: 100, carbs: 200, fats: 65, fibres: 25 };
+const MACRO_GOALS = { proteins: 100, carbs: 200, fats: 65, fibres: FIBRES_GOAL };
 
 const COLORFUL_PRODUCE_KEYWORDS = [
   "myrtille", "fraise", "framboise", "mure", "mûre", "grenade", "raisin", "cerise", "orange", "kiwi", "pomme", "poire", "banane", "abricot", "peche", "pêche", "prune", "mangue", "ananas", "brocoli", "carotte", "tomate", "poivron", "epinard", "épinard", "courgette", "aubergine", "betterave", "chou", "salade", "concombre", "haricot vert", "patate douce",

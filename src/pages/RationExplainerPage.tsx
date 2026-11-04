@@ -6,6 +6,7 @@ import {
   ACTIVITY_LEVELS,
   PROTEIN_G_PER_KG,
   FAT_ENERGY_SHARE,
+  FIBRES_GOAL,
   calculateBMR,
   calculateCalorieGoal,
   calculateCarbsGoal,
@@ -133,7 +134,7 @@ export default function RationExplainerPage() {
             </div>
             <div className="flex justify-between text-sm">
               <span>🟠 <strong>Glucides</strong></span>
-              <span className="font-mono">Énergie restante = <strong>{carbsG} g/jour</strong> <span className="text-muted-foreground">(dont 25g de fibres minimum)</span></span>
+              <span className="font-mono">Énergie restante = <strong>{carbsG} g/jour</strong> <span className="text-muted-foreground">(dont {FIBRES_GOAL}g de fibres minimum)</span></span>
             </div>
             <div className="flex justify-between text-sm">
               <span>🟡 <strong>Lipides</strong></span>
@@ -155,7 +156,7 @@ export default function RationExplainerPage() {
                 Le calcul est ({tdee} − {proteinG} × 4 − {fatsG} × 9) / 4,
                 arrondi à l'entier, sans descendre sous zéro.
                 {" "}
-                Privilégie les complexes (riz brun, pâtes complètes, légumineuses). Inclure au moins <strong>25 g de fibres/jour</strong> dans ces glucides.
+                Privilégie les complexes (riz brun, pâtes complètes, légumineuses). Inclure au moins <strong>{FIBRES_GOAL} g de fibres/jour</strong> dans ces glucides.
                 <br />
                 <span className="text-xs">Sources fibres : légumes, fruits, légumineuses, céréales complètes.</span>
               </p>
