@@ -7,6 +7,38 @@ import LabelPhotoDialog from "@/components/LabelPhotoDialog";
 import { useSupplements, nutrientLabel, type Supplement } from "@/hooks/useSupplements";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { parseCoveredDays } from "@/components/SupplementFrequencyChoice";
+import { Input } from "@/components/ui/input";
+
+function StartPeriodicite({ onChange }: { onChange: (jours: number) => Promise<unknown> }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState("30");
+  const [saving, setSaving] = useState(false);
+  const days = parseCoveredDays(value);
+  if (!editing) return (
+    <Button type="button" variant="outline" size="sm" className="h-auto whitespace-normal text-left"
+      onClick={() => { setValue("30"); setEditing(true); }}>
+      Répartir une dose sur plusieurs jours
+    </Button>
+  );
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Input type="number" min={2} max={120} step={1} value={value} disabled={saving}
+        onChange={(event) => setValue(event.target.value)} aria-label="Nombre de jours couverts" className="w-24" />
+      <Button type="button" size="sm" disabled={days === null || saving} onClick={async () => {
+        if (days === null) return;
+        setSaving(true);
+        try {
+          await onChange(days);
+          setEditing(false);
+        } finally {
+          setSaving(false);
+        }
+      }}>Enregistrer</Button>
+      <Button type="button" variant="ghost" size="sm" disabled={saving} onClick={() => setEditing(false)}>Annuler</Button>
+    </div>
+  );
+}
 
 function toKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -159,7 +191,7 @@ export default function SupplementsPage() {
           </p>
         )}
 
-        <div className="flex items-center gap-4 pl-10 pt-1">
+        <div className="flex flex-wrap items-center gap-4 pl-10 pt-1">
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Switch checked={s.actif} onCheckedChange={(v) => setActive.mutate({ id: s.id, actif: v })} />
             Actif
@@ -167,10 +199,13 @@ export default function SupplementsPage() {
           {s.periodicite_jours != null ? (
             <PeriodiciteBadge supplement={s} onChange={(jours) => setPeriodicite.mutate({ id: s.id, jours })} />
           ) : (
-            <label className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Switch checked={s.quotidien} onCheckedChange={(v) => setQuotidien.mutate({ id: s.id, quotidien: v })} />
-              Quotidien
-            </label>
+            <>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Switch checked={s.quotidien} onCheckedChange={(v) => setQuotidien.mutate({ id: s.id, quotidien: v })} />
+                Quotidien
+              </label>
+              {s.actif && <StartPeriodicite onChange={(jours) => setPeriodicite.mutateAsync({ id: s.id, jours })} />}
+            </>
           )}
         </div>
       </div>
