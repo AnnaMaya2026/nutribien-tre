@@ -3,6 +3,7 @@ import { Camera, Image as ImageIcon, X, Plus, Loader2, Trash2, Pencil } from "lu
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import SupplementFrequencyChoice, { supplementFrequencySettings, type SupplementFrequency } from "@/components/SupplementFrequencyChoice";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
@@ -138,7 +139,8 @@ export default function LabelPhotoDialog({
   const [dose, setDose] = useState("");
   const [doseUnit, setDoseUnit] = useState("");
   const [poidsDose, setPoidsDose] = useState("");
-  const [quotidien, setQuotidien] = useState(true);
+  const [frequence, setFrequence] = useState<SupplementFrequency>("quotidien");
+  const [joursCouverts, setJoursCouverts] = useState("30");
   // plat préparé
   const [portion, setPortion] = useState("");
   const [mealType, setMealType] = useState(defaultMealType);
@@ -179,7 +181,7 @@ export default function LabelPhotoDialog({
   const reset = () => {
     setStep("capture");
     setNom(""); setMarque(""); setDose(""); setDoseUnit(""); setPoidsDose("");
-    setQuotidien(true); setRows([]); setIgnored([]);
+    setFrequence("quotidien"); setJoursCouverts("30"); setRows([]); setIgnored([]);
     setPortion(""); setMealType(defaultMealType); setCoverage(null);
     setMacros([]); setMicros([]);
     setServings("2"); setPortionsEaten("1"); setAddedFat(""); setAsFavorite(false);
@@ -367,6 +369,8 @@ export default function LabelPhotoDialog({
       .map((r) => ({ nutrient_key: r.key, amount: Number(String(r.amount).replace(",", ".")), unit: r.unit }))
       .filter((n) => n.nutrient_key && isFinite(n.amount) && n.amount > 0);
     if (nutrients.length === 0) return toast.error("Ajoutez au moins un nutriment.");
+    const frequencySettings = supplementFrequencySettings(frequence, joursCouverts);
+    if (!frequencySettings) return toast.error("Nombre de jours couverts : entre 2 et 120.");
     setSaving(true);
     try {
       await addSupplement.mutateAsync({
@@ -375,7 +379,7 @@ export default function LabelPhotoDialog({
         dose_par_prise: doseNum,
         unite_dose: doseUnit,
         poids_dose_g: doseUnitNeedsWeight(doseUnit) ? poidsNum : null,
-        quotidien,
+        ...frequencySettings,
         nutrients,
       });
       close();
@@ -699,10 +703,8 @@ export default function LabelPhotoDialog({
                         </p>
                       </div>
                     )}
-                    <label className="flex items-center gap-2 text-sm pt-1">
-                      <input type="checkbox" checked={quotidien} onChange={(e) => setQuotidien(e.target.checked)} className="w-4 h-4" />
-                      Je le prends tous les jours (pré-coché chaque jour)
-                    </label>
+                    <SupplementFrequencyChoice frequency={frequence} onFrequencyChange={setFrequence}
+                      coveredDays={joursCouverts} onCoveredDaysChange={setJoursCouverts} />
                   </>
                 ) : (
                   <>
