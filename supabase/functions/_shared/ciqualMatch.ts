@@ -151,6 +151,10 @@ export interface ScoredCandidate {
   score: number;
 }
 
+export interface CiqualMatchContext {
+  ingredientsBruts?: boolean;
+}
+
 
 /** Score a CIQUAL row against a (raw) query name. 0..~1.5 */
 /** « œuf(s) » seul = œuf de poule. Une ligne d'œufs de poisson n'est acceptée
@@ -163,7 +167,7 @@ export function isFishRoeMismatch(query: string, nom: string): boolean {
   return !/\b(cabillaud|saumon|lompe|truite)\b/.test(q);
 }
 
-export function scoreCandidate(query: string, nom: string, groupe = ""): number {
+export function scoreCandidate(query: string, nom: string, groupe = "", context: CiqualMatchContext = {}): number {
   const qTokens = tokenize(query);
   if (qTokens.length === 0) return 0;
   if (isFishRoeMismatch(query, nom)) return -10;
@@ -192,9 +196,17 @@ export function scoreCandidate(query: string, nom: string, groupe = ""): number 
   if (!userSpecified) {
     const isStarchy = STARCHY_RE.test(qNorm);
     if (isStarchy) {
-      // Cooked / canned form is what the user actually eats
-      if (COOKED_RE.test(fullNorm)) score += 0.25;
-      else if (DRY_RE.test(fullNorm)) score -= 0.6;
+      if (context.ingredientsBruts) {
+        // Recipe-card weights refer to ingredients before cooking.
+        const explicitlyUncooked = /\bnon cuit\b/.test(fullNorm);
+        if (explicitlyUncooked) score += 0.25;
+        else if (COOKED_RE.test(fullNorm)) score -= 0.6;
+        else if (DRY_RE.test(fullNorm)) score += 0.25;
+      } else {
+        // Cooked / canned form is what the journal user actually eats.
+        if (COOKED_RE.test(fullNorm)) score += 0.25;
+        else if (DRY_RE.test(fullNorm)) score -= 0.6;
+      }
     } else if (FRESH_GROUPS.includes((groupe || "").trim().toLowerCase())) {
       // Vegetables, salads, herbs, fruits: raw / fresh is the default form
       if (FRESH_RE.test(fullNorm)) score += 0.15;
@@ -271,6 +283,7 @@ export const CIQUAL_MATCH_THRESHOLD = 0.6;
 export async function matchCiqual(
   supabase: any,
   name: string,
+  context: CiqualMatchContext = {},
 ): Promise<{ row: any; score: number } | null> {
   const generic = genericDrink(name);
   if (generic) {
@@ -313,7 +326,7 @@ export async function matchCiqual(
 
   let best: { row: any; score: number } | null = null;
   for (const row of candidates) {
-    const s = scoreCandidate(cleaned, row.nom || "", row.groupe || "");
+    const s = scoreCandidate(cleaned, row.nom || "", row.groupe || "", context);
     if (!best || s > best.score) best = { row, score: s };
   }
   if (!best || best.score < CIQUAL_MATCH_THRESHOLD) return null;

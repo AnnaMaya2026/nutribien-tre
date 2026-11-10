@@ -1,4 +1,5 @@
 # Corrections demandées
+- [ ] Favoriser les ingrédients crus/secs uniquement dans les fiches recettes ; vérifier les tests existants et ajouter les trois cas demandés.
 - [x] Partager le choix de fréquence entre les deux dialogues de complément ; les trois modes ont été enregistrés et relus dans l'écran connecté, puis les compléments temporaires supprimés.
 - [x] Permettre la répartition d'une dose depuis un complément actif sans périodicité ; limites et mise à jour vérifiées, sans changer le calcul.
 - [x] Aucun import de SupplementPhotoDialog ; vérification TypeScript sans erreur, 74 tests réussis, affichage ordinateur/téléphone vérifié.
