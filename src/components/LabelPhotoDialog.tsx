@@ -1,3 +1,4 @@
+import { isKcalGapBlocking } from "@/lib/recipeKcalCheck";
 import { useRef, useState } from "react";
 import { Camera, Image as ImageIcon, X, Plus, Loader2, Trash2, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -436,6 +437,7 @@ export default function LabelPhotoDialog({
   };
 
   const macroVal = (k: string) => numOrNull(macros.find((r) => r.key === k)?.amount ?? "");
+  const kcalGapBlocking = isRecipe && isKcalGapBlocking(macroVal("calories"), approxKcal);
   const setMacroVal = (k: string, v: string) =>
     setMacros((p) => p.map((x) => (x.key === k ? { ...x, amount: v, source: "manuel" } : x)));
   const recompute = async () => {
@@ -508,6 +510,7 @@ export default function LabelPhotoDialog({
   const saveRecipe = async () => {
     if (!user) return toast.error("Connectez-vous pour enregistrer.");
     if (!guardChecked) return toast.error("Cochez « J'ai vérifié les valeurs par portion » avant d'enregistrer.");
+    if (kcalGapBlocking && !keepKcalGap) return toast.error("Les calories s'écartent de la fiche : corrigez-les ou cochez « Je garde ces valeurs malgré l'écart ».");
     if (!nom.trim()) return toast.error("Le nom de la recette est requis.");
     const mult = Number(portionsEaten) || 1;
     const fatG = numOrNull(addedFat) ?? 0;
