@@ -93,6 +93,7 @@ RÈGLES STRICTES:
   "nutrition_per_portion" = la colonne « par portion » / « par personne » DU PLAT COMPLET. Jamais la colonne « pour 100 g ». Null si absente.
   "nutrition_per_100g" = la colonne « pour 100 g » DU PLAT COMPLET, null si absente.
   "portion_weight_g" = le poids d'une portion écrit sur la fiche (ex. « 1 portion = 360 g »), null s'il n'est pas écrit. Ne le devine jamais.
+  "approx_kcal_per_portion" = le nombre de la mention « Environ X kcal » (ou équivalent : « env. X kcal », « ≈ X kcal », « X kcal par portion ») imprimée sur la fiche, souvent au recto. null si cette mention est absente. Ne la devine jamais et ne la calcule jamais.
   "table_candidates" : si tu hésites entre plusieurs tableaux, liste-les TOUS ici (label = ce que le tableau décrit d'après la fiche, basis = "portion" ou "100g"), sinon [].
 
 Réponds STRICTEMENT en JSON:
@@ -104,6 +105,7 @@ Réponds STRICTEMENT en JSON:
   "nutrition_per_portion": NUTRI|null,
   "nutrition_per_100g": NUTRI|null,
   "portion_weight_g": number|null,
+  "approx_kcal_per_portion": number|null,
   "table_candidates": [{"label": string, "basis": "portion"|"100g", "values": NUTRI}],
   "issue": null|"blurry"|"not_a_recipe"|"too_dark"
 }
@@ -198,6 +200,7 @@ export async function buildResult(supabase: any, parsed: any) {
     servings,
     total_grams: round(totalGrams, 1),
     portion_grams: printedWeight && printedWeight > 0 ? printedWeight : (totalGrams > 0 ? round(totalGrams / servings, 1) : null),
+    approx_kcal_per_portion: num(parsed?.approx_kcal_per_portion) && num(parsed.approx_kcal_per_portion) > 0 ? num(parsed.approx_kcal_per_portion) : null,
     portion_weight_printed: printedWeight && printedWeight > 0 ? printedWeight : null,
     table_basis: tableBasis,
     per_100g: tableBasis === "100g_sans_poids" ? Object.fromEntries(MK.map((k) => [k, num(parsed.nutrition_per_100g[k])])) : null,
