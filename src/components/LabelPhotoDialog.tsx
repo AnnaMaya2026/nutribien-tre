@@ -1,3 +1,4 @@
+import { isKcalGapBlocking } from "@/lib/recipeKcalCheck";
 import { useRef, useState } from "react";
 import { Camera, Image as ImageIcon, X, Plus, Loader2, Trash2, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -150,6 +151,8 @@ export default function LabelPhotoDialog({
   const [micros, setMicros] = useState<Row[]>([]);
   // fiche recette
   const [servings, setServings] = useState("2");
+  const [approxKcal, setApproxKcal] = useState<number | null>(null);
+  const [keepKcalGap, setKeepKcalGap] = useState(false);
   const [portionsEaten, setPortionsEaten] = useState("1");
   const [addedFat, setAddedFat] = useState("");
   const [asFavorite, setAsFavorite] = useState(false);
@@ -223,6 +226,8 @@ export default function LabelPhotoDialog({
       const mi = data?.micros_per_portion || {};
       const macroSrc = (data?.macros_source === "etiquette" ? "fiche" : "ingredients") as Source;
       setServings(String(data?.servings || 2));
+      setApproxKcal(typeof data?.approx_kcal_per_portion === "number" && data.approx_kcal_per_portion > 0 ? data.approx_kcal_per_portion : null);
+      setKeepKcalGap(false);
       setPortionsEaten("1");
       setPortion(data?.portion_grams ? String(data.portion_grams) : "");
       setMacros(
@@ -432,6 +437,7 @@ export default function LabelPhotoDialog({
   };
 
   const macroVal = (k: string) => numOrNull(macros.find((r) => r.key === k)?.amount ?? "");
+  const kcalGapBlocking = isRecipe && isKcalGapBlocking(macroVal("calories"), approxKcal);
   const setMacroVal = (k: string, v: string) =>
     setMacros((p) => p.map((x) => (x.key === k ? { ...x, amount: v, source: "manuel" } : x)));
   const recompute = async () => {
@@ -504,6 +510,7 @@ export default function LabelPhotoDialog({
   const saveRecipe = async () => {
     if (!user) return toast.error("Connectez-vous pour enregistrer.");
     if (!guardChecked) return toast.error("Cochez « J'ai vérifié les valeurs par portion » avant d'enregistrer.");
+    if (kcalGapBlocking && !keepKcalGap) return toast.error("Les calories s'écartent de la fiche : corrigez-les ou cochez « Je garde ces valeurs malgré l'écart ».");
     if (!nom.trim()) return toast.error("Le nom de la recette est requis.");
     const mult = Number(portionsEaten) || 1;
     const fatG = numOrNull(addedFat) ?? 0;
@@ -938,6 +945,19 @@ export default function LabelPhotoDialog({
                   ) : (
                     <p className="text-sm text-muted-foreground">✓ Les kcal correspondent aux macros (écart ≤ 15 %).</p>
                   )}
+                  {approxKcal === null ? (
+                    <p className="text-sm text-muted-foreground">Photographiez aussi le recto pour vérifier les calories</p>
+                  ) : kcalGapBlocking ? (
+                    <div className="rounded-lg bg-destructive/10 border border-destructive p-2 space-y-2">
+                      <p className="text-sm text-destructive font-medium">
+                        ⚠️ Calculé : {macroVal("calories") === null ? "—" : Math.round(macroVal("calories") as number)} kcal, la fiche indique environ {Math.round(approxKcal)} kcal
+                      </p>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={keepKcalGap} onChange={(e) => setKeepKcalGap(e.target.checked)} className="w-4 h-4" />
+                        Je garde ces valeurs malgré l'écart
+                      </label>
+                    </div>
+                  ) : null}
                   <label className="flex items-center gap-2 text-sm font-medium">
                     <input type="checkbox" checked={guardChecked} onChange={(e) => setGuardChecked(e.target.checked)} className="w-4 h-4" />
                     J'ai vérifié les valeurs par portion
@@ -960,7 +980,7 @@ export default function LabelPhotoDialog({
                 </button>
                 <button
                   onClick={isSupplement ? saveSupplement : isRecipe ? saveRecipe : saveProduct}
-                  disabled={saving || (isRecipe && !guardChecked)}
+                  disabled={saving || (isRecipe && (!guardChecked || (kcalGapBlocking && !keepKcalGap)))}
                   className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-60"
                 >
                   {saving ? "Enregistrement…" : "Confirmer et enregistrer"}
