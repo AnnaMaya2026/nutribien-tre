@@ -43,7 +43,25 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .eq("message_date", today)
       .maybeSingle();
+    // Chiffres de l'accueil envoyés par l'écran (alimentation + compléments).
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const dash = body?.dashboard && Array.isArray(body.dashboard.nutrients) && typeof body.dashboard.calories === "number"
+      ? body.dashboard : null;
+
+    // Le message est refait si des aliments ont été ajoutés depuis sa rédaction (dîner tardif).
+    let stale = false;
     if (existing) {
+      const { data: lastFood } = await supabase
+        .from("food_logs")
+        .select("created_at")
+        .eq("user_id", user.id)
+        .eq("logged_at", today)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      stale = !!(lastFood?.created_at && existing.created_at && new Date(lastFood.created_at) > new Date(existing.created_at));
+    }
+    if (existing && !stale) {
       const shared = await getTomorrowChallenge();
       if (shared && shared !== existing.challenge) {
         await supabase.from("sophie_evening_messages").update({ challenge: shared }).eq("id", existing.id);
@@ -66,7 +84,7 @@ serve(async (req) => {
     const routines = routineDefRes.data || [];
     const routineLogs = routineLogsRes.data || [];
 
-    const calorieGoal = profile?.daily_calorie_goal || 1800;
+    const calorieGoal = dash?.calorieGoal ?? profile?.daily_calorie_goal ?? null;
     const totals = foodLogs.reduce((acc: any, l: any) => ({
       calories: acc.calories + (l.calories || 0),
       calcium: acc.calcium + (l.calcium || 0),
@@ -85,7 +103,11 @@ serve(async (req) => {
         { val: (totals as any)[key] || 0, goal: g.goal, label: g.label },
       ]),
     ) as Record<string, { val: number; goal: number; label: string }>;
-    const missing = Object.values(targets).filter((t) => t.val < t.goal * 0.6).map((t) => t.label);
+    // Avec les chiffres de l'écran : nutriments sous l'objectif, compléments inclus.
+    const missing: string[] = dash
+      ? dash.nutrients.filter((n: any) => n.primary !== false && n.goal > 0 && n.value < n.goal * 0.6).map((n: any) => n.label)
+      : Object.values(targets).filter((t) => t.val < t.goal * 0.6).map((t) => t.label);
+    const caloriesToday = dash ? dash.calories : Math.round(totals.calories);
 
     const symptomCtx = await buildSymptomContext(supabase, user.id);
     void symptomLog;
@@ -94,7 +116,7 @@ serve(async (req) => {
     const routinesTotal = routines.length;
 
     const userPrompt = `Données d'aujourd'hui :
-- Calories: ${Math.round(totals.calories)}/${calorieGoal}
+- Calories: ${caloriesToday} kcal${calorieGoal ? ` sur ${calorieGoal} kcal d'objectif` : ""} (donne le fait, sans féliciter ni pousser à manger plus ou moins)
 - Nutriments manquants: ${missing.length ? missing.join(", ") : "aucun"}
 ${symptomCtx.text}
 - Routines complétées: ${routinesDone}/${routinesTotal}
@@ -105,7 +127,7 @@ ${symptomCtx.text}
 Tu DOIS répondre UNIQUEMENT en JSON valide (sans markdown ni backticks) avec ce format exact :
 {
   "summary": "1 phrase qui résume la journée avec bienveillance",
-  "insight": "Une observation surprenante ou intéressante sur ses données",
+  "insight": "Une observation factuelle tirée uniquement des données ci-dessus, sans chiffre ni affirmation qui n'y figure pas",
   "challenge": "Un défi nutritionnel concret et motivant pour demain"
 }
 
@@ -148,13 +170,10 @@ ${SYMPTOM_RULE}`;
     }
     parsed.challenge = challenge;
 
-    const { data: inserted } = await supabase.from("sophie_evening_messages").insert({
-      user_id: user.id,
-      message_date: today,
-      summary: parsed.summary,
-      insight: parsed.insight,
-      challenge: parsed.challenge,
-    }).select().single();
+    const fields = { summary: parsed.summary, insight: parsed.insight, challenge: parsed.challenge };
+    const { data: inserted } = existing
+      ? await supabase.from("sophie_evening_messages").update({ ...fields, created_at: new Date().toISOString() }).eq("id", existing.id).select().single()
+      : await supabase.from("sophie_evening_messages").insert({ user_id: user.id, message_date: today, ...fields }).select().single();
 
     return new Response(JSON.stringify({ message: inserted, cached: false }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {

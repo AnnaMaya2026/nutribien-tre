@@ -1,11 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Moon, Loader2, ChevronRight } from "lucide-react";
 import SophieAvatar from "@/components/SophieAvatar";
+import { useDaySnapshot } from "@/hooks/useDaySnapshot";
 
 export default function SophieEveningBanner() {
+  const snapshot = useDaySnapshot();
+  const snapshotRef = useRef(snapshot);
+  snapshotRef.current = snapshot;
+  const snapshotReady = snapshot !== null;
   const { user } = useAuth();
   const navigate = useNavigate();
   const [now, setNow] = useState(new Date());
@@ -23,7 +28,7 @@ export default function SophieEveningBanner() {
 
   // Try cache then generate once
   useEffect(() => {
-    if (!user || !isAfter7pm || generated) return;
+    if (!user || !isAfter7pm || generated || !snapshotReady) return;
     (async () => {
       const { data: existing } = await supabase
         .from("sophie_evening_messages" as any)
@@ -31,14 +36,12 @@ export default function SophieEveningBanner() {
         .eq("user_id", user.id)
         .eq("message_date", today)
         .maybeSingle();
-      if (existing) {
-        setMessage(existing);
-        setGenerated(true);
-        return;
-      }
-      setLoading(true);
+      if (existing) setMessage(existing);
+      else setLoading(true);
       try {
-        const { data, error } = await supabase.functions.invoke("sophie-evening-message", { body: {} });
+        // Le serveur reçoit les chiffres de l'accueil et refait le message
+        // si des aliments ont été ajoutés depuis sa rédaction.
+        const { data, error } = await supabase.functions.invoke("sophie-evening-message", { body: { dashboard: snapshotRef.current } });
         if (error) throw error;
         if (data?.message) setMessage(data.message);
       } catch (e) {
@@ -48,7 +51,7 @@ export default function SophieEveningBanner() {
         setGenerated(true);
       }
     })();
-  }, [user, isAfter7pm, today, generated]);
+  }, [user, isAfter7pm, today, generated, snapshotReady]);
 
   if (!isAfter7pm) return null;
   if (!message && !loading) return null;

@@ -67,12 +67,17 @@ serve(async (req) => {
 
     // Repères lus dans la table unique (_shared/nutrientReferences.ts).
     const goals = keyNutrientGoals((profileRes.data as any)?.daily_calorie_goal);
-    let weakest = "calcium";
-    let weakestRatio = 1;
-    for (const [key, g] of Object.entries(goals)) {
-      const ratio = (totals as any)[key] / g.goal;
-      if (ratio < weakestRatio) { weakestRatio = ratio; weakest = key; }
-    }
+    // Chiffres du jour de référence envoyés par l'écran (alimentation + compléments) ;
+    // à défaut, alimentation seule.
+    const dash = body?.dashboard && Array.isArray(body.dashboard.nutrients) ? body.dashboard : null;
+    const ratios: { key: string; label: string; ratio: number }[] = dash
+      ? dash.nutrients
+          .filter((n: any) => n.key in goals && n.goal > 0)
+          .map((n: any) => ({ key: n.key as string, label: n.label, ratio: n.value / n.goal }))
+      : Object.entries(goals).map(([key, g]) => ({ key, label: g.label, ratio: (totals as any)[key] / g.goal }));
+    // Un nutriment n'est cité que s'il est réellement sous l'objectif (moins de 80 %).
+    const weakestEntry = ratios.filter((r) => r.ratio < 0.8).sort((a, b) => a.ratio - b.ratio)[0] ?? null;
+    const hasFoodData = dash ? dash.foodCount > 0 : foodLogs.length > 0;
 
     const symptomLog = symptomRes.data;
     const scores = (symptomLog?.symptom_scores && typeof symptomLog.symptom_scores === "object")
@@ -105,7 +110,13 @@ serve(async (req) => {
       "Préparer un repas 100% maison",
     ];
 
-    const userPrompt = `Contexte: nutriment le plus déficitaire ${moment === "demain" ? "ces derniers jours" : "hier"} : ${goals[weakest].label} (${Math.round(weakestRatio * 100)}% de l'objectif atteint).
+    const refDay = moment === "demain" ? "aujourd'hui" : "hier";
+    const nutrientLine = !hasFoodData
+      ? `aucun aliment enregistré ${refDay} : ne cite aucun nutriment.`
+      : weakestEntry
+        ? `nutriment le plus bas ${refDay}, compléments inclus : ${weakestEntry.label} (${Math.round(weakestEntry.ratio * 100)} % de l'objectif).`
+        : `tous les nutriments suivis étaient atteints ${refDay} : ne cite aucun manque.`;
+    const userPrompt = `Contexte: ${nutrientLine}
 Symptômes actuels : ${activeSymptoms.length ? activeSymptoms.join(", ") : "aucun particulier"}
 Jour cible: ${days[targetDayIdx]}, saison: ${season}.
 
@@ -148,7 +159,7 @@ Réponds UNIQUEMENT en JSON: { "challenge": "..." }`;
       user_id: user.id,
       challenge_date: targetDate,
       challenge_text: cleanChallengeText(parsed.challenge),
-      nutrient_key: weakest,
+      nutrient_key: hasFoodData ? weakestEntry?.key ?? null : null,
     }).select().single();
 
     return new Response(JSON.stringify({ challenge: inserted, cached: false }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
