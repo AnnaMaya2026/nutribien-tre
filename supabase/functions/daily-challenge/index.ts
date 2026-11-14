@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { cleanChallengeText, parisDate, TUTOIEMENT_RULE } from "../_shared/symptomContext.ts";
-import { FIBRES_GOAL_G } from "../_shared/nutritionTargets.ts";
+import { keyNutrientGoals } from "../_shared/nutrientReferences.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,9 +49,10 @@ serve(async (req) => {
       .limit(7);
     const recentTexts = (recent || []).map((r: any) => r.challenge_text).filter(Boolean);
 
-    const [foodRes, symptomRes] = await Promise.all([
+    const [foodRes, symptomRes, profileRes] = await Promise.all([
       supabase.from("food_logs").select("*").eq("user_id", user.id).eq("logged_at", yKey),
       supabase.from("symptom_logs").select("*").eq("user_id", user.id).eq("logged_at", yKey).maybeSingle(),
+      supabase.from("profiles").select("daily_calorie_goal").eq("user_id", user.id).maybeSingle(),
     ]);
     const foodLogs = foodRes.data || [];
 
@@ -64,14 +65,8 @@ serve(async (req) => {
       fibres: acc.fibres + (l.fibres || 0),
     }), { calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, fibres: 0 });
 
-    const goals: Record<string, { goal: number; label: string }> = {
-      calcium: { goal: 1200, label: "Calcium" },
-      vitamin_d: { goal: 20, label: "Vitamine D" },
-      magnesium: { goal: 320, label: "Magnésium" },
-      iron: { goal: 18, label: "Fer" },
-      omega3: { goal: 2.5, label: "Oméga-3" },
-      fibres: { goal: FIBRES_GOAL_G, label: "Fibres" },
-    };
+    // Repères lus dans la table unique (_shared/nutrientReferences.ts).
+    const goals = keyNutrientGoals((profileRes.data as any)?.daily_calorie_goal);
     let weakest = "calcium";
     let weakestRatio = 1;
     for (const [key, g] of Object.entries(goals)) {

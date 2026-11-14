@@ -2,6 +2,7 @@
 // le nom, la marque, la dose journalière et la composition nutriment/quantité.
 // Même schéma vision que analyze-meal-photo / parse-menu-foods (OpenAI gpt-4o).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { NUTRIENT_REFERENCES } from "../_shared/nutrientReferences.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -192,9 +193,14 @@ Réponds STRICTEMENT en JSON:
     );
     const { data: refs } = await supabase
       .from("nutrient_references")
-      .select("nutrient_key, unite, ar_etiquetage_ue, rnp_anses, limite_haute");
+      .select("nutrient_key, unite, ar_etiquetage_ue");
+    // AR d'étiquetage UE (conversion d'un %) lus en base ; repères et limites
+    // de sécurité lus dans la table unique (_shared/nutrientReferences.ts).
     const refMap: Record<string, any> = {};
     for (const r of refs || []) refMap[r.nutrient_key] = r;
+    for (const [key, r] of Object.entries(NUTRIENT_REFERENCES)) {
+      refMap[key] = { ...(refMap[key] || {}), nutrient_key: key, unite: refMap[key]?.unite || r.unit, rnp_anses: r.target, limite_haute: r.upperLimit };
+    }
 
     const doseCount = Number(parsed.daily_dose_count) > 0 ? Number(parsed.daily_dose_count) : 1;
 

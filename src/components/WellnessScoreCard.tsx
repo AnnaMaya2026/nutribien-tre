@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { FIBRES_GOAL } from "@/lib/calorieGoal";
+import { FIBRES_GOAL, calculateCalorieGoal } from "@/lib/calorieGoal";
+import { NUTRIENT_REFERENCES, omega3GoalG } from "@/lib/nutrientReferences";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { useProfile } from "@/hooks/useProfile";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
@@ -20,18 +21,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const NUTRIENT_GOALS: Record<string, number> = {
-  calcium: 1200,
-  magnesium: 320,
-  iron: 8,
-  fibres: FIBRES_GOAL,
-  omega3: 2.0,
-  zinc: 8,
-  potassium: 3500,
-  vitamin_b12: 2.4,
-  vitamin_b9: 400,
-  vitamin_e: 12,
-};
+/** Repères du score, lus dans la table unique ; oméga-3 selon l'objectif calorique. */
+function buildNutrientGoals(calorieGoal: number): Record<string, number> {
+  const goals: Record<string, number> = { fibres: FIBRES_GOAL };
+  for (const key of ["calcium", "magnesium", "iron", "zinc", "potassium", "vitamin_b12", "vitamin_b9", "vitamin_e"] as const) {
+    goals[key] = NUTRIENT_REFERENCES[key].target;
+  }
+  const omega3 = omega3GoalG(calorieGoal);
+  if (omega3 != null) goals.omega3 = omega3;
+  return goals;
+}
 
 const NUTRIENT_LABELS: Record<string, string> = {
   calcium: "Calcium",
@@ -104,6 +103,7 @@ type Breakdown = {
 
 function computeBreakdown(opts: {
   logs: any[];
+  nutrientGoals: Record<string, number>;
   symptomScores: Record<string, number> | null;
   routines: { total: number; completed: number };
   habits: { total: number; respected: number };
@@ -114,7 +114,7 @@ function computeBreakdown(opts: {
 
   let nutrientPts = 0;
   const deficits: { key: string; pct: number }[] = [];
-  for (const [key, goal] of Object.entries(NUTRIENT_GOALS)) {
+  for (const [key, goal] of Object.entries(opts.nutrientGoals)) {
     const value = sumNutrient(opts.logs, key);
     const pct = Math.round((value / goal) * 100);
     const label = NUTRIENT_LABELS[key] || key;
@@ -264,6 +264,21 @@ export default function WellnessScoreCard() {
 
   const routinesTotal = Array.isArray(routines) ? routines.length : 0;
 
+  const p = profile as any;
+  const nutrientGoals = useMemo(
+    () =>
+      buildNutrientGoals(
+        calculateCalorieGoal({
+          weight: p?.weight,
+          height: p?.height,
+          age: p?.age,
+          activityLevel: p?.activity_level,
+          objective: p?.objective,
+        }),
+      ),
+    [p?.weight, p?.height, p?.age, p?.activity_level, p?.objective],
+  );
+
   const breakdown = useMemo(() => {
     const completedToday = routineLogs.filter(
       (l: any) => l.logged_at === selectedDateStr && l.completed
@@ -276,11 +291,12 @@ export default function WellnessScoreCard() {
     }, 0);
     return computeBreakdown({
       logs,
+      nutrientGoals,
       symptomScores: (todayLog as any)?.symptom_scores || null,
       routines: { total: routinesTotal, completed: completedToday },
       habits: { total: habits.length, respected },
     });
-  }, [logs, routineLogs, selectedDateStr, todayLog, habits, habitLogs, routinesTotal]);
+  }, [logs, nutrientGoals, routineLogs, selectedDateStr, todayLog, habits, habitLogs, routinesTotal]);
 
   const noData = logs.length === 0;
   const scoreValue = noData ? profileEstimate(profile) : breakdown.score;
@@ -299,11 +315,12 @@ export default function WellnessScoreCard() {
     }, 0);
     return computeBreakdown({
       logs: yLogs,
+      nutrientGoals,
       symptomScores: null,
       routines: { total: routinesTotal, completed },
       habits: { total: habits.length, respected },
     }).score;
-  }, [yLogs, routineLogs, yesterdayStr, habits, habitLogs, routinesTotal]);
+  }, [yLogs, nutrientGoals, routineLogs, yesterdayStr, habits, habitLogs, routinesTotal]);
 
   const colors = colorOf(scoreValue);
   const ringPct = (scoreValue / 10) * 100;

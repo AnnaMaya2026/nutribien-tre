@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { FIBRES_GOAL_G } from "../_shared/nutritionTargets.ts";
+import { keyNutrientGoals, proteinGoalFromWeight, FAT_ENERGY_SHARE } from "../_shared/nutrientReferences.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -122,24 +122,18 @@ serve(async (req) => {
     const bestDay = dayKeys[dailyCal.indexOf(Math.max(...dailyCal))];
     const worstDay = dayKeys[dailyCal.indexOf(Math.min(...dailyCal.filter((c) => c > 0).length ? dailyCal.map((c) => c || Infinity) : dailyCal))];
 
-    // Macro + micro goals (per day). Macros are pulled from profile when available.
-    const proteinGoal = Number((profile as any)?.daily_protein_goal) || Math.round((calorieGoal * 0.27) / 4);
-    const carbsGoal = Number((profile as any)?.daily_carbs_goal) || Math.round((calorieGoal * 0.48) / 4);
-    const fatsGoal = Number((profile as any)?.daily_fats_goal) || Math.round((calorieGoal * 0.22) / 9);
+    // Objectifs du jour, calculés comme sur l'accueil (_shared/nutrientReferences.ts) :
+    // protéines selon le poids, lipides 35 % de l'énergie, glucides = le reste.
+    const proteinGoal = proteinGoalFromWeight((profile as any)?.weight) ?? Math.round((calorieGoal * 0.27) / 4);
+    const fatsGoal = Math.round((calorieGoal * FAT_ENERGY_SHARE) / 9);
+    const carbsGoal = Math.max(0, Math.round((calorieGoal - proteinGoal * 4 - fatsGoal * 9) / 4));
 
     const macroGoals: Record<string, { goal: number; label: string; unit: string }> = {
       proteins: { goal: proteinGoal, label: "Protéines", unit: "g" },
       carbs: { goal: carbsGoal, label: "Glucides", unit: "g" },
       fats: { goal: fatsGoal, label: "Lipides", unit: "g" },
     };
-    const nutrientGoals: Record<string, { goal: number; label: string; unit: string }> = {
-      calcium: { goal: 1200, label: "Calcium", unit: "mg" },
-      vitamin_d: { goal: 20, label: "Vitamine D", unit: "µg" },
-      magnesium: { goal: 320, label: "Magnésium", unit: "mg" },
-      iron: { goal: 18, label: "Fer", unit: "mg" },
-      omega3: { goal: 2.5, label: "Oméga-3", unit: "g" },
-      fibres: { goal: FIBRES_GOAL_G, label: "Fibres", unit: "g" },
-    };
+    const nutrientGoals = keyNutrientGoals(profile?.daily_calorie_goal);
 
     const sumFor = (k: string) => foodLogs.reduce((a, f) => a + (Number((f as any)[k]) || 0), 0);
     const macroTotals: Record<string, number> = {};

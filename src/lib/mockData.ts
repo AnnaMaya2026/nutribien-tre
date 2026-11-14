@@ -36,25 +36,6 @@ export const FOOD_DATABASE: FoodItem[] = [
   { name: "Soja (edamame)", calories: 121, proteins: 12, carbs: 9, fats: 5, calcium: 63, vitamin_d: 0, magnesium: 64, iron: 2.3, omega3: 0.4, phytoestrogens: 45, vitamin_b12: 0, portion: "100g" },
 ];
 
-// Daily recommended values for menopausal women
-export const DAILY_TARGETS = {
-  calcium: 1200,      // mg
-  vitamin_d: 10,      // µg (adjusted by age on dashboard)
-  magnesium: 320,     // mg
-  iron: 8,            // mg (post-menopause)
-  omega3: 2.0,        // g
-  phytoestrogens: 40, // mg
-  vitamin_b12: 2.4,   // µg
-  proteins: 60,       // g (adjusted per calorie goal)
-  carbs: 250,         // g
-  fats: 65,           // g
-  potassium: 3500,    // mg
-  zinc: 8,            // mg
-  vitamin_k: 90,      // µg
-  vitamin_b6: 1.5,    // mg
-  vitamin_b9: 400,    // µg
-  vitamin_e: 12,      // mg
-};
 
 // Mock meal suggestions
 export interface MealSuggestion {

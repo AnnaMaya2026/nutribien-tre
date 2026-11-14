@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildSymptomContext, parisDate, symptomLabel, symptomsOfLog, SYMPTOM_RULE, TUTOIEMENT_RULE } from "../_shared/symptomContext.ts";
 import { buildProfileRestrictionsContext } from "../_shared/profileRestrictions.ts";
+import { NUTRIENT_REFERENCES, FIBRES_GOAL_G, PHYTOESTROGENS_MAX_MG_PER_KG, proteinGoalFromWeight, type ReferenceKey } from "../_shared/nutrientReferences.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -261,23 +262,32 @@ Rappelle si pertinent : "Ces conseils ne remplacent pas un suivi médical."`;
         }), { calories: 0, proteins: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, fibres: 0, potassium: 0, zinc: 0, vitamin_k: 0, vitamin_b6: 0, vitamin_b9: 0, vitamin_e: 0 });
 
         const calorieGoal = profile?.daily_calorie_goal || 1800;
+        // Repères lus dans la table unique (_shared/nutrientReferences.ts).
+        const refLine = (key: ReferenceKey, value: number, decimals = 0) => {
+          const r = NUTRIENT_REFERENCES[key];
+          return `- ${r.label}: ${decimals ? value.toFixed(decimals) : Math.round(value)}${r.unit} / ${r.target}${r.unit}`;
+        };
+        const proteinGoal = proteinGoalFromWeight(profile?.weight);
+        const nutrientLines = [
+          `- Protéines: ${Math.round(totals.proteins)}g${proteinGoal != null ? ` / ${proteinGoal}g` : ""}`,
+          refLine("calcium", totals.calcium),
+          refLine("vitamin_d", totals.vitamin_d, 1),
+          refLine("magnesium", totals.magnesium),
+          refLine("iron", totals.iron, 1),
+          `- Fibres: ${Math.round(totals.fibres)}g / ${FIBRES_GOAL_G}g`,
+          refLine("potassium", totals.potassium),
+          refLine("zinc", totals.zinc, 1),
+          refLine("vitamin_k", totals.vitamin_k, 1),
+          refLine("vitamin_b6", totals.vitamin_b6, 2),
+          refLine("vitamin_b9", totals.vitamin_b9),
+          refLine("vitamin_e", totals.vitamin_e, 1),
+        ].join("\n");
         const caloriesRemaining = Math.max(0, calorieGoal - Math.round(totals.calories));
         nutritionContext = `
 Données nutritionnelles du jour:
 - Calories consommées: ${Math.round(totals.calories)} kcal / ${calorieGoal} kcal
 - ⚡ CALORIES RESTANTES AUJOURD'HUI: ${caloriesRemaining} kcal (budget maximal pour toute suggestion de repas/collation)
-- Protéines: ${Math.round(totals.proteins)}g / 60g
-- Calcium: ${Math.round(totals.calcium)}mg / 1200mg
-- Vitamine D: ${totals.vitamin_d.toFixed(1)}µg / 20µg
-- Magnésium: ${Math.round(totals.magnesium)}mg / 320mg
-- Fer: ${Math.round(totals.iron)}mg / 18mg
-- Fibres: ${Math.round(totals.fibres)}g / 25g
-- Potassium: ${Math.round(totals.potassium)}mg / 3500mg
-- Zinc: ${totals.zinc.toFixed(1)}mg / 8mg
-- Vitamine K: ${totals.vitamin_k.toFixed(1)}µg / 90µg
-- Vitamine B6: ${totals.vitamin_b6.toFixed(2)}mg / 1.5mg
-- Vitamine B9 (folate): ${Math.round(totals.vitamin_b9)}µg / 400µg
-- Vitamine E: ${totals.vitamin_e.toFixed(1)}mg / 12mg
+${nutrientLines}
 
 RÈGLE BUDGET CALORIQUE (STRICTE):
 Quand tu proposes un repas, une collation ou un menu, l'apport calorique total NE DOIT JAMAIS dépasser ${caloriesRemaining} kcal (les calories restantes du jour).
@@ -356,7 +366,7 @@ Connaissances scientifiques importantes:
 - Le ratio oméga-6/oméga-3 doit être ≤ 4:1. Le régime occidental typique est 15:1, très pro-inflammatoire.
 - 65-77% des femmes ménopausées sont déficientes en vitamine D.
 - Les aliments entiers sont supérieurs aux suppléments isolés.
-- Les aliments anti-inflammatoires prioritaires: poissons gras, myrtilles, brocoli, noix, graines de lin, soja.
+- Les aliments anti-inflammatoires prioritaires: poissons gras, myrtilles, brocoli, noix, graines de lin.
 
 RÈGLE INSIGHTS: Ne jamais donner de conseils évidents ou déjà connus. Chaque réponse doit apporter une information surprenante mais vraie.
 
@@ -369,7 +379,6 @@ EXEMPLES DE CE QU'IL NE FAUT PAS DIRE:
 EXEMPLES DE CE QUI FAIT L'EFFET WOW:
 ✅ "Votre fatigue n'est peut-être pas liée au manque de sommeil mais à un déficit en magnésium bisglycinate — la forme la mieux absorbée, rarement dans les compléments bon marché"
 ✅ "Le ratio oméga-6/oméga-3 dans l'alimentation occidentale est 15:1 alors que l'objectif anti-inflammatoire est 4:1 — réduire l'huile de tournesol est aussi important qu'augmenter le saumon"
-✅ "Les phytoestrogènes du soja sont métabolisés différemment selon ton microbiote — certaines femmes en tirent beaucoup de bénéfices, d'autres pas du tout"
 ✅ "La vitamine D seule ne suffit pas — sans vitamine K2, le calcium va dans les artères plutôt que dans les os"
 
 RÈGLES:
@@ -399,8 +408,9 @@ Liens validés autorisés:
 - Oméga-3 → inflammation, douleurs articulaires ✅
 - Magnésium → insomnie, anxiété, crampes ✅
 - Calcium + Vitamine D → os, ostéoporose ✅
-- Phytoestrogènes → bouffées de chaleur ✅
 - Protéines → masse musculaire, fatigue ✅
+
+Soja et phytoestrogènes : ne jamais les présenter comme prioritaires ni les conseiller pour un symptôme. L'ANSES (2025) fixe un seuil à ne pas dépasser de ${PHYTOESTROGENS_MAX_MG_PER_KG} mg d'isoflavones par kg de poids et par jour, et conseille de varier les sources de protéines végétales.
 
 Liens INTERDITS (non validés scientifiquement):
 - Écrans → sécheresse vaginale ❌

@@ -1,3 +1,5 @@
+import { FAT_ENERGY_SHARE, FIBRES_GOAL_G, PROTEIN_G_PER_KG } from "@/lib/nutrientReferences";
+
 // Calcul de l'objectif calorique journalier selon Harris-Benedict (femmes)
 // puis multiplication par un facteur d'activité (NAP) et ajustement selon l'objectif.
 
@@ -103,8 +105,7 @@ export function calculateCalorieGoal(params: {
   return final;
 }
 
-export const PROTEIN_G_PER_KG = 1.2;
-export const FAT_ENERGY_SHARE = 0.35;
+export { PROTEIN_G_PER_KG, FAT_ENERGY_SHARE };
 
 /** Protéines (g) selon le poids ; ancien pourcentage si le poids est indisponible. */
 export function calculateProteinGoal(tdee: number, weight?: number | null, objective?: string | null): number {
@@ -129,8 +130,8 @@ export function calculateFatsGoal(tdee: number): number {
   return Math.round((tdee * FAT_ENERGY_SHARE) / 9);
 }
 
-/** Fibres : apport satisfaisant adulte ANSES 2016, 30 g/jour. */
-export const FIBRES_GOAL = 30;
+/** Fibres : repère lu dans la table unique (nutrientReferences). */
+export const FIBRES_GOAL = FIBRES_GOAL_G;
 export const FIBRES_GOAL_MIN = FIBRES_GOAL;
 export const FIBRES_GOAL_MAX = FIBRES_GOAL;
 

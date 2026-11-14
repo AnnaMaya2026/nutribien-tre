@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildSymptomContext, cleanChallengeText, parisDate, SYMPTOM_RULE, TUTOIEMENT_RULE } from "../_shared/symptomContext.ts";
-import { FIBRES_GOAL_G } from "../_shared/nutritionTargets.ts";
+import { keyNutrientGoals } from "../_shared/nutrientReferences.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,14 +78,13 @@ serve(async (req) => {
       proteins: acc.proteins + (l.proteins || 0),
     }), { calories: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0, fibres: 0, proteins: 0 });
 
-    const targets: Record<string, { val: number; goal: number; label: string }> = {
-      calcium: { val: totals.calcium, goal: 1200, label: "Calcium" },
-      vitamin_d: { val: totals.vitamin_d, goal: 20, label: "Vitamine D" },
-      magnesium: { val: totals.magnesium, goal: 320, label: "Magnésium" },
-      iron: { val: totals.iron, goal: 18, label: "Fer" },
-      omega3: { val: totals.omega3, goal: 2.5, label: "Oméga-3" },
-      fibres: { val: totals.fibres, goal: FIBRES_GOAL_G, label: "Fibres" },
-    };
+    // Repères lus dans la table unique (_shared/nutrientReferences.ts).
+    const targets = Object.fromEntries(
+      Object.entries(keyNutrientGoals(profile?.daily_calorie_goal)).map(([key, g]) => [
+        key,
+        { val: (totals as any)[key] || 0, goal: g.goal, label: g.label },
+      ]),
+    ) as Record<string, { val: number; goal: number; label: string }>;
     const missing = Object.values(targets).filter((t) => t.val < t.goal * 0.6).map((t) => t.label);
 
     const symptomCtx = await buildSymptomContext(supabase, user.id);

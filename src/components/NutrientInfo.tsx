@@ -1,5 +1,20 @@
 import { Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  NUTRIENT_REFERENCES,
+  FIBRES_GOAL_G,
+  PROTEIN_G_PER_KG,
+  PHYTOESTROGENS_MAX_MG_PER_KG,
+  type ReferenceKey,
+} from "@/lib/nutrientReferences";
+
+const fr = (n: number) => n.toLocaleString("fr-FR");
+
+/** « Repère : 950 mg/jour (RNP ANSES) », lu dans la table unique. */
+function repere(key: ReferenceKey): string {
+  const r = NUTRIENT_REFERENCES[key];
+  return `Repère : ${fr(r.target)} ${r.unit}/jour (${r.type} ANSES${r.note ? `, ${r.note}` : ""}).`;
+}
 
 export type NutrientKey =
   | "calcium" | "vitamin_d" | "magnesium" | "iron" | "omega3" | "phytoestrogens"
@@ -8,51 +23,50 @@ export type NutrientKey =
 
 export const NUTRIENT_INFO: Record<NutrientKey, { text: string; disclaimer?: string }> = {
   calcium: {
-    text: "🦴 Essentiel pour la santé osseuse. Après la ménopause, le risque d'ostéoporose augmente. Objectif : 1200mg/jour.\n\nSources : produits laitiers, sardines, brocoli.",
+    text: `🦴 Essentiel pour la santé osseuse. Après la ménopause, le risque d'ostéoporose augmente. ${repere("calcium")}\n\nSources : produits laitiers, sardines, brocoli.`,
   },
   vitamin_d: {
-    text: "☀️ Favorise l'absorption du calcium. 65-77% des femmes ménopausées sont déficientes. Objectif : 10-15µg/jour selon l'âge.\n\nSources : saumon, sardines, œufs, soleil.",
+    text: `☀️ Favorise l'absorption du calcium. 65-77% des femmes ménopausées sont déficientes. ${repere("vitamin_d")}\n\nSources : saumon, sardines, œufs, soleil.`,
   },
   magnesium: {
-    text: "😴 Réduit fatigue, anxiété et troubles du sommeil — symptômes fréquents en ménopause. Objectif : 320mg/jour.\n\nSources : chocolat noir, noix, épinards, banane.",
+    text: `😴 Réduit fatigue, anxiété et troubles du sommeil — symptômes fréquents en ménopause. ${repere("magnesium")}\n\nSources : chocolat noir, noix, épinards, banane.`,
   },
   iron: {
-    text: "⚡ Transport de l'oxygène et énergie. Les besoins diminuent après la ménopause (8mg vs 18mg avant).\n\nSources : lentilles, viande rouge, épinards.",
+    text: `⚡ Transport de l'oxygène et énergie. Les besoins diminuent après la ménopause. ${repere("iron")}\n\nSources : lentilles, viande rouge, épinards.`,
   },
   omega3: {
-    text: "🐟 Anti-inflammatoire, cardioprotecteur et bon pour le cerveau. Recommandation générale : 250mg EPA+DHA/jour. En ménopause, certaines études suggèrent jusqu'à 2g/jour — consultez votre médecin.\n\nSources : saumon, sardines, noix, graines de lin.",
-    disclaimer: "Objectif indicatif — avis médical recommandé.",
+    text: "🐟 Anti-inflammatoires, cardioprotecteurs et bons pour le cerveau. Repère ANSES : acide alpha-linolénique (ALA) = 1 % de l'énergie, plus 250 mg de DHA et 250 mg d'EPA. Ton objectif est calculé à partir de ton objectif calorique.\n\nSources : saumon, sardines, noix, huile de colza, graines de lin.",
   },
   phytoestrogens: {
-    text: "🌱 Composés végétaux à effet œstrogénique léger. Peuvent atténuer les bouffées de chaleur chez certaines femmes. Objectif affiché : indicatif, pas de dose officielle établie.\n\nSources : soja, tofu, graines de lin, légumineuses.",
-    disclaimer: "Consultez votre médecin avant supplémentation.",
+    text: `🌱 Composés végétaux à effet œstrogénique. Les isoflavones viennent surtout du soja. Ce n'est pas un objectif : l'ANSES (2025) fixe un seuil à ne pas dépasser de ${fr(PHYTOESTROGENS_MAX_MG_PER_KG)} mg par kg de poids et par jour, et conseille de varier les sources de protéines végétales.\n\nSources : tofu, desserts et boissons au soja.`,
+    disclaimer: "Consultez votre médecin avant toute supplémentation.",
   },
   vitamin_b12: {
-    text: "🧠 Essentielle pour le système nerveux et la prévention de la démence. Risque de carence augmente avec l'âge. Objectif : 2.4µg/jour.\n\nSources : viandes, poissons, œufs, produits laitiers.",
+    text: `🧠 Essentielle pour le système nerveux et la prévention de la démence. Risque de carence augmente avec l'âge. ${repere("vitamin_b12")}\n\nSources : viandes, poissons, œufs, produits laitiers.`,
   },
   potassium: {
-    text: "❤️ Régule la tension artérielle et prévient les crampes musculaires. Objectif : 3500mg/jour.\n\nSources : banane, pomme de terre, légumineuses.",
+    text: `❤️ Régule la tension artérielle et prévient les crampes musculaires. ${repere("potassium")}\n\nSources : banane, pomme de terre, légumineuses.`,
   },
   zinc: {
-    text: "💪 Immunité, peau, cheveux et ongles. Objectif : 8mg/jour.\n\nSources : viande, fruits de mer, noix, graines.",
+    text: `💪 Immunité, peau, cheveux et ongles. ${repere("zinc")}\n\nSources : viande, fruits de mer, noix, graines.`,
   },
   vitamin_k: {
-    text: "🦴 Essentielle pour la coagulation et la santé osseuse. Travaille en synergie avec la vitamine D. Objectif : 90µg/jour.\n\nSources : légumes verts, brocoli, épinards.",
+    text: `🦴 Essentielle pour la coagulation et la santé osseuse. Travaille en synergie avec la vitamine D. ${repere("vitamin_k")}\n\nSources : légumes verts, brocoli, épinards.`,
   },
   vitamin_b6: {
-    text: "😊 Régule l'humeur via la sérotonine. Peut réduire les symptômes dépressifs en ménopause. Objectif : 1.5mg/jour.\n\nSources : poulet, poisson, banane, céréales complètes.",
+    text: `😊 Régule l'humeur via la sérotonine. Peut réduire les symptômes dépressifs en ménopause. ${repere("vitamin_b6")}\n\nSources : poulet, poisson, banane, céréales complètes.`,
   },
   vitamin_b9: {
-    text: "🧬 Prévention cardiovasculaire et fonction cognitive. Objectif : 400µg/jour.\n\nSources : légumes verts, légumineuses, foie.",
+    text: `🧬 Prévention cardiovasculaire et fonction cognitive. ${repere("vitamin_b9")}\n\nSources : légumes verts, légumineuses, foie.`,
   },
   vitamin_e: {
-    text: "✨ Antioxydant — protège la peau et réduit la sécheresse cutanée. Objectif : 12mg/jour.\n\nSources : huile de tournesol, noix, amandes.",
+    text: `✨ Antioxydant — protège la peau et réduit la sécheresse cutanée. ${repere("vitamin_e")}\n\nSources : huile de tournesol, noix, amandes.`,
   },
   fibres: {
-    text: "🌿 Régulent le transit, réduisent le cholestérol et stabilisent la glycémie. Objectif : 25-30g/jour.\n\nSources : légumes, fruits, céréales complètes, légumineuses.",
+    text: `🌿 Régulent le transit, réduisent le cholestérol et stabilisent la glycémie. Repère : ${fr(FIBRES_GOAL_G)} g/jour (ANSES).\n\nSources : légumes, fruits, céréales complètes, légumineuses.`,
   },
   proteins: {
-    text: "💪 Essentielles pour préserver la masse musculaire (sarcopénie). La perte musculaire s'accélère après la ménopause — priorité absolue ! Objectif : 1.2g/kg/jour.\n\nSources : viandes, poissons, œufs, légumineuses.",
+    text: `💪 Essentielles pour préserver la masse musculaire (sarcopénie). La perte musculaire s'accélère après la ménopause — priorité absolue ! Objectif : ${fr(PROTEIN_G_PER_KG)} g par kg de poids et par jour.\n\nSources : viandes, poissons, œufs, légumineuses.`,
   },
 };
 

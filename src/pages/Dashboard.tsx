@@ -7,7 +7,7 @@ import { useSupplements } from "@/hooks/useSupplements";
 
 import DateSelector from "@/components/DateSelector";
 import NutrientInfo, { NutrientKey } from "@/components/NutrientInfo";
-import { DAILY_TARGETS } from "@/lib/mockData";
+import { NUTRIENT_REFERENCES, amountForUpperLimit, omega3GoalG, phytoestrogensMaxMg, PHYTOESTROGENS_MAX_MG_PER_KG, type ReferenceKey } from "@/lib/nutrientReferences";
 import { getNutrientColor, isAberrantPct, ABERRANT_PCT, ABERRANT_LABEL } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
@@ -63,6 +63,7 @@ function ProgressBar({
   supplementUnit,
   supplementSources,
   limit,
+  limitAmount,
   estimatedAmount,
 }: {
   value: number;
@@ -77,6 +78,8 @@ function ProgressBar({
   supplementUnit?: string;
   supplementSources?: { nom: string; amount: number }[];
   limit?: number | null;
+  /** Valeur comparée à la limite (total du jour, ou compléments seuls pour le magnésium). */
+  limitAmount?: number;
   estimatedAmount?: number;
 }) {
   const supplement = supplementAmount || 0;
@@ -89,7 +92,9 @@ function ProgressBar({
   const supplementPct = Math.max(0, totalPct - foodPct);
   const { text, emoji } = getNutrientColor(aberrant ? 0 : rawPct);
   const foodColor = getNutrientColor((value / max) * 100).bg;
-  const overLimit = limit != null && !aberrant && totalValue > limit;
+  const comparedToLimit = limitAmount ?? totalValue;
+  const limitOnSupplementsOnly = limitAmount != null && limitAmount !== totalValue;
+  const overLimit = limit != null && !aberrant && comparedToLimit > limit;
   const fmt = (n: number) => (n >= 10 ? Math.round(n) : Math.round(n * 10) / 10);
   return (
     <div className="space-y-1">
@@ -145,7 +150,9 @@ function ProgressBar({
       )}
       {overLimit && (
         <p className="text-[11px] rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-1.5">
-          ℹ️ Total du jour {fmt(totalValue)}{unit}, au-dessus de la limite haute de sécurité ({limit}{unit}).
+          {limitOnSupplementsOnly
+            ? <>ℹ️ Compléments du jour {fmt(comparedToLimit)}{supplementUnit || unit}, au-dessus de la limite de sécurité pour les compléments ({limit}{unit}).</>
+            : <>ℹ️ Total du jour {fmt(totalValue)}{unit}, au-dessus de la limite haute de sécurité ({limit}{unit}).</>}
           {supplementSources && supplementSources.length > 0 && (
             <> Y contribuent : {supplementSources.map((s) => `${s.nom} (+${fmt(s.amount)}${supplementUnit || unit})`).join(", ")}.</>
           )}
@@ -160,6 +167,42 @@ function ProgressBar({
 }
 
 
+/**
+ * Phytoestrogènes : pas un objectif à atteindre mais un seuil à ne pas dépasser
+ * (valeur toxicologique de référence ANSES 2025, 0,02 mg/kg de poids/jour).
+ */
+function PhytoestrogenRow({ value, max }: { value: number; max: number | null }) {
+  const fmt = (n: number) => (n >= 10 ? Math.round(n) : Math.round(n * 10) / 10).toLocaleString("fr-FR");
+  const perKg = PHYTOESTROGENS_MAX_MG_PER_KG.toLocaleString("fr-FR");
+  const over = max != null && value > max;
+  const pct = max ? Math.min((value / max) * 100, 100) : 0;
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between items-center text-[15px]">
+        <span className="text-muted-foreground inline-flex items-center gap-1">
+          Phytoestrogènes
+          <NutrientInfo nutrient="phytoestrogens" />
+        </span>
+        <span className={`font-semibold text-right ${over ? "text-red-500" : "text-foreground"}`}>
+          {fmt(value)} mg{max != null ? ` · max ${fmt(max)} mg` : ""}
+        </span>
+      </div>
+      {max != null && (
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
+          <div className={`h-full transition-all duration-500 ${over ? "bg-red-400" : "bg-muted-foreground/40"}`} style={{ width: `${pct}%` }} />
+        </div>
+      )}
+      <p className="text-[11px] text-muted-foreground">
+        {over
+          ? `Au-dessus du seuil de l'ANSES pour les isoflavones du soja (${perKg} mg par kg de poids et par jour). Pense à varier tes sources de protéines végétales.`
+          : max != null
+            ? `Isoflavones du soja : seuil à ne pas dépasser fixé par l'ANSES, ${perKg} mg par kg de poids et par jour. Ce n'est pas un objectif.`
+            : `Isoflavones du soja : seuil à ne pas dépasser fixé par l'ANSES, ${perKg} mg par kg de poids et par jour. Renseigne ton poids pour le calculer.`}
+      </p>
+    </div>
+  );
+}
+
 function formatFrenchDate(): string {
   const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
   const months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
@@ -168,18 +211,11 @@ function formatFrenchDate(): string {
 }
 
 
-const MACRO_GOALS = { proteins: 100, carbs: 200, fats: 65, fibres: FIBRES_GOAL };
+const MACRO_GOALS = { fibres: FIBRES_GOAL };
 
 const COLORFUL_PRODUCE_KEYWORDS = [
   "myrtille", "fraise", "framboise", "mure", "mûre", "grenade", "raisin", "cerise", "orange", "kiwi", "pomme", "poire", "banane", "abricot", "peche", "pêche", "prune", "mangue", "ananas", "brocoli", "carotte", "tomate", "poivron", "epinard", "épinard", "courgette", "aubergine", "betterave", "chou", "salade", "concombre", "haricot vert", "patate douce",
 ];
-
-function getVitaminDGoal(age?: number | null) {
-  if (!age) return DAILY_TARGETS.vitamin_d;
-  if (age <= 50) return 5;
-  if (age <= 70) return 10;
-  return 15;
-}
 
 function getProducePortions(logs: any[]) {
   return logs.reduce((count, log) => {
@@ -205,7 +241,7 @@ export default function Dashboard() {
   const { allRoutines, logs: routineLogs } = useRoutines();
   const sportKcal = Math.round(getActivityExpenditure(routineLogs, selectedDateStr));
   // Compléments cochés du jour affiché, quantité saisie incluse.
-  const { contributions: supplementContribs, references: nutrientRefs } = useSupplements(selectedDateStr);
+  const { contributions: supplementContribs } = useSupplements(selectedDateStr);
   // Convert nutrient amounts to the same unit used by the food totals.
   // Most micros are mg or µg already in the right unit; oméga-3 is stored in g
   // by food logs but supplements are typically reported in mg → convert.
@@ -219,16 +255,13 @@ export default function Dashboard() {
     (logs || []).reduce((sum: number, l: any) => (l.micros_estimes && l[key] != null ? sum + Number(l[key]) : sum), 0);
   const supSources = (key: string, divisor = 1) =>
     (supplementContribs[key]?.sources || []).map((s) => ({ nom: s.nom, amount: s.amount / divisor }));
-  /** Limite haute de sécurité (ANSES), dans l'unité des totaux alimentaires. */
-  const supLimit = (key: string, divisor = 1) => {
-    const l = nutrientRefs[key]?.limite_haute;
-    return l == null ? null : Number(l) / divisor;
-  };
-  /** Couverture toujours comparée à la RNP ANSES, jamais aux AR d'étiquetage. */
-  const rnpTarget = (key: string, fallback: number, divisor = 1) => {
-    const r = nutrientRefs[key]?.rnp_anses;
-    return r == null ? fallback : Number(r) / divisor;
-  };
+  /** Repère ANSES, lu dans la table unique (nutrientReferences). */
+  const refTarget = (key: ReferenceKey) => NUTRIENT_REFERENCES[key].target;
+  /** Props de limite de sécurité : valeur, et quantité à lui comparer (total ou compléments seuls). */
+  const limitProps = (key: ReferenceKey, food: number) => ({
+    limit: NUTRIENT_REFERENCES[key].upperLimit,
+    limitAmount: amountForUpperLimit(key, food, supBy(key)),
+  });
 
   const [openMeals, setOpenMeals] = useState<Record<string, boolean>>({
     "petit-dejeuner": false,
@@ -238,7 +271,6 @@ export default function Dashboard() {
   });
   const [showSecondaryMicros, setShowSecondaryMicros] = useState(false);
 
-  const vitaminDGoal = getVitaminDGoal(profile?.age);
   const firstName = getDisplayName((profile as any)?.display_name, user?.email);
 
   // Per-meal targets based on profile goals (Harris-Benedict)
@@ -255,6 +287,8 @@ export default function Dashboard() {
   const dailyCarbs = calculateCarbsGoal(dailyCalories, dailyProteins, dailyFats);
   const calorieGoal = dailyCalories;
   const proteinGoal = dailyProteins;
+  const omega3Goal = omega3GoalG(dailyCalories) ?? 0;
+  const phytoMax = phytoestrogensMaxMg(p?.weight);
   const mealTargets = calculateMealTargets(dailyCalories, dailyProteins, dailyCarbs, dailyFats);
   const targetByMeal = Object.fromEntries(mealTargets.map((t) => [t.key, t]));
 
@@ -345,12 +379,12 @@ export default function Dashboard() {
   // Exactement les valeurs affichées (alimentation + compléments cochés + plats estimés),
   // envoyées telles quelles au récap de Sophie.
   const recapNutrients = [
-    ["Calcium", totals.calcium + supBy("calcium"), rnpTarget("calcium", DAILY_TARGETS.calcium), "mg"],
-    ["Vitamine D", totals.vitamin_d + supBy("vitamin_d"), rnpTarget("vitamin_d", vitaminDGoal), "µg"],
-    ["Magnésium", totals.magnesium + supBy("magnesium"), rnpTarget("magnesium", DAILY_TARGETS.magnesium), "mg"],
-    ["Fer", totals.iron + supBy("iron"), rnpTarget("iron", DAILY_TARGETS.iron), "mg"],
-    ["Oméga-3", totals.omega3 + supBy("omega3", 1000), DAILY_TARGETS.omega3, "g"],
-    ["Vitamine B12", totals.vitamin_b12 + supBy("vitamin_b12"), rnpTarget("vitamin_b12", DAILY_TARGETS.vitamin_b12), "µg"],
+    ["Calcium", totals.calcium + supBy("calcium"), refTarget("calcium"), "mg"],
+    ["Vitamine D", totals.vitamin_d + supBy("vitamin_d"), refTarget("vitamin_d"), "µg"],
+    ["Magnésium", totals.magnesium + supBy("magnesium"), refTarget("magnesium"), "mg"],
+    ["Fer", totals.iron + supBy("iron"), refTarget("iron"), "mg"],
+    ["Oméga-3", totals.omega3 + supBy("omega3", 1000), omega3Goal, "g"],
+    ["Vitamine B12", totals.vitamin_b12 + supBy("vitamin_b12"), refTarget("vitamin_b12"), "µg"],
     ["Fibres", totals.fibres + supMacros.fibres, MACRO_GOALS.fibres, "g"],
     ["Protéines", totals.proteins + supMacros.proteins, proteinGoal, "g"],
   ].map(([label, value, goal, unit]) => {
@@ -582,24 +616,24 @@ export default function Dashboard() {
       <div className="bg-card rounded-2xl p-5 card-soft mb-4 animate-fade-in">
         <h3 className="text-base font-semibold text-foreground mb-3">Micronutriments clés</h3>
         <div className="space-y-2">
-          <ProgressBar value={totals.calcium} max={rnpTarget("calcium", DAILY_TARGETS.calcium)} label="Calcium" unit="mg" isMicro nutrient="calcium" estimatedAmount={estBy("calcium")} supplementAmount={supBy("calcium")} supplementUnit="mg" supplementSources={supSources("calcium")} limit={supLimit("calcium")} />
-          <ProgressBar value={totals.vitamin_d} max={rnpTarget("vitamin_d", vitaminDGoal)} label="Vitamine D" unit="µg" isMicro nutrient="vitamin_d" estimatedAmount={estBy("vitamin_d")} supplementAmount={supBy("vitamin_d")} supplementUnit="µg" supplementSources={supSources("vitamin_d")} limit={supLimit("vitamin_d")} />
-          <ProgressBar value={totals.magnesium} max={rnpTarget("magnesium", DAILY_TARGETS.magnesium)} label="Magnésium" unit="mg" isMicro nutrient="magnesium" estimatedAmount={estBy("magnesium")} supplementAmount={supBy("magnesium")} supplementUnit="mg" supplementSources={supSources("magnesium")} limit={supLimit("magnesium")} />
-          <ProgressBar value={totals.iron} max={rnpTarget("iron", DAILY_TARGETS.iron)} label="Fer" unit="mg" isMicro nutrient="iron" estimatedAmount={estBy("iron")} supplementAmount={supBy("iron")} supplementUnit="mg" supplementSources={supSources("iron")} limit={supLimit("iron")} />
-          <ProgressBar value={totals.omega3} max={DAILY_TARGETS.omega3} label="Oméga-3" unit="g" isMicro nutrient="omega3" estimatedAmount={estBy("omega3")} supplementAmount={supBy("omega3", 1000)} supplementUnit="g" supplementSources={supSources("omega3", 1000)} limit={supLimit("omega3", 1000)} />
-          <ProgressBar value={totals.phytoestrogens} max={DAILY_TARGETS.phytoestrogens} label="Phytoestrogènes" unit="mg" isMicro nutrient="phytoestrogens" estimatedAmount={estBy("phytoestrogens")} maxPrefix="~" hint="(objectif indicatif)" />
-          <ProgressBar value={totals.vitamin_b12} max={rnpTarget("vitamin_b12", DAILY_TARGETS.vitamin_b12)} label="Vitamine B12" unit="µg" isMicro nutrient="vitamin_b12" estimatedAmount={estBy("vitamin_b12")} supplementAmount={supBy("vitamin_b12")} supplementUnit="µg" supplementSources={supSources("vitamin_b12")} limit={supLimit("vitamin_b12")} />
+          <ProgressBar value={totals.calcium} max={refTarget("calcium")} label="Calcium" unit="mg" isMicro nutrient="calcium" estimatedAmount={estBy("calcium")} supplementAmount={supBy("calcium")} supplementUnit="mg" supplementSources={supSources("calcium")} {...limitProps("calcium", totals.calcium)} />
+          <ProgressBar value={totals.vitamin_d} max={refTarget("vitamin_d")} label="Vitamine D" unit="µg" isMicro nutrient="vitamin_d" estimatedAmount={estBy("vitamin_d")} supplementAmount={supBy("vitamin_d")} supplementUnit="µg" supplementSources={supSources("vitamin_d")} {...limitProps("vitamin_d", totals.vitamin_d)} />
+          <ProgressBar value={totals.magnesium} max={refTarget("magnesium")} label="Magnésium" unit="mg" isMicro nutrient="magnesium" estimatedAmount={estBy("magnesium")} supplementAmount={supBy("magnesium")} supplementUnit="mg" supplementSources={supSources("magnesium")} {...limitProps("magnesium", totals.magnesium)} />
+          <ProgressBar value={totals.iron} max={refTarget("iron")} label="Fer" unit="mg" isMicro nutrient="iron" estimatedAmount={estBy("iron")} supplementAmount={supBy("iron")} supplementUnit="mg" supplementSources={supSources("iron")} {...limitProps("iron", totals.iron)} />
+          <ProgressBar value={totals.omega3} max={omega3Goal} label="Oméga-3" unit="g" isMicro nutrient="omega3" estimatedAmount={estBy("omega3")} supplementAmount={supBy("omega3", 1000)} supplementUnit="g" supplementSources={supSources("omega3", 1000)} />
+          <PhytoestrogenRow value={totals.phytoestrogens} max={phytoMax} />
+          <ProgressBar value={totals.vitamin_b12} max={refTarget("vitamin_b12")} label="Vitamine B12" unit="µg" isMicro nutrient="vitamin_b12" estimatedAmount={estBy("vitamin_b12")} supplementAmount={supBy("vitamin_b12")} supplementUnit="µg" supplementSources={supSources("vitamin_b12")} {...limitProps("vitamin_b12", totals.vitamin_b12)} />
 
         </div>
 
         {showSecondaryMicros && (
           <div className="space-y-2 mt-2 pt-3 border-t border-border animate-fade-in">
-            <ProgressBar value={totals.potassium} max={rnpTarget("potassium", DAILY_TARGETS.potassium)} label="Potassium" unit="mg" isMicro nutrient="potassium" estimatedAmount={estBy("potassium")} supplementAmount={supBy("potassium")} supplementUnit="mg" supplementSources={supSources("potassium")} limit={supLimit("potassium")} />
-            <ProgressBar value={totals.zinc} max={rnpTarget("zinc", DAILY_TARGETS.zinc)} label="Zinc" unit="mg" isMicro nutrient="zinc" estimatedAmount={estBy("zinc")} supplementAmount={supBy("zinc")} supplementUnit="mg" supplementSources={supSources("zinc")} limit={supLimit("zinc")} />
-            <ProgressBar value={totals.vitamin_k} max={rnpTarget("vitamin_k", DAILY_TARGETS.vitamin_k)} label="Vitamine K" unit="µg" isMicro nutrient="vitamin_k" estimatedAmount={estBy("vitamin_k")} supplementAmount={supBy("vitamin_k")} supplementUnit="µg" supplementSources={supSources("vitamin_k")} limit={supLimit("vitamin_k")} />
-            <ProgressBar value={totals.vitamin_b6} max={rnpTarget("vitamin_b6", DAILY_TARGETS.vitamin_b6)} label="Vitamine B6" unit="mg" isMicro nutrient="vitamin_b6" estimatedAmount={estBy("vitamin_b6")} supplementAmount={supBy("vitamin_b6")} supplementUnit="mg" supplementSources={supSources("vitamin_b6")} limit={supLimit("vitamin_b6")} />
-            <ProgressBar value={totals.vitamin_b9} max={rnpTarget("vitamin_b9", DAILY_TARGETS.vitamin_b9)} label="Vitamine B9 (folate)" unit="µg" isMicro nutrient="vitamin_b9" estimatedAmount={estBy("vitamin_b9")} supplementAmount={supBy("vitamin_b9")} supplementUnit="µg" supplementSources={supSources("vitamin_b9")} limit={supLimit("vitamin_b9")} />
-            <ProgressBar value={totals.vitamin_e} max={rnpTarget("vitamin_e", DAILY_TARGETS.vitamin_e)} label="Vitamine E" unit="mg" isMicro nutrient="vitamin_e" estimatedAmount={estBy("vitamin_e")} supplementAmount={supBy("vitamin_e")} supplementUnit="mg" supplementSources={supSources("vitamin_e")} limit={supLimit("vitamin_e")} />
+            <ProgressBar value={totals.potassium} max={refTarget("potassium")} label="Potassium" unit="mg" isMicro nutrient="potassium" estimatedAmount={estBy("potassium")} supplementAmount={supBy("potassium")} supplementUnit="mg" supplementSources={supSources("potassium")} {...limitProps("potassium", totals.potassium)} />
+            <ProgressBar value={totals.zinc} max={refTarget("zinc")} label="Zinc" unit="mg" isMicro nutrient="zinc" estimatedAmount={estBy("zinc")} supplementAmount={supBy("zinc")} supplementUnit="mg" supplementSources={supSources("zinc")} {...limitProps("zinc", totals.zinc)} />
+            <ProgressBar value={totals.vitamin_k} max={refTarget("vitamin_k")} label="Vitamine K" unit="µg" isMicro nutrient="vitamin_k" estimatedAmount={estBy("vitamin_k")} supplementAmount={supBy("vitamin_k")} supplementUnit="µg" supplementSources={supSources("vitamin_k")} {...limitProps("vitamin_k", totals.vitamin_k)} />
+            <ProgressBar value={totals.vitamin_b6} max={refTarget("vitamin_b6")} label="Vitamine B6" unit="mg" isMicro nutrient="vitamin_b6" estimatedAmount={estBy("vitamin_b6")} supplementAmount={supBy("vitamin_b6")} supplementUnit="mg" supplementSources={supSources("vitamin_b6")} {...limitProps("vitamin_b6", totals.vitamin_b6)} />
+            <ProgressBar value={totals.vitamin_b9} max={refTarget("vitamin_b9")} label="Vitamine B9 (folate)" unit="µg" isMicro nutrient="vitamin_b9" estimatedAmount={estBy("vitamin_b9")} supplementAmount={supBy("vitamin_b9")} supplementUnit="µg" supplementSources={supSources("vitamin_b9")} {...limitProps("vitamin_b9", totals.vitamin_b9)} />
+            <ProgressBar value={totals.vitamin_e} max={refTarget("vitamin_e")} label="Vitamine E" unit="mg" isMicro nutrient="vitamin_e" estimatedAmount={estBy("vitamin_e")} supplementAmount={supBy("vitamin_e")} supplementUnit="mg" supplementSources={supSources("vitamin_e")} {...limitProps("vitamin_e", totals.vitamin_e)} />
 
             <div className="rounded-xl bg-muted/30 px-3 py-2">
               <div className="flex items-center justify-between text-sm">

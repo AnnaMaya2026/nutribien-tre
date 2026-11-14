@@ -2,7 +2,7 @@
 // Triggered every Sunday at 20:00 (Europe/Paris) via pg_cron.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { FIBRES_GOAL_G } from "../_shared/nutritionTargets.ts";
+import { keyNutrientGoals } from "../_shared/nutrientReferences.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -82,14 +82,8 @@ async function generateForUser(
   const bestDay = dayKeys[dailyCal.indexOf(Math.max(...dailyCal))];
   const worstDay = dayKeys[dailyCal.indexOf(Math.min(...dailyCal.map((c) => (c || Infinity))))];
 
-  const nutrientGoals: Record<string, { goal: number; label: string; unit: string }> = {
-    calcium: { goal: 1200, label: "Calcium", unit: "mg" },
-    vitamin_d: { goal: 20, label: "Vitamine D", unit: "µg" },
-    magnesium: { goal: 320, label: "Magnésium", unit: "mg" },
-    iron: { goal: 18, label: "Fer", unit: "mg" },
-    omega3: { goal: 2.5, label: "Oméga-3", unit: "g" },
-    fibres: { goal: FIBRES_GOAL_G, label: "Fibres", unit: "g" },
-  };
+  // Repères lus dans la table unique (_shared/nutrientReferences.ts).
+  const nutrientGoals = keyNutrientGoals(profile?.daily_calorie_goal);
   const totals: Record<string, number> = {};
   for (const f of foodLogs)
     for (const k of Object.keys(nutrientGoals))

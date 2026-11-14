@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { amountForUpperLimit, referenceTarget, referenceUpperLimit } from "@/lib/nutrientReferences";
 
 export interface Supplement {
   id: string;
@@ -51,13 +52,6 @@ export interface SupplementLog {
   quantite: number;
 }
 
-
-export interface NutrientReference {
-  nutrient_key: string;
-  unite: string;
-  rnp_anses: number | null;
-  limite_haute: number | null;
-}
 
 /** Libellés FR des clés de nutriments utilisées par les compléments. */
 export const NUTRIENT_KEY_LABELS: Record<string, string> = {
@@ -146,17 +140,6 @@ export function useSupplements(dateStr: string) {
     },
   });
 
-  const referencesQuery = useQuery({
-    queryKey: ["nutrient_references"],
-    queryFn: async (): Promise<NutrientReference[]> => {
-      const { data, error } = await (supabase as any)
-        .from("nutrient_references")
-        .select("*");
-      if (error) throw error;
-      return (data || []) as NutrientReference[];
-    },
-  });
-
   const supplements = supplementsQuery.data || [];
   const allNutrients = nutrientsQuery.data || [];
   const logs = logsQuery.data || [];
@@ -166,12 +149,6 @@ export function useSupplements(dateStr: string) {
     for (const n of allNutrients) (map[n.supplement_id] ||= []).push(n);
     return map;
   }, [allNutrients]);
-
-  const references = useMemo(() => {
-    const map: Record<string, NutrientReference> = {};
-    for (const r of referencesQuery.data || []) map[r.nutrient_key] = r;
-    return map;
-  }, [referencesQuery.data]);
 
   /**
    * Un complément quotidien est PRÉ-COCHÉ : il compte tant que l'utilisatrice
@@ -352,7 +329,6 @@ export function useSupplements(dateStr: string) {
     activeSupplements,
     nutrientsBySupplement,
     logs,
-    references,
     contributions,
     contributionsForDay,
     takenSupplements,
@@ -371,19 +347,19 @@ export function useSupplements(dateStr: string) {
 
 /**
  * Statut d'un nutriment : apport alimentaire seul vs total compléments inclus.
- * La couverture est toujours comparée à la RNP ANSES (rnp_anses), jamais aux
- * apports de référence d'étiquetage.
+ * La couverture est comparée au repère ANSES de la table unique
+ * (nutrientReferences), jamais aux apports de référence d'étiquetage.
  */
 export function nutrientStatus(opts: {
+  key: string;
   food: number;
   contribution?: Contribution;
-  reference?: NutrientReference;
   fallbackTarget?: number;
 }) {
   const supplement = opts.contribution?.amount || 0;
   const total = opts.food + supplement;
-  const target = opts.reference?.rnp_anses ?? opts.fallbackTarget ?? 0;
-  const limit = opts.reference?.limite_haute ?? null;
+  const target = referenceTarget(opts.key) ?? opts.fallbackTarget ?? 0;
+  const limit = referenceUpperLimit(opts.key);
   return {
     food: opts.food,
     supplement,
@@ -392,7 +368,7 @@ export function nutrientStatus(opts: {
     foodPct: target ? (opts.food / target) * 100 : 0,
     totalPct: target ? (total / target) * 100 : 0,
     limit,
-    overLimit: limit != null && total > limit,
+    overLimit: limit != null && amountForUpperLimit(opts.key, opts.food, supplement) > limit,
     sources: opts.contribution?.sources || [],
   };
 }

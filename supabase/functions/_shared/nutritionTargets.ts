@@ -1,1 +1,2 @@
-export const FIBRES_GOAL_G = 30;
+// Conservé pour compatibilité : le repère vient de la table unique.
+export { FIBRES_GOAL_G } from "./nutrientReferences.ts";

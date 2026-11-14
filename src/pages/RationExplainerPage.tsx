@@ -15,6 +15,7 @@ import {
   getActivityLevel,
   getObjective,
 } from "@/lib/calorieGoal";
+import { NUTRIENT_REFERENCES, omega3GoalG } from "@/lib/nutrientReferences";
 
 export default function RationExplainerPage() {
   const navigate = useNavigate();
@@ -45,6 +46,7 @@ export default function RationExplainerPage() {
   });
 
   const proteinG = calculateProteinGoal(tdee, weight, objective.value);
+  const omega3Goal = omega3GoalG(tdee);
   const fatsG = calculateFatsGoal(tdee);
   const carbsG = calculateCarbsGoal(tdee, proteinG, fatsG);
   const fatsPct = FAT_ENERGY_SHARE * 100;
@@ -199,27 +201,30 @@ export default function RationExplainerPage() {
             À la ménopause, sois particulièrement attentive à :
           </p>
           <ul className="space-y-2 text-sm">
-            <li className="flex justify-between border-b border-border/40 pb-2">
-              <span><strong>Calcium</strong> <span className="text-muted-foreground">— os</span></span>
-              <span className="font-mono text-pink-deep">1000–1200 mg/j</span>
-            </li>
-            <li className="flex justify-between border-b border-border/40 pb-2">
-              <span><strong>Vitamine D</strong> <span className="text-muted-foreground">— absorption calcium</span></span>
-              <span className="font-mono text-pink-deep">800–1000 UI/j</span>
-            </li>
-            <li className="flex justify-between border-b border-border/40 pb-2">
-              <span><strong>Magnésium</strong> <span className="text-muted-foreground">— énergie, stress</span></span>
-              <span className="font-mono text-pink-deep">320 mg/j</span>
-            </li>
-            <li className="flex justify-between border-b border-border/40 pb-2">
-              <span><strong>Fer</strong> <span className="text-muted-foreground">— besoins réduits après ménopause</span></span>
-              <span className="font-mono text-pink-deep">8 mg/j</span>
-            </li>
+            {([
+              ["calcium", "os"],
+              ["vitamin_d", "absorption du calcium"],
+              ["magnesium", "énergie, stress"],
+              ["iron", "besoins réduits après la ménopause"],
+            ] as const).map(([key, role]) => {
+              const r = NUTRIENT_REFERENCES[key];
+              return (
+                <li key={key} className="flex justify-between border-b border-border/40 pb-2">
+                  <span><strong>{r.label}</strong> <span className="text-muted-foreground">— {role}</span></span>
+                  <span className="font-mono text-pink-deep">{r.target.toLocaleString("fr-FR")} {r.unit}/j</span>
+                </li>
+              );
+            })}
             <li className="flex justify-between">
               <span><strong>Oméga-3</strong> <span className="text-muted-foreground">— inflammations, articulations</span></span>
-              <span className="font-mono text-pink-deep">1–2 g/j</span>
+              <span className="font-mono text-pink-deep">
+                {omega3Goal != null ? `${omega3Goal.toLocaleString("fr-FR")} g/j` : "1 % de l'énergie + 0,5 g"}
+              </span>
             </li>
           </ul>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Repères ANSES (2021) pour une femme ménopausée. Oméga-3 : 1 % de ton objectif calorique en ALA, plus 250 mg de DHA et 250 mg d'EPA.
+          </p>
         </section>
 
         <p className="text-[11px] text-muted-foreground text-center px-4">

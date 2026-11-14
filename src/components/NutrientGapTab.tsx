@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { DAILY_TARGETS } from "@/lib/mockData";
+import { getDailyGoals } from "@/lib/dailyGoals";
 import { useFoodLogs } from "@/hooks/useFoodLogs";
 import { searchByNutrient, CiqualFood } from "@/lib/ciqual";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,19 +58,20 @@ export function NutrientGapTab() {
   }, [logs]);
 
   const gaps: NutrientGap[] = useMemo(() => {
+    const goals = getDailyGoals(profile);
     const checks: Omit<NutrientGap, "pct">[] = [
-      { key: "calcium", dbCol: "calcium_100g", label: "Calcium", current: todayTotals.calcium, target: DAILY_TARGETS.calcium, unit: "mg", emoji: "🦴" },
-      { key: "proteins", dbCol: "proteines_100g", label: "Protéines", current: todayTotals.proteins, target: DAILY_TARGETS.proteins, unit: "g", emoji: "💪" },
-      { key: "magnesium", dbCol: "magnesium_100g", label: "Magnésium", current: todayTotals.magnesium, target: DAILY_TARGETS.magnesium, unit: "mg", emoji: "🌿" },
-      { key: "iron", dbCol: "fer_100g", label: "Fer", current: todayTotals.iron, target: DAILY_TARGETS.iron, unit: "mg", emoji: "🩸" },
-      { key: "vitamin_d", dbCol: "vitamine_d_100g", label: "Vitamine D", current: todayTotals.vitamin_d, target: DAILY_TARGETS.vitamin_d, unit: "µg", emoji: "☀️" },
-      { key: "omega3", dbCol: "omega3_total_100g", label: "Oméga-3", current: todayTotals.omega3, target: DAILY_TARGETS.omega3, unit: "g", emoji: "🐟" },
+      { key: "calcium", dbCol: "calcium_100g", label: "Calcium", current: todayTotals.calcium, target: goals.calcium, unit: "mg", emoji: "🦴" },
+      { key: "proteins", dbCol: "proteines_100g", label: "Protéines", current: todayTotals.proteins, target: goals.proteins, unit: "g", emoji: "💪" },
+      { key: "magnesium", dbCol: "magnesium_100g", label: "Magnésium", current: todayTotals.magnesium, target: goals.magnesium, unit: "mg", emoji: "🌿" },
+      { key: "iron", dbCol: "fer_100g", label: "Fer", current: todayTotals.iron, target: goals.iron, unit: "mg", emoji: "🩸" },
+      { key: "vitamin_d", dbCol: "vitamine_d_100g", label: "Vitamine D", current: todayTotals.vitamin_d, target: goals.vitamin_d, unit: "µg", emoji: "☀️" },
+      { key: "omega3", dbCol: "omega3_total_100g", label: "Oméga-3", current: todayTotals.omega3, target: goals.omega3, unit: "g", emoji: "🐟" },
     ];
     return checks
       .map((c) => ({ ...c, pct: Math.round((c.current / c.target) * 100) }))
       .filter((c) => c.pct < 80)
       .sort((a, b) => a.pct - b.pct);
-  }, [todayTotals]);
+  }, [todayTotals, profile]);
 
   // Load foods + recipes when nutrient is selected
   useEffect(() => {

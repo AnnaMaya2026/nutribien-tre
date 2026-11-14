@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupplements } from "@/hooks/useSupplements";
-import { DAILY_TARGETS } from "@/lib/mockData";
+import { useProfile } from "@/hooks/useProfile";
+import { getDailyGoals } from "@/lib/dailyGoals";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { TrendingUp } from "lucide-react";
 
@@ -13,13 +14,16 @@ const PERIODS = [
   { value: 90, label: "3 mois" },
 ];
 
-const NUTRIENTS = [
-  { key: "calcium", label: "Calcium", color: "hsl(330, 60%, 65%)", target: DAILY_TARGETS.calcium, unit: "mg" },
-  { key: "vitamin_d", label: "Vitamine D", color: "hsl(45, 80%, 50%)", target: DAILY_TARGETS.vitamin_d, unit: "µg" },
-  { key: "magnesium", label: "Magnésium", color: "hsl(145, 50%, 45%)", target: DAILY_TARGETS.magnesium, unit: "mg" },
-  { key: "iron", label: "Fer", color: "hsl(0, 65%, 55%)", target: DAILY_TARGETS.iron, unit: "mg" },
-  { key: "omega3", label: "Oméga-3", color: "hsl(200, 60%, 55%)", target: DAILY_TARGETS.omega3, unit: "g" },
-];
+/** Courbes en % du repère : repères lus dans la table unique, oméga-3 selon l'objectif calorique. */
+function buildNutrients(goals: ReturnType<typeof getDailyGoals>) {
+  return [
+    { key: "calcium", label: "Calcium", color: "hsl(330, 60%, 65%)", target: goals.calcium, unit: "mg" },
+    { key: "vitamin_d", label: "Vitamine D", color: "hsl(45, 80%, 50%)", target: goals.vitamin_d, unit: "µg" },
+    { key: "magnesium", label: "Magnésium", color: "hsl(145, 50%, 45%)", target: goals.magnesium, unit: "mg" },
+    { key: "iron", label: "Fer", color: "hsl(0, 65%, 55%)", target: goals.iron, unit: "mg" },
+    { key: "omega3", label: "Oméga-3", color: "hsl(200, 60%, 55%)", target: goals.omega3, unit: "g" },
+  ];
+}
 
 /** Convertit une quantité (g, mg, µg) vers l'unité du graphique. */
 const IN_GRAMS: Record<string, number> = { g: 1, mg: 1e-3, "µg": 1e-6, ug: 1e-6, mcg: 1e-6 };
@@ -40,6 +44,9 @@ export default function MicronutrientTrendChart() {
     d.setDate(d.getDate() - (period - 1));
     return d.toISOString().split("T")[0];
   }, [period]);
+
+  const { profile } = useProfile();
+  const NUTRIENTS = useMemo(() => buildNutrients(getDailyGoals(profile)), [profile]);
 
   const { contributionsForDay } = useSupplements(new Date().toISOString().split("T")[0]);
 
@@ -107,7 +114,7 @@ export default function MicronutrientTrendChart() {
     });
     return { chartData: data, hasData: anyValue };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logs, period, contributionsForDay]);
+  }, [logs, period, contributionsForDay, NUTRIENTS]);
 
   const toggleNutrient = (key: string) => {
     setHidden((prev) => {
