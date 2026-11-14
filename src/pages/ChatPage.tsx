@@ -14,6 +14,7 @@ import FridgePhotoDialog from "@/components/FridgePhotoDialog";
 import MealPhotoDialog from "@/components/MealPhotoDialog";
 import { Utensils } from "lucide-react";
 import { normalizeTranscript, pickBestAlternative } from "@/lib/speechCorrections";
+import { useDaySnapshot } from "@/hooks/useDaySnapshot";
 
 
 const MENU_KEYWORDS = ["petit-déjeuner", "petit déjeuner", "déjeuner", "dîner", "diner", "menu", "repas", "collation", "goûter", "souper"];
@@ -36,6 +37,7 @@ const WELCOME: Message = {
 };
 
 export default function ChatPage() {
+  const daySnapshot = useDaySnapshot();
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -253,7 +255,8 @@ export default function ChatPage() {
       }));
 
       const { data, error } = await supabase.functions.invoke("chat-nutritionist", {
-        body: { messages: history },
+        // Sophie reçoit exactement les chiffres affichés sur l'accueil.
+        body: { messages: history, dashboard: daySnapshot ?? undefined },
       });
 
       console.log("Réponse API Sophie:", data);

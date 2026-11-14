@@ -2,7 +2,23 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildSymptomContext, parisDate, symptomLabel, symptomsOfLog, SYMPTOM_RULE, TUTOIEMENT_RULE } from "../_shared/symptomContext.ts";
 import { buildProfileRestrictionsContext } from "../_shared/profileRestrictions.ts";
-import { NUTRIENT_REFERENCES, FIBRES_GOAL_G, PHYTOESTROGENS_MAX_MG_PER_KG, proteinGoalFromWeight, type ReferenceKey } from "../_shared/nutrientReferences.ts";
+import { NUTRIENT_REFERENCES, FIBRES_GOAL_G, PHYTOESTROGENS_MAX_MG_PER_KG, PROTEIN_G_PER_KG, type ReferenceKey } from "../_shared/nutrientReferences.ts";
+import { matchCiqual } from "../_shared/ciqualMatch.ts";
+import {
+  computeRecipeTotals,
+  detectMeal,
+  formatRecipe,
+  isOverBudget,
+  mealBudget,
+  MEAL_LABELS,
+  parseRecipe,
+  pickRotation,
+  scaleToBudget,
+  type MealKey,
+  type ProposedDish,
+  type Recipe,
+  type RecipeTotals,
+} from "../_shared/sophieRecipe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +27,32 @@ const corsHeaders = {
 };
 
 const DAILY_LIMIT = 20;
+/** Conversation courante : modèle léger. Recettes : modèle plus fort (décision du 12/11/2026). */
+const CHAT_MODEL = "gpt-4o-mini";
+const RECIPE_MODEL = "gpt-4o";
+const CHAT_MAX_TOKENS = 350;
+const RECIPE_MAX_TOKENS = 900;
+/** Nombre de plats proposés gardés en mémoire pour ne pas se répéter. */
+const DISH_MEMORY = 15;
+/** Sous ce budget, on ne propose pas de recette. */
+const MIN_RECIPE_BUDGET = 100;
+
+const parisHour = () =>
+  Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", hour: "2-digit", hour12: false }).format(new Date()));
+
+/** Chiffres du jour envoyés par l'écran (mêmes que l'accueil), ou null s'ils sont absents ou incomplets. */
+function readDashboard(raw: any) {
+  if (!raw || typeof raw.calories !== "number" || typeof raw.calorieGoal !== "number" || !Array.isArray(raw.nutrients) || !Array.isArray(raw.meals)) return null;
+  return raw as {
+    calories: number;
+    calorieGoal: number;
+    caloriesRemaining: number;
+    foodCount: number;
+    macros?: Record<string, { value: number; goal: number }>;
+    nutrients: { key: string; label: string; value: number; goal: number; unit: string; reached: boolean }[];
+    meals: { key: string; label: string; target: number; eaten: number }[];
+  };
+}
 
 const HEALTH_LABELS: Record<string, string> = {
   cholesterol: "Cholestérol élevé",
@@ -47,7 +89,8 @@ serve(async (req) => {
       userId = user?.id ?? null;
     }
 
-    const { messages } = await req.json();
+    const { messages, dashboard: rawDashboard } = await req.json();
+    const dash = readDashboard(rawDashboard);
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Messages requis" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -65,6 +108,12 @@ serve(async (req) => {
     const today = parisDate(0);
     let symptomContext = "";
     let logsRes: any = null;
+    let countToStore: number | null = null;
+    let restrictionsBlock = "";
+    let recentDishes: ProposedDish[] = [];
+    let eatenLast7Days: string[] = [];
+    let calorieGoalKnown: number | null = dash?.calorieGoal ?? null;
+    let caloriesRemainingKnown: number | null = dash ? Math.max(0, dash.caloriesRemaining) : null;
 
     if (userId) {
       // 14-day window for trends aggregation
@@ -84,7 +133,7 @@ serve(async (req) => {
           .limit(12),
         supabase
           .from("food_logs")
-          .select("food_name, calories, logged_at, meal_type, logged_time")
+          .select("food_name, calories, logged_at, meal_type, created_at")
           .eq("user_id", userId)
           .gte("logged_at", trendsFrom),
         supabase
@@ -127,17 +176,25 @@ RÈGLE ABSOLUE: ne propose JAMAIS un aliment listé dans "n'aime pas" ou "évite
         const symptoms = (trendsSymptomsRes.data || []) as any[];
         const habits = (trendsHabitsRes.data || []) as any[];
         const bits: string[] = [];
-        // Late meals: dinner logged after 21:00
-        const lateDinners = foods.filter((f) => f.meal_type === "diner" && f.logged_time && f.logged_time > "21:00:00").length;
-        if (lateDinners >= 3) bits.push(`dîners tardifs récurrents (${lateDinners} après 21h sur 14j)`);
-        // Evening snacking
-        const eveSnacks = foods.filter((f) => f.meal_type === "collation" && f.logged_time && f.logged_time >= "20:00:00").length;
-        if (eveSnacks >= 3) bits.push(`grignotages en soirée fréquents (${eveSnacks} sur 14j)`);
-        // Skipped breakfast (days with no petit_dejeuner)
-        const daysWithFood = new Set(foods.map((f) => f.logged_at));
-        const daysWithBreakfast = new Set(foods.filter((f) => f.meal_type === "petit_dejeuner").map((f) => f.logged_at));
+        // L'heure du repas n'est pas enregistrée : on prend l'heure de saisie (Paris),
+        // seulement quand la saisie a eu lieu le jour même du repas.
+        const sameDayTime = (f: any): string | null => {
+          if (!f.created_at) return null;
+          const d = new Date(f.created_at);
+          const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(d);
+          if (day !== f.logged_at) return null;
+          return new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+        };
+        const daysWhere = (pred: (f: any) => boolean) => new Set(foods.filter(pred).map((f) => f.logged_at)).size;
+        const lateDinners = daysWhere((f) => f.meal_type === "diner" && (sameDayTime(f) ?? "") > "21:00");
+        if (lateDinners >= 3) bits.push(`dîners saisis après 21 h ${lateDinners} jours sur 14`);
+        const eveSnacks = daysWhere((f) => f.meal_type === "collation" && (sameDayTime(f) ?? "") >= "20:00");
+        if (eveSnacks >= 3) bits.push(`collations saisies après 20 h ${eveSnacks} jours sur 14`);
+        // Jours avec des repas saisis mais sans petit-déjeuner (aujourd'hui exclu : journée en cours)
+        const daysWithFood = new Set(foods.filter((f) => f.logged_at !== today).map((f) => f.logged_at));
+        const daysWithBreakfast = new Set(foods.filter((f) => f.meal_type === "petit-dejeuner").map((f) => f.logged_at));
         const skippedBreakfasts = [...daysWithFood].filter((d) => !daysWithBreakfast.has(d)).length;
-        if (skippedBreakfasts >= 4) bits.push(`petit-déjeuner sauté ${skippedBreakfasts} jours sur 14`);
+        if (skippedBreakfasts >= 4) bits.push(`aucun petit-déjeuner saisi ${skippedBreakfasts} jours sur ${daysWithFood.size}`);
         // Top recurring symptoms
         const symptomAvg: Record<string, { sum: number; n: number }> = {};
         for (const row of symptoms) {
@@ -184,6 +241,16 @@ RÈGLE ABSOLUE: ne propose JAMAIS un aliment listé dans "n'aime pas" ou "évite
       const profile = profileRes.data as any;
       profileForMemory = profile;
 
+      // Plats déjà proposés (les plus récents d'abord) et aliments mangés sur 7 jours.
+      recentDishes = (Array.isArray(prefs.proposed_dishes) ? prefs.proposed_dishes : []).slice(0, DISH_MEMORY);
+      const weekAgo = parisDate(-7);
+      eatenLast7Days = [...new Set(
+        ((trendsFoodRes.data || []) as any[])
+          .filter((f) => f.logged_at >= weekAgo && (f.meal_type === "dejeuner" || f.meal_type === "diner"))
+          .map((f) => String(f.food_name || "").trim())
+          .filter(Boolean),
+      )].slice(0, 40);
+
       // Recent conversation (chronological, oldest first)
       recentConversation = (prevChatRes.data || [])
         .slice()
@@ -215,16 +282,9 @@ RÈGLE ABSOLUE: ne propose JAMAIS un aliment listé dans "n'aime pas" ou "évite
           );
         }
 
-        // Increment counter (reset if new day)
-        const nextCount = currentCount + 1;
-        await supabase
-          .from("profiles")
-          .update({
-            daily_message_count: nextCount,
-            last_message_date: today,
-          })
-          .eq("user_id", userId);
-        remaining = Math.max(0, DAILY_LIMIT - nextCount);
+        // Le compteur n'est enregistré qu'une fois la réponse obtenue (voir plus bas).
+        countToStore = currentCount + 1;
+        remaining = Math.max(0, DAILY_LIMIT - countToStore);
 
         // Dietary + health restrictions (centralized helper with alternatives)
         const restrictionsCtx = buildProfileRestrictionsContext(profile);
@@ -234,7 +294,6 @@ Profil utilisatrice:
 - Prénom: ${profile.display_name || "Non renseigné"}
 - Stade: ${profile.menopause_stage || "Non renseigné"}
 - Symptômes déclarés au profil: ${(profile.symptoms || []).map(symptomLabel).join(", ") || "Aucun renseigné"}
-- Objectif calorique: ${profile.daily_calorie_goal || 1800} kcal
 - Régimes/restrictions alimentaires: ${restrictionsCtx.dietaryLabels.length ? restrictionsCtx.dietaryLabels.join(", ") : "Aucune"}
 
 ${restrictionsCtx.promptBlock}
@@ -242,61 +301,34 @@ ${restrictionsCtx.promptBlock}
 Rappelle si pertinent : "Ces conseils ne remplacent pas un suivi médical."`;
 
         healthContext = ""; // merged inside promptBlock above
+        restrictionsBlock = restrictionsCtx.promptBlock;
+        if (calorieGoalKnown == null && Number(profile.daily_calorie_goal) > 0) calorieGoalKnown = Number(profile.daily_calorie_goal);
       }
 
-      if (logsRes.data && logsRes.data.length > 0) {
-        const totals = logsRes.data.reduce((acc: any, log: any) => ({
-          calories: acc.calories + (log.calories || 0),
-          proteins: acc.proteins + (log.proteins || 0),
-          calcium: acc.calcium + (log.calcium || 0),
-          vitamin_d: acc.vitamin_d + (log.vitamin_d || 0),
-          magnesium: acc.magnesium + (log.magnesium || 0),
-          iron: acc.iron + (log.iron || 0),
-          fibres: acc.fibres + (log.fibres || 0),
-          potassium: acc.potassium + (log.potassium || 0),
-          zinc: acc.zinc + (log.zinc || 0),
-          vitamin_k: acc.vitamin_k + (log.vitamin_k || 0),
-          vitamin_b6: acc.vitamin_b6 + (log.vitamin_b6 || 0),
-          vitamin_b9: acc.vitamin_b9 + (log.vitamin_b9 || 0),
-          vitamin_e: acc.vitamin_e + (log.vitamin_e || 0),
-        }), { calories: 0, proteins: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, fibres: 0, potassium: 0, zinc: 0, vitamin_k: 0, vitamin_b6: 0, vitamin_b9: 0, vitamin_e: 0 });
-
-        const calorieGoal = profile?.daily_calorie_goal || 1800;
-        // Repères lus dans la table unique (_shared/nutrientReferences.ts).
-        const refLine = (key: ReferenceKey, value: number, decimals = 0) => {
-          const r = NUTRIENT_REFERENCES[key];
-          return `- ${r.label}: ${decimals ? value.toFixed(decimals) : Math.round(value)}${r.unit} / ${r.target}${r.unit}`;
-        };
-        const proteinGoal = proteinGoalFromWeight(profile?.weight);
-        const nutrientLines = [
-          `- Protéines: ${Math.round(totals.proteins)}g${proteinGoal != null ? ` / ${proteinGoal}g` : ""}`,
-          refLine("calcium", totals.calcium),
-          refLine("vitamin_d", totals.vitamin_d, 1),
-          refLine("magnesium", totals.magnesium),
-          refLine("iron", totals.iron, 1),
-          `- Fibres: ${Math.round(totals.fibres)}g / ${FIBRES_GOAL_G}g`,
-          refLine("potassium", totals.potassium),
-          refLine("zinc", totals.zinc, 1),
-          refLine("vitamin_k", totals.vitamin_k, 1),
-          refLine("vitamin_b6", totals.vitamin_b6, 2),
-          refLine("vitamin_b9", totals.vitamin_b9),
-          refLine("vitamin_e", totals.vitamin_e, 1),
-        ].join("\n");
-        const caloriesRemaining = Math.max(0, calorieGoal - Math.round(totals.calories));
+      if (dash) {
+        // Chiffres identiques à ceux de l'accueil : alimentation + compléments cochés.
+        const fmt = (n: number) => String(n).replace(".", ",");
+        const line = (n: any) => `${n.label} ${fmt(n.value)}/${fmt(n.goal)} ${n.unit}`;
+        const below = dash.nutrients.filter((n) => !n.reached);
+        const reached = dash.nutrients.filter((n) => n.reached);
+        const m = dash.macros;
         nutritionContext = `
-Données nutritionnelles du jour:
-- Calories consommées: ${Math.round(totals.calories)} kcal / ${calorieGoal} kcal
-- ⚡ CALORIES RESTANTES AUJOURD'HUI: ${caloriesRemaining} kcal (budget maximal pour toute suggestion de repas/collation)
-${nutrientLines}
-
-RÈGLE BUDGET CALORIQUE (STRICTE):
-Quand tu proposes un repas, une collation ou un menu, l'apport calorique total NE DOIT JAMAIS dépasser ${caloriesRemaining} kcal (les calories restantes du jour).
-- Si ${caloriesRemaining} < 150 kcal : propose uniquement une collation très légère (tisane, quelques légumes crus, 1 petit fruit) et signale gentiment que le budget calorique du jour est presque atteint.
-- Si ${caloriesRemaining} ≥ 150 kcal : propose un repas/collation dont le total estimé reste ≤ ${caloriesRemaining} kcal et indique explicitement l'estimation calorique (ex: "≈ ${Math.min(caloriesRemaining, 350)} kcal").
-- Ne propose JAMAIS un plat estimé au-dessus de ce budget en te justifiant après coup.`;
+Données du jour (identiques à l'écran d'accueil de l'utilisatrice, compléments alimentaires inclus) :
+- Calories : ${dash.calories} kcal sur ${dash.calorieGoal} kcal d'objectif. Reste : ${caloriesRemainingKnown} kcal.
+${m ? `- Protéines ${m.proteins?.value}/${m.proteins?.goal} g, glucides ${m.carbs?.value}/${m.carbs?.goal} g, lipides ${m.fats?.value}/${m.fats?.goal} g` : ""}
+- Par repas (mangé / cible) : ${dash.meals.map((x) => `${x.label} ${x.eaten}/${x.target} kcal`).join(" ; ")}
+- Nutriments SOUS l'objectif : ${below.length ? below.map(line).join(", ") : "aucun"}
+- Nutriments atteints : ${reached.length ? reached.map(line).join(", ") : "aucun"}
+- Aliments enregistrés aujourd'hui : ${dash.foodCount}
+Ne parle d'un manque QUE pour un nutriment de la liste « SOUS l'objectif ». N'annonce jamais d'autres chiffres que ceux-ci.`;
       } else {
-        const calorieGoalNoLogs = profile?.daily_calorie_goal || 1800;
-        nutritionContext = `\nAucun aliment enregistré aujourd'hui.\n⚡ CALORIES RESTANTES AUJOURD'HUI: ${calorieGoalNoLogs} kcal (budget maximal pour toute suggestion de repas).`;
+        // Ancienne version de l'écran : pas de chiffres transmis. On ne devine rien.
+        const eaten = Math.round(((logsRes.data || []) as any[]).reduce((a, l) => a + (Number(l.calories) || 0), 0));
+        if (calorieGoalKnown != null) caloriesRemainingKnown = Math.max(0, calorieGoalKnown - eaten);
+        nutritionContext = `
+Données du jour (partielles : les compléments alimentaires ne sont pas comptés) :
+- Calories mangées : ${eaten} kcal${calorieGoalKnown != null ? ` sur ${calorieGoalKnown} kcal d'objectif. Reste : ${caloriesRemainingKnown} kcal.` : ". Objectif calorique non disponible."}
+Tu ne connais pas les apports en vitamines et minéraux du jour : n'annonce aucun manque chiffré.`;
       }
     }
 
@@ -330,10 +362,24 @@ Quand tu proposes un repas, une collation ou un menu, l'apport calorique total N
       ? `\n\n🍔 Aliments industriels détectés aujourd'hui : ${detectedIndustrial.join(", ")}.
 Si pertinent dans le contexte de la conversation (et seulement si tu n'as pas encore fait cette suggestion plus tôt), termine ta réponse par EXACTEMENT ce format :
 "💡 J'ai remarqué que tu as mangé ${detectedIndustrial[0]} aujourd'hui — souvent riche en sel et additifs. Tu veux que je te propose une version maison rapide et plus nutritive ?"
-Si l'utilisatrice répond oui (ou équivalent : "oui", "vas-y", "ok", "volontiers"), propose-lui une recette maison simple (5-7 ingrédients, étapes courtes, alternative saine et rapide à préparer) à la place du plat industriel détecté.`
+Si l'utilisatrice répond oui (ou équivalent : "oui", "vas-y", "ok", "volontiers"), appelle l'outil proposer_recette pour une version maison simple du plat détecté.`
       : "";
 
-    const systemPrompt = `Tu es Sophie, une nutritionniste spécialisée dans la nutrition pour la ménopause. Tu as accès au profil de l'utilisatrice et à ses données nutritionnelles du jour.
+    // Fiche de connaissances : Sophie n'affirme que ce qui figure ici.
+    const ref = (key: ReferenceKey) => {
+      const r = NUTRIENT_REFERENCES[key];
+      return `${r.label} ${r.target} ${r.unit}`;
+    };
+    const knowledgeSheet = `FICHE DE CONNAISSANCES (tu n'affirmes rien de chiffré ou de médical en dehors de cette fiche et des données du jour) :
+- Repères journaliers ANSES pour une femme ménopausée : ${(["calcium", "vitamin_d", "magnesium", "iron", "zinc", "vitamin_b12", "vitamin_b9", "potassium"] as ReferenceKey[]).map(ref).join(", ")}, fibres ${FIBRES_GOAL_G} g. Protéines : ${PROTEIN_G_PER_KG} g par kg de poids.
+- Fer : le besoin baisse après la ménopause. Ne conseille jamais de complément de fer sans avis médical.
+- Soja et phytoestrogènes : ne les présente jamais comme prioritaires et ne les conseille pas pour un symptôme. L'ANSES (2025) fixe un seuil à ne pas dépasser de ${PHYTOESTROGENS_MAX_MG_PER_KG} mg d'isoflavones par kg de poids et par jour, et conseille de varier les sources de protéines végétales.
+- Liens habitudes ou alimentation → symptômes que tu peux évoquer : caféine → bouffées de chaleur, insomnie ; alcool → bouffées de chaleur, sommeil ; écrans le soir → insomnie ; oméga-3 → inflammation, douleurs articulaires ; magnésium → sommeil, crampes ; calcium + vitamine D → os ; protéines → masse musculaire.
+- Tout autre lien : ne l'établis pas. Dis : « Je ne peux pas établir de lien direct entre ces deux éléments. »
+- Tu ne cites pas d'étude, pas de pourcentage et pas de mécanisme biologique qui ne figure pas dans cette fiche. Si tu ne sais pas, dis-le.
+- Allergènes : n'affirme jamais qu'un aliment en contient ou n'en contient pas sans certitude ; en cas de doute, renvoie à l'étiquette du produit. Les boissons végétales et le tofu ne contiennent pas de lactose.`;
+
+    const systemPrompt = `Tu es Sophie, nutritionniste spécialisée dans la nutrition pour la ménopause. Tu as accès au profil de l'utilisatrice et à ses chiffres du jour.
 ${TUTOIEMENT_RULE}
 ${profileContext}
 ${memoryContext}
@@ -344,155 +390,176 @@ ${nutritionContext}
 ${healthContext}
 ${industrialContext}
 
+${knowledgeSheet}
 
-RÈGLE FORMAT DES SUGGESTIONS DE REPAS (OBLIGATOIRE):
-Ne donne JAMAIS une simple liste d'ingrédients avec leur grammage (ex: ❌ "100g de poisson blanc, 200g de haricots verts").
-Chaque suggestion de repas, collation ou menu doit être un vrai plat identifiable, présenté ainsi :
-1. **Nom du plat** appétissant et concret (ex: "Poisson blanc en papillote et haricots verts sautés à l'ail")
-2. Ingrédients avec quantités précises en g/ml — ces quantités doivent correspondre exactement à l'estimation calorique et aux macros annoncées (ne jamais annoncer des valeurs incohérentes avec les grammages)
-3. Préparation en 3 à 5 étapes courtes, simples et réalistes à faire chez soi (matériel de cuisine basique, temps total ≤ 30 min sauf demande contraire)
-4. Estimation "≈ X kcal · Y g de protéines" cohérente avec le budget calorique restant, les macros et l'objectif de l'utilisatrice
+RECETTES ET IDÉES DE REPAS :
+Dès que l'utilisatrice demande une idée de repas, de collation, de plat ou une recette (ou accepte une proposition de recette), appelle l'outil proposer_recette. N'écris jamais toi-même une recette, une liste d'ingrédients ou les calories d'un plat : c'est l'outil qui les calcule. Pour un menu de plusieurs repas, propose un repas à la fois, en commençant par le prochain.
 
-RÈGLE DE VARIÉTÉ DES SUGGESTIONS:
-Varie systématiquement tes propositions entre des plats classiques et des idées plus originales/créatives.
-- Plats classiques : combinaisons familières et réconfortantes (ex: "Poulet rôti aux herbes, quinoa et légumes verts", "Saumon à la poêle, purée de patate douce et épinards").
-- Idées originales : associations plus surprenantes mais savoureuses, faciles et accessibles (ex: "Pancakes salés aux œufs et petits pois", "Toast de patate douce au fromage frais et saumon fumé", "Bol de lentilles corail aux légumes grillés et sauce au yaourt").
-Alterne les deux styles d'une suggestion à l'autre pour ne jamais tomber dans la répétition. Les idées originales doivent rester réalistes, appétissantes et utilisables avec des ingrédients courants — évite les associations bizarres ou peu engageantes.
-Pour une collation très légère, le format peut être allégé (nom + composition + 1-2 étapes), mais elle doit rester un item nommé, jamais une liste brute d'ingrédients.
+STYLE (conversation) :
+- Réponds en français, en 3 à 4 phrases courtes, sans liste à puces.
+- Sois chaleureuse et concrète. Appuie-toi sur les chiffres du jour quand ils répondent à la question.
+- Calories : donne le fait, sans féliciter et sans pousser à manger plus ou moins. Ne félicite pour un nutriment que s'il figure dans « Nutriments atteints ».
+- Si tu connais le prénom de l'utilisatrice, utilise-le naturellement, sans la saluer à chaque message.
+- Tu ne remplaces pas un médecin : rappelle-le quand la question est médicale.
+- Ne termine jamais par une formule de politesse ou de clôture.`;
 
+    const lastUserText = String([...(messages as any[])].reverse().find((m) => m.role === "user")?.content || "");
+    const clientContents = new Set((messages as any[]).map((m) => String(m.content || "").trim()).filter(Boolean));
+    // Historique persistant récent, dédupliqué avec les messages envoyés par l'écran.
+    const history = [...recentConversation.filter((m) => !clientContents.has(String(m.content).trim())), ...messages];
 
-Connaissances scientifiques importantes:
-- La sarcopénie (perte musculaire) s'accélère après la ménopause. Les protéines sont essentielles: objectif 1g/kg/jour minimum.
-- Le ratio oméga-6/oméga-3 doit être ≤ 4:1. Le régime occidental typique est 15:1, très pro-inflammatoire.
-- 65-77% des femmes ménopausées sont déficientes en vitamine D.
-- Les aliments entiers sont supérieurs aux suppléments isolés.
-- Les aliments anti-inflammatoires prioritaires: poissons gras, myrtilles, brocoli, noix, graines de lin.
+    const callOpenAI = async (payload: Record<string, unknown>) => {
+      const r = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!r.ok) {
+        const errorText = await r.text();
+        console.error("OpenAI error:", r.status, errorText);
+        throw Object.assign(new Error(`OpenAI ${r.status}`), { status: r.status });
+      }
+      return (await r.json()).choices?.[0]?.message;
+    };
 
-RÈGLE INSIGHTS: Ne jamais donner de conseils évidents ou déjà connus. Chaque réponse doit apporter une information surprenante mais vraie.
+    let content = "";
+    let recipePayload: { recipe: Recipe; totals: RecipeTotals; meal: MealKey; budget: number | null } | null = null;
 
-EXEMPLES DE CE QU'IL NE FAUT PAS DIRE:
-❌ "Mange plus de calcium pour tes os"
-❌ "La vitamine D est importante"
-❌ "Buvez suffisamment d'eau"
-❌ "Mangez équilibré"
-
-EXEMPLES DE CE QUI FAIT L'EFFET WOW:
-✅ "Votre fatigue n'est peut-être pas liée au manque de sommeil mais à un déficit en magnésium bisglycinate — la forme la mieux absorbée, rarement dans les compléments bon marché"
-✅ "Le ratio oméga-6/oméga-3 dans l'alimentation occidentale est 15:1 alors que l'objectif anti-inflammatoire est 4:1 — réduire l'huile de tournesol est aussi important qu'augmenter le saumon"
-✅ "La vitamine D seule ne suffit pas — sans vitamine K2, le calcium va dans les artères plutôt que dans les os"
-
-RÈGLES:
-- Toujours expliquer LE MÉCANISME, pas juste la recommandation
-- Connecter les symptômes spécifiques de l'utilisatrice à des causes précises
-- Mentionner des formes spécifiques de nutriments quand c'est pertinent
-- Citer des études ou mécanismes biologiques
-- Maximum 3-4 phrases mais denses en valeur
-- Jamais de listes à puces basiques
-- Toujours quelque chose que l'utilisatrice ne savait pas avant
-
-Règles de style:
-- Réponds toujours en français
-- Si tu connais le prénom de l'utilisatrice, utilise-le naturellement (ex: "Bonjour Anna,...")
-- Sois chaleureuse, encourageante et bienveillante
-- Base tes conseils sur les données du jour et les contraintes santé éventuelles
-- Ne remplace pas un médecin, rappelle-le si besoin
-- Réponds en maximum 3-4 phrases courtes (sauf si tu proposes une recette : alors structure clairement)
-- IMPORTANT: Ne termine JAMAIS tes réponses par des formules de politesse comme "Prends soin de toi", "Bon appétit", "À bientôt", "N'hésite pas à revenir", "Belle journée" ou toute autre formule de clôture. Réponds naturellement comme dans une vraie conversation — laisse la porte ouverte à la question suivante sans la forcer.
-
-RÈGLE IMPORTANTE: Ne fais des liens entre habitudes/alimentation et symptômes UNIQUEMENT si le lien est scientifiquement validé.
-
-Liens validés autorisés:
-- Caféine → bouffées de chaleur, insomnie ✅
-- Alcool → bouffées de chaleur, sommeil ✅
-- Écrans → insomnie uniquement ✅
-- Oméga-3 → inflammation, douleurs articulaires ✅
-- Magnésium → insomnie, anxiété, crampes ✅
-- Calcium + Vitamine D → os, ostéoporose ✅
-- Protéines → masse musculaire, fatigue ✅
-
-Soja et phytoestrogènes : ne jamais les présenter comme prioritaires ni les conseiller pour un symptôme. L'ANSES (2025) fixe un seuil à ne pas dépasser de ${PHYTOESTROGENS_MAX_MG_PER_KG} mg d'isoflavones par kg de poids et par jour, et conseille de varier les sources de protéines végétales.
-
-Liens INTERDITS (non validés scientifiquement):
-- Écrans → sécheresse vaginale ❌
-- Café → douleurs articulaires ❌
-- Toute association non prouvée ❌
-
-En cas de doute sur un lien : NE PAS l'établir. Préférer dire : « Je ne peux pas établir de lien scientifique direct entre ces deux éléments. »
-
-RÈGLE ALLERGÈNES : Ne jamais affirmer qu'un aliment contient un allergène sans certitude.
-Exemples importants :
-- Lait de coco → SANS lactose (végétal)
-- Lait d'amande → SANS lactose
-- Lait de soja → SANS lactose
-- Tofu → SANS lactose
-- Tous laits végétaux → SANS lactose
-En cas de doute sur un allergène, dire : « Je te recommande de vérifier l'étiquette du produit pour confirmer. »
-
-RÈGLE FÉLICITATIONS : Ne félicite jamais pour des objectifs partiellement atteints.
-Félicite UNIQUEMENT quand :
-- Objectif atteint à 80% minimum
-- Ex hydratation : féliciter à partir de 6-7 verres (pas 2 verres sur 8 !)
-- Ex calories : féliciter si entre 80-100% de l'objectif
-- Ex nutriments : féliciter si la barre est verte
-Pour les objectifs peu atteints (<50%), encourager sans féliciter.
-Exemple : « Tu as bu 2 verres d'eau aujourd'hui, continue — l'objectif est 8 verres ! »
-
-RÈGLE MENUS:
-Quand tu proposes un menu, tu dois:
-1. AVANT de proposer le menu, calculer mentalement s'il atteint les objectifs:
-   - 80%+ de l'objectif calorique
-   - 80%+ des protéines (1.2g/kg)
-   - 80%+ des nutriments prioritaires
-   - Minimum 5 couleurs de fruits/légumes
-   - Minimum 3 sources de protéines différentes
-2. Si le menu ne remplit pas ces critères, l'AJUSTER avant de le proposer. Ne jamais proposer un menu sous-optimal puis expliquer pourquoi il est sous-optimal.
-3. Le menu proposé doit TOUJOURS:
-   - Couvrir les carences identifiées du jour
-   - Inclure des aliments anti-inflammatoires
-   - Respecter les restrictions alimentaires
-   - Être pratique et réalisable
-4. Après avoir proposé le menu, indiquer brièvement:
-   'Ce menu couvre: ✅ Calcium (85%) ✅ Protéines (90%) ✅ Oméga-3 (75%)'
-
-RÈGLE GÉNÉRALE:
-Ne jamais proposer quelque chose de sous-optimal puis expliquer pourquoi c'est sous-optimal. Toujours optimiser AVANT de proposer.`;
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          // Historique persistant récent (max 12 msgs des 3 derniers jours) —
-          // dédupliqué avec les messages envoyés par le client cette session.
-          ...(() => {
-            const clientContents = new Set(
-              (messages as any[]).map((m) => String(m.content || "").trim()).filter(Boolean),
-            );
-            return recentConversation.filter((m) => !clientContents.has(String(m.content).trim()));
-          })(),
-          ...messages,
-        ],
-        temperature: 0.7,
-        max_tokens: 300,
-      }),
+    const first = await callOpenAI({
+      model: CHAT_MODEL,
+      messages: [{ role: "system", content: systemPrompt }, ...history],
+      temperature: 0.5,
+      max_tokens: CHAT_MAX_TOKENS,
+      tools: [{
+        type: "function",
+        function: {
+          name: "proposer_recette",
+          description: "Propose une recette adaptée au budget calorique du repas ; les calories sont calculées par le serveur.",
+          parameters: {
+            type: "object",
+            properties: {
+              repas: { type: "string", enum: ["petit-dejeuner", "dejeuner", "collation", "diner"], description: "Repas visé, seulement s'il est précisé dans la conversation" },
+              demande: { type: "string", description: "Ce que l'utilisatrice souhaite (envie, ingrédient, contrainte), en quelques mots" },
+            },
+            required: ["demande"],
+          },
+        },
+      }],
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("OpenAI error:", response.status, errorText);
-      return new Response(JSON.stringify({ error: `OpenAI ${response.status}: ${errorText}` }), {
-        status: response.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const toolCall = first?.tool_calls?.find((t: any) => t?.function?.name === "proposer_recette");
+    if (!toolCall) {
+      content = String(first?.content || "").trim();
+    } else {
+      let args: any = {};
+      try { args = JSON.parse(toolCall.function.arguments || "{}"); } catch { args = {}; }
+      const meal: MealKey = (["petit-dejeuner", "dejeuner", "collation", "diner"] as MealKey[]).includes(args.repas)
+        ? args.repas
+        : detectMeal(lastUserText, parisHour());
+      // Budget du repas : cible du repas, limitée par le reste du jour moins la part des repas à venir.
+      const budget = dash
+        ? mealBudget(meal, Math.max(0, dash.caloriesRemaining), dash.meals)
+        : caloriesRemainingKnown;
 
-    const result = await response.json();
-    const content = result.choices?.[0]?.message?.content?.trim();
+      if (budget != null && budget < MIN_RECIPE_BUDGET) {
+        content = `Il te reste ${caloriesRemainingKnown ?? budget} kcal sur ton objectif du jour${budget !== caloriesRemainingKnown ? `, dont ${budget} kcal pour ${MEAL_LABELS[meal] === "collation" ? "une collation" : `le ${MEAL_LABELS[meal]}`} une fois gardée la part des repas à venir` : ""}. C'est trop peu pour une vraie recette : une tisane, quelques crudités ou un petit fruit conviennent mieux.`;
+      } else {
+        const rotation = pickRotation(recentDishes);
+        const below = dash ? dash.nutrients.filter((n) => !n.reached).map((n) => n.label) : [];
+        const avoid = [...recentDishes.map((d) => d.dish_name), ...eatenLast7Days].filter(Boolean);
+        const recipeSystem = `Tu composes UNE recette pour une femme ménopausée et tu réponds UNIQUEMENT en JSON, avec ce schéma exact :
+{"intro": "une phrase courte qui présente le plat, en tutoyant", "nom": "nom du plat", "proteine_principale": "un mot", "cuisine": "type de cuisine", "cuisson": "mode de cuisson", "ingredients": [{"nom": "ingrédient", "grammes": nombre}], "etapes": ["étape courte"]}
+
+Règles :
+- Repas : ${MEAL_LABELS[meal]}.
+${budget != null ? `- Budget : ${budget} kcal au maximum pour le plat entier, pour une personne. Vise entre ${Math.round(budget * 0.85)} et ${budget} kcal.` : "- Portion pour une personne."}
+- Tous les ingrédients en grammes, poids CRUS (riz, pâtes, légumineuses, viande et poisson avant cuisson), liquides compris. N'oublie pas la matière grasse de cuisson et d'assaisonnement.
+- Nomme chaque ingrédient simplement, comme dans une table de composition des aliments (« blanc de poulet », « riz basmati cru », « huile d'olive », « courgette »). Uniquement des ingrédients courants, pas de produit de marque ni de plat préparé.
+- 3 à 5 étapes courtes, matériel de cuisine courant, 30 minutes au plus.
+- N'écris aucune calorie ni aucune valeur nutritionnelle : elles sont calculées après.
+- Type de cuisine imposé : ${rotation.cuisine}. Mode de cuisson imposé : ${rotation.cuisson}.${rotation.proteinesRecentes.length ? ` Protéine principale différente de : ${rotation.proteinesRecentes.join(", ")}.` : ""}
+${avoid.length ? `- Ne propose aucun de ces plats ni une simple variante : ${avoid.slice(0, 40).join(" ; ")}.` : ""}
+${below.length ? `- Si le budget le permet, apporte des aliments riches en : ${below.join(", ")}.` : ""}
+- Soja : pas de tofu ni de produit au soja, sauf si l'utilisatrice le demande.
+- ${TUTOIEMENT_RULE}
+${restrictionsBlock}
+${memoryContext}`;
+        const recipeMessages: any[] = [
+          { role: "system", content: recipeSystem },
+          { role: "user", content: `Demande de l'utilisatrice : ${String(args.demande || lastUserText).slice(0, 400)}` },
+        ];
+
+        let intro = "";
+        let best: { recipe: Recipe; totals: RecipeTotals } | null = null;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const msg = await callOpenAI({
+            model: RECIPE_MODEL,
+            messages: recipeMessages,
+            temperature: 0.8,
+            max_tokens: RECIPE_MAX_TOKENS,
+            response_format: { type: "json_object" },
+          });
+          let raw: any = null;
+          try { raw = JSON.parse(msg?.content || ""); } catch { raw = null; }
+          const recipe = parseRecipe(raw);
+          if (!recipe) {
+            recipeMessages.push({ role: "assistant", content: String(msg?.content || "") }, { role: "user", content: "Réponse inutilisable. Renvoie le JSON complet demandé, avec les grammes de chaque ingrédient." });
+            continue;
+          }
+          intro = String(raw?.intro || "").trim();
+          // Calories calculées par le serveur à partir de la table CIQUAL (poids crus).
+          const compute = async (r: Recipe) => {
+            const rows = await Promise.all(r.ingredients.map(async (ing) => {
+              try { return (await matchCiqual(supabase, ing.nom, { ingredientsBruts: true }))?.row ?? null; } catch { return null; }
+            }));
+            return { rows, totals: computeRecipeTotals(r, rows) };
+          };
+          const { rows, totals } = await compute(recipe);
+          let candidate = { recipe, totals };
+          if (budget != null && totals.missing.length === 0 && isOverBudget(totals.kcal, budget)) {
+            const scaled = scaleToBudget(recipe, totals.kcal, budget);
+            if (scaled) candidate = { recipe: scaled, totals: computeRecipeTotals(scaled, rows) };
+          }
+          const ok = candidate.totals.missing.length === 0 && (budget == null || !isOverBudget(candidate.totals.kcal, budget));
+          if (!best || ok || candidate.totals.missing.length < best.totals.missing.length) best = candidate;
+          if (ok) break;
+          recipeMessages.push(
+            { role: "assistant", content: String(msg?.content || "") },
+            {
+              role: "user",
+              content: totals.missing.length
+                ? `Ces ingrédients sont introuvables dans la table de composition : ${totals.missing.join(", ")}. Propose une autre recette avec des ingrédients plus courants, nommés plus simplement.`
+                : `Cette recette fait ${totals.kcal} kcal une fois calculée, pour un budget de ${budget} kcal. Propose une recette plus légère, entièrement différente si besoin.`,
+            },
+          );
+        }
+
+        if (!best) {
+          content = "Je n'ai pas réussi à composer une recette fiable cette fois. Redemande-moi en précisant un ingrédient ou une envie.";
+        } else {
+          const over = budget != null && isOverBudget(best.totals.kcal, budget);
+          content = formatRecipe(best.recipe, best.totals, intro);
+          if (over) content += `\nAttention : ce plat dépasse ton budget ${meal === "collation" ? "de la collation" : `du ${MEAL_LABELS[meal]}`} (${budget} kcal).`;
+          else if (budget != null && best.totals.missing.length === 0) content += `\nBudget ${meal === "collation" ? "de la collation" : `du ${MEAL_LABELS[meal]}`} : ${budget} kcal.`;
+          recipePayload = { recipe: best.recipe, totals: best.totals, meal, budget };
+          // Mémoire des plats proposés, pour ne pas se répéter.
+          if (userId) {
+            const dish: ProposedDish & { date: string } = {
+              dish_name: best.recipe.nom,
+              main_protein: best.recipe.proteine_principale ?? null,
+              cuisine: best.recipe.cuisine ?? rotation.cuisine,
+              cooking: best.recipe.cuisson ?? rotation.cuisson,
+              date: today,
+            };
+            const current = profileForMemory?.sophie_preferences || {};
+            const updatedPrefs = { ...current, proposed_dishes: [dish, ...recentDishes].slice(0, DISH_MEMORY) };
+            const { error: dishErr } = await supabase.from("profiles").update({ sophie_preferences: updatedPrefs }).eq("user_id", userId);
+            if (dishErr) console.error("proposed dish not saved:", dishErr.message);
+            else if (profileForMemory) profileForMemory.sophie_preferences = updatedPrefs;
+          }
+        }
+      }
+    }
 
     if (!content) {
       return new Response(JSON.stringify({ error: "Réponse OpenAI vide" }), {
@@ -501,18 +568,22 @@ Ne jamais proposer quelque chose de sous-optimal puis expliquer pourquoi c'est s
       });
     }
 
+    // Le message n'est décompté qu'une fois la réponse obtenue.
+    if (userId && countToStore != null) {
+      await supabase.from("profiles").update({ daily_message_count: countToStore, last_message_date: today }).eq("user_id", userId);
+    }
+
     // ============ EXTRACTION PRÉFÉRENCES (déclenchée uniquement si le dernier message
     // utilisateur contient un signal de préférence, pour limiter les coûts) ============
     try {
-      const lastUserMsg = [...(messages as any[])].reverse().find((m) => m.role === "user");
-      const userText = String(lastUserMsg?.content || "");
+      const userText = lastUserText;
       const PREF_TRIGGERS = /\b(j['e ]?aime pas|je n['e ]?aime pas|je déteste|je deteste|j['e ]?adore|j['e ]?aime|je préfère|je prefere|j['e ]?évite|j['e ]?evite|allergique|intolérant|intolerant|jamais de|pas de|sans )/i;
       if (userId && userText && PREF_TRIGGERS.test(userText) && OPENAI_API_KEY) {
         const extract = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: CHAT_MODEL,
             messages: [
               { role: "system", content: `Tu extrais les préférences alimentaires exprimées dans le message d'une utilisatrice. Réponds UNIQUEMENT en JSON strict avec ce schéma: {"disliked":[],"liked":[],"avoided":[],"notes":[]}. Mets chaque aliment en minuscules, un mot ou expression courte. "disliked"=aliments qu'elle n'aime pas / déteste. "liked"=qu'elle aime / adore. "avoided"=qu'elle évite pour raison santé/éthique. "notes"=autres préférences (ex: "préfère végétarien le soir"). Si rien à extraire, renvoie toutes les listes vides.` },
               { role: "user", content: userText.slice(0, 500) },
@@ -531,6 +602,7 @@ Ne jamais proposer quelque chose de sous-optimal puis expliquer pourquoi c'est s
               .slice(0, 30);
           const current = profileForMemory?.sophie_preferences || {};
           const updated = {
+            ...current,
             disliked: merge(current.disliked, parsed.disliked),
             liked: merge(current.liked, parsed.liked),
             avoided: merge(current.avoided, parsed.avoided),
@@ -547,7 +619,7 @@ Ne jamais proposer quelque chose de sous-optimal puis expliquer pourquoi c'est s
     }
 
     return new Response(
-      JSON.stringify({ reply: content, remaining, limit: DAILY_LIMIT }),
+      JSON.stringify({ reply: content, remaining, limit: DAILY_LIMIT, recipe: recipePayload }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
 
@@ -555,7 +627,7 @@ Ne jamais proposer quelque chose de sous-optimal puis expliquer pourquoi c'est s
     console.error("chat-nutritionist error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Erreur inconnue" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: Number((e as any)?.status) || 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
