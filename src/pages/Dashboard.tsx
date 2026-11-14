@@ -14,6 +14,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recha
 import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
+import { buildDaySnapshot } from "@/lib/daySnapshot";
 import WeeklyReportCard from "@/components/WeeklyReportCard";
 import WellnessScoreCard from "@/components/WellnessScoreCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
@@ -377,25 +378,13 @@ export default function Dashboard() {
   const calRingPct = Math.min(calPct, 100);
 
   // Exactement les valeurs affichées (alimentation + compléments cochés + plats estimés),
-  // envoyées telles quelles au récap de Sophie.
-  const recapNutrients = [
-    ["Calcium", totals.calcium + supBy("calcium"), refTarget("calcium"), "mg"],
-    ["Vitamine D", totals.vitamin_d + supBy("vitamin_d"), refTarget("vitamin_d"), "µg"],
-    ["Magnésium", totals.magnesium + supBy("magnesium"), refTarget("magnesium"), "mg"],
-    ["Fer", totals.iron + supBy("iron"), refTarget("iron"), "mg"],
-    ["Oméga-3", totals.omega3 + supBy("omega3", 1000), omega3Goal, "g"],
-    ["Vitamine B12", totals.vitamin_b12 + supBy("vitamin_b12"), refTarget("vitamin_b12"), "µg"],
-    ["Fibres", totals.fibres + supMacros.fibres, MACRO_GOALS.fibres, "g"],
-    ["Protéines", totals.proteins + supMacros.proteins, proteinGoal, "g"],
-  ].map(([label, value, goal, unit]) => {
-    const pct = (Number(value) / Number(goal)) * 100;
-    return { label: label as string, value: Math.round(Number(value) * 10) / 10, goal: Number(goal), unit: unit as string, reached: pct >= 80 };
-  });
+  // envoyées telles quelles à Sophie (récap, chat, message du soir, défi).
+  const snapshot = buildDaySnapshot({ profile, logs, contributions: supplementContribs });
   const recapData = {
-    calories: Math.round(totalCalories),
-    calorieGoal,
-    foodCount: logs.length,
-    nutrients: recapNutrients,
+    calories: snapshot.calories,
+    calorieGoal: snapshot.calorieGoal,
+    foodCount: snapshot.foodCount,
+    nutrients: snapshot.nutrients.filter((n) => n.primary),
   };
 
   return (
