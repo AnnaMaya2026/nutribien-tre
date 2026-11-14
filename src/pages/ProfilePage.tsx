@@ -356,6 +356,9 @@ export default function ProfilePage() {
               {objective !== "maintenir" && (
                 <> · objectif <strong>{objectiveInfo.label.toLowerCase()}</strong></>
               )}.
+              {computedCalorieGoal === computedBMR && objective === "perte_poids" && (
+                <> L'objectif est maintenu au métabolisme de base : il ne descend jamais en dessous.</>
+              )}
             </div>
           </div>
 

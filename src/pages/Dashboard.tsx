@@ -15,6 +15,7 @@ import MicronutrientTrendChart from "@/components/MicronutrientTrendChart";
 import WeightTracker from "@/components/WeightTracker";
 import DailyRecapCard from "@/components/DailyRecapCard";
 import { buildDaySnapshot } from "@/lib/daySnapshot";
+import { useCalorieGoalSync } from "@/hooks/useCalorieGoalSync";
 import WeeklyReportCard from "@/components/WeeklyReportCard";
 import WellnessScoreCard from "@/components/WellnessScoreCard";
 import HealthProfileCard from "@/components/HealthProfileCard";
@@ -274,7 +275,8 @@ export default function Dashboard() {
 
   const firstName = getDisplayName((profile as any)?.display_name, user?.email);
 
-  // Per-meal targets based on profile goals (Harris-Benedict)
+  // Per-meal targets based on profile goals (Mifflin-St Jeor, plancher au métabolisme de base)
+  const goalDetails = useCalorieGoalSync();
   const p = profile as any;
   const dailyCalories = calculateCalorieGoal({
     weight: p?.weight,
@@ -390,6 +392,20 @@ export default function Dashboard() {
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
       <MedicalDisclaimerBanner />
+      {goalDetails.missing.length > 0 && (
+        <button
+          type="button"
+          onClick={() => navigate("/profil")}
+          className="w-full text-left mb-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 p-3 text-sm text-amber-800 dark:text-amber-200"
+        >
+          Ton objectif calorique n'est pas encore personnel : il manque {goalDetails.missing.join(", ")} dans ton profil. Touche ici pour le compléter.
+        </button>
+      )}
+      {goalDetails.floored && goalDetails.missing.length === 0 && (
+        <p className="mb-4 rounded-xl bg-muted/50 border border-border p-3 text-sm text-muted-foreground">
+          Ton objectif est maintenu à ton métabolisme de base ({goalDetails.bmr} kcal) : il ne descend jamais en dessous, même en perte de poids.
+        </p>
+      )}
       {/* Greeting */}
       <div className="mb-6 flex items-start justify-between gap-3">
         <div>

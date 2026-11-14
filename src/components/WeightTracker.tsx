@@ -2,6 +2,8 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { calculateCalorieGoal } from "@/lib/calorieGoal";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { ChevronDown, ChevronUp, Scale } from "lucide-react";
 import { toast } from "sonner";
@@ -15,6 +17,7 @@ const PERIODS = [
 
 export default function WeightTracker() {
   const { user } = useAuth();
+  const { profile, updateProfile } = useProfile();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [period, setPeriod] = useState(30);
@@ -94,9 +97,15 @@ export default function WeightTracker() {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_data, { weight }) => {
       queryClient.invalidateQueries({ queryKey: ["weight_logs"] });
       queryClient.invalidateQueries({ queryKey: ["weight_last"] });
+      // La pesée met à jour le poids du profil : calories et protéines suivent.
+      const p = profile as any;
+      updateProfile.mutate({
+        weight,
+        daily_calorie_goal: calculateCalorieGoal({ weight, height: p?.height, age: p?.age, activityLevel: p?.activity_level, objective: p?.objective }),
+      } as any);
       toast.success("Poids enregistré ✓");
       setWeightInput("");
     },

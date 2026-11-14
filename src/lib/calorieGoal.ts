@@ -1,7 +1,7 @@
 import { FAT_ENERGY_SHARE, FIBRES_GOAL_G, PROTEIN_G_PER_KG } from "@/lib/nutrientReferences";
 
-// Calcul de l'objectif calorique journalier selon Harris-Benedict (femmes)
-// puis multiplication par un facteur d'activité (NAP) et ajustement selon l'objectif.
+// Objectif calorique journalier : métabolisme de base (Mifflin-St Jeor, femmes)
+// × facteur d'activité, ajusté selon l'objectif, avec un plancher au métabolisme de base.
 
 export const ACTIVITY_LEVELS = [
   {
@@ -58,51 +58,72 @@ export function getActivityFactor(level?: string | null): number {
   return getActivityLevel(level).factor;
 }
 
-/** Harris-Benedict pour une femme : 655 + (9,6 × poids) + (1,8 × taille) − (4,7 × âge) */
-export function calculateBMR(params: {
+export interface BodyData {
   weight?: number | null;
   height?: number | null;
   age?: number | null;
-}): number {
-  const weight = Number(params.weight) || 60;
-  const height = Number(params.height) || 165;
-  const age = Number(params.age) || 50;
-  return Math.round(655 + 9.6 * weight + 1.8 * height - 4.7 * age);
 }
 
-/** TDEE = BMR × NAP, ajusté selon l'objectif. Pas de plancher. */
-export function calculateCalorieGoal(params: {
-  weight?: number | null;
-  height?: number | null;
-  age?: number | null;
-  activityLevel?: string | null;
-  objective?: string | null;
-}): number {
+/**
+ * Valeurs utilisées quand une donnée du profil manque. L'objectif n'est alors
+ * pas personnel : les écrans le disent (voir missingBodyData).
+ */
+export const DEFAULT_BODY = { weight: 60, height: 165, age: 50 } as const;
+
+const BODY_LABELS = { weight: "ton poids", height: "ta taille", age: "ton âge" } as const;
+
+const positive = (v: unknown) => {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
+/** Données du profil manquantes pour un calcul personnel (libellés prêts à afficher). */
+export function missingBodyData(params: BodyData): string[] {
+  return (["weight", "height", "age"] as const).filter((k) => positive(params[k]) == null).map((k) => BODY_LABELS[k]);
+}
+
+/**
+ * Métabolisme de base, formule de Mifflin-St Jeor pour une femme :
+ * (10 × poids) + (6,25 × taille) − (5 × âge) − 161.
+ */
+export function calculateBMR(params: BodyData): number {
+  const weight = positive(params.weight) ?? DEFAULT_BODY.weight;
+  const height = positive(params.height) ?? DEFAULT_BODY.height;
+  const age = positive(params.age) ?? DEFAULT_BODY.age;
+  return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
+}
+
+/** Ajustement de l'objectif en perte de poids ou en gain musculaire (kcal/jour). */
+export const OBJECTIVE_ADJUSTMENT_KCAL = 300;
+
+export interface CalorieGoalDetails {
+  bmr: number;
+  /** Dépense du jour : métabolisme de base × niveau d'activité. */
+  maintenance: number;
+  goal: number;
+  /** L'objectif a été remonté au métabolisme de base (plancher). */
+  floored: boolean;
+  /** Données du profil manquantes : l'objectif n'est pas personnel. */
+  missing: string[];
+}
+
+/**
+ * Objectif calorique = métabolisme de base × niveau d'activité, ajusté selon
+ * l'objectif, sans jamais descendre sous le métabolisme de base.
+ */
+export function calorieGoalDetails(params: BodyData & { activityLevel?: string | null; objective?: string | null }): CalorieGoalDetails {
   const bmr = calculateBMR(params);
-  const level = getActivityLevel(params.activityLevel);
-  let tdee = bmr * level.factor;
-
+  const maintenance = Math.round(bmr * getActivityLevel(params.activityLevel).factor);
   const objective = params.objective || "maintenir";
-  if (objective === "perte_poids") {
-    tdee -= 300;
-  } else if (objective === "gain_muscle") {
-    tdee += 300;
-  }
+  let goal = maintenance;
+  if (objective === "perte_poids") goal -= OBJECTIVE_ADJUSTMENT_KCAL;
+  else if (objective === "gain_muscle") goal += OBJECTIVE_ADJUSTMENT_KCAL;
+  const floored = goal < bmr;
+  return { bmr, maintenance, goal: floored ? bmr : goal, floored, missing: missingBodyData(params) };
+}
 
-  const final = Math.round(tdee);
-  if (typeof window !== "undefined") {
-    console.log("[calorieGoal]", {
-      weight: params.weight,
-      height: params.height,
-      age: params.age,
-      activity_level: params.activityLevel,
-      objective,
-      BMR: bmr,
-      NAP: level.factor,
-      TDEE: final,
-    });
-  }
-  return final;
+export function calculateCalorieGoal(params: BodyData & { activityLevel?: string | null; objective?: string | null }): number {
+  return calorieGoalDetails(params).goal;
 }
 
 export { PROTEIN_G_PER_KG, FAT_ENERGY_SHARE };

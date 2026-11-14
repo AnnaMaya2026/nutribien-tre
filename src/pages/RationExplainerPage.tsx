@@ -8,7 +8,9 @@ import {
   FAT_ENERGY_SHARE,
   FIBRES_GOAL,
   calculateBMR,
-  calculateCalorieGoal,
+  calorieGoalDetails,
+  missingBodyData,
+  DEFAULT_BODY,
   calculateCarbsGoal,
   calculateFatsGoal,
   calculateProteinGoal,
@@ -29,21 +31,23 @@ export default function RationExplainerPage() {
     );
   }
 
-  const weight = Number(profile?.weight) || 60;
-  const height = Number(profile?.height) || 160;
-  const age = Number(profile?.age) || 53;
+  const missing = missingBodyData({ weight: profile?.weight, height: profile?.height, age: profile?.age });
+  const weight = Number(profile?.weight) || DEFAULT_BODY.weight;
+  const height = Number(profile?.height) || DEFAULT_BODY.height;
+  const age = Number(profile?.age) || DEFAULT_BODY.age;
   const activityLevel = getActivityLevel(profile?.activity_level as string | null);
   const objective = getObjective(profile?.objective as string | null);
 
   const bmr = calculateBMR({ weight, height, age });
   const tdeeBase = Math.round(bmr * activityLevel.factor);
-  const tdee = calculateCalorieGoal({
+  const details = calorieGoalDetails({
     weight,
     height,
     age,
     activityLevel: profile?.activity_level as string | null,
     objective: profile?.objective as string | null,
   });
+  const tdee = details.goal;
 
   const proteinG = calculateProteinGoal(tdee, weight, objective.value);
   const omega3Goal = omega3GoalG(tdee);
@@ -52,8 +56,9 @@ export default function RationExplainerPage() {
   const fatsPct = FAT_ENERGY_SHARE * 100;
   const proteinPerKg = PROTEIN_G_PER_KG.toLocaleString("fr-FR");
 
-  const bmrCalc = `655 + (9.6 × ${weight}) + (1.8 × ${height}) − (4.7 × ${age})`;
-  const bmrDetail = `655 + ${(9.6 * weight).toFixed(0)} + ${(1.8 * height).toFixed(0)} − ${(4.7 * age).toFixed(0)}`;
+  const fr = (n: number) => n.toLocaleString("fr-FR");
+  const bmrCalc = `(10 × ${fr(weight)}) + (6,25 × ${fr(height)}) − (5 × ${fr(age)}) − 161`;
+  const bmrDetail = `${fr(Math.round(10 * weight))} + ${fr(Math.round(6.25 * height))} − ${fr(Math.round(5 * age))} − 161`;
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -74,8 +79,13 @@ export default function RationExplainerPage() {
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Chaque femme a des besoins différents. Voici comment on a calculé le tien
-            selon la formule <strong>Harris-Benedict</strong>, adaptée à ta ménopause.
+            selon la formule de <strong>Mifflin-St Jeor</strong>.
           </p>
+          {missing.length > 0 && (
+            <p className="mt-3 text-sm rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 p-3">
+              Ce calcul n'est pas encore personnel : il manque {missing.join(", ")} dans ton profil. Des valeurs moyennes sont utilisées en attendant.
+            </p>
+          )}
         </section>
 
         {/* Étape 1 */}
@@ -86,10 +96,10 @@ export default function RationExplainerPage() {
 
           <div className="rounded-xl bg-muted/40 p-4 mb-3 font-mono text-sm leading-relaxed">
             <div className="text-xs text-muted-foreground mb-2 font-sans">
-              Formule Harris-Benedict (femmes)
+              Formule de Mifflin-St Jeor (femmes)
             </div>
-            <div>TMB = 655 + (9.6 × poids)</div>
-            <div className="pl-12">+ (1.8 × taille) − (4.7 × âge)</div>
+            <div>TMB = (10 × poids) + (6,25 × taille)</div>
+            <div className="pl-12">− (5 × âge) − 161</div>
           </div>
 
           <p className="text-sm mb-2">
@@ -120,9 +130,17 @@ export default function RationExplainerPage() {
             <span className="text-pink-deep font-bold text-base">{tdeeBase} kcal/jour</span>
           </div>
           <p className="text-sm text-muted-foreground mt-3">
-            On multiplie ton TMB par ton niveau d'activité pour obtenir tes vrais besoins
+            On multiplie ton TMB par ton niveau d'activité pour obtenir tes besoins
             caloriques quotidiens.
           </p>
+          {tdee !== tdeeBase && (
+            <p className="text-sm mt-3">
+              Ton objectif « {objective.label.toLowerCase()} » : <strong>{tdee} kcal/jour</strong>
+              {details.floored
+                ? <> — maintenu à ton métabolisme de base : l'objectif ne descend jamais en dessous.</>
+                : <> ({tdee > tdeeBase ? "+" : "−"}{Math.abs(tdee - tdeeBase)} kcal).</>}
+            </p>
+          )}
         </section>
 
         {/* Étape 3 */}
