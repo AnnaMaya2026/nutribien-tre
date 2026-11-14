@@ -166,9 +166,9 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
         }
       }
 
-      // Estimate phytoestrogens from name when still missing (e.g. tofu, lin…)
+      // Isoflavones estimées d'après le nom pour les produits à base de soja ; sinon inconnu (null).
       if (phytoestrogens == null) {
-        phytoestrogens = estimatePhytoestrogensPer100g(productName) || null;
+        phytoestrogens = estimatePhytoestrogensPer100g(productName);
       }
 
       setProduct({

@@ -7,9 +7,9 @@ export const SYMPTOM_FOOD_MAP: Record<string, {
 }> = {
   bouffees_chaleur: {
     label: "Bouffées de chaleur",
-    nutrients: ["phytoestrogènes"],
-    description: "Privilégiez les aliments riches en phytoestrogènes",
-    foods: ["Tofu", "Soja (edamame)", "Graines de lin", "Lentilles", "Pois chiches"],
+    nutrients: ["fibres", "oméga-3"],
+    description: "Mise sur les légumineuses, les graines et les poissons gras, et limite l'alcool et la caféine",
+    foods: ["Lentilles", "Pois chiches", "Graines de lin", "Sardines", "Noix"],
   },
   fatigue: {
     label: "Fatigue",
@@ -97,9 +97,9 @@ export const SYMPTOM_FOOD_MAP: Record<string, {
   },
   transpiration_nocturne: {
     label: "Transpiration nocturne",
-    nutrients: ["phytoestrogènes", "magnésium"],
-    description: "Les phytoestrogènes peuvent aider à réguler",
-    foods: ["Tofu", "Graines de lin", "Soja", "Sauge (infusion)", "Amandes"],
+    nutrients: ["magnésium"],
+    description: "Favorise le magnésium et limite l'alcool et la caféine le soir",
+    foods: ["Amandes", "Graines de lin", "Épinards", "Sauge (infusion)", "Banane"],
   },
   fragilite_ongles_cheveux: {
     label: "Fragilité ongles et cheveux",
@@ -109,8 +109,8 @@ export const SYMPTOM_FOOD_MAP: Record<string, {
   },
   secheresse_vaginale: {
     label: "Sécheresse vaginale",
-    nutrients: ["phytoestrogènes", "oméga-3"],
-    description: "Phytoestrogènes et bons gras pour l'hydratation",
-    foods: ["Graines de lin", "Soja", "Avocat", "Huile d'olive", "Saumon"],
+    nutrients: ["oméga-3"],
+    description: "Les bons gras participent à l'hydratation des muqueuses",
+    foods: ["Graines de lin", "Noix", "Avocat", "Huile d'olive", "Saumon"],
   },
 };

@@ -24,7 +24,7 @@ export const REASSURANCE: Record<SymptomKey, string> = {
   fatigue:
     "Ce que tu ressens n'est pas aléatoire.\n\nDans cette phase, ton corps peut avoir du mal à absorber certains micronutriments essentiels — notamment le magnésium, la vitamine D et le fer.\n\nCe qui peut expliquer ta fatigue, tes variations d'énergie, ce sentiment de ne plus te reconnaître.",
   bouffees:
-    "Ce que tu ressens n'est pas aléatoire.\n\nLes bouffées de chaleur sont souvent liées à une baisse des phytoestrogènes et à certaines carences en micronutriments.\n\nCe que tu manges peut vraiment faire une différence — et NutriMéno est conçue pour te montrer laquelle.",
+    "Ce que tu ressens n'est pas aléatoire.\n\nLes bouffées de chaleur sont liées à la baisse des œstrogènes, et certaines habitudes alimentaires peuvent les accentuer ou les apaiser.\n\nCe que tu manges peut vraiment faire une différence — et NutriMéno est conçue pour te montrer laquelle.",
   sommeil:
     "Ce que tu ressens n'est pas aléatoire.\n\nLe sommeil perturbé pendant la ménopause est souvent lié à des carences en magnésium et à des pics de cortisol liés à l'alimentation.\n\nNutriMéno va t'aider à identifier et corriger ces déséquilibres.",
   poids:
@@ -41,7 +41,7 @@ export const REASSURANCE: Record<SymptomKey, string> = {
 
 export const PRIORITY_NUTRIENTS: Record<SymptomKey, string> = {
   fatigue: "Magnésium, Vitamine D, Fer",
-  bouffees: "Phytoestrogènes, Vitamine D",
+  bouffees: "Oméga-3, Magnésium, Vitamine D",
   sommeil: "Magnésium, Vitamine B6",
   poids: "Protéines, Fibres, Magnésium",
   humeur: "Oméga-3, Magnésium, Vitamines B",

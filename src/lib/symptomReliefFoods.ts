@@ -9,11 +9,10 @@ export const SYMPTOM_RELIEF_FOODS: Record<string, { label: string; foods: Relief
   bouffees_chaleur: {
     label: "Bouffées de chaleur",
     foods: [
-      { name: "Tofu", ciqualSearch: "tofu", nutrient: "Phytoestrogènes" },
-      { name: "Graines de lin", ciqualSearch: "lin", nutrient: "Phytoestrogènes (lignanes)" },
-      { name: "Soja (edamame)", ciqualSearch: "soja", nutrient: "Isoflavones" },
-      { name: "Lentilles", ciqualSearch: "lentille", nutrient: "Phytoestrogènes" },
-      { name: "Pois chiches", ciqualSearch: "pois chiche", nutrient: "Phytoestrogènes" },
+      { name: "Graines de lin", ciqualSearch: "lin", nutrient: "Oméga-3 (ALA) + fibres" },
+      { name: "Lentilles", ciqualSearch: "lentille", nutrient: "Fibres + protéines végétales" },
+      { name: "Pois chiches", ciqualSearch: "pois chiche", nutrient: "Fibres + protéines végétales" },
+      { name: "Sardines", ciqualSearch: "sardine", nutrient: "Oméga-3 + vitamine D" },
     ],
   },
   fatigue: {
