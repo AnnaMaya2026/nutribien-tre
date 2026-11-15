@@ -29,6 +29,13 @@
       "when": 1794752392333,
       "tag": "0003_add_birth_year_to_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794753930133,
+      "tag": "0004_add_food_provenance_columns",
+      "breakpoints": true
     }
   ]
 }

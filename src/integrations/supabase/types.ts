@@ -171,6 +171,7 @@ export type Database = {
           calcium: number | null
           calories: number | null
           carbs: number | null
+          ciqual_name: string | null
           fats: number | null
           favorite_meal_id: string
           fibres: number | null
@@ -188,6 +189,7 @@ export type Database = {
           proteins: number | null
           sel: number | null
           sodium: number | null
+          source: string | null
           sucres: number | null
           vitamin_b12: number | null
           vitamin_b6: number | null
@@ -203,6 +205,7 @@ export type Database = {
           calcium?: number | null
           calories?: number | null
           carbs?: number | null
+          ciqual_name?: string | null
           fats?: number | null
           favorite_meal_id: string
           fibres?: number | null
@@ -220,6 +223,7 @@ export type Database = {
           proteins?: number | null
           sel?: number | null
           sodium?: number | null
+          source?: string | null
           sucres?: number | null
           vitamin_b12?: number | null
           vitamin_b6?: number | null
@@ -235,6 +239,7 @@ export type Database = {
           calcium?: number | null
           calories?: number | null
           carbs?: number | null
+          ciqual_name?: string | null
           fats?: number | null
           favorite_meal_id?: string
           fibres?: number | null
@@ -252,6 +257,7 @@ export type Database = {
           proteins?: number | null
           sel?: number | null
           sodium?: number | null
+          source?: string | null
           sucres?: number | null
           vitamin_b12?: number | null
           vitamin_b6?: number | null
@@ -329,6 +335,7 @@ export type Database = {
           calcium: number | null
           calories: number | null
           carbs: number | null
+          ciqual_name: string | null
           created_at: string
           fats: number | null
           fibres: number | null
@@ -348,6 +355,7 @@ export type Database = {
           proteins: number | null
           sel: number | null
           sodium: number | null
+          source: string | null
           sucres: number | null
           user_id: string
           vitamin_b12: number | null
@@ -364,6 +372,7 @@ export type Database = {
           calcium?: number | null
           calories?: number | null
           carbs?: number | null
+          ciqual_name?: string | null
           created_at?: string
           fats?: number | null
           fibres?: number | null
@@ -383,6 +392,7 @@ export type Database = {
           proteins?: number | null
           sel?: number | null
           sodium?: number | null
+          source?: string | null
           sucres?: number | null
           user_id: string
           vitamin_b12?: number | null
@@ -399,6 +409,7 @@ export type Database = {
           calcium?: number | null
           calories?: number | null
           carbs?: number | null
+          ciqual_name?: string | null
           created_at?: string
           fats?: number | null
           fibres?: number | null
@@ -418,6 +429,7 @@ export type Database = {
           proteins?: number | null
           sel?: number | null
           sodium?: number | null
+          source?: string | null
           sucres?: number | null
           user_id?: string
           vitamin_b12?: number | null
