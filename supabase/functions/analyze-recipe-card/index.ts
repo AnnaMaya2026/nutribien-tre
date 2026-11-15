@@ -193,6 +193,7 @@ export async function buildResult(supabase: any, parsed: any) {
   }
   const salt = measured.salt;
   measured.sodium = salt === null ? null : round(salt / 2.54, 3);
+  const approxKcalPerPortion = num(parsed?.approx_kcal_per_portion);
 
   return {
     recipe_name: parsed?.recipe_name || null,
@@ -200,7 +201,7 @@ export async function buildResult(supabase: any, parsed: any) {
     servings,
     total_grams: round(totalGrams, 1),
     portion_grams: printedWeight && printedWeight > 0 ? printedWeight : (totalGrams > 0 ? round(totalGrams / servings, 1) : null),
-    approx_kcal_per_portion: num(parsed?.approx_kcal_per_portion) && num(parsed.approx_kcal_per_portion) > 0 ? num(parsed.approx_kcal_per_portion) : null,
+    approx_kcal_per_portion: approxKcalPerPortion !== null && approxKcalPerPortion > 0 ? approxKcalPerPortion : null,
     portion_weight_printed: printedWeight && printedWeight > 0 ? printedWeight : null,
     table_basis: tableBasis,
     per_100g: tableBasis === "100g_sans_poids" ? Object.fromEntries(MK.map((k) => [k, num(parsed.nutrition_per_100g[k])])) : null,
