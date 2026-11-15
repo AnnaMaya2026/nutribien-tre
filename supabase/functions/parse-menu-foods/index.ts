@@ -182,6 +182,8 @@ Ne donne AUCUNE valeur nutritionnelle : elles sont lues ensuite dans la table CI
           meal_type: mealType,
           portion_size: grams,
           estimated,
+          // Aliment CIQUAL utilisé pour le calcul (colonne food_logs.ciqual_name).
+          ciqual_name: estimated ? null : matchedName,
           ...scaled,
         });
       }

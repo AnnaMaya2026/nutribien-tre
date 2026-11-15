@@ -66,6 +66,9 @@ export function useFoodLogs(date?: string) {
       vitamin_b9: number | null;
       vitamin_e: number | null;
       meal_type: string;
+      /** Mode de saisie et aliment CIQUAL utilisé pour le calcul. */
+      source?: string | null;
+      ciqual_name?: string | null;
     }) => {
       if (!user) throw new Error("Not authenticated");
       const entry = {

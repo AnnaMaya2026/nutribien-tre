@@ -103,6 +103,7 @@ export default function SavedMenusPage() {
         const { estimated, ...rest } = entry;
         const row = {
           ...rest,
+          source: "menu",
           user_id: user.id,
           logged_at: loggedAt,
         };

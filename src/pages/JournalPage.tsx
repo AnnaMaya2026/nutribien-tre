@@ -25,6 +25,7 @@ import MealProgressBlock from "@/components/MealProgressBlock";
 import LabelPhotoDialog from "@/components/LabelPhotoDialog";
 import MealPhotoDialog from "@/components/MealPhotoDialog";
 import { fmtKcal, fmtQty } from "@/lib/formatNumber";
+import { describeFoodOrigin, type FoodSource } from "@/lib/foodSource";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -131,6 +132,8 @@ export default function JournalPage() {
       vitamin_b9: scaled.vitamin_b9,
       vitamin_e: scaled.vitamin_e,
       meal_type: mealType,
+      source: "recherche",
+      ciqual_name: selectedFood.nom,
     });
     setSelectedFood(null);
     setSearch("");
@@ -163,6 +166,8 @@ export default function JournalPage() {
         vitamin_b9: item.scaled.vitamin_b9,
         vitamin_e: item.scaled.vitamin_e,
         meal_type: mealType,
+        source: "voix",
+        ciqual_name: item.food.nom,
       });
     });
     setVoiceMatches(null);
@@ -261,6 +266,8 @@ export default function JournalPage() {
       sucres: (l as any).sucres ?? null,
       acides_gras_satures: (l as any).acides_gras_satures ?? null,
       brand: (l as any).brand ?? null,
+      source: (l as any).source ?? null,
+      ciqual_name: (l as any).ciqual_name ?? null,
       micros_estimes: (l as any).micros_estimes ?? false,
       micros_coverage_percent: (l as any).micros_coverage_percent ?? null,
     }));
@@ -271,10 +278,12 @@ export default function JournalPage() {
   };
 
   // Shared: add a list of items to a meal of the selected day (used by favorites and "repeat yesterday").
-  const addItemsToMeal = (items: any[], destMeal: string, extra?: (item: any) => Record<string, any>) => {
+  const addItemsToMeal = (items: any[], destMeal: string, source: FoodSource, extra?: (item: any) => Record<string, any>) => {
     items.forEach((item) => {
       addLog.mutate({
         ...(extra ? extra(item) : {}),
+        source,
+        ciqual_name: item.ciqual_name ?? null,
         food_name: item.food_name,
         portion_size: item.portion_size,
         calories: item.calories,
@@ -314,7 +323,7 @@ export default function JournalPage() {
     if (!addFavTarget || !user) return;
     const fav = favorites.find((f) => f.id === addFavTarget.favoriteId);
     if (!fav) return;
-    addItemsToMeal(fav.items, destMeal);
+    addItemsToMeal(fav.items, destMeal, "favori");
     setAddFavTarget(null);
   };
 
@@ -323,7 +332,7 @@ export default function JournalPage() {
     if (!user) return;
     const items = yesterdayLogs.filter((l) => l.meal_type === mealValue);
     if (items.length === 0) return;
-    addItemsToMeal(items, mealValue, (row) => {
+    addItemsToMeal(items, mealValue, "hier", (row) => {
       const { id, user_id, logged_at, created_at, updated_at, meal_type, ...rest } = row;
       return rest;
     });
@@ -665,6 +674,9 @@ export default function JournalPage() {
                           <div className="text-sm text-muted-foreground">
                             {fmtKcal(log.calories)} kcal · {fmtQty(log.proteins)} g prot · {formatPortion(log.food_name, log.portion_size)}
                           </div>
+                          {describeFoodOrigin(log as any) && (
+                            <div className="text-[13px] text-muted-foreground/80">{describeFoodOrigin(log as any)}</div>
+                          )}
                         </button>
                         <button
                           onClick={() => setEditPortion({ log, grams: log.portion_size || getDefaultPortion(log.food_name) })}

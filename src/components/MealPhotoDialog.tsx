@@ -209,7 +209,7 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
         const values = food
           ? scaleCiqual(food, it.grams)
           : Object.fromEntries(NUTRIENT_COLUMNS.map((k) => [k, null]));
-        entries.push({ food_name: it.name, portion_size: it.grams, estimated: !food, ...values });
+        entries.push({ food_name: it.name, portion_size: it.grams, estimated: !food, source: "photo", ciqual_name: food?.nom ?? null, ...values });
       }
 
       const loggedAt = selectedDateStr || todayStr;

@@ -408,6 +408,7 @@ export default function LabelPhotoDialog({
       meal_type: mealType,
       portion_size: portionNum,
       micros_estimes: true,
+      source: "etiquette",
       micros_coverage_percent: coverage,
       ingredients: productIngredients,
     };
@@ -527,6 +528,7 @@ export default function LabelPhotoDialog({
       meal_type: mealType,
       portion_size: portionNum === null ? null : Math.round(portionNum * mult + fatG),
       micros_estimes: true,
+      source: "fiche",
       micros_coverage_percent: null,
     };
     for (const f of MACRO_FIELDS) {

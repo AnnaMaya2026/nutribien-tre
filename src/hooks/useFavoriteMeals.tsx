@@ -38,6 +38,8 @@ export interface FavoriteMealItem {
   sucres: number | null;
   acides_gras_satures: number | null;
   brand: string | null;
+  source?: string | null;
+  ciqual_name?: string | null;
   micros_estimes: boolean;
   micros_coverage_percent: number | null;
 }

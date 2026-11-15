@@ -77,6 +77,8 @@ interface BarcodeScannerProps {
     vitamin_b9: number | null;
     vitamin_e: number | null;
     meal_type: string;
+    source?: string | null;
+    ciqual_name?: string | null;
   }) => void;
   isPending?: boolean;
 }
@@ -342,6 +344,8 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       vitamin_b9: scaled.vitamin_b9,
       vitamin_e: scaled.vitamin_e,
       meal_type: selectedMeal,
+      source: "code-barres",
+      ciqual_name: product.ciqualMatchName ?? null,
     });
     toast.success("Produit ajouté au journal ✓");
     handleClose();
