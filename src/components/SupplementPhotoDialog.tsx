@@ -251,7 +251,7 @@ export default function SupplementPhotoDialog({
                       Poids d'une {doseUnit} en grammes *
                     </label>
                     <Input value={poidsDose} onChange={(e) => setPoidsDose(e.target.value)} inputMode="decimal" placeholder="Ex : 5" />
-                    <p className="text-[11px] text-muted-foreground mt-1">
+                    <p className="text-[13px] text-muted-foreground mt-1">
                       Indiqué sur l'emballage. Sans ce poids, aucun calcul n'est possible.
                     </p>
                   </div>
@@ -276,7 +276,7 @@ export default function SupplementPhotoDialog({
                             <option key={k} value={k}>{NUTRIENT_KEY_LABELS[k]}</option>
                           ))}
                         </select>
-                        <p className="text-[11px] text-muted-foreground truncate">
+                        <p className="text-[13px] text-muted-foreground truncate">
                           {r.label}
                           {r.source === "converti_ar" && " · converti depuis le % AR"}
                           {r.source === "manuel" && " · saisie manuelle"}

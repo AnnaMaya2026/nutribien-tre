@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { amountForUpperLimit, referenceTarget, referenceUpperLimit } from "@/lib/nutrientReferences";
+import { parisDayKey } from "@/lib/parisDate";
 
 export interface Supplement {
   id: string;
@@ -134,7 +135,7 @@ export function useSupplements(dateStr: string) {
         .from("supplement_logs")
         .select("*")
         .eq("user_id", userId)
-        .gte("logged_at", since.toISOString().split("T")[0]);
+        .gte("logged_at", parisDayKey(since));
       if (error) throw error;
       return (data || []) as SupplementLog[];
     },
@@ -158,7 +159,7 @@ export function useSupplements(dateStr: string) {
   const isTaken = (s: Supplement, day: string = dateStr) => {
     const log = logs.find((l) => l.supplement_id === s.id && l.logged_at === day);
     if (log) return log.taken;
-    return s.quotidien && day <= new Date().toISOString().split("T")[0];
+    return s.quotidien && day <= parisDayKey();
   };
 
   /** Quantité prise ce jour-là (nombre de doses). 1 par défaut. */

@@ -4,6 +4,7 @@ import { scaleCiqual, CiqualFood } from "@/lib/ciqual";
 import { formatPortion, formatStandardPortionHint, getDefaultPortion, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 import type { VoiceCandidate } from "./VoiceInput";
 import type { VoiceMatch } from "./VoiceInput";
+import { fmtKcal, fmtQty } from "@/lib/formatNumber";
 
 interface Props {
   candidates: VoiceCandidate[];
@@ -54,7 +55,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
       </div>
 
       {candidates.length > 1 && (
-        <p className="text-[10px] text-muted-foreground mb-2">
+        <p className="text-[13px] text-muted-foreground mb-2">
           Aliment {currentIndex + 1} / {candidates.length}
         </p>
       )}
@@ -77,7 +78,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm text-foreground line-clamp-1">{food.nom}</div>
                   {food.groupe && (
-                    <div className="text-[10px] text-pink-deep/70 line-clamp-1">{food.groupe}</div>
+                    <div className="text-[13px] text-pink-deep/70 line-clamp-1">{food.groupe}</div>
                   )}
                   <div className="text-xs text-muted-foreground">
                     {food.calories_100g} kcal / 100{getPortionUnit(food.nom)}
@@ -98,7 +99,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
                 <RotateCcw className="w-4 h-4" />
                 🎤 Recommencer la recherche vocale
               </button>
-              <p className="text-[10px] text-muted-foreground text-center italic">
+              <p className="text-[13px] text-muted-foreground text-center italic">
                 Si votre aliment n'est pas dans la liste
               </p>
             </div>
@@ -112,7 +113,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
               <div>
                 <div className="font-semibold text-sm text-foreground">{pickedFood.nom}</div>
                 {pickedFood.groupe && (
-                  <div className="text-[10px] text-pink-deep/70">{pickedFood.groupe}</div>
+                  <div className="text-[13px] text-pink-deep/70">{pickedFood.groupe}</div>
                 )}
               </div>
               <button
@@ -154,11 +155,11 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-muted-foreground -mt-2 mb-4 text-center">{formatStandardPortionHint(pickedFood.nom)}</p>
+          <p className="text-[13px] text-muted-foreground -mt-2 mb-4 text-center">{formatStandardPortionHint(pickedFood.nom)}</p>
 
           {/* Nutritional preview */}
           <div className="text-xs text-muted-foreground mb-4 text-center">
-            {scaleCiqual(pickedFood, grams).calories} kcal · {scaleCiqual(pickedFood, grams).proteins}g prot · {scaleCiqual(pickedFood, grams).carbs}g gluc
+            {fmtKcal(scaleCiqual(pickedFood, grams).calories)} kcal · {fmtQty(scaleCiqual(pickedFood, grams).proteins)} g prot · {fmtQty(scaleCiqual(pickedFood, grams).carbs)} g gluc
           </div>
 
           {/* Confirm button */}

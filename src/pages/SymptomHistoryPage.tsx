@@ -19,6 +19,7 @@ import { CustomizeSymptomsModal } from "@/components/CustomizeSymptomsModal";
 import CorrelationsSection from "@/components/CorrelationsSection";
 import DateSelector from "@/components/DateSelector";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
+import { parisDayKey } from "@/lib/parisDate";
 
 const PERIODS = [
   { value: 7, label: "7 jours" },
@@ -46,7 +47,7 @@ const CORRELATION_PERIODS = [
   { value: 90, label: "3 mois" },
 ];
 
-const toDateKey = (date: Date) => date.toISOString().split("T")[0];
+const toDateKey = (date: Date) => parisDayKey(date);
 
 const buildDateRange = (period: number) => {
   const days: string[] = [];
@@ -88,7 +89,7 @@ function DailyRating({
   return (
     <div className="bg-card rounded-2xl p-4 card-soft mb-4 animate-fade-in">
       <h3 className="text-sm font-semibold text-foreground mb-1">🩺 Bilan du jour</h3>
-      <p className="text-[10px] text-muted-foreground mb-3">
+      <p className="text-[13px] text-muted-foreground mb-3">
         Évaluez chaque symptôme de 1 (léger) à 10 (très intense)
       </p>
 
@@ -115,13 +116,13 @@ function DailyRating({
               <div className="mt-2 bg-destructive/10 rounded-xl p-3 border border-destructive/20">
                 <div className="flex items-start gap-2 mb-1.5">
                   <AlertTriangle className="w-3.5 h-3.5 text-destructive flex-shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-foreground font-medium">
+                  <p className="text-[13px] text-foreground font-medium">
                     Score élevé — aliments recommandés :
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {SYMPTOM_FOOD_MAP[s.value].foods.slice(0, 3).map((food) => (
-                    <span key={food} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-pink-deep font-medium">
+                    <span key={food} className="text-[13px] px-2 py-0.5 rounded-full bg-primary/15 text-pink-deep font-medium">
                       {food}
                     </span>
                   ))}
@@ -137,13 +138,13 @@ function DailyRating({
       {/* Add more symptoms */}
       {inactiveSymptoms.length > 0 && (
         <div className="mt-2">
-          <p className="text-[10px] text-muted-foreground mb-1.5">Ajouter un symptôme :</p>
+          <p className="text-[13px] text-muted-foreground mb-1.5">Ajouter un symptôme :</p>
           <div className="flex flex-wrap gap-1.5">
             {inactiveSymptoms.map((s) => (
               <button
                 key={s.value}
                 onClick={() => setScore(s.value, 3)}
-                className="text-[10px] px-2.5 py-1 rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-pink-deep transition-all"
+                className="text-[13px] px-2.5 py-1 rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-pink-deep transition-all"
               >
                 + {s.label}
               </button>
@@ -432,7 +433,7 @@ export default function SymptomHistoryPage() {
     if (period >= 9999) return "2000-01-01";
     const d = new Date();
     d.setDate(d.getDate() - (period - 1));
-    return d.toISOString().split("T")[0];
+    return parisDayKey(d);
   }, [period]);
 
   // Today's log
@@ -497,7 +498,7 @@ export default function SymptomHistoryPage() {
         .from("habit_logs")
         .select("habit_key, habit_name, count, logged_at")
         .eq("user_id", user.id)
-        .gte("logged_at", since.toISOString().split("T")[0])
+        .gte("logged_at", parisDayKey(since))
         .order("logged_at", { ascending: true });
       if (error) throw error;
       return data || [];
@@ -559,7 +560,7 @@ export default function SymptomHistoryPage() {
     for (let i = effectivePeriod - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      days.push(d.toISOString().split("T")[0]);
+      days.push(parisDayKey(d));
     }
 
     const data = days.map((date) => {
@@ -679,7 +680,7 @@ export default function SymptomHistoryPage() {
         )}
         {dateStr && routineCompletionByDate[dateStr] > 0 && (
           <div className="mt-2 pt-2 border-t border-border">
-            <span className="text-[11px] text-green-600 font-medium">
+            <span className="text-[13px] text-green-600 font-medium">
               ✅ {routineCompletionByDate[dateStr]} routine
               {routineCompletionByDate[dateStr] > 1 ? "s" : ""} complétée
               {routineCompletionByDate[dateStr] > 1 ? "s" : ""}
@@ -696,7 +697,7 @@ export default function SymptomHistoryPage() {
         <h1 className="text-2xl font-bold text-foreground">Symptômes</h1>
         <button
           onClick={() => setShowCustomize(true)}
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted text-pink-deep text-[11px] font-semibold hover:bg-primary/10 transition"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted text-pink-deep text-[13px] font-semibold hover:bg-primary/10 transition"
           aria-label="Personnaliser mes symptômes"
         >
           <Settings className="w-3.5 h-3.5" />
@@ -840,7 +841,7 @@ export default function SymptomHistoryPage() {
             {activeSymptomKeys.slice(0, 6).map((key, i) => {
               const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key.replace(/^custom_/, "");
               return (
-                <span key={key} className="text-[10px] flex items-center gap-1">
+                <span key={key} className="text-[13px] flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
                   {label}
                 </span>
@@ -894,7 +895,7 @@ export default function SymptomHistoryPage() {
                     {latest}/10
                   </span>
                 </div>
-                <div className="flex gap-4 text-[10px] text-muted-foreground">
+                <div className="flex gap-4 text-[13px] text-muted-foreground">
                   <span>Moyenne : <strong className="text-foreground">{avg}</strong></span>
                   <span>Max : <strong className="text-foreground">{max}</strong></span>
                   <span>Entrées : <strong className="text-foreground">{values.length}</strong></span>

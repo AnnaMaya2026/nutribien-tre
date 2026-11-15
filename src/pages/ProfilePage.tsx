@@ -299,7 +299,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <div className="font-medium">{level.label}</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">{level.description}</div>
+                  <div className="text-[13px] text-muted-foreground mt-0.5">{level.description}</div>
                 </button>
               ))}
             </div>
@@ -319,7 +319,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <div className="font-medium">{obj.label}</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">{obj.description}</div>
+                  <div className="text-[13px] text-muted-foreground mt-0.5">{obj.description}</div>
                 </button>
               ))}
             </div>
@@ -350,7 +350,7 @@ export default function ProfilePage() {
           <div className="bg-primary/10 border border-primary/20 rounded-xl p-3">
             <div className="text-xs text-muted-foreground mb-0.5">Votre objectif calorique</div>
             <div className="text-2xl font-bold text-foreground">{computedCalorieGoal} kcal/jour</div>
-            <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+            <div className="text-[13px] text-muted-foreground mt-1 leading-relaxed">
               Basé sur votre métabolisme de base de <strong>{computedBMR} kcal</strong> ×
               niveau d'activité <strong>{activityInfo.label.toLowerCase()}</strong> (×{activityInfo.factor})
               {objective !== "maintenir" && (
@@ -366,22 +366,22 @@ export default function ProfilePage() {
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Protéines</div>
               <div className="text-lg font-bold text-foreground">{computedProteinGoal} g</div>
-              <div className="text-[10px] text-muted-foreground">{objective === "perte_poids" ? "32%" : objective === "gain_muscle" ? "30%" : objective === "osseux" ? "35%" : "27%"} des calories</div>
+              <div className="text-[13px] text-muted-foreground">{objective === "perte_poids" ? "32%" : objective === "gain_muscle" ? "30%" : objective === "osseux" ? "35%" : "27%"} des calories</div>
             </div>
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Glucides</div>
               <div className="text-lg font-bold text-foreground">{computedCarbsGoal} g</div>
-              <div className="text-[10px] text-muted-foreground">{objective === "perte_poids" ? "42%" : "48%"} des calories</div>
+              <div className="text-[13px] text-muted-foreground">{objective === "perte_poids" ? "42%" : "48%"} des calories</div>
             </div>
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Lipides</div>
               <div className="text-lg font-bold text-foreground">{computedFatsGoal} g</div>
-              <div className="text-[10px] text-muted-foreground">22% des calories</div>
+              <div className="text-[13px] text-muted-foreground">22% des calories</div>
             </div>
             <div className="bg-muted/40 rounded-xl p-3">
               <div className="text-xs text-muted-foreground">Fibres</div>
               <div className="text-lg font-bold text-foreground">{FIBRES_GOAL_MIN} g</div>
-              <div className="text-[10px] text-muted-foreground">Recommandation</div>
+              <div className="text-[13px] text-muted-foreground">Recommandation</div>
             </div>
           </div>
 
@@ -394,7 +394,7 @@ export default function ProfilePage() {
             <RefreshCw className="w-4 h-4 mr-2" />
             Recalculer mes objectifs
           </Button>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             ⚠️ Ces recommandations sont indicatives. Consultez votre médecin pour un suivi personnalisé.
           </p>
         </Section>
@@ -536,7 +536,7 @@ export default function ProfilePage() {
               Politique de confidentialité
             </button>
           </div>
-          <p className="text-[10px] text-muted-foreground/70 italic">
+          <p className="text-[13px] text-muted-foreground/70 italic">
             NutriMéno est un outil d'aide nutritionnelle et ne remplace pas un avis médical.
           </p>
         </section>

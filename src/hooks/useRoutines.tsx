@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { parisDayKey } from "@/lib/parisDate";
 
 export interface Routine {
   id: string;
@@ -134,7 +135,7 @@ export function useRoutines() {
         .from("routine_logs")
         .select("*")
         .eq("user_id", userId)
-        .gte("logged_at", since.toISOString().split("T")[0])
+        .gte("logged_at", parisDayKey(since))
         .order("logged_at", { ascending: false });
       if (error) throw error;
       return (data || []) as RoutineLog[];
@@ -313,10 +314,10 @@ export function calculateStreak(logs: RoutineLog[], routineId: string): number {
   let streak = 0;
   const cur = new Date();
   // If today not done, check from yesterday
-  if (!dates.has(cur.toISOString().split("T")[0])) {
+  if (!dates.has(parisDayKey(cur))) {
     cur.setDate(cur.getDate() - 1);
   }
-  while (dates.has(cur.toISOString().split("T")[0])) {
+  while (dates.has(parisDayKey(cur))) {
     streak++;
     cur.setDate(cur.getDate() - 1);
   }
@@ -327,8 +328,8 @@ export function weekCompletionCount(logs: RoutineLog[], routineId: string): numb
   const today = new Date();
   const start = new Date(today);
   start.setDate(today.getDate() - 6);
-  const startStr = start.toISOString().split("T")[0];
-  const todayStrV = today.toISOString().split("T")[0];
+  const startStr = parisDayKey(start);
+  const todayStrV = parisDayKey(today);
   return logs.filter(
     (l) =>
       l.routine_id === routineId &&

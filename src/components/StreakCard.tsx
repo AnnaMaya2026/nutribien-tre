@@ -45,13 +45,13 @@ export default function StreakCard() {
           const bg = d.status === "full" ? "bg-green-100 dark:bg-green-900/30" : d.status === "partial" ? "bg-orange-100 dark:bg-orange-900/30" : "bg-muted";
           return (
             <div key={d.date + idx} className={`flex flex-col items-center gap-1 rounded-lg py-2 ${bg}`}>
-              <span className="text-[10px] text-muted-foreground font-medium">{d.label}</span>
+              <span className="text-[13px] text-muted-foreground font-medium">{d.label}</span>
               <span className="text-base leading-none">{icon}</span>
             </div>
           );
         })}
       </div>
-      <div className="mt-2 flex items-center justify-center gap-3 text-[10px] text-muted-foreground">
+      <div className="mt-2 flex items-center justify-center gap-3 text-[13px] text-muted-foreground">
         <span>✅ Complet</span>
         <span>🟡 Partiel</span>
         <span>⭕ Vide</span>

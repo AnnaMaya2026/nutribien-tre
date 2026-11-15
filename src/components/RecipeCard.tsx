@@ -75,8 +75,8 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-foreground">{recipe.name}</h3>
-          <p className="text-[10px] text-muted-foreground">{recipe.description}</p>
-          <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">{recipe.description}</p>
+          <div className="flex items-center gap-3 mt-1 text-[13px] text-muted-foreground">
             <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Préparation : {recipe.prepTime} min</span>
             {recipe.cookTime > 0 && (
               <span className="flex items-center gap-1"><Flame className="w-3 h-3" /> Cuisson : {recipe.cookTime} min</span>
@@ -88,7 +88,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
       {/* Menopause nutrient badges */}
       <div className="flex gap-1.5 mb-3 flex-wrap">
         {recipe.menopauseNutrients.map((n) => (
-          <span key={n} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-pink-deep font-medium border border-primary/25">
+          <span key={n} className="text-[13px] px-2 py-0.5 rounded-full bg-primary/15 text-pink-deep font-medium border border-primary/25">
             {n}
           </span>
         ))}
@@ -102,7 +102,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
             <button
               key={m}
               onClick={() => setPortionMultiplier(m)}
-              className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all ${portionMultiplier === m ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+              className={`px-2 py-1 rounded-md text-[13px] font-medium transition-all ${portionMultiplier === m ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
             >
               {m === 0.5 ? "½" : m === 1.5 ? "1½" : m}
             </button>
@@ -122,7 +122,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
           ].map((n) => (
             <div key={n.label} className="bg-muted/50 rounded-lg py-1.5">
               <div className="text-xs font-bold text-foreground">{n.value}</div>
-              <div className="text-[9px] text-muted-foreground">{n.label}</div>
+              <div className="text-[13px] text-muted-foreground">{n.label}</div>
             </div>
           ))}
         </div>
@@ -139,8 +139,8 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
             { label: "Oméga-3", value: totals.omega3, unit: "g" },
           ].map((n) => (
             <div key={n.label} className="bg-muted/30 rounded-lg py-1 px-1">
-              <div className="text-[10px] font-semibold text-foreground">{n.value}{n.unit}</div>
-              <div className="text-[9px] text-muted-foreground">{n.label}</div>
+              <div className="text-[13px] font-semibold text-foreground">{n.value}{n.unit}</div>
+              <div className="text-[13px] text-muted-foreground">{n.label}</div>
             </div>
           ))}
         </div>
@@ -167,7 +167,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
                 <Leaf className="w-3 h-3 text-pink-deep/60" />
                 <span className="text-xs text-foreground">{ing.name}</span>
               </div>
-              <span className="text-[10px] text-muted-foreground font-medium">
+              <span className="text-[13px] text-muted-foreground font-medium">
                 {Math.round(ing.grams * portionMultiplier)}{getPortionUnit(ing.name)}
                 {ing.scaled && ` · ${Math.round(ing.scaled.calories * portionMultiplier)} kcal`}
               </span>
@@ -182,8 +182,8 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
               </div>
               <ol className="space-y-1.5">
                 {recipe.steps.map((step, i) => (
-                  <li key={i} className="flex gap-2 text-[11px] text-foreground">
-                    <span className="flex-shrink-0 w-4 h-4 rounded-full bg-primary/15 text-pink-deep font-semibold flex items-center justify-center text-[10px]">
+                  <li key={i} className="flex gap-2 text-[13px] text-foreground">
+                    <span className="flex-shrink-0 w-4 h-4 rounded-full bg-primary/15 text-pink-deep font-semibold flex items-center justify-center text-[13px]">
                       {i + 1}
                     </span>
                     <span className="leading-relaxed">{step}</span>

@@ -3,12 +3,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
+import { parisDayKey } from "@/lib/parisDate";
 
 const SYMPTOM_LABEL: Record<string, string> = Object.fromEntries(
   FULL_SYMPTOMS_LIST.map((s) => [s.value, s.label])
 );
 
-const toKey = (d: Date) => d.toISOString().split("T")[0];
+const toKey = (d: Date) => parisDayKey(d);
 
 // Keywords to detect foods/habits worth correlating
 const FOOD_KEYWORDS = [
@@ -176,7 +177,7 @@ export default function CorrelationsSection() {
           ))}
         </ul>
       )}
-      <p className="mt-3 text-[11px] text-muted-foreground italic">
+      <p className="mt-3 text-[13px] text-muted-foreground italic">
         ⚠️ Corrélations indicatives — pas un avis médical.
       </p>
     </section>

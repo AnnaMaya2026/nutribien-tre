@@ -81,7 +81,7 @@ export default function DailyRecapCard({ data: recapData }: { data: RecapData })
             <Sparkles className="w-3.5 h-3.5 text-pink-deep" />
             Récap du jour
           </h3>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             Bilan personnalisé par Sophie
           </p>
         </div>

@@ -88,7 +88,6 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
             }
           }
 
-          console.log(`[Voice] Search "${item.name}":`, results?.length, "results", results);
 
           if (searchError) {
             console.error(`[Voice] Search error for "${item.name}":`, searchError);
@@ -270,7 +269,7 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
           className="absolute top-full mt-2 z-20 flex items-center gap-2 whitespace-nowrap rounded-full bg-primary/15 border border-primary/30 px-3 py-1 shadow-sm"
         >
           <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
-          <span className="text-[11px] font-medium text-foreground">
+          <span className="text-[13px] font-medium text-foreground">
             Enregistrement en cours… appuyez pour arrêter
           </span>
         </div>
@@ -278,7 +277,7 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
 
       {state === "processing" && (
         <div role="status" className="absolute top-full mt-2 z-20 whitespace-nowrap rounded-full bg-muted px-3 py-1">
-          <span className="text-[11px] text-muted-foreground">Analyse en cours…</span>
+          <span className="text-[13px] text-muted-foreground">Analyse en cours…</span>
         </div>
       )}
     </div>

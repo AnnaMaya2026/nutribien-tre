@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { FULL_SYMPTOMS_LIST } from "@/lib/symptoms";
 import { TrendingDown, TrendingUp, Minus, Loader2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from "recharts";
+import { parisDayKey } from "@/lib/parisDate";
 
 const SYMPTOM_LABEL: Record<string, string> = Object.fromEntries(
   FULL_SYMPTOMS_LIST.map((s) => [s.value, s.label])
@@ -23,7 +24,7 @@ interface Props {
   entryLabel: string;
 }
 
-const toKey = (d: Date) => d.toISOString().split("T")[0];
+const toKey = (d: Date) => parisDayKey(d);
 
 export default function BeforeAfterButton({ entryId, entryDate, entryLabel }: Props) {
   const [open, setOpen] = useState(false);
@@ -176,7 +177,7 @@ export default function BeforeAfterButton({ entryId, entryDate, entryLabel }: Pr
                           <Icon className="w-3.5 h-3.5" /> {changeText}
                         </span>
                       </div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                      <div className="text-[13px] text-muted-foreground mt-0.5">
                         Avant : {(r.before as number).toFixed(1)}/10 · Après : {(r.after as number).toFixed(1)}/10
                       </div>
                     </div>
@@ -186,7 +187,7 @@ export default function BeforeAfterButton({ entryId, entryDate, entryLabel }: Pr
             </>
           )}
 
-          <p className="mt-3 text-[11px] text-muted-foreground italic">
+          <p className="mt-3 text-[13px] text-muted-foreground italic">
             ⚠️ Ces tendances sont indicatives et ne constituent pas un avis médical.
           </p>
         </DialogContent>

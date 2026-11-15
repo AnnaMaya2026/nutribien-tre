@@ -37,7 +37,7 @@ function FoodCard({ food, gapsCovered }: { food: CiqualFood; gapsCovered?: strin
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-foreground line-clamp-2">{food.nom}</h3>
-          {food.groupe && <p className="text-[10px] text-pink-deep/70 line-clamp-1">{food.groupe}</p>}
+          {food.groupe && <p className="text-[13px] text-pink-deep/70 line-clamp-1">{food.groupe}</p>}
         </div>
       </div>
 
@@ -45,7 +45,7 @@ function FoodCard({ food, gapsCovered }: { food: CiqualFood; gapsCovered?: strin
       {gapsCovered && gapsCovered.length > 0 && (
         <div className="flex gap-1.5 mb-2 flex-wrap">
           {gapsCovered.map((g) => (
-            <span key={g} className="text-[10px] px-2 py-0.5 rounded-full bg-warning/20 text-warning font-medium border border-warning/30">
+            <span key={g} className="text-[13px] px-2 py-0.5 rounded-full bg-warning/20 text-warning font-medium border border-warning/30">
               Couvre votre manque en {g} ✓
             </span>
           ))}
@@ -60,14 +60,14 @@ function FoodCard({ food, gapsCovered }: { food: CiqualFood; gapsCovered?: strin
             <button
               key={g}
               onClick={() => setGrams(g)}
-              className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all ${grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+              className={`px-2 py-1 rounded-md text-[13px] font-medium transition-all ${grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
             >
               {g}{unit}
             </button>
           ))}
         </div>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-3">{formatStandardPortionHint(food.nom)}</p>
+      <p className="text-[13px] text-muted-foreground mb-3">{formatStandardPortionHint(food.nom)}</p>
 
       {/* Macros */}
       <div className="grid grid-cols-5 gap-1 text-center mb-2">
@@ -80,7 +80,7 @@ function FoodCard({ food, gapsCovered }: { food: CiqualFood; gapsCovered?: strin
         ].map((n) => (
           <div key={n.label} className="bg-muted/50 rounded-lg py-1.5">
             <div className="text-xs font-bold text-foreground">{n.value}</div>
-            <div className="text-[9px] text-muted-foreground">{n.label}</div>
+            <div className="text-[13px] text-muted-foreground">{n.label}</div>
           </div>
         ))}
       </div>
@@ -96,8 +96,8 @@ function FoodCard({ food, gapsCovered }: { food: CiqualFood; gapsCovered?: strin
           { label: "Vit. B12", value: scaled.vitamin_b12, unit: "µg" },
         ].map((n) => (
           <div key={n.label} className="bg-muted/30 rounded-lg py-1 px-1">
-            <div className="text-[10px] font-semibold text-foreground">{n.value}{n.unit}</div>
-            <div className="text-[9px] text-muted-foreground">{n.label}</div>
+            <div className="text-[13px] font-semibold text-foreground">{n.value}{n.unit}</div>
+            <div className="text-[13px] text-muted-foreground">{n.label}</div>
           </div>
         ))}
       </div>
@@ -234,10 +234,10 @@ export default function RepasPage() {
 
       <Tabs defaultValue="nutrients" className="w-full">
         <TabsList className="w-full mb-4 h-auto flex-wrap min-h-12 p-1">
-          <TabsTrigger value="nutrients" className="flex-1 text-[11px] px-1 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🥕 Par nutriment manquant</TabsTrigger>
-          <TabsTrigger value="recipes" className="flex-1 text-[11px] px-1 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🍽️ Par recette</TabsTrigger>
-          <TabsTrigger value="symptoms" className="flex-1 text-[11px] px-1 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">✨ Atténuer mes symptômes</TabsTrigger>
-          <TabsTrigger value="gaps" className="flex-1 text-[11px] px-1 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🎯 Combler mes manques</TabsTrigger>
+          <TabsTrigger value="nutrients" className="flex-1 text-[13px] px-1 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🥕 Par nutriment manquant</TabsTrigger>
+          <TabsTrigger value="recipes" className="flex-1 text-[13px] px-1 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🍽️ Par recette</TabsTrigger>
+          <TabsTrigger value="symptoms" className="flex-1 text-[13px] px-1 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">✨ Atténuer mes symptômes</TabsTrigger>
+          <TabsTrigger value="gaps" className="flex-1 text-[13px] px-1 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">🎯 Combler mes manques</TabsTrigger>
         </TabsList>
 
         <TabsContent value="nutrients">
@@ -291,7 +291,7 @@ export default function RepasPage() {
                         <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
                           <div className={`h-full rounded-full transition-all ${getNutrientColor(gap.pct).bg}`} style={{ width: `${gap.pct}%` }} />
                         </div>
-                        <span className="text-[10px] text-muted-foreground w-8 text-right">{gap.pct}%</span>
+                        <span className="text-[13px] text-muted-foreground w-8 text-right">{gap.pct}%</span>
                       </div>
                     </div>
                   ))}
@@ -300,7 +300,7 @@ export default function RepasPage() {
 
               <h3 className="text-sm font-semibold text-foreground mb-3">Aliments suggérés pour combler vos manques</h3>
               {restrictionLabels.length > 0 && (
-                <p className="text-[11px] text-foreground bg-primary/10 rounded-md px-2 py-1 mb-3">
+                <p className="text-[13px] text-foreground bg-primary/10 rounded-md px-2 py-1 mb-3">
                   ✅ Suggestions filtrées selon votre profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
                 </p>
               )}

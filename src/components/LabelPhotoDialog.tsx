@@ -15,6 +15,7 @@ import {
   DOSE_UNITS,
   doseUnitNeedsWeight,
 } from "@/hooks/useSupplements";
+import { fmtKcal, fmtQty } from "@/lib/formatNumber";
 
 const MAX_DIM = 1400;
 const JPEG_QUALITY = 0.82;
@@ -465,12 +466,14 @@ export default function LabelPhotoDialog({
   const guardWarnings = (() => {
     const w: string[] = [];
     if (!macrosComplete && manualIngredients.length > 0) {
-      const names = manualIngredients.map((m) => m.name).join(", ");
       const plural = manualIngredients.length > 1;
+      const noWeight = manualIngredients.filter((m) => !m.not_found).map((m) => m.name);
+      const notFound = manualIngredients.filter((m) => m.not_found).map((m) => m.name);
       w.push(
-        `Valeurs INCOMPLÈTES : ${manualIngredients.length} ingrédient${plural ? "s" : ""} sans poids connu (${names}) ` +
-          `${plural ? "ont" : "a"} été exclu${plural ? "s" : ""} du calcul. Les valeurs ci-dessous sont donc trop basses. ` +
-          `Saisissez leur poids puis recalculez, ou corrigez les macros à la main.`,
+        `Valeurs INCOMPLÈTES : ${manualIngredients.length} ingrédient${plural ? "s" : ""} ${plural ? "ont" : "a"} été exclu${plural ? "s" : ""} du calcul, ` +
+          `les valeurs ci-dessous sont donc trop basses.` +
+          (noWeight.length ? ` Poids à indiquer : ${noWeight.join(", ")} — saisis-le en grammes puis recalcule.` : "") +
+          (notFound.length ? ` Aliment non reconnu dans la table CIQUAL : ${notFound.join(", ")} — corrige les valeurs à la main d'après l'emballage.` : ""),
       );
     }
     const kcal = macroVal("calories"), p = macroVal("proteins"), c = macroVal("carbs"), f = macroVal("fats");
@@ -580,7 +583,7 @@ export default function LabelPhotoDialog({
     <div key={r.key} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground truncate">{r.label}</p>
-        <p className="text-[11px] text-muted-foreground truncate">{SOURCE_LABEL[r.source]}</p>
+        <p className="text-[13px] text-muted-foreground truncate">{SOURCE_LABEL[r.source]}</p>
       </div>
       <Input
         value={r.amount}
@@ -705,7 +708,7 @@ export default function LabelPhotoDialog({
                           Poids d'une {doseUnit} en grammes *
                         </label>
                         <Input value={poidsDose} onChange={(e) => setPoidsDose(e.target.value)} inputMode="decimal" placeholder="Ex : 5" />
-                        <p className="text-[11px] text-muted-foreground mt-1">
+                        <p className="text-[13px] text-muted-foreground mt-1">
                           Indiqué sur l'emballage. Sans ce poids, aucun calcul n'est possible.
                         </p>
                       </div>
@@ -721,7 +724,7 @@ export default function LabelPhotoDialog({
                           Portions de la recette (indiquées sur la fiche)
                         </label>
                         <Input value={servings} onChange={(e) => setServings(e.target.value)} inputMode="decimal" placeholder="2" />
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-[13px] text-muted-foreground">
                           Toutes les valeurs ci-dessous sont déjà données POUR UNE portion.
                         </p>
                         <div>
@@ -753,7 +756,7 @@ export default function LabelPhotoDialog({
                           Matières grasses ajoutées — huile, beurre (g)
                         </label>
                         <Input value={addedFat} onChange={(e) => setAddedFat(e.target.value)} inputMode="decimal" placeholder="Vide : à vous de le remplir" />
-                        <p className="text-[11px] text-muted-foreground mt-1">
+                        <p className="text-[13px] text-muted-foreground mt-1">
                           La fiche ne les chiffre pas et je ne les estime pas. 1 cuillère à soupe d'huile = 10 g, 1 cuillère à café = 5 g, 1 cuillère à soupe de beurre = 15 g.
                         </p>
                       </div>
@@ -792,7 +795,7 @@ export default function LabelPhotoDialog({
                               <option key={k} value={k}>{NUTRIENT_KEY_LABELS[k]}</option>
                             ))}
                           </select>
-                          <p className="text-[11px] text-muted-foreground truncate">
+                          <p className="text-[13px] text-muted-foreground truncate">
                             {r.label} · {SOURCE_LABEL[r.source]}
                           </p>
                         </div>
@@ -843,7 +846,7 @@ export default function LabelPhotoDialog({
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold mb-1">Micronutriments — estimés depuis les ingrédients</h3>
-                    <p className="text-[11px] text-muted-foreground mb-2">
+                    <p className="text-[13px] text-muted-foreground mb-2">
                       {coverage !== null
                         ? `Les pourcentages d'ingrédients couvrent environ ${coverage} % du plat. Le reste est inconnu : les valeurs vides le restent, elles ne valent pas zéro.`
                         : "Une valeur vide reste inconnue : elle ne vaut pas zéro."}
@@ -872,11 +875,12 @@ export default function LabelPhotoDialog({
                 <div className="rounded-lg border-2 border-destructive p-3 text-xs space-y-2">
                   <p className="font-medium text-destructive">
                     {manualIngredients.length} ingrédient{manualIngredients.length > 1 ? "s" : ""} exclu
-                    {manualIngredients.length > 1 ? "s" : ""} du calcul — poids inconnu
+                    {manualIngredients.length > 1 ? "s" : ""} du calcul
                   </p>
                   <p className="text-muted-foreground">
-                    Leur poids n'est pas dans la table de référence, ils ne sont donc PAS comptés dans les valeurs
-                    ci-dessous. Indiquez leur poids en grammes puis recalculez.
+                    Ils ne sont PAS comptés dans les valeurs ci-dessous. Si un champ « g » apparaît, c'est le poids
+                    d'une pièce qui manque : indique-le en grammes puis recalcule. « Aliment non reconnu » signifie
+                    que le nom n'existe pas dans la table CIQUAL : corrige alors les valeurs à la main.
                   </p>
                   <div className="space-y-2">
                     {manualIngredients.map((m, i) => (
@@ -886,7 +890,7 @@ export default function LabelPhotoDialog({
                           {m.quantity !== null ? ` — ${m.quantity} ${m.unit || ""}` : ""}
                         </span>
                         {m.not_found ? (
-                          <span className="text-destructive font-medium">introuvable dans la base</span>
+                          <span className="text-destructive font-medium">aliment non reconnu</span>
                         ) : (
                           <Input
                             className="w-24"
@@ -916,7 +920,7 @@ export default function LabelPhotoDialog({
                       <p className="text-sm text-foreground">Plusieurs tableaux lus sur la fiche : lequel est celui du plat complet ?</p>
                       {candidates.map((c, i) => (
                         <button key={i} onClick={() => applyCandidate(c)} className="w-full text-left p-2 rounded-lg bg-muted text-sm">
-                          {c.label} ({c.basis === "100g" ? "pour 100 g" : "par portion"}) — {c.values.calories ?? "—"} kcal, {c.values.proteins ?? "—"} g prot.
+                          {c.label} ({c.basis === "100g" ? "pour 100 g" : "par portion"}) — {fmtKcal(c.values.calories)} kcal, {fmtQty(c.values.proteins)} g prot.
                         </button>
                       ))}
                     </div>

@@ -24,6 +24,7 @@ import { calculateCalorieGoal, calculateProteinGoal, calculateCarbsGoal, calcula
 import MealProgressBlock from "@/components/MealProgressBlock";
 import LabelPhotoDialog from "@/components/LabelPhotoDialog";
 import MealPhotoDialog from "@/components/MealPhotoDialog";
+import { fmtKcal, fmtQty } from "@/lib/formatNumber";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -460,9 +461,9 @@ export default function JournalPage() {
                   className="w-full text-left px-4 py-3 hover:bg-muted/50 border-b border-border last:border-0"
                 >
                   <div className="font-medium text-sm text-foreground line-clamp-1">{f.nom}</div>
-                  {f.groupe && <div className="text-[10px] text-pink-deep/70 line-clamp-1">{f.groupe}</div>}
+                  {f.groupe && <div className="text-[13px] text-pink-deep/70 line-clamp-1">{f.groupe}</div>}
                   <div className="text-xs text-muted-foreground">
-                    {f.calories_100g} kcal · P {f.proteines_100g}g · G {f.glucides_100g}g · L {f.lipides_100g}g · F {f.fibres_100g}g
+                    {fmtKcal(f.calories_100g)} kcal · P {fmtQty(f.proteines_100g)} g · G {fmtQty(f.glucides_100g)} g · L {fmtQty(f.lipides_100g)} g · F {fmtQty(f.fibres_100g)} g
                   </div>
                 </button>
               ))}
@@ -510,7 +511,7 @@ export default function JournalPage() {
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-2">{formatStandardPortionHint(selectedFood.nom)}</p>
+            <p className="text-[13px] text-muted-foreground mt-2">{formatStandardPortionHint(selectedFood.nom)}</p>
           </div>
 
           {/* Meal type */}
@@ -644,7 +645,7 @@ export default function JournalPage() {
                           <div className="font-semibold text-base text-foreground line-clamp-1 flex items-center gap-1.5 flex-wrap">
                             {log.food_name.replace(" 📦", "")}
                             {isIndustrialFood(log.food_name) && (
-                              <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[10px] px-1.5 py-0">
+                              <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[13px] px-1.5 py-0">
                                 Industriel
                               </Badge>
                             )}
@@ -652,7 +653,7 @@ export default function JournalPage() {
                               const w = detectRestrictionWarning(log.food_name, dietaryRestrictions);
                               return w ? (
                                 <Badge
-                                  className="bg-destructive/15 text-destructive border-destructive/30 text-[10px] px-1.5 py-0"
+                                  className="bg-destructive/15 text-destructive border-destructive/30 text-[13px] px-1.5 py-0"
                                   title={`Incompatible avec votre régime: ${w.label}`}
                                 >
                                   ⚠️ Contient {w.label.toLowerCase().replace(/^sans /, "")}
@@ -662,7 +663,7 @@ export default function JournalPage() {
                             <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${expandedLogs[log.id] ? "rotate-180" : ""}`} />
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {log.calories} kcal · {log.proteins}g prot · {formatPortion(log.food_name, log.portion_size)}
+                            {fmtKcal(log.calories)} kcal · {fmtQty(log.proteins)} g prot · {formatPortion(log.food_name, log.portion_size)}
                           </div>
                         </button>
                         <button
@@ -785,7 +786,7 @@ export default function JournalPage() {
         {showFavorites && (
           <div className="space-y-2">
             {favorites.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">Aucun repas favori sauvegardé. Cliquez sur ⭐ pour en créer.</p>
+              <p className="text-xs text-muted-foreground italic">Aucun repas favori. Touche ⭐ sous un repas pour l'enregistrer en entier.</p>
             ) : (
               favorites.map((fav) => {
                 const totalCal = fav.items.reduce((s, i) => s + (i.calories || 0), 0);
@@ -795,7 +796,7 @@ export default function JournalPage() {
                       <div>
                         <div className="font-medium text-sm text-foreground">{fav.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          {fav.items.length} aliment{fav.items.length !== 1 ? "s" : ""} · {Math.round(totalCal)} kcal
+                          Repas entier · {fav.items.length} aliment{fav.items.length !== 1 ? "s" : ""} · {Math.round(totalCal)} kcal
                         </div>
                       </div>
                       <button
@@ -805,7 +806,7 @@ export default function JournalPage() {
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <div className="text-[10px] text-muted-foreground mb-2 space-y-0.5">
+                    <div className="text-[13px] text-muted-foreground mb-2 space-y-0.5">
                       {fav.items.map((item, i) => (
                         <div key={i}>{item.food_name} ({formatPortion(item.food_name, item.portion_size)})</div>
                       ))}
@@ -830,7 +831,14 @@ export default function JournalPage() {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setSaveFavModal(null)}>
           <div className="bg-card rounded-t-2xl w-full max-w-lg p-5 pb-8 animate-fade-in" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-sm font-semibold text-foreground mb-1">⭐ Nommer ce repas favori</h3>
-            <p className="text-xs text-muted-foreground mb-3">{saveFavModal.items.length} aliment(s)</p>
+            <p className="text-xs text-muted-foreground mb-1">
+              Ce favori gardera tout le repas, soit {saveFavModal.items.length} aliment{saveFavModal.items.length !== 1 ? "s" : ""} :
+            </p>
+            <ul className="text-[13px] text-foreground mb-3 max-h-32 overflow-y-auto list-disc pl-5">
+              {saveFavModal.items.map((item: any, i: number) => (
+                <li key={i}>{item.food_name} ({formatPortion(item.food_name, item.portion_size)})</li>
+              ))}
+            </ul>
             <Input
               value={favName}
               onChange={(e) => setFavName(e.target.value)}
@@ -857,9 +865,22 @@ export default function JournalPage() {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setAddFavTarget(null)}>
           <div className="bg-card rounded-t-2xl w-full max-w-lg p-5 pb-8 animate-fade-in" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-sm font-semibold text-foreground mb-1">Ajouter à quel repas ?</h3>
-            <p className="text-xs text-muted-foreground mb-4">
-              {favorites.find((f) => f.id === addFavTarget.favoriteId)?.name}
-            </p>
+            {(() => {
+              const fav = favorites.find((f) => f.id === addFavTarget.favoriteId);
+              if (!fav) return null;
+              return (
+                <div className="mb-4">
+                  <p className="text-xs text-muted-foreground">
+                    « {fav.name} » ajoutera ces {fav.items.length} aliment{fav.items.length !== 1 ? "s" : ""} :
+                  </p>
+                  <ul className="text-[13px] text-foreground max-h-32 overflow-y-auto list-disc pl-5">
+                    {fav.items.map((item, i) => (
+                      <li key={i}>{item.food_name} ({formatPortion(item.food_name, item.portion_size)})</li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
             <div className="grid grid-cols-2 gap-2">
               {MEAL_TYPES.map((m) => (
                 <button
@@ -889,7 +910,7 @@ export default function JournalPage() {
           <div className="bg-card rounded-t-2xl w-full max-w-lg p-5 pb-8 animate-fade-in" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-sm font-semibold text-foreground mb-1">✏️ Modifier la portion</h3>
             <p className="text-xs text-muted-foreground mb-4 line-clamp-1">{editPortion.log.food_name}</p>
-            <p className="text-[11px] text-muted-foreground mb-2">
+            <p className="text-[13px] text-muted-foreground mb-2">
               Portion actuelle : <span className="font-medium text-foreground">{formatPortion(editPortion.log.food_name, editPortion.log.portion_size)}</span>
             </p>
 

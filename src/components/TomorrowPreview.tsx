@@ -20,7 +20,7 @@ export default function TomorrowPreview() {
           <p className="text-sm text-muted-foreground">Un conseil personnalisé rien que pour toi</p>
         </div>
       </div>
-      <p className="text-[11px] text-muted-foreground italic mt-3 text-center">
+      <p className="text-[13px] text-muted-foreground italic mt-3 text-center">
         Reviens demain pour découvrir tes nouvelles insights ✨
       </p>
     </div>

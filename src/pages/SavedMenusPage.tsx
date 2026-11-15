@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { parisDayKey } from "@/lib/parisDate";
 
 interface SavedMenu {
   id: string;
@@ -94,7 +95,7 @@ export default function SavedMenusPage() {
       }
 
       setProgress({ done: 0, total: entries.length });
-      const loggedAt = targetDate.toISOString().split("T")[0];
+      const loggedAt = parisDayKey(targetDate);
       let totalCalories = 0;
       let inserted = 0;
 
@@ -180,7 +181,7 @@ export default function SavedMenusPage() {
                   <h3 className="text-sm font-semibold text-foreground">
                     {menu.title}
                   </h3>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-[13px] text-muted-foreground">
                     {new Date(menu.menu_date).toLocaleDateString("fr-FR", {
                       weekday: "long",
                       day: "numeric",

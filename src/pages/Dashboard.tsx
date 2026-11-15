@@ -44,6 +44,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { parisDayKey } from "@/lib/parisDate";
+import { fmtKcal, fmtQty } from "@/lib/formatNumber";
 
 function getCalorieColor(pct: number) {
   if (pct > 110) return { stroke: "hsl(0, 70%, 55%)", text: "text-red-500", emoji: "🔴" };
@@ -97,7 +99,7 @@ function ProgressBar({
   const comparedToLimit = limitAmount ?? totalValue;
   const limitOnSupplementsOnly = limitAmount != null && limitAmount !== totalValue;
   const overLimit = limit != null && !aberrant && comparedToLimit > limit;
-  const fmt = (n: number) => (n >= 10 ? Math.round(n) : Math.round(n * 10) / 10);
+  const fmt = (n: number) => (n >= 10 ? fmtKcal(n) : fmtQty(n));
   return (
     <div className="space-y-1">
       <div className="flex justify-between items-center text-[15px]">
@@ -106,7 +108,7 @@ function ProgressBar({
           {nutrient && <NutrientInfo nutrient={nutrient} />}
         </span>
         {aberrant ? (
-          <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400 text-right">
+          <span className="text-[13px] font-medium text-amber-600 dark:text-amber-400 text-right">
             ⚠️ {ABERRANT_LABEL}
           </span>
         ) : (
@@ -117,6 +119,11 @@ function ProgressBar({
           </span>
         )}
       </div>
+      {aberrant && (
+        <p className="text-[13px] text-amber-700 dark:text-amber-300">
+          Total calculé : {fmt(totalValue)}{unit}, soit plus de {ABERRANT_PCT / 100} fois le repère ({max}{unit}). Une quantité ou un complément est sans doute mal saisi : vérifie tes aliments du jour dans Repas et tes compléments.
+        </p>
+      )}
       {!aberrant && (
         <div className="h-2 bg-muted rounded-full overflow-hidden flex">
           <div
@@ -133,7 +140,7 @@ function ProgressBar({
         </div>
       )}
       {supplement > 0 && !aberrant ? (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           🍽️ Alimentation seule : <span className="font-medium">{fmt(value)}{unit}</span>
           {max ? ` (${Math.round((value / max) * 100)}% de la RNP)` : ""}
           {" · "}
@@ -146,12 +153,12 @@ function ProgressBar({
         </p>
       ) : null}
       {!aberrant && (estimatedAmount || 0) > 0 && (
-        <p className="text-[11px] text-amber-600 dark:text-amber-400">
+        <p className="text-[13px] text-amber-600 dark:text-amber-400">
           🧪 dont {fmt(estimatedAmount || 0)}{unit} estimé (plats préparés, depuis les ingrédients)
         </p>
       )}
       {overLimit && (
-        <p className="text-[11px] rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-1.5">
+        <p className="text-[13px] rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-1.5">
           {limitOnSupplementsOnly
             ? <>ℹ️ Compléments du jour {fmt(comparedToLimit)}{supplementUnit || unit}, au-dessus de la limite de sécurité pour les compléments ({limit}{unit}).</>
             : <>ℹ️ Total du jour {fmt(totalValue)}{unit}, au-dessus de la limite haute de sécurité ({limit}{unit}).</>}
@@ -162,7 +169,7 @@ function ProgressBar({
         </p>
       )}
       {hint && !aberrant && (
-        <p className="text-[11px] text-muted-foreground italic">{hint}</p>
+        <p className="text-[13px] text-muted-foreground italic">{hint}</p>
       )}
     </div>
   );
@@ -194,7 +201,7 @@ function PhytoestrogenRow({ value, max }: { value: number; max: number | null })
           <div className={`h-full transition-all duration-500 ${over ? "bg-red-400" : "bg-muted-foreground/40"}`} style={{ width: `${pct}%` }} />
         </div>
       )}
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-[13px] text-muted-foreground">
         {over
           ? `Au-dessus du seuil de l'ANSES pour les isoflavones du soja (${perKg} mg par kg de poids et par jour). Pense à varier tes sources de protéines végétales.`
           : max != null
@@ -366,7 +373,7 @@ export default function Dashboard() {
     const labels = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i);
-      days[d.toISOString().split("T")[0]] = 0;
+      days[parisDayKey(d)] = 0;
     }
     weekLogs.forEach((log) => { const key = log.logged_at; if (key in days) days[key] += log.calories || 0; });
     return Object.entries(days).map(([date, cal]) => {
@@ -504,11 +511,11 @@ export default function Dashboard() {
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className={`text-3xl font-bold ${calColor.text}`}>{calColor.emoji} {Math.round(totalCalories)}</span>
               <span className="text-xs text-muted-foreground">kcal consommées</span>
-              <span className="text-[10px] text-muted-foreground mt-0.5">/ {calorieGoal} kcal</span>
+              <span className="text-[13px] text-muted-foreground mt-0.5">/ {calorieGoal} kcal</span>
             </div>
           </div>
           {supMacros.calories > 0 && (
-            <p className="mt-2 text-[11px] text-muted-foreground text-center">
+            <p className="mt-2 text-[13px] text-muted-foreground text-center">
               🍽️ Alimentation seule : <span className="font-medium">{Math.round(totals.calories)} kcal</span>
               {" · "}
               <span className="text-amber-600 dark:text-amber-400">
@@ -557,7 +564,7 @@ export default function Dashboard() {
                   )}
                 </div>
                 {m.sup > 0 && (
-                  <div className="mt-1 text-[10px] text-muted-foreground leading-tight">
+                  <div className="mt-1 text-[13px] text-muted-foreground leading-tight">
                     🍽️ {Math.round(m.food)}g
                     <br />
                     <span className="text-amber-600 dark:text-amber-400">💊 +{Math.round(m.sup)}g</span>
@@ -583,7 +590,7 @@ export default function Dashboard() {
             ⚠️ Apport protéique insuffisant pour préserver votre masse musculaire. Objectif : {proteinGoal}g de protéines aujourd'hui.
           </p>
         )}
-        <p className="mt-2 text-[11px] text-muted-foreground text-center">
+        <p className="mt-2 text-[13px] text-muted-foreground text-center">
           ⚠️ Ces recommandations sont indicatives. Consultez votre médecin pour un suivi personnalisé.
         </p>
         <button
@@ -660,7 +667,7 @@ export default function Dashboard() {
           {showSecondaryMicros ? "− Réduire" : "+ Voir tous les micronutriments (6)"}
         </button>
 
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-2 text-[13px] text-muted-foreground">
           Les conseils alimentaires portent sur l'assiette seule ; le statut est évalué sur le total,
           compléments cochés inclus. Couverture calculée sur les repères ANSES.
         </p>

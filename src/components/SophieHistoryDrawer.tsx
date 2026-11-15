@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
+import { parisDayKey } from "@/lib/parisDate";
 
 interface SophieMessage {
   id: string;
@@ -23,8 +24,8 @@ function formatDateLabel(dateStr: string): string {
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  const todayStr = today.toISOString().split("T")[0];
-  const yStr = yesterday.toISOString().split("T")[0];
+  const todayStr = parisDayKey(today);
+  const yStr = parisDayKey(yesterday);
   if (dateStr === todayStr) return "Aujourd'hui";
   if (dateStr === yStr) return "Hier";
   const d = new Date(dateStr + "T00:00:00");

@@ -60,7 +60,7 @@ function PeriodiciteBadge({ supplement, onChange }: { supplement: Supplement; on
             setValue(String(supplement.periodicite_jours));
             setEditing(true);
           }}
-          className="px-2 h-7 rounded-md border border-border text-[11px] flex items-center"
+          className="px-2 h-7 rounded-md border border-border text-[13px] flex items-center"
           aria-label={`Modifier le nombre de jours couverts de ${supplement.nom}`}
         >
           Modifier
@@ -86,14 +86,14 @@ function PeriodiciteBadge({ supplement, onChange }: { supplement: Supplement; on
           setEditing(false);
         }}
         disabled={!valid}
-        className="px-2 h-7 rounded-md bg-primary text-primary-foreground text-[11px] flex items-center disabled:opacity-50"
+        className="px-2 h-7 rounded-md bg-primary text-primary-foreground text-[13px] flex items-center disabled:opacity-50"
         aria-label="Enregistrer le nombre de jours couverts"
       >
         OK
       </button>
       <button
         onClick={() => setEditing(false)}
-        className="px-2 h-7 rounded-md bg-muted text-[11px] flex items-center"
+        className="px-2 h-7 rounded-md bg-muted text-[13px] flex items-center"
         aria-label="Annuler la modification"
       >
         Annuler
@@ -156,7 +156,7 @@ export default function SupplementsPage() {
                 .join(" · ")}
             </p>
             {s.composition_incomplete && (
-              <p className="text-[11px] text-amber-600 dark:text-amber-400">Composition incomplète</p>
+              <p className="text-[13px] text-amber-600 dark:text-amber-400">Composition incomplète</p>
             )}
           </div>
           <button
@@ -185,7 +185,7 @@ export default function SupplementsPage() {
         )}
 
         {nutrients.length > 0 && (
-          <p className="text-[11px] text-muted-foreground pl-10">
+          <p className="text-[13px] text-muted-foreground pl-10">
             {nutrients.slice(0, 6).map((n) => `${nutrientLabel(n.nutrient_key)} ${n.amount}${n.unit}`).join(" · ")}
             {nutrients.length > 6 ? ` · +${nutrients.length - 6}` : ""}
           </p>
@@ -232,7 +232,7 @@ export default function SupplementsPage() {
         <Camera className="w-4 h-4 mr-2" />
         Ajouter par photo de l'étiquette
       </Button>
-      <p className="text-[11px] text-muted-foreground text-center mb-5">
+      <p className="text-[13px] text-muted-foreground text-center mb-5">
         Vous pourrez tout vérifier et corriger avant enregistrement, ou saisir à la main.
       </p>
 

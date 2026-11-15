@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { HabitsTracker } from "@/components/HabitsTracker";
 import { RoutinesTracker } from "@/components/RoutinesTracker";
 import BeforeAfterButton from "@/components/BeforeAfterButton";
+import { parisDayKey } from "@/lib/parisDate";
 
 export default function PersonalJournalPage() {
   const { entries, addEntry, deleteEntry } = useJournalEntries();
   const [tab, setTab] = useState<"notes" | "routines" | "habitudes">("notes");
   const [showForm, setShowForm] = useState(false);
   const [content, setContent] = useState("");
-  const [entryDate, setEntryDate] = useState(new Date().toISOString().split("T")[0]);
+  const [entryDate, setEntryDate] = useState(parisDayKey());
 
   const handleAdd = () => {
     if (!content.trim()) return;
@@ -20,7 +21,7 @@ export default function PersonalJournalPage() {
       {
         onSuccess: () => {
           setContent("");
-          setEntryDate(new Date().toISOString().split("T")[0]);
+          setEntryDate(parisDayKey());
           setShowForm(false);
         },
       }
@@ -172,7 +173,7 @@ export default function PersonalJournalPage() {
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-[10px] text-muted-foreground font-medium">
+                                  <span className="text-[13px] text-muted-foreground font-medium">
                                     {formatDay(entry.entry_date)}
                                   </span>
                                 </div>

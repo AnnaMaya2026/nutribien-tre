@@ -7,6 +7,7 @@ import DateSelector from "@/components/DateSelector";
 
 import { LineChart, Line, ResponsiveContainer, YAxis } from "recharts";
 import { toast } from "sonner";
+import { parisDayKey } from "@/lib/parisDate";
 
 function statusColor(count: number, goal: number) {
   if (goal === 0) {
@@ -39,7 +40,7 @@ function BinaryHabitCard({ habit }: { habit: UserHabit }) {
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = parisDayKey(d);
       const log = logs.find(
         (l) => l.habit_key === habit.habit_key && l.logged_at === dateStr
       );
@@ -62,7 +63,7 @@ function BinaryHabitCard({ habit }: { habit: UserHabit }) {
             <p className="text-sm font-semibold text-foreground truncate">
               {habit.habit_name}
             </p>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               Objectif : éviter après 21h
             </p>
           </div>
@@ -83,7 +84,7 @@ function BinaryHabitCard({ habit }: { habit: UserHabit }) {
       <div className="grid grid-cols-2 gap-2 mb-3">
         <button
           onClick={() => setState(1)}
-          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[11px] font-semibold transition-all ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all ${
             state === 1
               ? "bg-progress-high text-white shadow-sm"
               : "bg-muted text-foreground hover:bg-progress-high/10"
@@ -94,7 +95,7 @@ function BinaryHabitCard({ habit }: { habit: UserHabit }) {
         </button>
         <button
           onClick={() => setState(2)}
-          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[11px] font-semibold transition-all ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all ${
             state === 2
               ? "bg-destructive text-white shadow-sm"
               : "bg-muted text-foreground hover:bg-destructive/10"
@@ -106,7 +107,7 @@ function BinaryHabitCard({ habit }: { habit: UserHabit }) {
       </div>
 
       {state === 2 && (
-        <div className="flex items-start gap-1.5 mb-2 text-[10px] text-destructive">
+        <div className="flex items-start gap-1.5 mb-2 text-[13px] text-destructive">
           <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-0.5" />
           <span>Objectif non respecté aujourd'hui</span>
         </div>
@@ -128,7 +129,7 @@ function BinaryHabitCard({ habit }: { habit: UserHabit }) {
           );
         })}
       </div>
-      <div className="flex justify-between text-[9px] text-muted-foreground mt-0.5 px-1">
+      <div className="flex justify-between text-[13px] text-muted-foreground mt-0.5 px-1">
         <span>il y a 7j</span>
         <span>aujourd'hui</span>
       </div>
@@ -187,7 +188,7 @@ function HydrationCard({ habit }: { habit: UserHabit }) {
             <p className="text-sm font-semibold text-foreground truncate">
               {habit.habit_name}
             </p>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               Objectif : {goal} verres/jour ({(goal * 0.25).toFixed(1)}L) · 1 verre = 250 mL
             </p>
           </div>
@@ -217,7 +218,7 @@ function HydrationCard({ habit }: { habit: UserHabit }) {
           <p className={`text-2xl font-bold ${colorClass}`}>
             {count} / {goal}
           </p>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             verres aujourd'hui
             {count >= goal && " ✅"}
           </p>
@@ -247,7 +248,7 @@ function HydrationCard({ habit }: { habit: UserHabit }) {
         })}
       </div>
       {count > goal && (
-        <p className="text-[10px] text-progress-high mt-2">
+        <p className="text-[13px] text-progress-high mt-2">
           +{count - goal} verre(s) au-delà de l'objectif 💪
         </p>
       )}
@@ -308,7 +309,7 @@ function SleepCard({ habit }: { habit: UserHabit }) {
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = parisDayKey(d);
       const log = logs.find(
         (l) => l.habit_key === habit.habit_key && l.logged_at === dateStr
       );
@@ -326,7 +327,7 @@ function SleepCard({ habit }: { habit: UserHabit }) {
             <p className="text-sm font-semibold text-foreground truncate">
               {habit.habit_name}
             </p>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               Objectif : 7-8 heures/nuit
             </p>
           </div>
@@ -361,7 +362,7 @@ function SleepCard({ habit }: { habit: UserHabit }) {
             onChange={(e) => setHours(Number(e.target.value) || 0)}
             className={`text-center text-2xl font-bold h-10 ${colorText}`}
           />
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             heures de sommeil
             {hours >= 7 && " ✅"}
           </p>
@@ -382,17 +383,17 @@ function SleepCard({ habit }: { habit: UserHabit }) {
       </div>
 
       {hours > 0 && hours < 6 && (
-        <p className="text-[10px] text-destructive mb-2">
+        <p className="text-[13px] text-destructive mb-2">
           🔴 Moins de 6h — pense à te coucher plus tôt
         </p>
       )}
       {hours >= 6 && hours < 7 && (
-        <p className="text-[10px] text-warning mb-2">
+        <p className="text-[13px] text-warning mb-2">
           🟠 Presque l'objectif, continue !
         </p>
       )}
       {hours >= 7 && (
-        <p className="text-[10px] text-progress-high mb-2">
+        <p className="text-[13px] text-progress-high mb-2">
           🟢 Nuit réparatrice 💚
         </p>
       )}
@@ -412,7 +413,7 @@ function SleepCard({ habit }: { habit: UserHabit }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex justify-between text-[9px] text-muted-foreground mt-0.5 px-1">
+      <div className="flex justify-between text-[13px] text-muted-foreground mt-0.5 px-1">
         <span>il y a 7j</span>
         <span>aujourd'hui</span>
       </div>
@@ -436,7 +437,7 @@ function HabitCard({ habit }: { habit: UserHabit }) {
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = parisDayKey(d);
       const log = logs.find(
         (l) => l.habit_key === habit.habit_key && l.logged_at === dateStr
       );
@@ -512,7 +513,7 @@ function HabitCard({ habit }: { habit: UserHabit }) {
             <p className="text-sm font-semibold text-foreground truncate">
               {habit.habit_name}
             </p>
-            <p className="text-[10px] text-muted-foreground">{goalLabel}</p>
+            <p className="text-[13px] text-muted-foreground">{goalLabel}</p>
           </div>
         </div>
         <button
@@ -540,7 +541,7 @@ function HabitCard({ habit }: { habit: UserHabit }) {
           <p className={`text-3xl font-bold ${colorClass}`}>
             {isAtteindre ? `${count}/${goal}` : count}
           </p>
-          <p className="text-[10px] text-muted-foreground">{habit.unit}</p>
+          <p className="text-[13px] text-muted-foreground">{habit.unit}</p>
         </div>
         <button
           onClick={handleInc}
@@ -564,17 +565,17 @@ function HabitCard({ habit }: { habit: UserHabit }) {
       {isAtteindre ? (
         <>
           {count < goal && (
-            <p className="text-[10px] text-primary mb-2">
+            <p className="text-[13px] text-primary mb-2">
               🔵 {count}/{goal} {habit.unit} — continuez !
             </p>
           )}
           {count === goal && (
-            <p className="text-[10px] text-progress-high mb-2">
+            <p className="text-[13px] text-progress-high mb-2">
               🟢 Objectif atteint ! 💚
             </p>
           )}
           {count > goal && (
-            <p className="text-[10px] text-progress-high mb-2">
+            <p className="text-[13px] text-progress-high mb-2">
               🟢 Super ! Vous dépassez votre objectif 🎉
             </p>
           )}
@@ -582,19 +583,19 @@ function HabitCard({ habit }: { habit: UserHabit }) {
       ) : (
         <>
           {goal > 0 && count > goal && count - goal <= 2 && (
-            <div className="flex items-start gap-1.5 mb-2 text-[10px] text-warning">
+            <div className="flex items-start gap-1.5 mb-2 text-[13px] text-warning">
               <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-0.5" />
               <span>🟠 Attention : +{count - goal} au-dessus de l'objectif</span>
             </div>
           )}
           {goal > 0 && count - goal >= 3 && (
-            <div className="flex items-start gap-1.5 mb-2 text-[10px] text-destructive">
+            <div className="flex items-start gap-1.5 mb-2 text-[13px] text-destructive">
               <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-0.5" />
               <span>🔴 Dépassement important : +{count - goal} au-dessus de l'objectif</span>
             </div>
           )}
           {goal > 0 && count <= goal && count > 0 && (
-            <p className="text-[10px] text-primary mb-2">🔵 Objectif respecté</p>
+            <p className="text-[13px] text-primary mb-2">🔵 Objectif respecté</p>
           )}
         </>
       )}
@@ -614,7 +615,7 @@ function HabitCard({ habit }: { habit: UserHabit }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex justify-between text-[9px] text-muted-foreground mt-0.5 px-1">
+      <div className="flex justify-between text-[13px] text-muted-foreground mt-0.5 px-1">
         <span>il y a 7j</span>
         <span>aujourd'hui</span>
       </div>

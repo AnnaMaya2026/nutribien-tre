@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useSelectedDate } from "./useSelectedDate";
+import { parisDayKey } from "@/lib/parisDate";
 
 export type SymptomScores = Record<string, number>;
 
@@ -39,7 +40,7 @@ export function useSymptomLogs() {
         .from("symptom_logs")
         .select("*")
         .eq("user_id", user.id)
-        .gte("logged_at", weekAgo.toISOString().split("T")[0])
+        .gte("logged_at", parisDayKey(weekAgo))
         .order("logged_at", { ascending: true });
       if (error) throw error;
       return data || [];

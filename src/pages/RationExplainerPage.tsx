@@ -240,12 +240,12 @@ export default function RationExplainerPage() {
               </span>
             </li>
           </ul>
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-[13px] text-muted-foreground">
             Repères ANSES (2021) pour une femme ménopausée. Oméga-3 : 1 % de ton objectif calorique en ALA, plus 250 mg de DHA et 250 mg d'EPA.
           </p>
         </section>
 
-        <p className="text-[11px] text-muted-foreground text-center px-4">
+        <p className="text-[13px] text-muted-foreground text-center px-4">
           ⚠️ Ces recommandations sont indicatives. Consultez votre médecin pour un suivi personnalisé.
         </p>
 

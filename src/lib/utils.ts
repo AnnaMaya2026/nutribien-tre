@@ -12,7 +12,7 @@ export const ABERRANT_PCT = 500;
 export function isAberrantPct(pct: number) {
   return !isFinite(pct) || pct > ABERRANT_PCT;
 }
-export const ABERRANT_LABEL = "Valeur aberrante — données en cours de vérification";
+export const ABERRANT_LABEL = "Valeur anormalement haute";
 
 /** Nutrient progress bar color logic:
  *  0-50%   → red (insufficient)

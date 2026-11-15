@@ -98,7 +98,7 @@ export default function NutrientInfo({ nutrient }: { nutrient: NutrientKey }) {
       >
         <p className="text-xs text-foreground whitespace-pre-line leading-relaxed">{info.text}</p>
         {info.disclaimer && (
-          <p className="mt-2 text-[11px] text-pink-deep font-medium">⚠️ {info.disclaimer}</p>
+          <p className="mt-2 text-[13px] text-pink-deep font-medium">⚠️ {info.disclaimer}</p>
         )}
       </PopoverContent>
     </Popover>

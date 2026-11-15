@@ -7,6 +7,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { getDailyGoals } from "@/lib/dailyGoals";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { TrendingUp } from "lucide-react";
+import { parisDayKey } from "@/lib/parisDate";
 
 const PERIODS = [
   { value: 7, label: "7 jours" },
@@ -42,13 +43,13 @@ export default function MicronutrientTrendChart() {
   const startDate = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() - (period - 1));
-    return d.toISOString().split("T")[0];
+    return parisDayKey(d);
   }, [period]);
 
   const { profile } = useProfile();
   const NUTRIENTS = useMemo(() => buildNutrients(getDailyGoals(profile)), [profile]);
 
-  const { contributionsForDay } = useSupplements(new Date().toISOString().split("T")[0]);
+  const { contributionsForDay } = useSupplements(parisDayKey());
 
   const { data: logs = [] } = useQuery({
     queryKey: ["food_logs_micro_trend", user?.id, startDate],
@@ -82,7 +83,7 @@ export default function MicronutrientTrendChart() {
     for (let i = period - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      days.push(d.toISOString().split("T")[0]);
+      days.push(parisDayKey(d));
     }
 
     let anyValue = false;
@@ -162,7 +163,7 @@ export default function MicronutrientTrendChart() {
           <button
             key={p.value}
             onClick={() => setPeriod(p.value)}
-            className={`flex-1 py-1.5 rounded-xl text-[10px] font-medium transition-all ${
+            className={`flex-1 py-1.5 rounded-xl text-[13px] font-medium transition-all ${
               period === p.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
             }`}
           >
@@ -220,7 +221,7 @@ export default function MicronutrientTrendChart() {
             <button
               key={n.key}
               onClick={() => toggleNutrient(n.key)}
-              className={`text-[10px] flex items-center gap-1 transition-opacity ${isHidden ? "opacity-30" : "opacity-100"}`}
+              className={`text-[13px] flex items-center gap-1 transition-opacity ${isHidden ? "opacity-30" : "opacity-100"}`}
             >
               <span className="w-2 h-2 rounded-full" style={{ background: n.color }} />
               {n.label}

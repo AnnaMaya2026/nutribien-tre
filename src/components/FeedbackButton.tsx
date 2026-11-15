@@ -43,7 +43,6 @@ export default function FeedbackButton() {
       toast.error("Une erreur est survenue. Réessayez dans quelques instants.");
       return;
     }
-    console.log("Feedback saved:", data);
     const saved = (Array.isArray(data) ? data[0] : data) as { created_at?: string } | null;
     try {
       const { error: emailError } = await supabase.functions.invoke("send-feedback-email", {
@@ -56,12 +55,9 @@ export default function FeedbackButton() {
         },
       });
       if (emailError) {
-        console.log("Error if any:", emailError);
       } else {
-        console.log("Email sent successfully");
       }
     } catch (e) {
-      console.log("Error if any:", e);
     }
     toast.success(
       "Merci pour votre retour ! Votre avis nous aide à améliorer NutriMéno 💗"

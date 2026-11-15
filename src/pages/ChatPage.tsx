@@ -15,6 +15,7 @@ import MealPhotoDialog from "@/components/MealPhotoDialog";
 import { Utensils } from "lucide-react";
 import { normalizeTranscript, pickBestAlternative } from "@/lib/speechCorrections";
 import { useDaySnapshot } from "@/hooks/useDaySnapshot";
+import { parisDayKey } from "@/lib/parisDate";
 
 
 const MENU_KEYWORDS = ["petit-déjeuner", "petit déjeuner", "déjeuner", "dîner", "diner", "menu", "repas", "collation", "goûter", "souper"];
@@ -73,7 +74,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!user || restored) return;
     (async () => {
-      const today = new Date().toISOString().split("T")[0];
+      const today = parisDayKey();
       const { data, error } = await supabase
         .from("sophie_conversations" as any)
         .select("*")
@@ -112,7 +113,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const today = new Date().toISOString().split("T")[0];
+      const today = parisDayKey();
       const { data } = await supabase
         .from("profiles")
         .select("daily_message_count, last_message_date")
@@ -259,7 +260,6 @@ export default function ChatPage() {
         body: { messages: history, dashboard: daySnapshot ?? undefined },
       });
 
-      console.log("Réponse API Sophie:", data);
 
       // Edge function returns 429 with structured payload when limit hit
       if (error) {
@@ -450,7 +450,7 @@ export default function ChatPage() {
               <h1 className="text-base sm:text-lg font-bold text-foreground whitespace-nowrap">Sophie — Nutritionniste IA</h1>
               <p className="text-xs text-muted-foreground truncate">Conseils personnalisés pour la ménopause</p>
               {remaining !== null && (
-                <p className="text-[10px] text-muted-foreground/80 mt-0.5">
+                <p className="text-[13px] text-muted-foreground/80 mt-0.5">
                   Messages restants aujourd'hui : {remaining}/20
                 </p>
               )}
@@ -619,7 +619,7 @@ export default function ChatPage() {
             >
               {isRecording ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
             </button>
-            <span className="text-[10px] text-muted-foreground font-medium">Parler</span>
+            <span className="text-[13px] text-muted-foreground font-medium">Parler</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <button
@@ -631,7 +631,7 @@ export default function ChatPage() {
             >
               <Refrigerator className="w-6 h-6" />
             </button>
-            <span className="text-[10px] text-muted-foreground font-medium">Frigo</span>
+            <span className="text-[13px] text-muted-foreground font-medium">Frigo</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <button
@@ -643,7 +643,7 @@ export default function ChatPage() {
             >
               <Utensils className="w-6 h-6" />
             </button>
-            <span className="text-[10px] text-muted-foreground font-medium">Assiette</span>
+            <span className="text-[13px] text-muted-foreground font-medium">Assiette</span>
           </div>
           <Input
             value={input}

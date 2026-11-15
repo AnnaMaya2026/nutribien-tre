@@ -75,7 +75,7 @@ export default function HealthProfileCard() {
             <h3 className="text-sm font-semibold text-foreground">
               Mes priorités bien-être
             </h3>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               {count > 0
                 ? `${count} préférence${count > 1 ? "s" : ""} suivie${count > 1 ? "s" : ""}`
                 : "Personnalisez vos recommandations"}
@@ -91,7 +91,7 @@ export default function HealthProfileCard() {
 
       {open && (
         <div className="px-5 pb-5 animate-fade-in">
-          <p className="text-[11px] text-muted-foreground mb-3">
+          <p className="text-[13px] text-muted-foreground mb-3">
             Ces informations permettent à NutriMéno de personnaliser ses
             recommandations.
           </p>
@@ -123,7 +123,7 @@ export default function HealthProfileCard() {
           </div>
 
           <div className="mb-4">
-            <label className="text-[11px] text-muted-foreground block mb-1">
+            <label className="text-[13px] text-muted-foreground block mb-1">
               Autre (précisez)
             </label>
             <Input
@@ -139,7 +139,7 @@ export default function HealthProfileCard() {
             <h4 className="text-sm font-semibold text-foreground mb-1">
               Régimes et restrictions alimentaires
             </h4>
-            <p className="text-[11px] text-muted-foreground mb-3">
+            <p className="text-[13px] text-muted-foreground mb-3">
               Sophie et les suggestions tiendront compte de ces préférences.
             </p>
 
@@ -171,7 +171,7 @@ export default function HealthProfileCard() {
             </div>
 
             <div>
-              <label className="text-[11px] text-muted-foreground block mb-1">
+              <label className="text-[13px] text-muted-foreground block mb-1">
                 Autre (précisez)
               </label>
               <Input
@@ -192,7 +192,7 @@ export default function HealthProfileCard() {
             {updateProfile.isPending ? "Enregistrement..." : "Enregistrer"}
           </button>
 
-          <p className="text-[10px] text-muted-foreground italic border-t border-border pt-2 mt-3">
+          <p className="text-[13px] text-muted-foreground italic border-t border-border pt-2 mt-3">
             {HEALTH_DISCLAIMER}
           </p>
         </div>

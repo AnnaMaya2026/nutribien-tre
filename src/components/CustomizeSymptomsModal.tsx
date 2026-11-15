@@ -85,7 +85,7 @@ export function CustomizeSymptomsModal({
 
           {custom.length > 0 && (
             <>
-              <p className="text-[11px] font-semibold text-pink-deep uppercase tracking-wider mt-3">
+              <p className="text-[13px] font-semibold text-pink-deep uppercase tracking-wider mt-3">
                 Symptômes personnalisés
               </p>
               <div className="space-y-2">

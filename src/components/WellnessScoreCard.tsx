@@ -20,6 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { parisDayKey } from "@/lib/parisDate";
 
 /** Repères du score, lus dans la table unique ; oméga-3 selon l'objectif calorique. */
 function buildNutrientGoals(calorieGoal: number): Record<string, number> {
@@ -257,7 +258,7 @@ export default function WellnessScoreCard() {
   const yesterdayStr = useMemo(() => {
     const d = new Date(selectedDateStr);
     d.setDate(d.getDate() - 1);
-    return d.toISOString().split("T")[0];
+    return parisDayKey(d);
   }, [selectedDateStr]);
 
   const { logs: yLogs } = useFoodLogs(yesterdayStr);
@@ -356,7 +357,7 @@ export default function WellnessScoreCard() {
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className={`text-xl font-bold ${colors.text}`}>{scoreValue.toFixed(1)}</span>
-                    <span className="text-[10px] text-muted-foreground">/10</span>
+                    <span className="text-[13px] text-muted-foreground">/10</span>
                   </div>
                 </button>
               </TooltipTrigger>

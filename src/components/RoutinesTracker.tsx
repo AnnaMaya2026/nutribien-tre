@@ -87,7 +87,7 @@ function RoutineForm({
             <button
               key={c.value}
               onClick={() => setState({ ...state, category: c.value })}
-              className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-all ${
                 state.category === c.value
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground"
@@ -165,7 +165,7 @@ function RoutineForm({
               className="h-9 bg-background"
             />
           </div>
-          <p className="text-[12px] text-muted-foreground leading-snug">
+          <p className="text-[13px] text-muted-foreground leading-snug">
             La dépense estimée s'affiche à titre d'information : elle n'augmente pas votre
             budget calorique.
           </p>
@@ -274,14 +274,14 @@ function RoutineForm({
             {typeof window !== "undefined" &&
               "Notification" in window &&
               Notification.permission !== "granted" && (
-                <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-2 leading-snug">
+                <p className="text-[13px] text-amber-700 dark:text-amber-300 mt-2 leading-snug">
                   ⚠️ Activez les notifications dans les paramètres de votre navigateur pour
                   recevoir les rappels.
                 </p>
               )}
           </div>
         )}
-        <p className="text-[12px] text-muted-foreground mt-2 leading-snug">
+        <p className="text-[13px] text-muted-foreground mt-2 leading-snug">
           💡 Pour recevoir les rappels même quand l'app est fermée, installez NutriMéno sur
           votre écran d'accueil
         </p>
@@ -683,17 +683,17 @@ export function RoutinesTracker() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-medium text-foreground">{r.name}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                      <span className="text-[13px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                         {cat?.label || "📝 Autre"}
                       </span>
                       {r.reminder_enabled && r.reminder_time && (
-                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
+                        <span className="text-[13px] px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
                           <Bell className="w-3 h-3" />
                           {r.reminder_time.slice(0, 5)}
                         </span>
                       )}
                       {r.provides_nutrient && r.nutrient_amount && (
-                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                        <span className="text-[13px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
                           +{r.nutrient_amount}
                           {r.nutrient_unit} {nutrientDef?.label || r.nutrient_key}
                         </span>
@@ -713,13 +713,13 @@ export function RoutinesTracker() {
                     })()}
                     <div className="flex items-center gap-3 mt-0.5">
                       {streak > 0 && (
-                        <span className="text-[11px] text-orange-500 font-medium flex items-center gap-1">
+                        <span className="text-[13px] text-orange-500 font-medium flex items-center gap-1">
                           <Flame className="w-3 h-3" />
                           {streak} jour{streak > 1 ? "s" : ""} consécutif
                           {streak > 1 ? "s" : ""}
                         </span>
                       )}
-                      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <span className="text-[13px] text-muted-foreground flex items-center gap-1">
                         <Star className="w-3 h-3" />
                         {weekCount}/7 jours cette semaine
                       </span>
@@ -730,7 +730,7 @@ export function RoutinesTracker() {
                     {r.reminder_enabled && (
                       <button
                         onClick={() => handleTest(r)}
-                        className="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-pink-deep font-medium hover:bg-primary/20 transition-colors flex items-center gap-1"
+                        className="text-[13px] px-2 py-1 rounded-full bg-primary/10 text-pink-deep font-medium hover:bg-primary/20 transition-colors flex items-center gap-1"
                         aria-label="Rappel"
                         title="Envoyer une notification de test"
                       >
@@ -742,7 +742,6 @@ export function RoutinesTracker() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log("[Routines] Edit clicked", r.id, r.name);
                         openEdit(r);
                       }}
                       className="text-muted-foreground hover:text-primary transition-colors p-1"

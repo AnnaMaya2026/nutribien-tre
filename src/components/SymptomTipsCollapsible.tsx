@@ -20,7 +20,7 @@ export function SymptomTipsCollapsible({ symptomKey }: { symptomKey: string }) {
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-primary/10 transition-colors"
       >
-        <span className="flex items-center gap-1.5 text-[12px] font-semibold text-pink-deep">
+        <span className="flex items-center gap-1.5 text-[13px] font-semibold text-pink-deep">
           💡 Comment atténuer ce symptôme&nbsp;?
         </span>
         <ChevronDown
@@ -33,7 +33,7 @@ export function SymptomTipsCollapsible({ symptomKey }: { symptomKey: string }) {
             {tips.map((tip) => (
               <li
                 key={tip}
-                className="text-[11px] text-foreground flex items-start gap-1.5 leading-snug"
+                className="text-[13px] text-foreground flex items-start gap-1.5 leading-snug"
               >
                 <span className="text-pink-deep mt-0.5">•</span>
                 <span>{tip}</span>
@@ -41,7 +41,7 @@ export function SymptomTipsCollapsible({ symptomKey }: { symptomKey: string }) {
             ))}
           </ul>
           {!isGeneric && (
-            <p className="text-[10px] text-muted-foreground italic border-t border-border pt-1.5">
+            <p className="text-[13px] text-muted-foreground italic border-t border-border pt-1.5">
               {TIPS_DISCLAIMER}
             </p>
           )}

@@ -3,6 +3,7 @@ import { Plus, Minus, Check, X } from "lucide-react";
 import { scaleCiqual } from "@/lib/ciqual";
 import { formatPortion, formatStandardPortionHint, getPortionStep, getPortionUnit } from "@/lib/portionUnits";
 import type { VoiceMatch } from "./VoiceInput";
+import { fmtKcal, fmtQty } from "@/lib/formatNumber";
 
 interface VoiceResultsProps {
   matches: VoiceMatch[];
@@ -48,7 +49,7 @@ export default function VoiceResults({ matches, mealType, onConfirm, onCancel }:
             <div className="flex-1">
               <div className="font-medium text-sm text-foreground line-clamp-1">{item.food.nom}</div>
               <div className="text-xs text-muted-foreground">
-                {item.scaled.calories} kcal · {item.scaled.proteins}g prot · {item.scaled.carbs}g gluc
+                {fmtKcal(item.scaled.calories)} kcal · {fmtQty(item.scaled.proteins)} g prot · {fmtQty(item.scaled.carbs)} g gluc
               </div>
             </div>
             <button onClick={() => removeItem(idx)} className="text-muted-foreground hover:text-destructive ml-2">
@@ -79,7 +80,7 @@ export default function VoiceResults({ matches, mealType, onConfirm, onCancel }:
                 <button
                   key={g}
                   onClick={() => updateGrams(idx, g)}
-                  className={`px-2 py-1 rounded text-[10px] font-medium ${
+                  className={`px-2 py-1 rounded text-[13px] font-medium ${
                     item.grams === g ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                   }`}
                 >
@@ -90,7 +91,7 @@ export default function VoiceResults({ matches, mealType, onConfirm, onCancel }:
               </>;
             })()}
           </div>
-          <p className="text-[11px] text-muted-foreground">{formatStandardPortionHint(item.food.nom)}</p>
+          <p className="text-[13px] text-muted-foreground">{formatStandardPortionHint(item.food.nom)}</p>
         </div>
       ))}
 

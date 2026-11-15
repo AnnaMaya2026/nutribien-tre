@@ -62,7 +62,6 @@ async function fetchWithRetry(url: string, retries = 3, timeout = 10000): Promis
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
-      console.log(`[OFF] Attempt ${attempt}/${retries}`);
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timer);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -79,16 +78,13 @@ async function fetchWithRetry(url: string, retries = 3, timeout = 10000): Promis
 
 export async function searchFoods(query: string): Promise<ParsedFood[]> {
   const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&fields=product_name,nutriments,serving_size&lc=fr&cc=fr&page_size=25`;
-  console.log("[OFF] Searching:", url);
   const res = await fetchWithRetry(url);
   const data = await res.json();
-  console.log("[OFF] Raw results:", data.products?.length ?? 0);
   const products: OFFProduct[] = data.products || [];
   const parsed = products
     .map(parseProduct)
     .filter((p): p is ParsedFood => p !== null && p.calories_100g > 0)
     .slice(0, 10);
-  console.log("[OFF] Parsed foods:", parsed.length);
   return parsed;
 }
 

@@ -49,10 +49,6 @@ export function SymptomReliefTab() {
   const selected = todayLog?.selected_symptoms || [];
 
   // 🔍 Debug: compare DB symptom keys with code keys
-  console.log("[SymptomReliefTab] DB symptoms (todayLog):", todayLog);
-  console.log("[SymptomReliefTab] DB scores keys:", Object.keys(scores));
-  console.log("[SymptomReliefTab] DB selected_symptoms:", selected);
-  console.log("[SymptomReliefTab] Relief foods keys:", Object.keys(SYMPTOM_RELIEF_FOODS));
 
   // Collect ALL symptom keys that are active today (score >= 5 OR present in selected_symptoms)
   const allCandidateKeys = Array.from(
@@ -71,7 +67,6 @@ export function SymptomReliefTab() {
     })
     .sort((a, b) => (scores[b] || 0) - (scores[a] || 0));
 
-  console.log("[SymptomReliefTab] Active symptoms to display:", activeSymptoms);
 
   // Stable signature for effect deps (include restrictions so list refreshes when profile changes)
   const activeKey = activeSymptoms.join("|") + "::" + restrictions.join(",");
@@ -158,11 +153,11 @@ export function SymptomReliefTab() {
           <Sparkles className="w-4 h-4 text-pink-deep" />
           <h3 className="text-sm font-semibold text-foreground">Suggestions personnalisées</h3>
         </div>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           Aliments inspirants adaptés à vos symptômes. Cliquez pour découvrir des idées de recettes ✨
         </p>
         {restrictionLabels.length > 0 && (
-          <p className="mt-2 text-[11px] text-foreground bg-primary/10 rounded-md px-2 py-1">
+          <p className="mt-2 text-[13px] text-foreground bg-primary/10 rounded-md px-2 py-1">
             ✅ Filtré selon votre profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
           </p>
         )}
@@ -186,7 +181,7 @@ export function SymptomReliefTab() {
               <Activity className="w-4 h-4 text-pink-deep" />
               <h3 className="text-sm font-semibold text-foreground">{cfg.label}</h3>
               {typeof score === "number" && (
-                <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-warning/20 text-warning font-medium border border-warning/30">
+                <span className="ml-auto text-[13px] px-2 py-0.5 rounded-full bg-warning/20 text-warning font-medium border border-warning/30">
                   Intensité : {score}/10
                 </span>
               )}
@@ -197,14 +192,14 @@ export function SymptomReliefTab() {
                 <div key={i} className="flex items-center justify-between gap-2 px-3 py-2 bg-muted/30 rounded-lg">
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-foreground truncate">{it.name}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">
+                    <p className="text-[13px] text-muted-foreground truncate">
                       {it.food ? `${Math.round(it.food.calories_100g)} kcal/100g · ` : ""}
                       <span className="text-pink-deep/80">{it.nutrient}</span>
                     </p>
                   </div>
                   <button
                     onClick={() => openRecipeIdeas(it)}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground text-[10px] font-medium hover:bg-primary/90 transition whitespace-nowrap"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground text-[13px] font-medium hover:bg-primary/90 transition whitespace-nowrap"
                   >
                     🍽️ Idées recettes
                   </button>
@@ -248,7 +243,7 @@ export function SymptomReliefTab() {
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <h4 className="text-sm font-semibold text-foreground flex-1">{r.name}</h4>
                   {r.prep_time && (
-                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap">
+                    <span className="flex items-center gap-1 text-[13px] text-muted-foreground whitespace-nowrap">
                       <Clock className="w-3 h-3" /> {r.prep_time}
                     </span>
                   )}
@@ -259,7 +254,7 @@ export function SymptomReliefTab() {
 
                 {r.ingredients?.length > 0 && (
                   <div className="mb-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-pink-deep mb-1">Ingrédients</p>
+                    <p className="text-[13px] font-semibold uppercase tracking-wide text-pink-deep mb-1">Ingrédients</p>
                     <ul className="text-xs text-foreground space-y-0.5 list-disc list-inside">
                       {r.ingredients.map((ing, j) => (
                         <li key={j}>{ing}</li>
@@ -270,7 +265,7 @@ export function SymptomReliefTab() {
 
                 {r.steps?.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-pink-deep mb-1">Préparation</p>
+                    <p className="text-[13px] font-semibold uppercase tracking-wide text-pink-deep mb-1">Préparation</p>
                     <ol className="text-xs text-foreground space-y-1 list-decimal list-inside">
                       {r.steps.map((s, j) => (
                         <li key={j}>{s}</li>
@@ -283,7 +278,7 @@ export function SymptomReliefTab() {
 
             {!recipesLoading && recipes.length > 0 && (
               <div className="bg-primary/10 rounded-xl p-3 text-center">
-                <p className="text-[11px] text-foreground">
+                <p className="text-[13px] text-foreground">
                   💡 Une fois cuisinée, n'oubliez pas de logger votre repas dans le <span className="font-semibold text-pink-deep">Journal</span>.
                 </p>
               </div>

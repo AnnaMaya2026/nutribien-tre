@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { fmtKcal, fmtQty } from "@/lib/formatNumber";
 
 interface Props {
   scaled: {
@@ -25,8 +26,7 @@ interface Props {
 }
 
 function fmt(v: number | null | undefined): string {
-  if (v === null || v === undefined || !isFinite(Number(v))) return "—";
-  return String(v);
+  return fmtQty(v);
 }
 
 function Section({ title, items, defaultOpen = true }: { title: string; items: { label: string; value: string; unit: string }[]; defaultOpen?: boolean }) {

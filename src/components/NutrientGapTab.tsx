@@ -166,13 +166,13 @@ export function NutrientGapTab() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground line-clamp-1">{f.nom}</p>
-                  {f.groupe && <p className="text-[10px] text-muted-foreground line-clamp-1">{f.groupe}</p>}
+                  {f.groupe && <p className="text-[13px] text-muted-foreground line-clamp-1">{f.groupe}</p>}
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-bold text-primary-foreground">
                     {Math.round(Number(f[selected.dbCol] as number) * 10) / 10}{selected.unit}
                   </div>
-                  <div className="text-[9px] text-muted-foreground">/100g</div>
+                  <div className="text-[13px] text-muted-foreground">/100g</div>
                 </div>
               </div>
             ))}
@@ -186,7 +186,7 @@ export function NutrientGapTab() {
             variant="ghost"
             onClick={() => generateRecipes(selected, recipes.map((r) => r.name))}
             disabled={loadingRecipes}
-            className="h-7 text-[10px]"
+            className="h-7 text-[13px]"
           >
             <RotateCw className={`w-3 h-3 mr-1 ${loadingRecipes ? "animate-spin" : ""}`} />
             Autres idées
@@ -205,25 +205,25 @@ export function NutrientGapTab() {
                   <Sparkles className="w-4 h-4 text-primary-foreground mt-0.5 flex-shrink-0" />
                   <h4 className="text-sm font-bold text-foreground flex-1">{r.name}</h4>
                 </div>
-                <div className="flex gap-2 mb-2 text-[10px] text-muted-foreground">
+                <div className="flex gap-2 mb-2 text-[13px] text-muted-foreground">
                   <span>⏱ Prép: {r.prep_time}</span>
                   <span>🔥 Cuisson: {r.cook_time}</span>
                   <span>🔥 {r.calories} kcal</span>
                 </div>
                 {r.addresses && (
-                  <p className="text-[10px] text-pink-deep/80 italic mb-2">{r.addresses}</p>
+                  <p className="text-[13px] text-pink-deep/80 italic mb-2">{r.addresses}</p>
                 )}
                 <div className="mb-2">
-                  <p className="text-[11px] font-semibold text-foreground mb-1">Ingrédients :</p>
-                  <ul className="text-[11px] text-muted-foreground space-y-0.5">
+                  <p className="text-[13px] font-semibold text-foreground mb-1">Ingrédients :</p>
+                  <ul className="text-[13px] text-muted-foreground space-y-0.5">
                     {r.ingredients?.map((ing, i) => (
                       <li key={i}>• {ing.name} — {ing.grams}g</li>
                     ))}
                   </ul>
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold text-foreground mb-1">Étapes :</p>
-                  <ol className="text-[11px] text-muted-foreground space-y-0.5 list-decimal list-inside">
+                  <p className="text-[13px] font-semibold text-foreground mb-1">Étapes :</p>
+                  <ol className="text-[13px] text-muted-foreground space-y-0.5 list-decimal list-inside">
                     {r.steps?.map((s, i) => (
                       <li key={i}>{s}</li>
                     ))}
@@ -264,7 +264,7 @@ export function NutrientGapTab() {
               <span className="text-2xl">{gap.emoji}</span>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-foreground">{gap.label}</p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-[13px] text-muted-foreground">
                   {gap.pct}% de votre objectif
                 </p>
               </div>

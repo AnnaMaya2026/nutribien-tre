@@ -7,6 +7,7 @@ import { calculateCalorieGoal } from "@/lib/calorieGoal";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { ChevronDown, ChevronUp, Scale } from "lucide-react";
 import { toast } from "sonner";
+import { parisDayKey } from "@/lib/parisDate";
 
 const PERIODS = [
   { value: 7, label: "7j" },
@@ -28,7 +29,7 @@ export default function WeightTracker() {
   const startDate = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() - (period - 1));
-    return d.toISOString().split("T")[0];
+    return parisDayKey(d);
   }, [period]);
 
   const { data: logs = [] } = useQuery({
@@ -67,7 +68,7 @@ export default function WeightTracker() {
   const upsertMutation = useMutation({
     mutationFn: async ({ weight, goal }: { weight: number; goal?: number | null }) => {
       if (!user) throw new Error("Non connecté");
-      const today = new Date().toISOString().split("T")[0];
+      const today = parisDayKey();
 
       // Check if entry exists for today
       const { data: existing } = await supabase
@@ -131,7 +132,7 @@ export default function WeightTracker() {
         if (error) throw error;
       } else {
         // Create an entry for today with just the goal
-        const today = new Date().toISOString().split("T")[0];
+        const today = parisDayKey();
         const { error } = await supabase
           .from("weight_logs")
           .insert({ user_id: user.id, weight_kg: goal, logged_at: today, goal_weight: goal });
@@ -280,7 +281,7 @@ export default function WeightTracker() {
                     setEditingGoal(true);
                     setGoalInput(goalWeight ? String(goalWeight) : "");
                   }}
-                  className="text-[10px] text-pink-deep underline"
+                  className="text-[13px] text-pink-deep underline"
                 >
                   {goalWeight ? "Modifier" : "Définir un objectif"}
                 </button>
@@ -307,7 +308,7 @@ export default function WeightTracker() {
               <button
                 key={p.value}
                 onClick={() => setPeriod(p.value)}
-                className={`flex-1 py-1.5 rounded-xl text-[10px] font-medium transition-all ${
+                className={`flex-1 py-1.5 rounded-xl text-[13px] font-medium transition-all ${
                   period === p.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                 }`}
               >
@@ -371,7 +372,7 @@ export default function WeightTracker() {
                 { label: "Max", value: `${stats.max} kg` },
               ].map((s) => (
                 <div key={s.label} className="bg-muted/30 rounded-xl p-2 text-center">
-                  <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                  <p className="text-[13px] text-muted-foreground">{s.label}</p>
                   <p className="text-xs font-semibold text-foreground">{s.value}</p>
                 </div>
               ))}

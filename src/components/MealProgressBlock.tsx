@@ -22,7 +22,7 @@ function Bar({ label, unit, current, target, color }: BarSpec) {
   const cur = unit === "kcal" ? Math.round(current) : Math.round(current);
   return (
     <div>
-      <div className="flex items-center justify-between text-[11px] mb-1">
+      <div className="flex items-center justify-between text-[13px] mb-1">
         <span className="text-foreground/80">{label}</span>
         <span className="text-muted-foreground tabular-nums">
           {Math.round((current / safeTarget) * 100)}% · {cur}/{target} {unit}
@@ -50,7 +50,7 @@ export default function MealProgressBlock({
 }) {
   return (
     <div className="px-4 pb-3 pt-1 border-t border-border/50 space-y-2">
-      <div className="text-[10px] text-muted-foreground space-y-0.5">
+      <div className="text-[13px] text-muted-foreground space-y-0.5">
         <div>
           <span className="font-semibold text-foreground/70">Objectif :</span>{" "}
           {target.calories} kcal · {target.proteins}g prot · {target.carbs}g gluc · {target.fats}g lip

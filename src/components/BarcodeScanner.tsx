@@ -90,7 +90,6 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
   const scanningRef = useRef(false);
 
   const stopCamera = useCallback(() => {
-    console.log("Stopping camera...");
     scanningRef.current = false;
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
@@ -102,13 +101,11 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
   }, []);
 
   const lookupBarcode = async (barcode: string) => {
-    console.log("API call to OpenFoodFacts...", barcode);
     setLoading(true);
     try {
       const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
       const data = await res.json();
       if (data.status !== 1 || !data.product) {
-        console.log("Product not found:", barcode);
         toast.error("Produit non trouvé dans la base de données. Essayez la recherche manuelle.");
         setShowScanner(false);
         return;
@@ -116,7 +113,6 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       const p = data.product;
       const nm = p.nutriments || {};
       const productName = p.product_name || p.product_name_fr || "Produit inconnu";
-      console.log("Product found:", productName);
 
       let calcium = n(nm.calcium_100g);
       let vitamin_d = n(nm["vitamin-d_100g"]);
@@ -208,7 +204,6 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
 
   const startScanning = useCallback(async () => {
     if (!videoRef.current) return;
-    console.log("Starting camera...");
     setScanning(true);
 
     try {
@@ -222,14 +217,12 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       streamRef.current = stream;
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
-      console.log("Camera started");
 
       // Dynamically import @zxing/browser
       const { BrowserMultiFormatReader } = await import("@zxing/browser");
       const codeReader = new BrowserMultiFormatReader();
 
       scanningRef.current = true;
-      console.log("Scanning...");
 
       // Continuous decode loop
       const tryDecode = async () => {
@@ -238,7 +231,6 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
           const result = await codeReader.decodeOnceFromVideoDevice(undefined, videoRef.current);
           if (result) {
             const text = result.getText();
-            console.log("Barcode detected:", text);
             stopCamera();
             setScanning(false);
             lookupBarcode(text);
@@ -247,7 +239,6 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
         } catch (err: any) {
           // NotFoundException is normal during scanning
           if (err?.name !== "NotFoundException" && scanningRef.current) {
-            console.log("Scan attempt error:", err?.message);
           }
         }
         // If still scanning, the decodeOnce handles the loop internally
@@ -475,12 +466,12 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                       {product.brand && <p className="text-xs text-muted-foreground">{product.brand}</p>}
                     </div>
                     {isIndustrialFood(product.name) && (
-                      <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[10px] shrink-0">
+                      <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30 text-[13px] shrink-0">
                         Produit industriel
                       </Badge>
                     )}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Code: {product.barcode}</p>
+                  <p className="text-[13px] text-muted-foreground mt-1">Code: {product.barcode}</p>
                 </div>
 
                 {/* Warning: incomplete nutritional data */}
@@ -489,12 +480,12 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                     <p className="text-xs text-orange-700 font-medium">
                       ⚠️ Données nutritionnelles incomplètes pour ce produit. Vérifiez l'étiquette.
                     </p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[13px] text-muted-foreground">
                       Saisissez les calories pour 100{unit} manuellement, ou recherchez ce produit
                       directement dans la base CIQUAL via la recherche d'aliments.
                     </p>
                     <div className="flex items-center gap-2">
-                      <label className="text-[11px] text-muted-foreground">kcal / 100{unit} :</label>
+                      <label className="text-[13px] text-muted-foreground">kcal / 100{unit} :</label>
                       <Input
                         type="number"
                         min={0}
@@ -553,7 +544,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                       </button>
                     ))}
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-2">{formatStandardPortionHint(product.name)}</p>
+                  <p className="text-[13px] text-muted-foreground mt-2">{formatStandardPortionHint(product.name)}</p>
                 </div>
 
                 {/* Macros */}
@@ -567,19 +558,19 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                   ].map((item) => (
                     <div key={item.l} className="bg-muted/50 rounded-lg p-2">
                       <div className="text-lg font-bold text-foreground">{item.v}</div>
-                      <div className="text-[10px] text-muted-foreground">{item.l}</div>
+                      <div className="text-[13px] text-muted-foreground">{item.l}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Micros source banner */}
                 {product.microsSource === "ciqual" && product.ciqualMatchName && (
-                  <p className="text-[11px] text-muted-foreground italic">
+                  <p className="text-[13px] text-muted-foreground italic">
                     Micronutriments estimés depuis CIQUAL ({product.ciqualMatchName})
                   </p>
                 )}
                 {!product.microsAvailable && (
-                  <p className="text-[11px] text-orange-600 italic">
+                  <p className="text-[13px] text-orange-600 italic">
                     Micros non disponibles pour ce produit
                   </p>
                 )}
@@ -600,7 +591,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                         {item.value}
                         {item.unit}
                       </div>
-                      <div className="text-[9px] text-muted-foreground">{item.label}</div>
+                      <div className="text-[13px] text-muted-foreground">{item.label}</div>
                     </div>
                   ))
                   ) : (
