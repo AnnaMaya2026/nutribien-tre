@@ -37,7 +37,7 @@ Si l'utilisatrice mentionne des mesures courantes, convertis-les en grammes pour
 - 1 cuillère à café (cc) = 5g (liquides) ou 3g (poudres)
 - 1 cuillère à soupe (cs) = 15g (liquides) ou 10g (poudres)
 - 1 verre = 200ml pour les liquides
-- 1 bol = 300ml pour soupe/bouillon, 300g pour solides
+- 1 bol = 300ml pour soupe/bouillon ; pour un solide, le poids dépend de l'aliment : 40g pour des céréales ou des flocons secs, 250g pour un plat cuisiné, des pâtes ou du riz cuits
 - 1 tasse = 150ml pour café/thé/tisane/infusion, 250ml pour autres boissons, 250g pour solides
 - 1 poignée = 30g
 - 1 tranche = 30g (pain) ou 50g (viande/fromage)
@@ -53,7 +53,7 @@ Exemples de conversion:
 - "2 cuillères à soupe d'huile d'olive" → {"name": "huile olive", "grams": 30}
 - "un oeuf" → {"name": "oeuf", "grams": 55}
 - "une banane" → {"name": "banane", "grams": 120}
-- "1 bol de flocons d'avoine" → {"name": "flocons avoine", "grams": 300}
+- "1 bol de flocons d'avoine" → {"name": "flocons avoine", "grams": 40}
 - "1 verre de lait" → {"name": "lait", "grams": 200}
 - "une tasse de café" → {"name": "café", "grams": 150}
 - "un bol de soupe" → {"name": "soupe", "grams": 300}

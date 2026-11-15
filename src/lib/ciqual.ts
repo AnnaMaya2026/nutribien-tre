@@ -10,24 +10,29 @@ export interface CiqualFood {
   proteines_100g: number;
   glucides_100g: number;
   lipides_100g: number;
-  fibres_100g: number;
-  calcium_100g: number;
-  fer_100g: number;
-  magnesium_100g: number;
-  vitamine_d_100g: number;
-  vitamine_b12_100g: number;
-  omega3_total_100g: number;
-  phytoestrogenes_100mg: number;
-  potassium_100g: number;
-  zinc_100g: number;
-  vitamine_k_100g: number;
-  vitamine_b6_100g: number;
-  vitamine_b9_100g: number;
-  vitamine_e_100g: number;
+  fibres_100g: number | null;
+  calcium_100g: number | null;
+  fer_100g: number | null;
+  magnesium_100g: number | null;
+  vitamine_d_100g: number | null;
+  vitamine_b12_100g: number | null;
+  omega3_total_100g: number | null;
+  phytoestrogenes_100mg: number | null;
+  potassium_100g: number | null;
+  zinc_100g: number | null;
+  vitamine_k_100g: number | null;
+  vitamine_b6_100g: number | null;
+  vitamine_b9_100g: number | null;
+  vitamine_e_100g: number | null;
 }
 
 function n(v: number | null): number {
   return v ?? 0;
+}
+
+/** Fibres et micronutriments : une valeur absente reste inconnue (null), jamais 0. */
+function unknownStaysNull(v: number | null | undefined): number | null {
+  return v === null || v === undefined || !Number.isFinite(Number(v)) ? null : Number(v);
 }
 
 function mapRows(data: any[]): CiqualFood[] {
@@ -39,20 +44,20 @@ function mapRows(data: any[]): CiqualFood[] {
     proteines_100g: n(row.proteines_100g),
     glucides_100g: n(row.glucides_100g),
     lipides_100g: n(row.lipides_100g),
-    fibres_100g: n(row.fibres_100g),
-    calcium_100g: n(row.calcium_100g),
-    fer_100g: n(row.fer_100g),
-    magnesium_100g: n(row.magnesium_100g),
-    vitamine_d_100g: n(row.vitamine_d_100g),
-    vitamine_b12_100g: n(row.vitamine_b12_100g),
-    omega3_total_100g: n(row.omega3_total_100g),
-    phytoestrogenes_100mg: n(row.phytoestrogenes_100mg),
-    potassium_100g: n(row.potassium_100g),
-    zinc_100g: n(row.zinc_100g),
-    vitamine_k_100g: n(row.vitamine_k_100g),
-    vitamine_b6_100g: n(row.vitamine_b6_100g),
-    vitamine_b9_100g: n(row.vitamine_b9_100g),
-    vitamine_e_100g: n(row.vitamine_e_100g),
+    fibres_100g: unknownStaysNull(row.fibres_100g),
+    calcium_100g: unknownStaysNull(row.calcium_100g),
+    fer_100g: unknownStaysNull(row.fer_100g),
+    magnesium_100g: unknownStaysNull(row.magnesium_100g),
+    vitamine_d_100g: unknownStaysNull(row.vitamine_d_100g),
+    vitamine_b12_100g: unknownStaysNull(row.vitamine_b12_100g),
+    omega3_total_100g: unknownStaysNull(row.omega3_total_100g),
+    phytoestrogenes_100mg: unknownStaysNull(row.phytoestrogenes_100mg),
+    potassium_100g: unknownStaysNull(row.potassium_100g),
+    zinc_100g: unknownStaysNull(row.zinc_100g),
+    vitamine_k_100g: unknownStaysNull(row.vitamine_k_100g),
+    vitamine_b6_100g: unknownStaysNull(row.vitamine_b6_100g),
+    vitamine_b9_100g: unknownStaysNull(row.vitamine_b9_100g),
+    vitamine_e_100g: unknownStaysNull(row.vitamine_e_100g),
   }));
 }
 
