@@ -225,6 +225,15 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
         toast.error(`Non enregistré${missing.length > 1 ? "s" : ""} dans le journal : ${missing.join(", ")}`, { duration: 10000 });
       }
 
+      // Aliments absents de la table CIQUAL : enregistrés sans valeurs, jamais estimés.
+      const toComplete = entries.filter((e) => e.estimated).map((e) => String(e.food_name || ""));
+      if (toComplete.length) {
+        toast.warning(
+          `Non reconnu${toComplete.length > 1 ? "s" : ""} dans la table CIQUAL, ajouté${toComplete.length > 1 ? "s" : ""} sans valeurs : ${toComplete.join(", ")}. Remplace-le${toComplete.length > 1 ? "s" : ""} par un aliment proche avec la recherche.`,
+          { duration: 12000 },
+        );
+      }
+
       setSummary({ count: inserted, calories: Math.round(totalCalories) });
       setStep("done");
       toast.success("Repas ajouté au journal !");

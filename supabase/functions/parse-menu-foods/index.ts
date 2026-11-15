@@ -80,8 +80,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Ask GPT to parse menu + give per-100g estimates for every food
-    const sys = `Tu es un nutritionniste. Analyse le menu et identifie TOUS les aliments EXPLICITEMENT mentionnés dans le texte, avec leur portion estimée en grammes. N'INVENTE AUCUN aliment qui n'est pas écrit dans le menu. N'EN OUBLIE AUCUN. Pour chaque aliment, donne aussi des valeurs nutritionnelles ESTIMÉES par 100g (utilisées en fallback). Réponds STRICTEMENT en JSON.`;
+    // Le modèle identifie les aliments et leurs poids ; les valeurs nutritionnelles viennent de CIQUAL.
+    const sys = `Tu es un nutritionniste. Analyse le menu et identifie TOUS les aliments EXPLICITEMENT mentionnés dans le texte, avec leur portion estimée en grammes. N'INVENTE AUCUN aliment qui n'est pas écrit dans le menu. N'EN OUBLIE AUCUN. Ne donne aucune valeur nutritionnelle. Réponds STRICTEMENT en JSON.`;
     const userMsg = `Menu:\n${menu_content}\n\nFormat JSON attendu:
 {
   "meals": [
@@ -90,19 +90,13 @@ Deno.serve(async (req) => {
       "foods": [
         {
           "name": "nom de l'aliment en français, simple (ex: 'flocons d'avoine', 'saumon grillé')",
-          "grams": number,
-          "per_100g": {
-            "calories": number, "proteins": number, "carbs": number, "fats": number, "fibres": number,
-            "calcium": number, "vitamin_d": number, "magnesium": number, "iron": number, "omega3": number,
-            "phytoestrogens": number, "vitamin_b12": number, "potassium": number, "zinc": number,
-            "vitamin_k": number, "vitamin_b6": number, "vitamin_b9": number, "vitamin_e": number
-          }
+          "grams": number
         }
       ]
     }
   ]
 }
-Unités STRICTES: calories=kcal, macros/fibres/oméga-3=g, calcium/magnésium/fer/zinc/potassium/vitamine_e/vitamine_b6=mg, vitamine_d/b12/k/b9=µg, phytoestrogens=mg. Si inconnu, mets 0. NE PAS donner d'oméga-3 en mg.`;
+Ne donne AUCUNE valeur nutritionnelle : elles sont lues ensuite dans la table CIQUAL.`;
 
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -162,12 +156,10 @@ Unités STRICTES: calories=kcal, macros/fibres/oméga-3=g, calcium/magnésium/fe
           console.warn("ciqual lookup failed for", name, e);
         }
 
+        // Aliment introuvable dans CIQUAL : aucune valeur n'est inventée.
+        // Il reste « à compléter » (toutes les valeurs à null, estimated = true).
         if (estimated) {
-          const est = f.per_100g || {};
-          for (const k of NUTRIENT_KEYS) {
-            const v = (est as any)[k];
-            per100[k] = v === null || v === undefined || v === "" ? null : Number(v);
-          }
+          for (const k of NUTRIENT_KEYS) per100[k] = null;
         }
 
         // Sanitize per-100g values (units, ceilings) BEFORE scaling.

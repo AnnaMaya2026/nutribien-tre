@@ -116,6 +116,15 @@ export default function SavedMenusPage() {
         setProgress({ done: inserted, total: entries.length });
       }
 
+      // Aliments absents de la table CIQUAL : enregistrés sans valeurs, jamais estimés.
+      const toComplete = entries.filter((e) => e.estimated).map((e) => String(e.food_name || ""));
+      if (toComplete.length) {
+        toast.warning(
+          `Non reconnu${toComplete.length > 1 ? "s" : ""} dans la table CIQUAL, ajouté${toComplete.length > 1 ? "s" : ""} sans valeurs : ${toComplete.join(", ")}. Remplace-le${toComplete.length > 1 ? "s" : ""} par un aliment proche avec la recherche.`,
+          { duration: 12000 },
+        );
+      }
+
       setSummary({
         count: inserted,
         calories: Math.round(totalCalories),
