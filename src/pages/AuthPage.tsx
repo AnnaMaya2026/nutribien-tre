@@ -11,6 +11,7 @@ import {
 } from "@/lib/onboardingMessages";
 import { calculateCalorieGoal } from "@/lib/calorieGoal";
 import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
+import { birthYearFromAge } from "@/hooks/useProfile";
 
 export default function AuthPage() {
   const { signIn, signUp, user } = useAuth();
@@ -54,6 +55,7 @@ export default function AuthPage() {
           .from("profiles")
           .update({
             age: a.age,
+            birth_year: birthYearFromAge(a.age),
             weight: a.weight,
             height: a.height,
             activity_level: a.activity_level ?? "sedentaire",

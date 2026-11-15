@@ -26,3 +26,15 @@ describe("Objectif calorique : Mifflin-St Jeor et plancher", () => {
     expect(calorieGoalDetails({ height: 165 }).missing).toEqual(["ton poids", "ton âge"]);
   });
 });
+
+import { ageFromBirthYear, birthYearFromAge } from "@/hooks/useProfile";
+
+describe("Âge tiré de l'année de naissance", () => {
+  it("avance tout seul d'une année sur l'autre", () => {
+    expect(birthYearFromAge(55, 2026)).toBe(1971);
+    expect(ageFromBirthYear(1971, 2026)).toBe(55);
+    expect(ageFromBirthYear(1971, 2027)).toBe(56);
+    expect(ageFromBirthYear(null, 2026)).toBeNull();
+    expect(birthYearFromAge(null, 2026)).toBeNull();
+  });
+});
