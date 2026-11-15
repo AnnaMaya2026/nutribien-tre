@@ -564,6 +564,7 @@ export type Database = {
           activity_level: string | null
           age: number | null
           best_streak: number
+          birth_year: number | null
           created_at: string
           current_streak: number
           custom_symptoms: string[] | null
@@ -605,6 +606,7 @@ export type Database = {
           activity_level?: string | null
           age?: number | null
           best_streak?: number
+          birth_year?: number | null
           created_at?: string
           current_streak?: number
           custom_symptoms?: string[] | null
@@ -646,6 +648,7 @@ export type Database = {
           activity_level?: string | null
           age?: number | null
           best_streak?: number
+          birth_year?: number | null
           created_at?: string
           current_streak?: number
           custom_symptoms?: string[] | null
