@@ -26,6 +26,11 @@ interface ScannedProduct {
   carbs_100g: number;
   fats_100g: number;
   fiber_100g: number;
+  /** Sel, sodium, sucres et graisses saturées de l'étiquette, en g pour 100 g ; null = non fourni. */
+  salt_100g: number | null;
+  sodium_100g: number | null;
+  sugars_100g: number | null;
+  saturated_fat_100g: number | null;
   calcium_100g: number | null;
   vitamin_d_100g: number | null;
   magnesium_100g: number | null;
@@ -54,6 +59,10 @@ interface BarcodeScannerProps {
     carbs: number;
     fats: number;
     fibres: number;
+    sel?: number | null;
+    sodium?: number | null;
+    sucres?: number | null;
+    acides_gras_satures?: number | null;
     calcium: number | null;
     vitamin_d: number | null;
     magnesium: number | null;
@@ -154,6 +163,11 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
         carbs_100g: n(nm.carbohydrates_100g),
         fats_100g: n(nm.fat_100g),
         fiber_100g: n(nm.fiber_100g),
+        // Open Food Facts donne ces quatre valeurs en grammes, comme les colonnes du journal.
+        salt_100g: n(nm.salt_100g),
+        sodium_100g: n(nm.sodium_100g) ?? (n(nm.salt_100g) !== null ? Math.round((n(nm.salt_100g)! / 2.54) * 1000) / 1000 : null),
+        sugars_100g: n(nm.sugars_100g),
+        saturated_fat_100g: n(nm["saturated-fat_100g"]),
         calcium_100g: calcium,
         vitamin_d_100g: vitamin_d,
         magnesium_100g: magnesium,
@@ -280,6 +294,10 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
         carbs: Math.round((product.carbs_100g * nutritionGrams) / 100),
         fats: Math.round((product.fats_100g * nutritionGrams) / 100),
         fibres: Math.round((product.fiber_100g * nutritionGrams) / 100),
+        sel: scaleOrNull(product.salt_100g, nutritionGrams / 100, 2),
+        sodium: scaleOrNull(product.sodium_100g, nutritionGrams / 100, 3),
+        sucres: scaleOrNull(product.sugars_100g, nutritionGrams / 100, 1),
+        acides_gras_satures: scaleOrNull(product.saturated_fat_100g, nutritionGrams / 100, 1),
         calcium: scaleOrNull(product.calcium_100g, nutritionGrams / 100),
         vitamin_d: scaleOrNull(product.vitamin_d_100g, nutritionGrams / 100, 1),
         magnesium: scaleOrNull(product.magnesium_100g, nutritionGrams / 100),
@@ -306,6 +324,10 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       carbs: scaled.carbs,
       fats: scaled.fats,
       fibres: scaled.fibres,
+      sel: scaled.sel,
+      sodium: scaled.sodium,
+      sucres: scaled.sucres,
+      acides_gras_satures: scaled.acides_gras_satures,
       calcium: scaled.calcium,
       vitamin_d: scaled.vitamin_d,
       magnesium: scaled.magnesium,
