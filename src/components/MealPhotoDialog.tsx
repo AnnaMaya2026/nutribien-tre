@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Image as ImageIcon, X, Plus, Loader2, Check, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -7,11 +7,17 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useSelectedDate } from "@/hooks/useSelectedDate";
 import { useQueryClient } from "@tanstack/react-query";
+import { matchCiqualFood, scaleCiqual, type CiqualFood } from "@/lib/ciqual";
 
 interface MealItem {
   name: string;
   grams: number;
+  /** Confiance de l'analyse photo sur le poids. */
+  confidence?: "haute" | "moyenne" | "basse";
 }
+
+const NUTRIENT_COLUMNS = ["calories", "proteins", "carbs", "fats", "fibres", "calcium", "vitamin_d", "magnesium", "iron", "omega3",
+  "vitamin_b12", "phytoestrogens", "potassium", "zinc", "vitamin_k", "vitamin_b6", "vitamin_b9", "vitamin_e"] as const;
 
 interface MealPhotoDialogProps {
   open: boolean;
@@ -77,6 +83,22 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
   const [newGrams, setNewGrams] = useState("");
   const [mealType, setMealType] = useState<string>(guessMealType());
   const [summary, setSummary] = useState<{ count: number; calories: number } | null>(null);
+  // Aliment CIQUAL retenu pour chaque nom (moteur unique) : null = non reconnu, absent = recherche en cours.
+  const [matches, setMatches] = useState<Record<string, CiqualFood | null>>({});
+  useEffect(() => {
+    const pending = [...new Set(items.map((it) => it.name))].filter((name) => !(name in matches));
+    if (pending.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const found: Record<string, CiqualFood | null> = {};
+      for (const name of pending) {
+        try { found[name] = (await matchCiqualFood(name))?.food ?? null; } catch { found[name] = null; }
+      }
+      if (!cancelled) setMatches((prev) => ({ ...prev, ...found }));
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items]);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -180,18 +202,14 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
     if (!user) return;
     setStep("saving");
     try {
-      const mealLabel = MEAL_LABELS[mealType] || "Repas";
-      const menuContent = `${mealLabel}:\n${items.map((it) => `- ${it.name} (${it.grams}g)`).join("\n")}`;
-
-      const { data, error } = await supabase.functions.invoke("parse-menu-foods", {
-        body: { menu_content: menuContent },
-      });
-      if (error) throw error;
-      const entries: any[] = (data?.entries as any[]) || [];
-      if (entries.length === 0) {
-        toast.error("Impossible d'estimer les nutriments. Réessaie.");
-        setStep("review");
-        return;
+      // Les valeurs viennent de l'aliment CIQUAL affiché à l'écran : ce qui est montré est ce qui est compté.
+      const entries: any[] = [];
+      for (const it of items) {
+        const food = it.name in matches ? matches[it.name] : (await matchCiqualFood(it.name).catch(() => null))?.food ?? null;
+        const values = food
+          ? scaleCiqual(food, it.grams)
+          : Object.fromEntries(NUTRIENT_COLUMNS.map((k) => [k, null]));
+        entries.push({ food_name: it.name, portion_size: it.grams, estimated: !food, ...values });
       }
 
       const loggedAt = selectedDateStr || todayStr;
@@ -345,7 +363,17 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
                       key={`${it.name}-${i}`}
                       className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2"
                     >
-                      <span className="text-sm text-foreground flex-1 truncate">{it.name}</span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-sm text-foreground truncate">{it.name}</span>
+                        <span className={`block text-[13px] truncate ${matches[it.name] === null ? "text-destructive" : "text-muted-foreground"}`}>
+                          {!(it.name in matches)
+                            ? "Recherche dans la table CIQUAL…"
+                            : matches[it.name]
+                              ? `Compté comme : ${matches[it.name]!.nom}`
+                              : "Non reconnu : sera ajouté sans valeurs"}
+                          {it.confidence === "basse" ? " · poids incertain, à vérifier" : ""}
+                        </span>
+                      </span>
                       <Input
                         type="number"
                         min={1}

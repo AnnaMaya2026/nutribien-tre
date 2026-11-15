@@ -36,11 +36,13 @@ RÈGLES:
 - Nom en français, simple (ex: "poulet grillé", "riz basmati", "haricots verts").
 - Regroupe intelligemment (ex: une salade composée → liste les ingrédients principaux).
 - N'inclus PAS l'assiette, les couverts, les verres.
+- Matières grasses : si un aliment est visiblement frit, poêlé, rôti, nappé de sauce ou assaisonné, ajoute une ligne séparée pour la matière grasse (ex: "huile d'olive", "beurre", "vinaigrette") avec une quantité prudente. Si rien ne l'indique, n'en ajoute pas.
+- Indique pour chaque aliment ta confiance sur le poids : "haute" (portion bien visible), "moyenne", ou "basse" (aliment caché, en sauce, râpé, mélangé).
 - Si l'image est floue, sombre, ou ne montre pas de repas: renvoie foods=[] et remplis "issue".
 
 Réponds STRICTEMENT en JSON valide:
 {
-  "foods": [{ "name": "nom", "grams": number }, ...],
+  "foods": [{ "name": "nom", "grams": number, "confidence": "haute" | "moyenne" | "basse" }, ...],
   "issue": null | "blurry" | "no_food" | "too_dark"
 }`;
 
@@ -90,6 +92,7 @@ Réponds STRICTEMENT en JSON valide:
           .map((f: any) => ({
             name: typeof f?.name === "string" ? f.name.trim() : "",
             grams: Math.max(1, Math.round(Number(f?.grams) || 0)),
+            confidence: f?.confidence === "haute" || f?.confidence === "basse" ? f.confidence : "moyenne",
           }))
           .filter((f) => f.name.length > 0 && f.name.length < 80 && f.grams > 0)
           .slice(0, 20)
