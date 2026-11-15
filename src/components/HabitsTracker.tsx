@@ -164,7 +164,7 @@ function HydrationCard({ habit }: { habit: UserHabit }) {
       if (!sessionStorage.getItem(key)) {
         sessionStorage.setItem(key, "1");
         toast.warning(
-          "💧 Pensez à vous hydrater ! Une bonne hydratation aide à réduire les bouffées de chaleur et la fatigue.",
+          "💧 Pense à t'hydrater ! Une bonne hydratation aide à réduire les bouffées de chaleur et la fatigue.",
           { duration: 6000 }
         );
       }
@@ -566,7 +566,7 @@ function HabitCard({ habit }: { habit: UserHabit }) {
         <>
           {count < goal && (
             <p className="text-[13px] text-primary mb-2">
-              🔵 {count}/{goal} {habit.unit} — continuez !
+              🔵 {count}/{goal} {habit.unit} — continue !
             </p>
           )}
           {count === goal && (
@@ -576,7 +576,7 @@ function HabitCard({ habit }: { habit: UserHabit }) {
           )}
           {count > goal && (
             <p className="text-[13px] text-progress-high mb-2">
-              🟢 Super ! Vous dépassez votre objectif 🎉
+              🟢 Super ! Tu dépasses ton objectif 🎉
             </p>
           )}
         </>
@@ -736,7 +736,7 @@ export function HabitsTracker() {
       <div className="mb-4">
         <h2 className="text-lg font-bold text-foreground">🚫 Habitudes à surveiller</h2>
         <p className="text-xs text-muted-foreground">
-          Suivez vos habitudes qui peuvent aggraver vos symptômes
+          Suis tes habitudes qui peuvent aggraver tes symptômes
         </p>
       </div>
 

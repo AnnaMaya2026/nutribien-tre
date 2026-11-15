@@ -244,7 +244,7 @@ export default function ProfilePage() {
             <Input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Votre prénom"
+              placeholder="Ton prénom"
               className="bg-background"
             />
           </Field>
@@ -281,7 +281,7 @@ export default function ProfilePage() {
               className="bg-background"
             />
             <p className="text-xs text-muted-foreground">
-              La mise à jour du poids recalcule vos objectifs caloriques et protéiques.
+              La mise à jour du poids recalcule tes objectifs caloriques et protéiques.
             </p>
           </Field>
 
@@ -305,7 +305,7 @@ export default function ProfilePage() {
             </div>
           </Field>
 
-          <Field label="Votre objectif">
+          <Field label="Ton objectif">
             <div className="grid grid-cols-2 gap-2">
               {OBJECTIVES.map((obj) => (
                 <button
@@ -348,10 +348,10 @@ export default function ProfilePage() {
         {/* Objectifs */}
         <Section title="Objectifs (calculés automatiquement)">
           <div className="bg-primary/10 border border-primary/20 rounded-xl p-3">
-            <div className="text-xs text-muted-foreground mb-0.5">Votre objectif calorique</div>
+            <div className="text-xs text-muted-foreground mb-0.5">Ton objectif calorique</div>
             <div className="text-2xl font-bold text-foreground">{computedCalorieGoal} kcal/jour</div>
             <div className="text-[13px] text-muted-foreground mt-1 leading-relaxed">
-              Basé sur votre métabolisme de base de <strong>{computedBMR} kcal</strong> ×
+              Basé sur ton métabolisme de base de <strong>{computedBMR} kcal</strong> ×
               niveau d'activité <strong>{activityInfo.label.toLowerCase()}</strong> (×{activityInfo.factor})
               {objective !== "maintenir" && (
                 <> · objectif <strong>{objectiveInfo.label.toLowerCase()}</strong></>
@@ -395,7 +395,7 @@ export default function ProfilePage() {
             Recalculer mes objectifs
           </Button>
           <p className="text-[13px] text-muted-foreground">
-            ⚠️ Ces recommandations sont indicatives. Consultez votre médecin pour un suivi personnalisé.
+            ⚠️ Ces recommandations sont indicatives. Consulte ton médecin pour un suivi personnalisé.
           </p>
         </Section>
 
@@ -492,10 +492,10 @@ export default function ProfilePage() {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Supprimer votre compte ?</AlertDialogTitle>
+                <AlertDialogTitle>Supprimer ton compte ?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Êtes-vous sûre de vouloir supprimer votre compte ? Cette action
-                  est irréversible et supprimera toutes vos données.
+                  Es-tu sûre de vouloir supprimer ton compte ? Cette action
+                  est irréversible et supprimera toutes tes données.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -520,7 +520,7 @@ export default function ProfilePage() {
           >
             <span className="text-sm font-semibold text-foreground">💊 Mes compléments</span>
             <span className="block text-xs text-muted-foreground">
-              Ajoutez-les par photo de l'étiquette et cochez vos prises
+              Ajoute-les par photo de l'étiquette et coche tes prises
             </span>
           </button>
         </section>

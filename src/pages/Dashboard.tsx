@@ -165,7 +165,7 @@ function ProgressBar({
           {supplementSources && supplementSources.length > 0 && (
             <> Y contribuent : {supplementSources.map((s) => `${s.nom} (+${fmt(s.amount)}${supplementUnit || unit})`).join(", ")}.</>
           )}
-          {" "}Vous pouvez espacer vos prises ; ponctuellement, ce n'est pas dangereux.
+          {" "}Tu peux espacer tes prises ; ponctuellement, ce n'est pas dangereux.
         </p>
       )}
       {hint && !aberrant && (
@@ -448,9 +448,9 @@ export default function Dashboard() {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Êtes-vous sûre de vouloir vous déconnecter ?</AlertDialogTitle>
+              <AlertDialogTitle>Es-tu sûre de vouloir te déconnecter ?</AlertDialogTitle>
               <AlertDialogDescription>
-                Vous devrez vous reconnecter pour accéder à votre profil et à vos données.
+                Tu devras te reconnecter pour accéder à ton profil et à tes données.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -578,7 +578,7 @@ export default function Dashboard() {
         <p className="mt-3 text-xs text-muted-foreground text-center">
           Protéines: {Math.round(totals.proteins + supMacros.proteins)}g / {proteinGoal}g
           {typeof p?.weight === "number" && Number.isFinite(p.weight) && p.weight > 0 && (
-            <> ({PROTEIN_G_PER_KG.toLocaleString("fr-FR")} g par kg de votre poids de {p.weight.toLocaleString("fr-FR")} kg)</>
+            <> ({PROTEIN_G_PER_KG.toLocaleString("fr-FR")} g par kg de ton poids de {p.weight.toLocaleString("fr-FR")} kg)</>
           )}
           {supMacros.proteins > 0 && (
             <> — dont <span className="text-amber-600 dark:text-amber-400">{Math.round(supMacros.proteins)}g de compléments</span> ({Math.round(totals.proteins)}g par l'alimentation
@@ -587,11 +587,11 @@ export default function Dashboard() {
         </p>
         {totals.proteins + supMacros.proteins < proteinGoal && (
           <p className="mt-2 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-            ⚠️ Apport protéique insuffisant pour préserver votre masse musculaire. Objectif : {proteinGoal}g de protéines aujourd'hui.
+            ⚠️ Apport protéique insuffisant pour préserver ta masse musculaire. Objectif : {proteinGoal}g de protéines aujourd'hui.
           </p>
         )}
         <p className="mt-2 text-[13px] text-muted-foreground text-center">
-          ⚠️ Ces recommandations sont indicatives. Consultez votre médecin pour un suivi personnalisé.
+          ⚠️ Ces recommandations sont indicatives. Consulte ton médecin pour un suivi personnalisé.
         </p>
         <button
           onClick={() => navigate("/ration")}
@@ -654,7 +654,7 @@ export default function Dashboard() {
               </div>
               <p className="mt-1 text-xs text-muted-foreground">{Math.min(antioxidantScore, 5)}/5 portions fruits & légumes</p>
               {antioxidantScore < 3 && (
-                <p className="mt-1 text-xs text-muted-foreground">Ajoutez des fruits rouges ou légumes colorés pour booster vos antioxydants !</p>
+                <p className="mt-1 text-xs text-muted-foreground">Ajoute des fruits rouges ou légumes colorés pour booster tes antioxydants !</p>
               )}
             </div>
           </div>

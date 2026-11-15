@@ -62,8 +62,8 @@ export default function ProfileSetup() {
   const steps = [
     // Step 0: Display name
     <div key="name" className="space-y-6 animate-fade-in">
-      <h2 className="text-xl font-semibold text-foreground">Comment souhaitez-vous être appelée ?</h2>
-      <p className="text-muted-foreground text-sm">Votre prénom sera utilisé dans toute l'application</p>
+      <h2 className="text-xl font-semibold text-foreground">Comment souhaites-tu être appelée ?</h2>
+      <p className="text-muted-foreground text-sm">Ton prénom sera utilisé dans toute l'application</p>
       <div>
         <label className="text-sm font-medium text-foreground mb-1 block">Prénom affiché</label>
         <Input
@@ -79,7 +79,7 @@ export default function ProfileSetup() {
     // Step 1: Menopause stage
     <div key="stage" className="space-y-6 animate-fade-in">
       <h2 className="text-xl font-semibold text-foreground">Étape de ménopause</h2>
-      <p className="text-muted-foreground text-sm">Pour adapter vos recommandations</p>
+      <p className="text-muted-foreground text-sm">Pour adapter tes recommandations</p>
       <div className="space-y-3">
         {MENOPAUSE_STAGES.map((s) => (
           <button
@@ -99,8 +99,8 @@ export default function ProfileSetup() {
 
     // Step 2: Symptoms
     <div key="symptoms" className="space-y-6 animate-fade-in">
-      <h2 className="text-xl font-semibold text-foreground">Vos symptômes principaux</h2>
-      <p className="text-muted-foreground text-sm">Sélectionnez ceux qui vous concernent</p>
+      <h2 className="text-xl font-semibold text-foreground">Tes symptômes principaux</h2>
+      <p className="text-muted-foreground text-sm">Sélectionne ceux qui te concernent</p>
       <SymptomChips selected={symptoms} onToggle={toggleSymptom} />
     </div>,
 
@@ -125,7 +125,7 @@ export default function ProfileSetup() {
         ))}
       </div>
       <div>
-        <label className="text-sm font-medium text-foreground mb-1 block">Autre (précisez)</label>
+        <label className="text-sm font-medium text-foreground mb-1 block">Autre (précise)</label>
         <Input
           type="text"
           placeholder="Ex: sans soja, halal, casher…"
@@ -159,9 +159,9 @@ export default function ProfileSetup() {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Êtes-vous sûre de vouloir vous déconnecter ?</AlertDialogTitle>
+              <AlertDialogTitle>Es-tu sûre de vouloir te déconnecter ?</AlertDialogTitle>
               <AlertDialogDescription>
-                Vous devrez vous reconnecter pour accéder à votre profil et à vos données.
+                Tu devras te reconnecter pour accéder à ton profil et à tes données.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

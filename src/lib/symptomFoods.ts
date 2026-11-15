@@ -14,13 +14,13 @@ export const SYMPTOM_FOOD_MAP: Record<string, {
   fatigue: {
     label: "Fatigue",
     nutrients: ["fer", "vitamine B12", "magnésium"],
-    description: "Augmentez votre apport en fer, B12 et magnésium",
+    description: "Augmente ton apport en fer, B12 et magnésium",
     foods: ["Épinards", "Lentilles", "Sardines", "Amandes", "Quinoa"],
   },
   insomnie: {
     label: "Insomnie",
     nutrients: ["magnésium", "tryptophane"],
-    description: "Favorisez le magnésium et le tryptophane",
+    description: "Favorise le magnésium et le tryptophane",
     foods: ["Banane", "Amandes", "Lait chaud", "Graines de citrouille", "Noix"],
   },
   anxiete: {
@@ -44,13 +44,13 @@ export const SYMPTOM_FOOD_MAP: Record<string, {
   sautes_humeur: {
     label: "Sautes d'humeur",
     nutrients: ["oméga-3", "magnésium", "vitamine B6"],
-    description: "Stabilisez votre humeur avec oméga-3 et magnésium",
+    description: "Stabilise ton humeur avec oméga-3 et magnésium",
     foods: ["Saumon", "Banane", "Amandes", "Avocat", "Chocolat noir"],
   },
   prise_de_poids: {
     label: "Prise de poids",
     nutrients: ["fibres", "protéines"],
-    description: "Privilégiez fibres et protéines pour la satiété",
+    description: "Privilégie fibres et protéines pour la satiété",
     foods: ["Lentilles", "Poulet", "Brocoli", "Quinoa", "Fromage blanc"],
   },
   secheresse_cutanee: {
@@ -80,7 +80,7 @@ export const SYMPTOM_FOOD_MAP: Record<string, {
   ballonnements: {
     label: "Ballonnements",
     nutrients: ["probiotiques", "fibres douces"],
-    description: "Privilégiez les fibres douces et les probiotiques",
+    description: "Privilégie les fibres douces et les probiotiques",
     foods: ["Yaourt nature", "Gingembre", "Fenouil", "Banane", "Riz"],
   },
   irritabilite: {
@@ -92,7 +92,7 @@ export const SYMPTOM_FOOD_MAP: Record<string, {
   deprime: {
     label: "Déprime / mélancolie",
     nutrients: ["oméga-3", "vitamine D", "tryptophane"],
-    description: "Boostez votre humeur avec oméga-3 et vitamine D",
+    description: "Booste ton humeur avec oméga-3 et vitamine D",
     foods: ["Saumon", "Noix", "Œufs", "Banane", "Chocolat noir"],
   },
   transpiration_nocturne: {

@@ -168,7 +168,7 @@ export default function SavedMenusPage() {
           <div className="text-center py-12 text-sm text-muted-foreground">
             Aucun menu sauvegardé pour l'instant.
             <br />
-            Demandez à Sophie un menu, puis cliquez sur "Sauvegarder ce menu".
+            Demande à Sophie un menu, puis clique sur "Sauvegarder ce menu".
           </div>
         ) : (
           menus.map((menu) => (

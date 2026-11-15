@@ -224,7 +224,7 @@ export default function SupplementsPage() {
       <DateSelector />
 
       <p className="text-sm text-muted-foreground my-3">
-        Cochez ce que vous avez pris ce jour-là — vous pouvez revenir sur n'importe quelle journée passée.
+        Coche ce que tu as pris ce jour-là — tu peux revenir sur n'importe quelle journée passée.
         Les compléments marqués « quotidien » sont cochés d'avance.
       </p>
 
@@ -233,14 +233,14 @@ export default function SupplementsPage() {
         Ajouter par photo de l'étiquette
       </Button>
       <p className="text-[13px] text-muted-foreground text-center mb-5">
-        Vous pourrez tout vérifier et corriger avant enregistrement, ou saisir à la main.
+        Tu pourras tout vérifier et corriger avant enregistrement, ou saisir à la main.
       </p>
 
       {isLoading && <p className="text-sm text-muted-foreground">Chargement…</p>}
 
       {!isLoading && supplements.length === 0 && (
         <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Aucun complément pour l'instant. Commencez par photographier une étiquette.
+          Aucun complément pour l'instant. Commence par photographier une étiquette.
         </div>
       )}
 

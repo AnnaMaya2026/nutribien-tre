@@ -90,7 +90,7 @@ function DailyRating({
     <div className="bg-card rounded-2xl p-4 card-soft mb-4 animate-fade-in">
       <h3 className="text-sm font-semibold text-foreground mb-1">🩺 Bilan du jour</h3>
       <p className="text-[13px] text-muted-foreground mb-3">
-        Évaluez chaque symptôme de 1 (léger) à 10 (très intense)
+        Évalue chaque symptôme de 1 (léger) à 10 (très intense)
       </p>
 
       {/* Active symptoms with sliders */}
@@ -340,7 +340,7 @@ function CorrelationAnalysis({
     const withAction = overlap.filter((point) => point.action > 0);
     const withoutAction = overlap.filter((point) => point.action === 0);
     if (overlap.length < 7 || withAction.length < 2 || withoutAction.length < 2) {
-      return "Continuez le suivi quelques jours pour voir apparaître les corrélations 💪";
+      return "Continue le suivi quelques jours pour voir apparaître les corrélations 💪";
     }
 
     const average = (points: typeof overlap) => points.reduce((sum, point) => sum + Number(point.symptom), 0) / points.length;
@@ -704,7 +704,7 @@ export default function SymptomHistoryPage() {
           Personnaliser
         </button>
       </div>
-      <p className="text-muted-foreground text-sm mb-4">Suivez et évaluez vos symptômes au quotidien</p>
+      <p className="text-muted-foreground text-sm mb-4">Suis et évalue tes symptômes au quotidien</p>
 
       <CustomizeSymptomsModal open={showCustomize} onOpenChange={setShowCustomize} />
 
@@ -856,7 +856,7 @@ export default function SymptomHistoryPage() {
             Aucune donnée pour cette période.
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Remplissez le bilan du jour ci-dessus pour voir les tendances.
+            Remplis le bilan du jour ci-dessus pour voir les tendances.
           </p>
         </div>
       )}

@@ -55,7 +55,7 @@ export default function DateSelector({ showBanner = true }: { showBanner?: boole
           onClick={() => setSelectedDate(new Date())}
           className="w-full mb-3 px-4 py-2.5 rounded-xl bg-pink-deep/10 border border-pink-deep/20 text-left text-sm text-foreground hover:bg-pink-deep/15 transition-colors"
         >
-          📅 Vous consultez le {selectedDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+          📅 Tu consultes le {selectedDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
           <span className="block text-pink-deep font-semibold mt-0.5">Retour à aujourd'hui →</span>
         </button>
       )}

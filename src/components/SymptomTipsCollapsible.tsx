@@ -3,7 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { SYMPTOM_TIPS, TIPS_DISCLAIMER } from "@/lib/symptomTips";
 
 const GENERIC_TIPS = [
-  "Consultez Sophie pour des conseils personnalisés sur ce symptôme.",
+  "Consulte Sophie pour des conseils personnalisés sur ce symptôme.",
 ];
 
 export function SymptomTipsCollapsible({ symptomKey }: { symptomKey: string }) {

@@ -28,10 +28,10 @@ export default function ForgotPasswordDialog({
     });
     setLoading(false);
     if (error) {
-      setError("Email non trouvé. Vérifiez l'adresse saisie.");
+      setError("Email non trouvé. Vérifie l'adresse saisie.");
     } else {
       setSuccess(
-        `Un email de réinitialisation a été envoyé à ${email}. Vérifiez vos spams si nécessaire.`
+        `Un email de réinitialisation a été envoyé à ${email}. Vérifie tes spams si nécessaire.`
       );
     }
   };
@@ -40,9 +40,9 @@ export default function ForgotPasswordDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Réinitialiser votre mot de passe</DialogTitle>
+          <DialogTitle>Réinitialiser ton mot de passe</DialogTitle>
           <DialogDescription>
-            Entrez votre adresse email et nous vous enverrons un lien de réinitialisation.
+            Entre ton adresse email et nous t'enverrons un lien de réinitialisation.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">

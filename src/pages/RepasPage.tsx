@@ -46,7 +46,7 @@ function FoodCard({ food, gapsCovered }: { food: CiqualFood; gapsCovered?: strin
         <div className="flex gap-1.5 mb-2 flex-wrap">
           {gapsCovered.map((g) => (
             <span key={g} className="text-[13px] px-2 py-0.5 rounded-full bg-warning/20 text-warning font-medium border border-warning/30">
-              Couvre votre manque en {g} ✓
+              Couvre ton manque en {g} ✓
             </span>
           ))}
         </div>
@@ -230,7 +230,7 @@ export default function RepasPage() {
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
       <h1 className="text-2xl font-bold text-foreground mb-1">Suggestions pour toi</h1>
-      <p className="text-muted-foreground text-sm mb-4">Personnalisées selon vos besoins du jour</p>
+      <p className="text-muted-foreground text-sm mb-4">Personnalisées selon tes besoins du jour</p>
 
       <Tabs defaultValue="nutrients" className="w-full">
         <TabsList className="w-full mb-4 h-auto flex-wrap min-h-12 p-1">
@@ -264,7 +264,7 @@ export default function RepasPage() {
 
           {recipeQuery.trim().length < 2 && (
             <p className="text-xs text-muted-foreground mb-3 italic">
-              💡 Tapez un mot-clé ou parcourez nos recettes adaptées à la ménopause
+              💡 Tape un mot-clé ou parcours nos recettes adaptées à la ménopause
             </p>
           )}
 
@@ -281,7 +281,7 @@ export default function RepasPage() {
               <div className="bg-card rounded-2xl p-4 card-soft mb-4">
                 <div className="flex items-center gap-2 mb-3">
                   <AlertTriangle className="w-4 h-4 text-warning" />
-                  <h3 className="text-sm font-semibold text-foreground">Vos manques aujourd'hui (&lt;50%)</h3>
+                  <h3 className="text-sm font-semibold text-foreground">Tes manques aujourd'hui (&lt;50%)</h3>
                 </div>
                 <div className="space-y-2">
                   {gaps.map((gap) => (
@@ -298,10 +298,10 @@ export default function RepasPage() {
                 </div>
               </div>
 
-              <h3 className="text-sm font-semibold text-foreground mb-3">Aliments suggérés pour combler vos manques</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Aliments suggérés pour combler tes manques</h3>
               {restrictionLabels.length > 0 && (
                 <p className="text-[13px] text-foreground bg-primary/10 rounded-md px-2 py-1 mb-3">
-                  ✅ Suggestions filtrées selon votre profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
+                  ✅ Suggestions filtrées selon ton profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
                 </p>
               )}
 
@@ -321,7 +321,7 @@ export default function RepasPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="text-5xl mb-4">✅</div>
               <p className="text-sm text-foreground font-medium mb-1">Bravo !</p>
-              <p className="text-xs text-muted-foreground">Vos apports nutritionnels sont bons aujourd'hui</p>
+              <p className="text-xs text-muted-foreground">Tes apports nutritionnels sont bons aujourd'hui</p>
             </div>
           )}
         </TabsContent>

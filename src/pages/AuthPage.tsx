@@ -90,7 +90,7 @@ export default function AuthPage() {
     if (error) {
       setError(error.message);
     } else if (!isLogin) {
-      setSuccess("Vérifiez votre e-mail pour confirmer votre inscription !");
+      setSuccess("Vérifie ton e-mail pour confirmer ton inscription !");
     }
     setLoading(false);
   };
@@ -110,7 +110,7 @@ export default function AuthPage() {
           <p className="text-muted-foreground mt-2 text-sm">
             {hasOnboardingAnswers && !isLogin
               ? "Tes réponses sont prêtes — encore une étape."
-              : "Votre nutrition adaptée à la ménopause"}
+              : "Ta nutrition adaptée à la ménopause"}
           </p>
         </div>
 

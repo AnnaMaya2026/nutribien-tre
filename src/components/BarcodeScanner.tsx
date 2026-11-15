@@ -106,7 +106,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
       const data = await res.json();
       if (data.status !== 1 || !data.product) {
-        toast.error("Produit non trouvé dans la base de données. Essayez la recherche manuelle.");
+        toast.error("Produit non trouvé dans la base de données. Essaie la recherche manuelle.");
         setShowScanner(false);
         return;
       }
@@ -195,7 +195,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       });
       setGrams(getDefaultPortion(productName));
     } catch {
-      toast.error("Erreur de connexion, réessayez");
+      toast.error("Erreur de connexion, réessaie");
       setShowScanner(false);
     } finally {
       setLoading(false);
@@ -285,7 +285,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
   const handleManualSubmit = () => {
     const code = manualCode.trim();
     if (!code || code.length < 8) {
-      toast.error("Veuillez saisir un code-barres valide (8-13 chiffres)");
+      toast.error("Saisis un code-barres valide (8-13 chiffres)");
       return;
     }
     setManualMode(false);
@@ -395,7 +395,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                 </div>
                 {scanning && (
                   <p className="text-xs text-muted-foreground text-center mt-3 animate-pulse">
-                    📷 Placez le code-barres dans le cadre...
+                    📷 Place le code-barres dans le cadre...
                   </p>
                 )}
                 <button
@@ -415,7 +415,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
             {/* Manual input */}
             {!product && !loading && manualMode && (
               <div className="p-4 space-y-3">
-                <p className="text-xs text-muted-foreground">Entrez le code-barres (8 à 13 chiffres) :</p>
+                <p className="text-xs text-muted-foreground">Entre le code-barres (8 à 13 chiffres) :</p>
                 <Input
                   type="text"
                   inputMode="numeric"
@@ -478,10 +478,10 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                 {product.calories_100g === 0 && (
                   <div className="rounded-xl border border-orange-500/40 bg-orange-500/10 p-3 space-y-2">
                     <p className="text-xs text-orange-700 font-medium">
-                      ⚠️ Données nutritionnelles incomplètes pour ce produit. Vérifiez l'étiquette.
+                      ⚠️ Données nutritionnelles incomplètes pour ce produit. Vérifie l'étiquette.
                     </p>
                     <p className="text-[13px] text-muted-foreground">
-                      Saisissez les calories pour 100{unit} manuellement, ou recherchez ce produit
+                      Saisis les calories pour 100{unit} manuellement, ou recherche ce produit
                       directement dans la base CIQUAL via la recherche d'aliments.
                     </p>
                     <div className="flex items-center gap-2">
@@ -623,7 +623,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                   className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <Plus className="w-4 h-4" />
-                  {product.calories_100g === 0 ? "Saisissez les calories pour ajouter" : "Ajouter au journal"}
+                  {product.calories_100g === 0 ? "Saisis les calories pour ajouter" : "Ajouter au journal"}
                 </button>
               </div>
             )}

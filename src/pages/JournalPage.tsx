@@ -97,7 +97,7 @@ export default function JournalPage() {
         if (res.length === 0) setSearchError("Aucun résultat trouvé");
       } catch {
         setResults([]);
-        setSearchError("Erreur de connexion, réessayez");
+        setSearchError("Erreur de connexion, réessaie");
       } finally {
         setSearching(false);
       }
@@ -363,7 +363,7 @@ export default function JournalPage() {
   return (
     <div className="pb-24 px-4 pt-6 bg-background min-h-screen">
       <h1 className="text-2xl font-bold text-foreground mb-1">Journal alimentaire</h1>
-      <p className="text-muted-foreground text-sm mb-3">Ajoutez vos repas du jour</p>
+      <p className="text-muted-foreground text-sm mb-3">Ajoute tes repas du jour</p>
 
       {/* Date selector (synchronized with dashboard) */}
       <DateSelector />
@@ -371,7 +371,7 @@ export default function JournalPage() {
       {/* Future date message */}
       {isFuture && (
         <div className="w-full mb-3 px-4 py-3 rounded-xl bg-muted text-center text-sm text-muted-foreground">
-          Vous ne pouvez pas saisir des repas pour une date future
+          Tu ne peux pas saisir des repas pour une date future
         </div>
       )}
 
@@ -654,7 +654,7 @@ export default function JournalPage() {
                               return w ? (
                                 <Badge
                                   className="bg-destructive/15 text-destructive border-destructive/30 text-[13px] px-1.5 py-0"
-                                  title={`Incompatible avec votre régime: ${w.label}`}
+                                  title={`Incompatible avec ton régime: ${w.label}`}
                                 >
                                   ⚠️ Contient {w.label.toLowerCase().replace(/^sans /, "")}
                                 </Badge>
@@ -734,7 +734,7 @@ export default function JournalPage() {
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="text-6xl mb-4">🥗</div>
           <p className="text-sm text-muted-foreground mb-2 max-w-[240px]">
-            Commencez à enregistrer vos repas pour suivre votre nutrition
+            Commence à enregistrer tes repas pour suivre ta nutrition
           </p>
         </div>
       ) : null}
@@ -991,7 +991,7 @@ export default function JournalPage() {
         <div className="fixed inset-0 z-[60] bg-foreground/50 flex items-end sm:items-center justify-center" onClick={() => setPhotoChoiceOpen(false)}>
           <div className="bg-background w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-4 pb-[calc(96px+env(safe-area-inset-bottom))] sm:pb-4 space-y-2" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-base font-bold text-foreground">Que voulez-vous photographier ?</h2>
+              <h2 className="text-base font-bold text-foreground">Que veux-tu photographier ?</h2>
               <button onClick={() => setPhotoChoiceOpen(false)} aria-label="Fermer" className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center"><X className="w-5 h-5" /></button>
             </div>
             {[

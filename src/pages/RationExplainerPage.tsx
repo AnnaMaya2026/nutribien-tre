@@ -246,7 +246,7 @@ export default function RationExplainerPage() {
         </section>
 
         <p className="text-[13px] text-muted-foreground text-center px-4">
-          ⚠️ Ces recommandations sont indicatives. Consultez votre médecin pour un suivi personnalisé.
+          ⚠️ Ces recommandations sont indicatives. Consulte ton médecin pour un suivi personnalisé.
         </p>
 
         {/* Activity factors reference */}

@@ -40,7 +40,7 @@ export default function FeedbackButton() {
     setSending(false);
     if (error) {
       console.error("Feedback error:", error);
-      toast.error("Une erreur est survenue. Réessayez dans quelques instants.");
+      toast.error("Une erreur est survenue. Réessaie dans quelques instants.");
       return;
     }
     const saved = (Array.isArray(data) ? data[0] : data) as { created_at?: string } | null;
@@ -60,7 +60,7 @@ export default function FeedbackButton() {
     } catch (e) {
     }
     toast.success(
-      "Merci pour votre retour ! Votre avis nous aide à améliorer NutriMéno 💗"
+      "Merci pour ton retour ! Ton avis nous aide à améliorer NutriMéno 💗"
     );
     setTimeout(() => {
       setOpen(false);
@@ -92,7 +92,7 @@ export default function FeedbackButton() {
           >
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-base font-bold text-foreground">
-                Votre avis nous aide à améliorer NutriMéno 💗
+                Ton avis nous aide à améliorer NutriMéno 💗
               </h3>
               <button onClick={() => setOpen(false)} className="text-muted-foreground p-1">
                 <X className="w-5 h-5" />
@@ -145,7 +145,7 @@ export default function FeedbackButton() {
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Décrivez votre retour..."
+                placeholder="Décris ton retour..."
                 className="w-full h-24 bg-muted rounded-lg p-3 text-base text-foreground placeholder:text-muted-foreground resize-none border border-border focus:outline-none focus:ring-2 focus:ring-primary/30"
                 style={{ fontSize: "16px" }}
               />

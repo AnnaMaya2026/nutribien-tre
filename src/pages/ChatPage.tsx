@@ -319,7 +319,7 @@ export default function ChatPage() {
       console.error("Erreur réelle du chat nutritionniste:", e, { userMessage: trimmedInput });
       const errorMsg: Message = {
         id: Date.now() + 1,
-        text: "Désolée, je suis momentanément indisponible. Réessayez dans quelques instants.",
+        text: "Désolée, je suis momentanément indisponible. Réessaie dans quelques instants.",
         from: "ai",
       };
       setMessages((prev) => [...prev, errorMsg]);

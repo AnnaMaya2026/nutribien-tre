@@ -62,7 +62,7 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
       }
 
       if (!data?.foods?.length) {
-        toast.error("Je n'ai pas compris, réessayez");
+        toast.error("Je n'ai pas compris, réessaie");
         setState("idle");
         return;
       }
@@ -96,7 +96,7 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
           }
 
           if (!results || results.length === 0) {
-            toast.error(`"${item.name}" non trouvé, recherchez manuellement`);
+            toast.error(`"${item.name}" non trouvé, recherche manuellement`);
             continue;
           }
 
@@ -219,7 +219,7 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
       if (finalText.length > 0) {
         processTranscript(finalText);
       } else {
-        toast.error("Je n'ai pas compris, réessayez");
+        toast.error("Je n'ai pas compris, réessaie");
         setState("idle");
       }
     };
@@ -248,7 +248,7 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
             ? "bg-muted text-muted-foreground"
             : "bg-primary/10 text-pink-deep hover:bg-primary/20"
         }`}
-        title={state === "listening" ? "Appuyez pour arrêter l'enregistrement" : "Dicter un aliment"}
+        title={state === "listening" ? "Appuie pour arrêter l'enregistrement" : "Dicter un aliment"}
         aria-label={state === "listening" ? "Arrêter l'enregistrement" : "Dicter un aliment"}
       >
         {state === "listening" && (
@@ -270,7 +270,7 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
         >
           <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
           <span className="text-[13px] font-medium text-foreground">
-            Enregistrement en cours… appuyez pour arrêter
+            Enregistrement en cours… appuie pour arrêter
           </span>
         </div>
       )}

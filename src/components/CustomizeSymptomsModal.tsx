@@ -65,7 +65,7 @@ export function CustomizeSymptomsModal({
 
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            Activez ou désactivez les symptômes que vous souhaitez suivre.
+            Active ou désactive les symptômes que tu souhaites suivre.
           </p>
 
           <div className="space-y-2">

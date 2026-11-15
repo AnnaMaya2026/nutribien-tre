@@ -95,7 +95,7 @@ export default function Step5Data({
 
         <div>
           <label className="text-sm font-medium text-foreground mb-2 block">
-            Votre niveau d'activité physique ?
+            Ton niveau d'activité physique ?
           </label>
           <div className="grid grid-cols-1 gap-2">
             {ACTIVITY_OPTIONS.map((opt) => {
@@ -123,7 +123,7 @@ export default function Step5Data({
           {canShowEstimate && (
             <div className="mt-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3">
               <p className="text-sm font-semibold text-foreground">
-                Votre objectif estimé : {estimatedCalories} kcal/jour
+                Ton objectif estimé : {estimatedCalories} kcal/jour
               </p>
             </div>
           )}

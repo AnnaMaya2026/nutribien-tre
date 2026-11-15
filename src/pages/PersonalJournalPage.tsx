@@ -55,10 +55,10 @@ export default function PersonalJournalPage() {
       </h1>
       <p className="text-muted-foreground text-sm mb-4">
         {tab === "notes"
-          ? "Notez vos événements de vie et observations"
+          ? "Note tes événements de vie et observations"
           : tab === "routines"
-          ? "Cochez vos séances de sport"
-          : "Suivez vos habitudes du quotidien"}
+          ? "Coche tes séances de sport"
+          : "Suis tes habitudes du quotidien"}
       </p>
 
       {/* Tabs */}
@@ -205,7 +205,7 @@ export default function PersonalJournalPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="text-6xl mb-4">📓</div>
               <p className="text-sm text-muted-foreground mb-2 max-w-[240px]">
-                Commencez à noter vos événements de vie pour mieux suivre votre parcours
+                Commence à noter tes événements de vie pour mieux suivre ton parcours
               </p>
             </div>
           ) : null}

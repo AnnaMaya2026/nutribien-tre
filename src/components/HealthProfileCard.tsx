@@ -78,7 +78,7 @@ export default function HealthProfileCard() {
             <p className="text-[13px] text-muted-foreground">
               {count > 0
                 ? `${count} préférence${count > 1 ? "s" : ""} suivie${count > 1 ? "s" : ""}`
-                : "Personnalisez vos recommandations"}
+                : "Personnalise tes recommandations"}
             </p>
           </div>
         </div>
@@ -124,7 +124,7 @@ export default function HealthProfileCard() {
 
           <div className="mb-4">
             <label className="text-[13px] text-muted-foreground block mb-1">
-              Autre (précisez)
+              Autre (précise)
             </label>
             <Input
               value={other}
@@ -172,7 +172,7 @@ export default function HealthProfileCard() {
 
             <div>
               <label className="text-[13px] text-muted-foreground block mb-1">
-                Autre (précisez)
+                Autre (précise)
               </label>
               <Input
                 value={dietOther}

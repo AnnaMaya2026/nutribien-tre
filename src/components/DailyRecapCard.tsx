@@ -64,7 +64,7 @@ export default function DailyRecapCard({ data: recapData }: { data: RecapData })
       setRecap(data.recap);
     } catch (e: any) {
       console.error("daily-recap error:", e);
-      toast.error("Impossible de générer le bilan. Réessayez dans un instant.");
+      toast.error("Impossible de générer le bilan. Réessaie dans un instant.");
     } finally {
       setLoading(false);
     }
@@ -110,7 +110,7 @@ export default function DailyRecapCard({ data: recapData }: { data: RecapData })
       {loading && (
         <div className="flex items-center justify-center gap-2 py-4 text-pink-deep">
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-xs italic">Sophie prépare votre bilan...</span>
+          <span className="text-xs italic">Sophie prépare ton bilan...</span>
         </div>
       )}
 

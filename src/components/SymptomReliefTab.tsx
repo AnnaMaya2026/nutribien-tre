@@ -131,7 +131,7 @@ export function SymptomReliefTab() {
   };
 
   if (!user) {
-    return <p className="text-sm text-muted-foreground text-center py-8">Connectez-vous pour voir vos suggestions.</p>;
+    return <p className="text-sm text-muted-foreground text-center py-8">Connecte-toi pour voir tes suggestions.</p>;
   }
 
   if (activeSymptoms.length === 0) {
@@ -140,7 +140,7 @@ export function SymptomReliefTab() {
         <div className="text-5xl mb-4">🎉</div>
         <p className="text-sm text-foreground font-medium mb-1">Aucun symptôme élevé aujourd'hui</p>
         <p className="text-xs text-muted-foreground max-w-xs">
-          Revenez après avoir rempli votre bilan de symptômes pour obtenir des suggestions ciblées.
+          Reviens après avoir rempli ton bilan de symptômes pour obtenir des suggestions ciblées.
         </p>
       </div>
     );
@@ -154,11 +154,11 @@ export function SymptomReliefTab() {
           <h3 className="text-sm font-semibold text-foreground">Suggestions personnalisées</h3>
         </div>
         <p className="text-[13px] text-muted-foreground">
-          Aliments inspirants adaptés à vos symptômes. Cliquez pour découvrir des idées de recettes ✨
+          Aliments inspirants adaptés à tes symptômes. Clique pour découvrir des idées de recettes ✨
         </p>
         {restrictionLabels.length > 0 && (
           <p className="mt-2 text-[13px] text-foreground bg-primary/10 rounded-md px-2 py-1">
-            ✅ Filtré selon votre profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
+            ✅ Filtré selon ton profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
           </p>
         )}
       </div>
@@ -221,7 +221,7 @@ export function SymptomReliefTab() {
               {activeIngredient?.nutrient && (
                 <span className="text-pink-deep/80">Riche en {activeIngredient.nutrient}</span>
               )}
-              {" · "}Inspirations pour vos repas — à logger ensuite dans le Journal.
+              {" · "}Inspirations pour tes repas — à logger ensuite dans le Journal.
             </SheetDescription>
           </SheetHeader>
 
@@ -279,7 +279,7 @@ export function SymptomReliefTab() {
             {!recipesLoading && recipes.length > 0 && (
               <div className="bg-primary/10 rounded-xl p-3 text-center">
                 <p className="text-[13px] text-foreground">
-                  💡 Une fois cuisinée, n'oubliez pas de logger votre repas dans le <span className="font-semibold text-pink-deep">Journal</span>.
+                  💡 Une fois cuisinée, n'oublie pas de logger ton repas dans le <span className="font-semibold text-pink-deep">Journal</span>.
                 </p>
               </div>
             )}

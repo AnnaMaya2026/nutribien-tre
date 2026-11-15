@@ -150,7 +150,7 @@ export default function WeightTracker() {
   const handleSave = () => {
     const w = parseFloat(weightInput);
     if (isNaN(w) || w < 20 || w > 300) {
-      toast.error("Entrez un poids valide (20-300 kg)");
+      toast.error("Entre un poids valide (20-300 kg)");
       return;
     }
     upsertMutation.mutate({ weight: w });
@@ -159,7 +159,7 @@ export default function WeightTracker() {
   const handleGoalSave = () => {
     const g = parseFloat(goalInput);
     if (isNaN(g) || g < 20 || g > 300) {
-      toast.error("Entrez un objectif valide (20-300 kg)");
+      toast.error("Entre un objectif valide (20-300 kg)");
       return;
     }
     saveGoalMutation.mutate(g);
@@ -359,7 +359,7 @@ export default function WeightTracker() {
             </ResponsiveContainer>
           ) : (
             <p className="text-xs text-muted-foreground text-center py-4">
-              {chartData.length === 1 ? "Ajoutez plus d'entrées pour voir le graphique" : "Aucune donnée pour cette période"}
+              {chartData.length === 1 ? "Ajoute plus d'entrées pour voir le graphique" : "Aucune donnée pour cette période"}
             </p>
           )}
 

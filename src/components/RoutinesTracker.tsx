@@ -166,7 +166,7 @@ function RoutineForm({
             />
           </div>
           <p className="text-[13px] text-muted-foreground leading-snug">
-            La dépense estimée s'affiche à titre d'information : elle n'augmente pas votre
+            La dépense estimée s'affiche à titre d'information : elle n'augmente pas ton
             budget calorique.
           </p>
         </div>
@@ -275,15 +275,15 @@ function RoutineForm({
               "Notification" in window &&
               Notification.permission !== "granted" && (
                 <p className="text-[13px] text-amber-700 dark:text-amber-300 mt-2 leading-snug">
-                  ⚠️ Activez les notifications dans les paramètres de votre navigateur pour
+                  ⚠️ Active les notifications dans les paramètres de ton navigateur pour
                   recevoir les rappels.
                 </p>
               )}
           </div>
         )}
         <p className="text-[13px] text-muted-foreground mt-2 leading-snug">
-          💡 Pour recevoir les rappels même quand l'app est fermée, installez NutriMéno sur
-          votre écran d'accueil
+          💡 Pour recevoir les rappels même quand l'app est fermée, installe NutriMéno sur
+          ton écran d'accueil
         </p>
       </div>
     </>
@@ -392,7 +392,7 @@ export function RoutinesTracker() {
       const granted = await requestNotificationPermission();
       if (!granted) {
         toast.message(
-          "Les notifications sont bloquées. Activez-les dans les paramètres de votre navigateur."
+          "Les notifications sont bloquées. Active-les dans les paramètres de ton navigateur."
         );
       }
     }
@@ -472,7 +472,7 @@ export function RoutinesTracker() {
     const hasSeen = localStorage.getItem(key);
     if (!hasSeen) {
       toast.info(
-        "Ceci envoie une notification test immédiate pour vérifier que vos rappels fonctionnent correctement.",
+        "Ceci envoie une notification test immédiate pour vérifier que tes rappels fonctionnent correctement.",
         { duration: 4000 }
       );
       localStorage.setItem(key, "true");
@@ -482,7 +482,7 @@ export function RoutinesTracker() {
       toast.success("Notification de test envoyée 🔔");
     } else {
       toast.error(
-        "Notifications bloquées. Autorisez-les dans votre navigateur pour recevoir les rappels."
+        "Notifications bloquées. Autorise-les dans ton navigateur pour recevoir les rappels."
       );
     }
   };
@@ -613,8 +613,8 @@ export function RoutinesTracker() {
           {sportPrompt && (() => {
             const m = parseFloat(sportDuration.replace(",", ".")) || 0;
             const met = metFor(sportActivity, sportCustomMet);
-            if (!met) return <p className="text-[13px] text-muted-foreground">Choisissez un type d'activité pour obtenir une estimation.</p>;
-            if (!weightKg) return <p className="text-[13px] text-muted-foreground">Renseignez votre poids dans le profil pour obtenir une estimation.</p>;
+            if (!met) return <p className="text-[13px] text-muted-foreground">Choisis un type d'activité pour obtenir une estimation.</p>;
+            if (!weightKg) return <p className="text-[13px] text-muted-foreground">Renseigne ton poids dans le profil pour obtenir une estimation.</p>;
             return <p className="text-[13px] text-muted-foreground">Dépense estimée : ~{estimateExpenditure(met, weightKg, m)} kcal (estimation)</p>;
           })()}
           <div className="flex gap-2">
@@ -639,7 +639,7 @@ export function RoutinesTracker() {
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="text-6xl mb-4">✅</div>
           <p className="text-sm text-muted-foreground max-w-[260px]">
-            Ajoutez vos séances de sport pour suivre leur durée et les calories dépensées
+            Ajoute tes séances de sport pour suivre leur durée et les calories dépensées
           </p>
         </div>
       ) : (

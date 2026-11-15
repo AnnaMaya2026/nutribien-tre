@@ -9,48 +9,48 @@ import {
 
 const SLIDES = [
   {
-    title: "Loggez vos repas en 3 façons",
-    text: `• Micro 🎤 : dites ce que vous avez mangé
-• Scanner 📷 : scannez le code-barres
-• Recherche 🔍 : tapez le nom de l'aliment
+    title: "Logge tes repas en 3 façons",
+    text: `• Micro 🎤 : dis ce que tu as mangé
+• Scanner 📷 : scanne le code-barres
+• Recherche 🔍 : tape le nom de l'aliment
 
-Organisez par repas et ajustez les portions`,
+Organise par repas et ajuste les portions`,
     image: "/help/journal_alimentaire.png",
   },
   {
-    title: "Suivez vos nutriments clés",
+    title: "Suis tes nutriments clés",
     text: `Calories, macros et micronutriments prioritaires ménopause en temps réel.
 
 🔴 insuffisant / 🟠 moyen / 🟢 atteint`,
     image: "/help/accueil.png",
   },
   {
-    title: "Suivez l'évolution de vos symptômes",
-    text: `• Évaluez chaque jour de 1 à 10
-• Visualisez l'évolution dans le temps
-• Recevez des conseils nutritionnels adaptés`,
+    title: "Suis l'évolution de tes symptômes",
+    text: `• Évalue chaque jour de 1 à 10
+• Visualise l'évolution dans le temps
+• Reçois des conseils nutritionnels adaptés`,
     image: "/help/symptomes.png",
   },
   {
     title: "Des suggestions personnalisées",
     text: `• Par nutriment manquant
 • Par recette
-• Pour atténuer vos symptômes
-• Pour combler vos manques`,
+• Pour atténuer tes symptômes
+• Pour combler tes manques`,
     image: "/help/idees.png",
   },
   {
-    title: "Sophie, votre nutritionniste IA",
-    text: `• Posez vos questions par écrit ou à la voix
-• Dites-lui ce que vous avez dans le frigo
-• Demandez un menu pour la semaine`,
+    title: "Sophie, ta nutritionniste IA",
+    text: `• Pose tes questions par écrit ou à la voix
+• Dis-lui ce que tu as dans le frigo
+• Demande un menu pour la semaine`,
     image: "/help/sophie.png",
   },
   {
     title: "Sport et habitudes",
-    text: `• Suivez vos séances de sport
-• Suivez vos habitudes à surveiller
-• Corrélation avec vos symptômes`,
+    text: `• Suis tes séances de sport
+• Suis tes habitudes à surveiller
+• Corrélation avec tes symptômes`,
     image: "/help/routines_habitudes.png",
   },
 ];

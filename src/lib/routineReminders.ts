@@ -66,7 +66,7 @@ function scheduleFallback(r: ReminderRoutine) {
     try {
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("NutriMéno 💊", {
-          body: `N'oubliez pas: ${r.name}`,
+          body: `N'oublie pas: ${r.name}`,
           icon: "/favicon.svg",
           tag: `routine-${r.id}`,
         });
@@ -98,7 +98,7 @@ export async function scheduleAllReminders(routines: ReminderRoutine[]) {
       payload: {
         id: `routine-${r.id}`,
         title: "NutriMéno 💊",
-        body: `N'oubliez pas: ${r.name}`,
+        body: `N'oublie pas: ${r.name}`,
         delayMs,
       },
     });

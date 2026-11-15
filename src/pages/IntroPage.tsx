@@ -6,19 +6,19 @@ const FEATURES = [
     icon: Target,
     emoji: "🎯",
     title: "Suivi nutritionnel personnalisé",
-    text: "13 nutriments clés adaptés à vos besoins ménopausiques",
+    text: "13 nutriments clés adaptés à tes besoins ménopausiques",
   },
   {
     icon: MessageCircle,
     emoji: "💬",
-    title: "Sophie, votre nutritionniste IA",
+    title: "Sophie, ta nutritionniste IA",
     text: "Conseils personnalisés et vocaux disponibles 24h/24",
   },
   {
     icon: BarChart3,
     emoji: "📊",
     title: "Corrélation symptômes & nutrition",
-    text: "Comprenez l'impact de votre alimentation sur vos symptômes",
+    text: "Comprends l'impact de ton alimentation sur tes symptômes",
   },
 ];
 

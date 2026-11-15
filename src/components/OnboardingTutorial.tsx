@@ -18,36 +18,36 @@ const buildSteps = (name: string): Step[] => [
   {
     type: "welcome",
     title: name ? `Bienvenue ${name} ! 💗` : "Bienvenue dans NutriMéno ! 💗",
-    subtitle: "Découvrez en 30 secondes comment NutriMéno va vous accompagner",
+    subtitle: "Découvre en 30 secondes comment NutriMéno va t'accompagner",
   },
   {
     type: "info",
-    title: "Votre tableau de bord 📊",
-    subtitle: "Suivez vos calories et nutriments clés en temps réel, adaptés à vos besoins ménopausiques.",
+    title: "Ton tableau de bord 📊",
+    subtitle: "Suis tes calories et nutriments clés en temps réel, adaptés à tes besoins ménopausiques.",
   },
   {
     type: "info",
     title: "Journal alimentaire 🍽️",
     subtitle:
-      "• Dictez vos repas à la voix 🎤\n• Scannez les codes-barres 📷\n• Recherchez manuellement vos aliments",
+      "• Dicte tes repas à la voix 🎤\n• Scanne les codes-barres 📷\n• Recherche manuellement tes aliments",
   },
   {
     type: "info",
     title: "Idées repas ✨",
     subtitle:
-      "Trouvez des idées de repas :\n• Par ingrédients du frigo\n• Par recette\n• Pour combler vos manques\n• Pour atténuer vos symptômes",
+      "Trouve des idées de repas :\n• Par ingrédients du frigo\n• Par recette\n• Pour combler tes manques\n• Pour atténuer tes symptômes",
   },
   {
     type: "info",
-    title: "Sophie, votre nutritionniste 💬",
+    title: "Sophie, ta nutritionniste 💬",
     subtitle:
-      "Posez vos questions à Sophie, votre nutritionniste IA spécialisée en ménopause — elle vous répond et vous parle 🎙️",
+      "Pose tes questions à Sophie, ta nutritionniste IA spécialisée en ménopause — elle te répond et te parle 🎙️",
   },
   {
     type: "action",
-    title: "Sophie crée votre menu 🍽️",
+    title: "Sophie crée ton menu 🍽️",
     subtitle:
-      "Demandez à Sophie votre menu du jour adapté à vos besoins nutritionnels.\nAjoutez-le directement dans votre journal alimentaire en 1 clic !\nVos apports sont analysés instantanément. ✨",
+      "Demande à Sophie ton menu du jour adapté à tes besoins nutritionnels.\nAjoute-le directement dans ton journal alimentaire en 1 clic !\nTes apports sont analysés instantanément. ✨",
     image: "/help/sophie.png",
     buttonLabel: "Essayer avec Sophie →",
     navigateTo: "/chat",
@@ -56,18 +56,18 @@ const buildSteps = (name: string): Step[] => [
     type: "info",
     title: "Suivi des symptômes 📈",
     subtitle:
-      "Évaluez vos symptômes chaque jour et observez leur évolution dans le temps pour mieux les comprendre.",
+      "Évalue tes symptômes chaque jour et observe leur évolution dans le temps pour mieux les comprendre.",
   },
   {
     type: "info",
     title: "Notes, Sport & Habitudes 📝",
     subtitle:
-      "• Notez vos événements de vie\n• Suivez vos séances de sport (durée, calories)\n• Suivez vos habitudes à surveiller (café, alcool, hydratation...)",
+      "• Note tes événements de vie\n• Suis tes séances de sport (durée, calories)\n• Suis tes habitudes à surveiller (café, alcool, hydratation...)",
   },
   {
     type: "final",
-    title: "Vous êtes prête ! 🎉",
-    subtitle: "NutriMéno va vous accompagner chaque jour pour mieux vivre votre ménopause grâce à la nutrition 💗",
+    title: "Tu es prête ! 🎉",
+    subtitle: "NutriMéno va t'accompagner chaque jour pour mieux vivre ta ménopause grâce à la nutrition 💗",
   },
 ];
 

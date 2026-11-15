@@ -114,7 +114,7 @@ export default function BeforeAfterButton({ entryId, entryDate, entryLabel }: Pr
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base">
-              Impact de "{shortLabel}" sur vos symptômes
+              Impact de "{shortLabel}" sur tes symptômes
             </DialogTitle>
           </DialogHeader>
 
@@ -123,7 +123,7 @@ export default function BeforeAfterButton({ entryId, entryDate, entryLabel }: Pr
           ) : notEnough || rows.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">
               Pas encore assez de données.<br />
-              Revenez dans quelques jours pour voir l'impact ! 💪
+              Reviens dans quelques jours pour voir l'impact ! 💪
             </p>
           ) : (
             <>

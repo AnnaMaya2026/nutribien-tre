@@ -30,23 +30,23 @@ import NotFound from "@/pages/NotFound";
 import SEOLayout from "@/components/SEOLayout";
 
 const SEO = {
-  dashboard: { title: "NutriMéno — Tableau de bord nutritionnel", description: "Suivez votre nutrition personnalisée pour la ménopause", path: "/" },
-  journal: { title: "Journal alimentaire — NutriMéno", description: "Loggez vos repas et suivez vos apports nutritionnels", path: "/journal" },
-  repas: { title: "Suggestions de repas — NutriMéno", description: "Recettes et idées de repas adaptées à vos besoins nutritionnels", path: "/repas" },
-  chat: { title: "Sophie, votre nutritionniste IA — NutriMéno", description: "Conseils nutritionnels personnalisés pour la ménopause", path: "/chat" },
-  symptomes: { title: "Suivi des symptômes — NutriMéno", description: "Suivez l'évolution de vos symptômes ménopausiques", path: "/symptomes" },
-  notes: { title: "Journal personnel — NutriMéno", description: "Notes, sport et habitudes pour votre bien-être", path: "/notes" },
-  menus: { title: "Menus sauvegardés — NutriMéno", description: "Retrouvez vos menus et plans de repas favoris", path: "/menus" },
-  profil: { title: "Mon profil — NutriMéno", description: "Gérez votre profil et vos préférences nutritionnelles", path: "/profil" },
+  dashboard: { title: "NutriMéno — Tableau de bord nutritionnel", description: "Suis ta nutrition personnalisée pour la ménopause", path: "/" },
+  journal: { title: "Journal alimentaire — NutriMéno", description: "Logge tes repas et suis tes apports nutritionnels", path: "/journal" },
+  repas: { title: "Suggestions de repas — NutriMéno", description: "Recettes et idées de repas adaptées à tes besoins nutritionnels", path: "/repas" },
+  chat: { title: "Sophie, ta nutritionniste IA — NutriMéno", description: "Conseils nutritionnels personnalisés pour la ménopause", path: "/chat" },
+  symptomes: { title: "Suivi des symptômes — NutriMéno", description: "Suis l'évolution de tes symptômes ménopausiques", path: "/symptomes" },
+  notes: { title: "Journal personnel — NutriMéno", description: "Notes, sport et habitudes pour ton bien-être", path: "/notes" },
+  menus: { title: "Menus sauvegardés — NutriMéno", description: "Retrouve tes menus et plans de repas favoris", path: "/menus" },
+  profil: { title: "Mon profil — NutriMéno", description: "Gère ton profil et tes préférences nutritionnelles", path: "/profil" },
   ration: { title: "Comprendre ta ration — NutriMéno", description: "Explication pédagogique de ton calcul calorique personnalisé", path: "/ration" },
-  complements: { title: "Mes compléments — NutriMéno", description: "Gérez vos compléments alimentaires et leur prise quotidienne", path: "/complements" },
+  complements: { title: "Mes compléments — NutriMéno", description: "Gère tes compléments alimentaires et leur prise quotidienne", path: "/complements" },
 
   cgu: { title: "Conditions d'utilisation — NutriMéno", description: "Conditions générales d'utilisation de NutriMéno", path: "/cgu" },
   confidentialite: { title: "Politique de confidentialité — NutriMéno", description: "Politique de confidentialité et RGPD de NutriMéno", path: "/confidentialite" },
-  reset: { title: "Réinitialiser le mot de passe — NutriMéno", description: "Réinitialisez votre mot de passe NutriMéno", path: "/reset-password" },
-  auth: { title: "Connexion — NutriMéno", description: "Connectez-vous à votre compte NutriMéno", path: "/auth" },
-  welcome: { title: "NutriMéno — Nutrition personnalisée pour la ménopause", description: "Suivez votre nutrition, gérez vos symptômes et consultez Sophie, votre nutritionniste IA spécialisée en ménopause.", path: "/" },
-  onboarding: { title: "Bienvenue — NutriMéno", description: "Personnalisez votre expérience NutriMéno", path: "/onboarding" },
+  reset: { title: "Réinitialiser le mot de passe — NutriMéno", description: "Réinitialise ton mot de passe NutriMéno", path: "/reset-password" },
+  auth: { title: "Connexion — NutriMéno", description: "Connecte-toi à ton compte NutriMéno", path: "/auth" },
+  welcome: { title: "NutriMéno — Nutrition personnalisée pour la ménopause", description: "Suis ta nutrition, gère tes symptômes et consulte Sophie, ta nutritionniste IA spécialisée en ménopause.", path: "/" },
+  onboarding: { title: "Bienvenue — NutriMéno", description: "Personnalise ton expérience NutriMéno", path: "/onboarding" },
 };
 
 function withSEO(seo: { title: string; description: string; path: string }, element: JSX.Element) {

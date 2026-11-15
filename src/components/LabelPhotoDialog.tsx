@@ -266,9 +266,9 @@ export default function LabelPhotoDialog({
       setMacrosComplete(data?.macros_complete !== false);
       setManualGrams({});
       setIgnored((data?.pantry_items || []).map((l: string) => ({ label: l, amount: null, unit: null })));
-      if (data?.issue === "blurry") toast.error("Photo floue : vérifiez chaque valeur avant d'enregistrer.");
-      else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisissez les valeurs à la main.");
-      else toast.success(`Fiche lue (${data?.servings || 2} portions) — vérifiez chaque valeur.`);
+      if (data?.issue === "blurry") toast.error("Photo floue : vérifie chaque valeur avant d'enregistrer.");
+      else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisis les valeurs à la main.");
+      else toast.success(`Fiche lue (${data?.servings || 2} portions) — vérifie chaque valeur.`);
   };
 
   const analyze = async (images: string[]) => {
@@ -300,10 +300,10 @@ export default function LabelPhotoDialog({
           })),
         );
         setIgnored([...(data?.other_ingredients || []), ...(data?.unrecognized || [])]);
-        if (data?.issue === "blurry") toast.error("Photo floue : vérifiez chaque valeur avant d'enregistrer.");
-        else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisissez les valeurs à la main.");
-        else if (nutrients.length === 0) toast.error("Aucun nutriment lu. Ajoutez-les manuellement.");
-        else toast.success(`${nutrients.length} nutriment(s) lus — vérifiez chaque ligne.`);
+        if (data?.issue === "blurry") toast.error("Photo floue : vérifie chaque valeur avant d'enregistrer.");
+        else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisis les valeurs à la main.");
+        else if (nutrients.length === 0) toast.error("Aucun nutriment lu. Ajoute-les manuellement.");
+        else toast.success(`${nutrients.length} nutriment(s) lus — vérifie chaque ligne.`);
       } else if (isRecipe) {
         applyRecipe(data);
       } else {
@@ -342,21 +342,21 @@ export default function LabelPhotoDialog({
         const unmatched = data?.estimated_micros?.unmatched_ingredients || [];
         setProductIngredients(Array.isArray(data?.ingredients) ? data.ingredients : null);
         setIgnored(unmatched.map((l: string) => ({ label: l, amount: null, unit: null })));
-        if (data?.issue === "blurry") toast.error("Photo floue : vérifiez chaque valeur avant d'enregistrer.");
-        else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisissez les valeurs à la main.");
-        else toast.success("Étiquette lue — vérifiez chaque valeur.");
+        if (data?.issue === "blurry") toast.error("Photo floue : vérifie chaque valeur avant d'enregistrer.");
+        else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisis les valeurs à la main.");
+        else toast.success("Étiquette lue — vérifie chaque valeur.");
       }
       setStep("review");
     } catch (e) {
       console.error(e);
-      toast.error("Lecture impossible. Vous pouvez saisir les valeurs à la main.");
+      toast.error("Lecture impossible. Tu peux saisir les valeurs à la main.");
       if (!isSupplement) blankProductRows();
       setStep("review");
     }
   };
 
   const addRow = () => {
-    if (!newKey) return toast.error("Choisissez un nutriment.");
+    if (!newKey) return toast.error("Choisis un nutriment.");
     const a = Number(newAmount.replace(",", "."));
     if (!isFinite(a) || a <= 0) return toast.error("Quantité invalide.");
     setRows((p) => [...p, { key: newKey, label: nutrientLabel(newKey), amount: String(a), unit: newUnit, source: "manuel" }]);
@@ -366,15 +366,15 @@ export default function LabelPhotoDialog({
   const saveSupplement = async () => {
     if (!nom.trim()) return toast.error("Le nom du produit est requis.");
     const doseNum = Number(String(dose).replace(",", "."));
-    if (!isFinite(doseNum) || doseNum <= 0) return toast.error("Indiquez la dose par jour.");
-    if (!doseUnit) return toast.error("Choisissez l'unité de la dose.");
+    if (!isFinite(doseNum) || doseNum <= 0) return toast.error("Indique la dose par jour.");
+    if (!doseUnit) return toast.error("Choisis l'unité de la dose.");
     const poidsNum = Number(String(poidsDose).replace(",", "."));
     if (doseUnitNeedsWeight(doseUnit) && (!isFinite(poidsNum) || poidsNum <= 0))
-      return toast.error(`Indiquez le poids d'une ${doseUnit} en grammes : sans lui, aucun calcul n'est possible.`);
+      return toast.error(`Indique le poids d'une ${doseUnit} en grammes : sans lui, aucun calcul n'est possible.`);
     const nutrients = rows
       .map((r) => ({ nutrient_key: r.key, amount: Number(String(r.amount).replace(",", ".")), unit: r.unit }))
       .filter((n) => n.nutrient_key && isFinite(n.amount) && n.amount > 0);
-    if (nutrients.length === 0) return toast.error("Ajoutez au moins un nutriment.");
+    if (nutrients.length === 0) return toast.error("Ajoute au moins un nutriment.");
     const frequencySettings = supplementFrequencySettings(frequence, joursCouverts);
     if (!frequencySettings) return toast.error("Nombre de jours couverts : entre 2 et 120.");
     setSaving(true);
@@ -395,10 +395,10 @@ export default function LabelPhotoDialog({
   };
 
   const saveProduct = async () => {
-    if (!user) return toast.error("Connectez-vous pour enregistrer.");
+    if (!user) return toast.error("Connecte-toi pour enregistrer.");
     if (!nom.trim()) return toast.error("Le nom du plat est requis.");
     const portionNum = Number(String(portion).replace(",", "."));
-    if (!isFinite(portionNum) || portionNum <= 0) return toast.error("Indiquez le poids de la portion en grammes.");
+    if (!isFinite(portionNum) || portionNum <= 0) return toast.error("Indique le poids de la portion en grammes.");
 
     const entry: Record<string, any> = {
       user_id: user.id,
@@ -427,7 +427,7 @@ export default function LabelPhotoDialog({
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["food_logs"] });
       queryClient.invalidateQueries({ queryKey: ["food_logs_week"] });
-      toast.success("Plat ajouté à votre journal.");
+      toast.success("Plat ajouté à ton journal.");
       close();
     } catch (e) {
       console.error(e);
@@ -442,11 +442,11 @@ export default function LabelPhotoDialog({
   const setMacroVal = (k: string, v: string) =>
     setMacros((p) => p.map((x) => (x.key === k ? { ...x, amount: v, source: "manuel" } : x)));
   const recompute = async () => {
-    if (!parsedEcho) return toast.error("Reprenez la photo : l'analyse d'origine n'est plus disponible.");
+    if (!parsedEcho) return toast.error("Reprends la photo : l'analyse d'origine n'est plus disponible.");
     const overrides = manualIngredients
       .map((m) => ({ name: m.name, grams: numOrNull(manualGrams[m.name] ?? "") }))
       .filter((o) => o.grams !== null && o.grams > 0);
-    if (!overrides.length) return toast.error("Indiquez au moins un poids en grammes.");
+    if (!overrides.length) return toast.error("Indique au moins un poids en grammes.");
     try {
       setStep("analyzing");
       const { data, error } = await supabase.functions.invoke("analyze-recipe-card", {
@@ -459,7 +459,7 @@ export default function LabelPhotoDialog({
     } catch (e) {
       console.error(e);
       setStep("review");
-      toast.error("Recalcul impossible. Corrigez les valeurs à la main.");
+      toast.error("Recalcul impossible. Corrige les valeurs à la main.");
     }
   };
 
@@ -477,7 +477,7 @@ export default function LabelPhotoDialog({
       );
     }
     const kcal = macroVal("calories"), p = macroVal("proteins"), c = macroVal("carbs"), f = macroVal("fats");
-    if (kcal === null) w.push("Calories absentes : saisissez les kcal par portion.");
+    if (kcal === null) w.push("Calories absentes : saisis les kcal par portion.");
     if (p !== null && c !== null && f !== null && kcal !== null && kcal > 0) {
       const calc = p * 4 + c * 4 + f * 9;
       const gap = Math.abs(calc - kcal) / kcal;
@@ -485,14 +485,14 @@ export default function LabelPhotoDialog({
     }
     const n = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const MEAT = /(canard|poulet|dinde|boeuf|veau|porc|agneau|jambon|lardon|saucisse|viande|steak|poisson|saumon|cabillaud|thon|crevette|merlu|colin|truite|lieu|dorade|bar |gambas|chorizo|magret|filet)/;
-    if (p !== null && p < 5 && MEAT.test(n)) w.push(`Invraisemblable : ${p} g de protéines pour un plat avec viande ou poisson. Vous avez peut-être le tableau d'un seul ingrédient ou la colonne « pour 100 g ».`);
-    if (kcal !== null && kcal > 0 && kcal < 200 && MEAT.test(n)) w.push(`${Math.round(kcal)} kcal pour une portion de plat complet paraît bas : vérifiez que c'est bien la colonne « par portion ».`);
-    if (tableBasis === "100g_sans_poids") w.push("La fiche ne donne que la colonne « pour 100 g » et pas le poids d'une portion : indiquez le poids de votre portion ci-dessus, puis appliquez le calcul.");
+    if (p !== null && p < 5 && MEAT.test(n)) w.push(`Invraisemblable : ${p} g de protéines pour un plat avec viande ou poisson. Tu as peut-être le tableau d'un seul ingrédient ou la colonne « pour 100 g ».`);
+    if (kcal !== null && kcal > 0 && kcal < 200 && MEAT.test(n)) w.push(`${Math.round(kcal)} kcal pour une portion de plat complet paraît bas : vérifie que c'est bien la colonne « par portion ».`);
+    if (tableBasis === "100g_sans_poids") w.push("La fiche ne donne que la colonne « pour 100 g » et pas le poids d'une portion : indique le poids de ta portion ci-dessus, puis applique le calcul.");
     return w;
   })();
   const applyPer100 = () => {
     const g = numOrNull(portion);
-    if (!per100 || g === null || g <= 0) return toast.error("Indiquez d'abord le poids d'une portion en grammes.");
+    if (!per100 || g === null || g <= 0) return toast.error("Indique d'abord le poids d'une portion en grammes.");
     setMacros((prev) => prev.map((x) => {
       if (x.key === "sodium") { const s = per100.salt; return { ...x, amount: s == null ? "" : String(Math.round((s * g) / 100 / 2.54 * 1000) / 1000), source: "calcule" }; }
       const v = per100[x.key];
@@ -501,7 +501,7 @@ export default function LabelPhotoDialog({
     setTableBasis("100g_x_poids");
   };
   const applyCandidate = (c: { basis: string; values: Record<string, number | null> }) => {
-    if (c.basis === "100g") { setPer100(c.values); setTableBasis("100g_sans_poids"); toast.info("Tableau pour 100 g : indiquez le poids de la portion puis appliquez le calcul."); return; }
+    if (c.basis === "100g") { setPer100(c.values); setTableBasis("100g_sans_poids"); toast.info("Tableau pour 100 g : indique le poids de la portion puis applique le calcul."); return; }
     setMacros((prev) => prev.map((x) => {
       if (x.key === "sodium") { const s = c.values.salt; return { ...x, amount: s == null ? "" : String(Math.round(s / 2.54 * 1000) / 1000), source: "calcule" }; }
       const v = c.values[x.key];
@@ -511,9 +511,9 @@ export default function LabelPhotoDialog({
   };
 
   const saveRecipe = async () => {
-    if (!user) return toast.error("Connectez-vous pour enregistrer.");
-    if (!guardChecked) return toast.error("Cochez « J'ai vérifié les valeurs par portion » avant d'enregistrer.");
-    if (kcalGapBlocking && !keepKcalGap) return toast.error("Les calories s'écartent de la fiche : corrigez-les ou cochez « Je garde ces valeurs malgré l'écart ».");
+    if (!user) return toast.error("Connecte-toi pour enregistrer.");
+    if (!guardChecked) return toast.error("Coche « J'ai vérifié les valeurs par portion » avant d'enregistrer.");
+    if (kcalGapBlocking && !keepKcalGap) return toast.error("Les calories s'écartent de la fiche : corrige-les ou coche « Je garde ces valeurs malgré l'écart ».");
     if (!nom.trim()) return toast.error("Le nom de la recette est requis.");
     const mult = Number(portionsEaten) || 1;
     const fatG = numOrNull(addedFat) ?? 0;
@@ -544,7 +544,7 @@ export default function LabelPhotoDialog({
       entry.fats = Math.round(((entry.fats ?? 0) + fatG) * 100) / 100;
       entry.calories = Math.round(((entry.calories ?? 0) + fatG * 9) * 100) / 100;
     }
-    if (entry.calories === null) return toast.error("Les calories sont requises : complétez la ligne Calories.");
+    if (entry.calories === null) return toast.error("Les calories sont requises : complète la ligne Calories.");
 
     setSaving(true);
     try {
@@ -560,9 +560,9 @@ export default function LabelPhotoDialog({
           meal_type: mealType,
           items: [{ ...rest, micros_estimes: true, micros_coverage_percent: null } as any],
         });
-        toast.success("Recette ajoutée à votre journal et à vos favoris.");
+        toast.success("Recette ajoutée à ton journal et à tes favoris.");
       } else {
-        toast.success("Recette ajoutée à votre journal.");
+        toast.success("Recette ajoutée à ton journal.");
       }
       close();
     } catch (e) {
@@ -613,10 +613,10 @@ export default function LabelPhotoDialog({
             <>
               <p className="text-sm text-muted-foreground">
                 {isSupplement
-                  ? "Photographiez le tableau nutritionnel au dos de la boîte. Toutes les valeurs lues vous seront présentées, modifiables, avant enregistrement."
+                  ? "Photographie le tableau nutritionnel au dos de la boîte. Toutes les valeurs lues te seront présentées, modifiables, avant enregistrement."
                   : isRecipe
-                    ? "Photographiez la fiche recette : le nom du plat, le nombre de portions et la liste des ingrédients avec leurs quantités. Tout est ramené à une portion, et vous pourrez ensuite dire combien vous en avez mangé."
-                    : "Photographiez le dos de l'emballage : le tableau nutritionnel et la liste d'ingrédients. Les macros sont reprises telles quelles ; les micronutriments sont estimés depuis les ingrédients. Tout reste modifiable avant enregistrement."}
+                    ? "Photographie la fiche recette : le nom du plat, le nombre de portions et la liste des ingrédients avec leurs quantités. Tout est ramené à une portion, et tu pourras ensuite dire combien tu en as mangé."
+                    : "Photographie le dos de l'emballage : le tableau nutritionnel et la liste d'ingrédients. Les macros sont reprises telles quelles ; les micronutriments sont estimés depuis les ingrédients. Tout reste modifiable avant enregistrement."}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <button disabled={isRecipe && photos.length >= 4} onClick={() => cameraRef.current?.click()} className="flex flex-col items-center gap-2 p-5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 min-h-[120px] justify-center shadow-md">
@@ -642,7 +642,7 @@ export default function LabelPhotoDialog({
                       ))}
                     </div>
                   )}
-                  <p className="text-xs text-muted-foreground">Recto, puis verso. Une photo ratée : supprimez-la avec la croix et reprenez-la.</p>
+                  <p className="text-xs text-muted-foreground">Recto, puis verso. Une photo ratée : supprime-la avec la croix et reprends-la.</p>
                   <button
                     onClick={() => analyze(photos)}
                     disabled={photos.length === 0}
@@ -671,8 +671,8 @@ export default function LabelPhotoDialog({
             <>
               <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 p-3 text-xs text-amber-900 dark:text-amber-200">
                 {isSupplement
-                  ? "Vérifiez chaque ligne : un dosage erroné fausserait ensuite vos couvertures et vos alertes de dépassement."
-                  : "Vérifiez chaque ligne. Les valeurs du tableau sont mesurées ; les micronutriments sont estimés depuis la liste d'ingrédients et restent approximatifs."}
+                  ? "Vérifie chaque ligne : un dosage erroné fausserait ensuite tes couvertures et tes alertes de dépassement."
+                  : "Vérifie chaque ligne. Les valeurs du tableau sont mesurées ; les micronutriments sont estimés depuis la liste d'ingrédients et restent approximatifs."}
               </div>
 
               <div className="space-y-2">
@@ -729,7 +729,7 @@ export default function LabelPhotoDialog({
                         </p>
                         <div>
                           <label className="text-xs font-medium text-muted-foreground block mb-1">
-                            Combien de portions avez-vous mangé ?
+                            Combien de portions as-tu mangé ?
                           </label>
                           <div className="flex gap-1.5 flex-wrap">
                             {["0.5", "1", "1.5", "2"].map((p) => (
@@ -755,7 +755,7 @@ export default function LabelPhotoDialog({
                         <label className="text-xs font-medium text-muted-foreground">
                           Matières grasses ajoutées — huile, beurre (g)
                         </label>
-                        <Input value={addedFat} onChange={(e) => setAddedFat(e.target.value)} inputMode="decimal" placeholder="Vide : à vous de le remplir" />
+                        <Input value={addedFat} onChange={(e) => setAddedFat(e.target.value)} inputMode="decimal" placeholder="Vide : à toi de le remplir" />
                         <p className="text-[13px] text-muted-foreground mt-1">
                           La fiche ne les chiffre pas et je ne les estime pas. 1 cuillère à soupe d'huile = 10 g, 1 cuillère à café = 5 g, 1 cuillère à soupe de beurre = 15 g.
                         </p>
@@ -907,7 +907,7 @@ export default function LabelPhotoDialog({
                     Recalculer avec ces poids
                   </button>
                   <p className="text-muted-foreground">
-                    Vous pouvez aussi les ajouter séparément depuis « Ajouter un aliment ».
+                    Tu peux aussi les ajouter séparément depuis « Ajouter un aliment ».
                   </p>
                 </div>
               )}
@@ -950,7 +950,7 @@ export default function LabelPhotoDialog({
                     <p className="text-sm text-muted-foreground">✓ Les kcal correspondent aux macros (écart ≤ 15 %).</p>
                   )}
                   {approxKcal === null ? (
-                    <p className="text-sm text-muted-foreground">Photographiez aussi le recto pour vérifier les calories</p>
+                    <p className="text-sm text-muted-foreground">Photographie aussi le recto pour vérifier les calories</p>
                   ) : kcalGapBlocking ? (
                     <div className="rounded-lg bg-destructive/10 border border-destructive p-2 space-y-2">
                       <p className="text-sm text-destructive font-medium">

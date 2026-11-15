@@ -39,7 +39,7 @@ export const NUTRIENT_INFO: Record<NutrientKey, { text: string; disclaimer?: str
   },
   phytoestrogens: {
     text: `🌱 Composés végétaux à effet œstrogénique. Les isoflavones viennent surtout du soja. Ce n'est pas un objectif : l'ANSES (2025) fixe un seuil à ne pas dépasser de ${fr(PHYTOESTROGENS_MAX_MG_PER_KG)} mg par kg de poids et par jour, et conseille de varier les sources de protéines végétales.\n\nSources : tofu, desserts et boissons au soja.`,
-    disclaimer: "Consultez votre médecin avant toute supplémentation.",
+    disclaimer: "Consulte ton médecin avant toute supplémentation.",
   },
   vitamin_b12: {
     text: `🧠 Essentielle pour le système nerveux et la prévention de la démence. Risque de carence augmente avec l'âge. ${repere("vitamin_b12")}\n\nSources : viandes, poissons, œufs, produits laitiers.`,

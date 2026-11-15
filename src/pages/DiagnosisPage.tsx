@@ -61,7 +61,7 @@ export default function DiagnosisPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
         <Loader2 className="w-8 h-8 text-pink-deep animate-spin mb-4" />
-        <p className="text-foreground font-medium">Sophie prépare votre diagnostic personnalisé…</p>
+        <p className="text-foreground font-medium">Sophie prépare ton diagnostic personnalisé…</p>
         <p className="text-sm text-muted-foreground mt-2">Quelques secondes seulement 💗</p>
       </div>
     );
@@ -74,13 +74,13 @@ export default function DiagnosisPage() {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/15 mb-3">
             <Sparkles className="w-7 h-7 text-pink-deep" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Votre profil nutritionnel 💗</h1>
+          <h1 className="text-2xl font-bold text-foreground">Ton profil nutritionnel 💗</h1>
           <p className="text-sm text-muted-foreground mt-2">Insights personnalisés par Sophie</p>
         </div>
 
         <div className="space-y-3 mb-5">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-            Découvertes surprenantes pour votre profil
+            Découvertes surprenantes pour ton profil
           </h2>
           {data.insights.slice(0, 3).map((insight, i) => (
             <div
@@ -107,7 +107,7 @@ export default function DiagnosisPage() {
 
         <div className="bg-card rounded-2xl p-5 border border-border/50 card-soft mb-6">
           <h3 className="text-sm font-semibold text-foreground mb-2">
-            ✨ Ce que NutriMéno va faire pour vous
+            ✨ Ce que NutriMéno va faire pour toi
           </h3>
           <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
             {data.promise_message}

@@ -6,22 +6,22 @@ import { useProfile } from "@/hooks/useProfile";
 const SLIDES = [
   {
     icon: "🎤",
-    title: "Loggez vos repas facilement",
-    text: "Utilisez le micro pour dicter ce que vous avez mangé, ou scannez le code-barres de vos produits.",
+    title: "Logge tes repas facilement",
+    text: "Utilise le micro pour dicter ce que tu as mangé, ou scanne le code-barres de tes produits.",
     button: "Essayer maintenant →",
     path: "/journal",
   },
   {
     icon: "📊",
-    title: "Suivez vos symptômes",
-    text: "Évaluez vos symptômes chaque jour pour voir leur évolution et recevoir des conseils personnalisés.",
+    title: "Suis tes symptômes",
+    text: "Évalue tes symptômes chaque jour pour voir leur évolution et recevoir des conseils personnalisés.",
     button: "Aller aux symptômes →",
     path: "/symptomes",
   },
   {
     icon: "💬",
-    title: "Parlez à Sophie",
-    text: "Posez vos questions à Sophie, votre nutritionniste IA. Dites-lui ce que vous avez dans le frigo !",
+    title: "Parle à Sophie",
+    text: "Pose tes questions à Sophie, ta nutritionniste IA. Dis-lui ce que tu as dans le frigo !",
     button: "Parler à Sophie →",
     path: "/chat",
   },

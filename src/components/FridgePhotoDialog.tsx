@@ -84,21 +84,21 @@ export default function FridgePhotoDialog({ open, onClose, onConfirm }: FridgePh
       if (error) throw error;
 
       if (data?.issue === "blurry") {
-        toast.error("La photo semble floue. Reprenez-la avec plus de lumière et de netteté.");
+        toast.error("La photo semble floue. Reprends-la avec plus de lumière et de netteté.");
         setFoods([]);
       } else if (data?.issue === "too_dark") {
-        toast.error("La photo est trop sombre pour être analysée. Réessayez avec plus de lumière.");
+        toast.error("La photo est trop sombre pour être analysée. Réessaie avec plus de lumière.");
         setFoods([]);
       } else if (data?.issue === "no_food" || !Array.isArray(data?.foods) || data.foods.length === 0) {
-        toast.error("Aucun aliment détecté sur la photo. Vérifiez le cadrage ou ajoutez-les manuellement.");
+        toast.error("Aucun aliment détecté sur la photo. Vérifie le cadrage ou ajoute-les manuellement.");
         setFoods([]);
       } else {
         setFoods(data.foods);
-        toast.success(`${data.foods.length} aliment(s) détecté(s) — vérifiez la liste.`);
+        toast.success(`${data.foods.length} aliment(s) détecté(s) — vérifie la liste.`);
       }
     } catch (e) {
       console.error("analyze-fridge-photo error", e);
-      toast.error("Analyse impossible. Réessayez dans un instant.");
+      toast.error("Analyse impossible. Réessaie dans un instant.");
       setFoods([]);
     } finally {
       setAnalyzing(false);
@@ -119,7 +119,7 @@ export default function FridgePhotoDialog({ open, onClose, onConfirm }: FridgePh
   const confirm = () => {
     const list = (foods || []).map((f) => f.trim()).filter(Boolean);
     if (list.length === 0) {
-      toast.error("Ajoutez au moins un aliment avant de valider.");
+      toast.error("Ajoute au moins un aliment avant de valider.");
       return;
     }
     onConfirm(list);
@@ -131,7 +131,7 @@ export default function FridgePhotoDialog({ open, onClose, onConfirm }: FridgePh
     <div className="fixed inset-0 z-[60] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-background w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto shadow-xl pb-[calc(96px+env(safe-area-inset-bottom))] sm:pb-0">
         <div className="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
-          <h2 className="text-base font-bold text-foreground">📸 Photo de votre frigo / placard</h2>
+          <h2 className="text-base font-bold text-foreground">📸 Photo de ton frigo / placard</h2>
           <button
             onClick={handleClose}
             className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center"
@@ -145,7 +145,7 @@ export default function FridgePhotoDialog({ open, onClose, onConfirm }: FridgePh
           {!preview && !analyzing && (
             <>
               <p className="text-sm text-muted-foreground">
-                Prenez ou importez une photo de vos aliments : Sophie identifiera ce que vous avez sous la main pour vous proposer un menu adapté à vos calories restantes et à votre objectif du jour.
+                Prends ou importe une photo de tes aliments : Sophie identifiera ce que tu as sous la main pour te proposer un menu adapté à tes calories restantes et à ton objectif du jour.
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -164,7 +164,7 @@ export default function FridgePhotoDialog({ open, onClose, onConfirm }: FridgePh
                 </button>
               </div>
               <p className="text-xs text-muted-foreground italic">
-                💡 Astuce : cadrez l'ensemble avec de la lumière, ouvrez le frigo ou étalez les aliments pour une meilleure détection.
+                💡 Astuce : cadre l'ensemble avec de la lumière, ouvre le frigo ou étale les aliments pour une meilleure détection.
               </p>
             </>
           )}
@@ -217,7 +217,7 @@ export default function FridgePhotoDialog({ open, onClose, onConfirm }: FridgePh
                 </button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Supprimez ce qui n'est pas correct, ajoutez ce qui manque, puis validez.
+                Supprime ce qui n'est pas correct, ajoute ce qui manque, puis valide.
               </p>
 
               {foods.length > 0 ? (
@@ -240,7 +240,7 @@ export default function FridgePhotoDialog({ open, onClose, onConfirm }: FridgePh
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground italic bg-muted/50 rounded-lg p-3">
-                  Aucun aliment détecté — ajoutez-les manuellement ci-dessous.
+                  Aucun aliment détecté — ajoute-les manuellement ci-dessous.
                 </p>
               )}
 

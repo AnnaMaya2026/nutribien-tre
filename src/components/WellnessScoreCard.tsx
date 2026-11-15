@@ -75,18 +75,18 @@ const SYMPTOM_LABELS: Record<string, string> = {
 };
 
 const SYMPTOM_FOOD_ADVICE: Record<string, string> = {
-  fatigue: "Privilégiez le fer (lentilles, épinards) et la vitamine B12.",
+  fatigue: "Privilégie le fer (lentilles, épinards) et la vitamine B12.",
   bouffees_chaleur: "Misez sur les phytoestrogènes : soja, graines de lin.",
-  insomnie: "Magnésium le soir (amandes, banane) et évitez la caféine.",
+  insomnie: "Magnésium le soir (amandes, banane) et évite la caféine.",
   sautes_humeur: "Oméga-3 (poissons gras, noix) pour stabiliser l'humeur.",
-  ballonnements: "Réduisez les FODMAPs, ajoutez fenouil et gingembre.",
-  anxiete: "Magnésium et oméga-3, limitez sucre et caféine.",
+  ballonnements: "Réduis les FODMAPs, ajoute fenouil et gingembre.",
+  anxiete: "Magnésium et oméga-3, limite sucre et caféine.",
   brain_fog: "Oméga-3 et baies riches en antioxydants.",
-  maux_de_tete: "Hydratez-vous bien et stabilisez votre glycémie.",
+  maux_de_tete: "Hydrate-toi bien et stabilise ta glycémie.",
   douleurs_articulaires: "Curcuma, gingembre et oméga-3 anti-inflammatoires.",
   irritabilite: "Magnésium, vitamines B et glycémie stable.",
   deprime: "Oméga-3, vitamine D et tryptophane (œufs, fromage).",
-  transpiration_nocturne: "Soja, lin et évitez alcool/épices le soir.",
+  transpiration_nocturne: "Évite l'alcool et les épices le soir.",
 };
 
 function sumNutrient(logs: any[], k: string) {
@@ -204,7 +204,7 @@ function computeBreakdown(opts: {
         ? `${remaining.slice(0, -1).join(", ")} ou ${remaining[remaining.length - 1]}`
         : remaining[0];
       suggestions.push(
-        `Boostez votre ${NUTRIENT_LABELS[worstDef.key]} (${worstDef.pct}%) : essayez ${finalTip}.`
+        `Booste ton apport en ${NUTRIENT_LABELS[worstDef.key]} (${worstDef.pct}%) : essaie ${finalTip}.`
       );
     }
   }
@@ -216,7 +216,7 @@ function computeBreakdown(opts: {
   if (opts.routines.completed < opts.routines.total) {
     const missing = opts.routines.total - opts.routines.completed;
     suggestions.push(
-      `Complétez ${missing} routine${missing > 1 ? "s" : ""} restante${missing > 1 ? "s" : ""} pour gagner jusqu'à ${Math.min(2, missing * 0.5).toFixed(1)}pt.`
+      `Complète ${missing} routine${missing > 1 ? "s" : ""} restante${missing > 1 ? "s" : ""} pour gagner jusqu'à ${Math.min(2, missing * 0.5).toFixed(1)}pt.`
     );
   }
 
@@ -362,7 +362,7 @@ export default function WellnessScoreCard() {
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-[220px] text-xs">
-                Score basé sur vos apports nutritionnels, vos symptômes et vos routines du jour.
+                Score basé sur tes apports nutritionnels, tes symptômes et tes routines du jour.
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -376,11 +376,11 @@ export default function WellnessScoreCard() {
             </div>
             {estimated ? (
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Basé sur votre profil. Commencez à logger vos repas pour obtenir votre vrai score ! 🎯
+                Basé sur ton profil. Commence à logger tes repas pour obtenir ton vrai score ! 🎯
               </p>
             ) : (
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Calculé sur vos apports, symptômes, routines et habitudes du jour.
+                Calculé sur tes apports, symptômes, routines et habitudes du jour.
               </p>
             )}
             {trend && (
@@ -407,7 +407,7 @@ export default function WellnessScoreCard() {
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Votre score de bien-être : {scoreValue.toFixed(1)}/10
+              Ton score de bien-être : {scoreValue.toFixed(1)}/10
             </DialogTitle>
           </DialogHeader>
 
@@ -444,7 +444,7 @@ export default function WellnessScoreCard() {
 
             {breakdown.suggestions.length > 0 && (
               <section>
-                <h4 className="font-semibold mb-2">💡 Pour améliorer votre score aujourd'hui :</h4>
+                <h4 className="font-semibold mb-2">💡 Pour améliorer ton score aujourd'hui :</h4>
                 <ul className="space-y-1.5 list-disc pl-5">
                   {breakdown.suggestions.map((s, i) => (
                     <li key={i} className="text-foreground">{s}</li>

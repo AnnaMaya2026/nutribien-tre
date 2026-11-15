@@ -126,20 +126,20 @@ export default function SupplementPhotoDialog({
       );
       setIgnored([...(data?.other_ingredients || []), ...(data?.unrecognized || [])]);
 
-      if (data?.issue === "blurry") toast.error("Photo floue : vérifiez chaque valeur avant d'enregistrer.");
-      else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisissez les valeurs à la main.");
-      else if (nutrients.length === 0) toast.error("Aucun nutriment lu. Ajoutez-les manuellement.");
-      else toast.success(`${nutrients.length} nutriment(s) lus — vérifiez chaque ligne.`);
+      if (data?.issue === "blurry") toast.error("Photo floue : vérifie chaque valeur avant d'enregistrer.");
+      else if (data?.issue === "too_dark") toast.error("Photo trop sombre : saisis les valeurs à la main.");
+      else if (nutrients.length === 0) toast.error("Aucun nutriment lu. Ajoute-les manuellement.");
+      else toast.success(`${nutrients.length} nutriment(s) lus — vérifie chaque ligne.`);
       setStep("review");
     } catch (e) {
       console.error(e);
-      toast.error("Lecture impossible. Vous pouvez saisir le complément à la main.");
+      toast.error("Lecture impossible. Tu peux saisir le complément à la main.");
       setStep("review");
     }
   };
 
   const addRow = () => {
-    if (!newKey) return toast.error("Choisissez un nutriment.");
+    if (!newKey) return toast.error("Choisis un nutriment.");
     const a = Number(newAmount.replace(",", "."));
     if (!isFinite(a) || a <= 0) return toast.error("Quantité invalide.");
     setRows((p) => [...p, { nutrient_key: newKey, label: nutrientLabel(newKey), amount: String(a), unit: newUnit, source: "manuel" }]);
@@ -149,15 +149,15 @@ export default function SupplementPhotoDialog({
   const save = async () => {
     if (!nom.trim()) return toast.error("Le nom du produit est requis.");
     const doseNum = Number(String(dose).replace(",", "."));
-    if (!isFinite(doseNum) || doseNum <= 0) return toast.error("Indiquez la dose par jour.");
-    if (!doseUnit) return toast.error("Choisissez l'unité de la dose.");
+    if (!isFinite(doseNum) || doseNum <= 0) return toast.error("Indique la dose par jour.");
+    if (!doseUnit) return toast.error("Choisis l'unité de la dose.");
     const poidsNum = Number(String(poidsDose).replace(",", "."));
     if (doseUnitNeedsWeight(doseUnit) && (!isFinite(poidsNum) || poidsNum <= 0))
-      return toast.error(`Indiquez le poids d'une ${doseUnit} en grammes : sans lui, aucun calcul n'est possible.`);
+      return toast.error(`Indique le poids d'une ${doseUnit} en grammes : sans lui, aucun calcul n'est possible.`);
     const nutrients = rows
       .map((r) => ({ nutrient_key: r.nutrient_key, amount: Number(String(r.amount).replace(",", ".")), unit: r.unit }))
       .filter((n) => n.nutrient_key && isFinite(n.amount) && n.amount > 0);
-    if (nutrients.length === 0) return toast.error("Ajoutez au moins un nutriment.");
+    if (nutrients.length === 0) return toast.error("Ajoute au moins un nutriment.");
     const frequencySettings = supplementFrequencySettings(frequence, joursCouverts);
     if (!frequencySettings) return toast.error("Nombre de jours couverts : entre 2 et 120.");
     setSaving(true);
@@ -192,7 +192,7 @@ export default function SupplementPhotoDialog({
           {step === "capture" && (
             <>
               <p className="text-sm text-muted-foreground">
-                Photographiez le tableau nutritionnel au dos de la boîte. Toutes les valeurs lues vous seront présentées, modifiables, avant enregistrement.
+                Photographie le tableau nutritionnel au dos de la boîte. Toutes les valeurs lues te seront présentées, modifiables, avant enregistrement.
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => cameraRef.current?.click()} className="flex flex-col items-center gap-2 p-5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 min-h-[120px] justify-center shadow-md">
@@ -220,7 +220,7 @@ export default function SupplementPhotoDialog({
           {step === "review" && (
             <>
               <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 p-3 text-xs text-amber-900 dark:text-amber-200">
-                Vérifiez chaque ligne : un dosage erroné fausserait ensuite vos couvertures et vos alertes de dépassement.
+                Vérifie chaque ligne : un dosage erroné fausserait ensuite tes couvertures et tes alertes de dépassement.
               </div>
 
               <div className="space-y-2">

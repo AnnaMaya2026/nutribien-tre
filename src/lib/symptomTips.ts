@@ -8,7 +8,7 @@ export const SYMPTOM_TIPS: Record<string, string[]> = {
     "Porter des vêtements en fibres naturelles",
   ],
   fatigue: [
-    "Vérifier vos apports en fer, vitamine D et magnésium",
+    "Vérifier tes apports en fer, vitamine D et magnésium",
     "Maintenir des horaires de sommeil réguliers",
     "Activité physique modérée 30 min/jour",
     "Éviter les sucres rapides",

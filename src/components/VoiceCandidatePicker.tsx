@@ -64,7 +64,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
         <>
           {/* Instruction */}
           <p className="text-xs text-pink-deep font-medium mb-3">
-            👆 Appuyez sur l'aliment correspondant
+            👆 Appuie sur l'aliment correspondant
           </p>
 
           {/* Candidates list */}
@@ -100,7 +100,7 @@ export default function VoiceCandidatePicker({ candidates, onDone, onCancel, onR
                 🎤 Recommencer la recherche vocale
               </button>
               <p className="text-[13px] text-muted-foreground text-center italic">
-                Si votre aliment n'est pas dans la liste
+                Si ton aliment n'est pas dans la liste
               </p>
             </div>
           )}

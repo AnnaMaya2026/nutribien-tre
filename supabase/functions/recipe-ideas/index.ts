@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
         JSON.stringify({
           recipes: [],
           excluded: true,
-          reason: `${ingredient} est exclu par vos restrictions alimentaires.`,
+          reason: `${ingredient} est exclu par tes restrictions alimentaires.`,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );

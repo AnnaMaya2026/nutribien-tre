@@ -13,4 +13,4 @@ export const HEALTH_CONDITIONS = [
 export type HealthConditionCode = typeof HEALTH_CONDITIONS[number]["value"];
 
 export const HEALTH_DISCLAIMER =
-  "⚠️ NutriMéno ne remplace pas un suivi médical. Consultez votre médecin pour tout conseil de santé personnalisé.";
+  "⚠️ NutriMéno ne remplace pas un suivi médical. Consulte ton médecin pour tout conseil de santé personnalisé.";

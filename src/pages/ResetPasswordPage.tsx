@@ -42,7 +42,7 @@ export default function ResetPasswordPage() {
     if (error) {
       setError(error.message);
     } else {
-      setSuccess("Votre mot de passe a été réinitialisé avec succès.");
+      setSuccess("Ton mot de passe a été réinitialisé avec succès.");
       setTimeout(() => navigate("/"), 1500);
     }
   };
@@ -56,7 +56,7 @@ export default function ResetPasswordPage() {
           </div>
           <h1 className="text-2xl font-bold text-foreground">Nouveau mot de passe</h1>
           <p className="text-muted-foreground mt-2 text-sm">
-            Choisissez un nouveau mot de passe pour votre compte.
+            Choisis un nouveau mot de passe pour ton compte.
           </p>
         </div>
 

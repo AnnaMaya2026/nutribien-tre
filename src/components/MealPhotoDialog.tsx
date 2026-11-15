@@ -118,7 +118,7 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
       if (error) throw error;
 
       if (data?.issue === "blurry") {
-        toast.error("La photo semble floue. Reprenez-la avec plus de lumière et de netteté.");
+        toast.error("La photo semble floue. Reprends-la avec plus de lumière et de netteté.");
         setItems([]);
         setStep("review");
       } else if (data?.issue === "too_dark") {
@@ -126,17 +126,17 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
         setItems([]);
         setStep("review");
       } else if (data?.issue === "no_food" || !Array.isArray(data?.foods) || data.foods.length === 0) {
-        toast.error("Aucun aliment détecté sur l'assiette. Ajoutez-les manuellement.");
+        toast.error("Aucun aliment détecté sur l'assiette. Ajoute-les manuellement.");
         setItems([]);
         setStep("review");
       } else {
         setItems(data.foods);
-        toast.success(`${data.foods.length} aliment(s) détecté(s) — ajustez les quantités si besoin.`);
+        toast.success(`${data.foods.length} aliment(s) détecté(s) — ajuste les quantités si besoin.`);
         setStep("review");
       }
     } catch (e) {
       console.error("analyze-meal-photo error", e);
-      toast.error("Analyse impossible. Réessayez dans un instant.");
+      toast.error("Analyse impossible. Réessaie dans un instant.");
       setItems([]);
       setStep("review");
     }
@@ -170,7 +170,7 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
       return;
     }
     if (items.length === 0) {
-      toast.error("Ajoutez au moins un aliment.");
+      toast.error("Ajoute au moins un aliment.");
       return;
     }
     setStep("confirm");
@@ -189,7 +189,7 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
       if (error) throw error;
       const entries: any[] = (data?.entries as any[]) || [];
       if (entries.length === 0) {
-        toast.error("Impossible d'estimer les nutriments. Réessayez.");
+        toast.error("Impossible d'estimer les nutriments. Réessaie.");
         setStep("review");
         return;
       }
@@ -253,7 +253,7 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
           {step === "capture" && (
             <>
               <p className="text-sm text-muted-foreground">
-                Prenez ou importez une photo de votre repas : Sophie identifiera les aliments et estimera les quantités pour les ajouter à votre journal.
+                Prends ou importe une photo de ton repas : Sophie identifiera les aliments et estimera les quantités pour les ajouter à ton journal.
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -272,7 +272,7 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
                 </button>
               </div>
               <p className="text-xs text-muted-foreground italic">
-                💡 Astuce : cadrez l'assiette de dessus avec un bon éclairage pour une meilleure estimation des portions.
+                💡 Astuce : cadre l'assiette de dessus avec un bon éclairage pour une meilleure estimation des portions.
               </p>
             </>
           )}
@@ -326,7 +326,7 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
                 </button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Ajustez les quantités, supprimez ou ajoutez des aliments, puis validez.
+                Ajuste les quantités, supprime ou ajoute des aliments, puis valide.
               </p>
 
               {items.length > 0 ? (
@@ -357,7 +357,7 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground italic bg-muted/50 rounded-lg p-3">
-                  Aucun aliment — ajoutez-les manuellement ci-dessous.
+                  Aucun aliment — ajoute-les manuellement ci-dessous.
                 </p>
               )}
 
@@ -405,7 +405,7 @@ export default function MealPhotoDialog({ open, onClose }: MealPhotoDialogProps)
           {step === "confirm" && (
             <div className="space-y-4">
               <p className="text-sm text-foreground">
-                Souhaitez-vous ajouter ce repas à votre journal alimentaire ?
+                Souhaites-tu ajouter ce repas à ton journal alimentaire ?
               </p>
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Type de repas</label>

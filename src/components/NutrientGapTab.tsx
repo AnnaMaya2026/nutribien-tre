@@ -135,14 +135,14 @@ export function NutrientGapTab() {
             <h2 className="text-lg font-bold text-foreground">{selected.label}</h2>
           </div>
           <p className="text-xs text-muted-foreground">
-            Vous êtes à <span className={`font-semibold ${getNutrientColor(selected.pct).text}`}>{selected.pct}%</span> de votre objectif quotidien
+            Tu es à <span className={`font-semibold ${getNutrientColor(selected.pct).text}`}>{selected.pct}%</span> de ton objectif quotidien
             ({Math.round(selected.current)}{selected.unit} / {selected.target}{selected.unit})
           </p>
         </div>
 
         {restrictionLabels.length > 0 && (
           <div className="mb-3 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs text-foreground">
-            ✅ Suggestions filtrées selon votre profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
+            ✅ Suggestions filtrées selon ton profil : <span className="font-semibold">{restrictionLabels.join(", ")}</span>
             {alternatives.length > 0 && (
               <ul className="mt-1.5 space-y-0.5 text-muted-foreground">
                 {alternatives.slice(0, 3).map((a, i) => (
@@ -243,7 +243,7 @@ export function NutrientGapTab() {
       <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in">
         <div className="text-5xl mb-4">✅</div>
         <p className="text-sm text-foreground font-medium mb-1">Bravo !</p>
-        <p className="text-xs text-muted-foreground">Tous vos nutriments sont au-dessus de 80% aujourd'hui</p>
+        <p className="text-xs text-muted-foreground">Tous tes nutriments sont au-dessus de 80% aujourd'hui</p>
       </div>
     );
   }
@@ -251,7 +251,7 @@ export function NutrientGapTab() {
   return (
     <div className="animate-fade-in">
       <p className="text-xs text-muted-foreground mb-3 italic">
-        💡 Vos nutriments sous les 80% aujourd'hui. Touchez-en un pour voir les aliments et recettes adaptés.
+        💡 Tes nutriments sous les 80% aujourd'hui. Touche-en un pour voir les aliments et recettes adaptés.
       </p>
       <div className="space-y-2">
         {gaps.map((gap) => (
@@ -265,7 +265,7 @@ export function NutrientGapTab() {
               <div className="flex-1">
                 <p className="text-sm font-semibold text-foreground">{gap.label}</p>
                 <p className="text-[13px] text-muted-foreground">
-                  {gap.pct}% de votre objectif
+                  {gap.pct}% de ton objectif
                 </p>
               </div>
               <ChevronLeft className="w-4 h-4 text-muted-foreground rotate-180" />

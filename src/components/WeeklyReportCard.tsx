@@ -135,7 +135,7 @@ export default function WeeklyReportCard() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <SophieAvatar size={28} />
-              📊 Votre semaine
+              📊 Ta semaine
             </DialogTitle>
             {range.start && (
               <p className="text-xs text-muted-foreground">
