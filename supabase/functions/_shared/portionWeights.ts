@@ -102,6 +102,9 @@ export function matchesKeyword(normalizedName: string, keyword: string): boolean
   return new RegExp(`(?:^|[^a-z0-9])${pattern}(?:[^a-z0-9]|$)`).test(normalizedName);
 }
 
+/** Masse volumique des huiles végétales alimentaires, en g par ml. */
+export const OIL_DENSITY_G_PER_ML = 0.92;
+
 /** Convertit une quantité d'ingrédient en grammes, ou null si inconnue. */
 export function toGrams(
   name: string,
@@ -113,6 +116,10 @@ export function toGrams(
   if (u === "g" || u === "gr" || u === "gramme" || u === "grammes") return { grams: quantity, basis: "grammes lus" };
   if (u === "ml" || u === "cl" || u === "l") {
     const ml = u === "cl" ? quantity * 10 : u === "l" ? quantity * 1000 : quantity;
+    // L'huile est plus légère que l'eau : compter 1 ml = 1 g la surestime de 8 %.
+    if (/huile/i.test(name)) {
+      return { grams: Math.round(ml * OIL_DENSITY_G_PER_ML * 10) / 10, basis: `volume lu (huile : 1 ml ≈ ${OIL_DENSITY_G_PER_ML} g)` };
+    }
     return { grams: ml, basis: "volume lu (1 ml ≈ 1 g)" };
   }
   if (u === "cas" || u === "cac" || u === "cuillere" || u === "cuillère") {

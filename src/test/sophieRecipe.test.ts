@@ -119,3 +119,13 @@ describe("Chiffres envoyés à Sophie = chiffres de l'accueil", () => {
     expect(snap.meals.reduce((a, m) => a + m.target, 0)).toBeGreaterThan(snap.calorieGoal - 5);
   });
 });
+
+import { toGrams } from "../../supabase/functions/_shared/portionWeights";
+
+describe("Fiche recette : conversion des volumes", () => {
+  it("compte l'huile à 0,92 g par ml et les autres liquides à 1 g par ml", () => {
+    expect(toGrams("huile d'olive", 10, "ml").grams).toBe(9.2);
+    expect(toGrams("huile de sésame", 1, "cl").grams).toBe(9.2);
+    expect(toGrams("sauce soja", 20, "ml").grams).toBe(20);
+  });
+});
