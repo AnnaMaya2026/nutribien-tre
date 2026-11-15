@@ -113,3 +113,26 @@ export function buildDaySnapshot(opts: { profile: any; logs: any[]; contribution
     meals,
   };
 }
+
+/**
+ * Moyenne de plusieurs journées (nutriments et calories). Sans journée saisie,
+ * renvoie `empty` avec days = 0.
+ */
+export function averageSnapshots(snapshots: DaySnapshot[], empty: DaySnapshot): DaySnapshot & { days: number } {
+  const days = snapshots.length;
+  if (days === 0) return { ...empty, days: 0 };
+  const avg = (pick: (s: DaySnapshot) => number) => snapshots.reduce((a, s) => a + pick(s), 0) / days;
+  const first = snapshots[0];
+  const calories = Math.round(avg((s) => s.calories));
+  return {
+    ...first,
+    calories,
+    caloriesRemaining: Math.max(0, first.calorieGoal - calories),
+    foodCount: snapshots.reduce((a, s) => a + s.foodCount, 0),
+    nutrients: first.nutrients.map((n, i) => {
+      const value = Math.round(avg((s) => s.nutrients[i].value) * 10) / 10;
+      return { ...n, value, reached: n.goal > 0 ? (value / n.goal) * 100 >= 80 : true };
+    }),
+    days,
+  };
+}

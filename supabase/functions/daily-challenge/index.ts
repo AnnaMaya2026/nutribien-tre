@@ -110,7 +110,9 @@ serve(async (req) => {
       "Préparer un repas 100% maison",
     ];
 
-    const refDay = moment === "demain" ? "aujourd'hui" : "hier";
+    // L'écran envoie une moyenne sur les derniers jours saisis (dash.days).
+    const dashDays = Number(dash?.days) || 0;
+    const refDay = dashDays > 1 ? `en moyenne sur les ${dashDays} derniers jours saisis` : moment === "demain" ? "aujourd'hui" : "hier";
     const nutrientLine = !hasFoodData
       ? `aucun aliment enregistré ${refDay} : ne cite aucun nutriment.`
       : weakestEntry

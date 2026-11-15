@@ -8,6 +8,12 @@ import { isFoodAllowed, getAlternativesForRestrictions, getDietaryLabels } from 
 import { getNutrientColor } from "@/lib/utils";
 import { Loader2, Sparkles, ChevronLeft, RotateCw, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDaySnapshot } from "@/hooks/useDaySnapshot";
+import { detectMeal, mealBudget } from "../../supabase/functions/_shared/sophieRecipe.ts";
+import { fmtKcal, fmtQty } from "@/lib/formatNumber";
+
+const parisHour = () =>
+  Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", hour: "2-digit", hour12: false }).format(new Date()));
 
 interface NutrientGap {
   key: string;
@@ -29,6 +35,9 @@ interface GeneratedRecipe {
   calories: number;
   proteins: number;
   addresses: string;
+  /** Ingrédients absents de la table CIQUAL, non comptés dans les calories. */
+  uncounted?: string[];
+  calories_partial?: boolean;
 }
 
 export function NutrientGapTab() {
@@ -43,19 +52,19 @@ export function NutrientGapTab() {
   const [recipes, setRecipes] = useState<GeneratedRecipe[]>([]);
   const [loadingRecipes, setLoadingRecipes] = useState(false);
 
+  // Apports du jour identiques à l'accueil : alimentation + compléments cochés.
+  const daySnapshot = useDaySnapshot();
   const todayTotals = useMemo(() => {
-    return logs.reduce(
-      (acc, log) => ({
-        proteins: acc.proteins + (log.proteins || 0),
-        calcium: acc.calcium + (log.calcium || 0),
-        vitamin_d: acc.vitamin_d + (log.vitamin_d || 0),
-        magnesium: acc.magnesium + (log.magnesium || 0),
-        iron: acc.iron + (log.iron || 0),
-        omega3: acc.omega3 + (log.omega3 || 0),
-      }),
-      { proteins: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0 }
-    );
-  }, [logs]);
+    const value = (key: string) => daySnapshot?.nutrients.find((n) => n.key === key)?.value ?? 0;
+    return {
+      proteins: value("proteins"),
+      calcium: value("calcium"),
+      vitamin_d: value("vitamin_d"),
+      magnesium: value("magnesium"),
+      iron: value("iron"),
+      omega3: value("omega3"),
+    };
+  }, [daySnapshot]);
 
   const gaps: NutrientGap[] = useMemo(() => {
     const goals = getDailyGoals(profile);
@@ -69,9 +78,9 @@ export function NutrientGapTab() {
     ];
     return checks
       .map((c) => ({ ...c, pct: Math.round((c.current / c.target) * 100) }))
-      .filter((c) => c.pct < 80)
+      .filter((c) => daySnapshot !== null && c.pct < 80)
       .sort((a, b) => a.pct - b.pct);
-  }, [todayTotals, profile]);
+  }, [todayTotals, profile, daySnapshot]);
 
   // Load foods + recipes when nutrient is selected
   useEffect(() => {
@@ -106,6 +115,10 @@ export function NutrientGapTab() {
           context: `Recettes riches en ${gap.label} pour combler un manque (apport actuel: ${gap.pct}% de l'objectif quotidien).`,
           count: 4,
           exclude,
+          // Budget du prochain repas, calculé comme pour Sophie.
+          budget: daySnapshot
+            ? mealBudget(detectMeal("", parisHour()), daySnapshot.caloriesRemaining, daySnapshot.meals)
+            : undefined,
         },
       });
       if (error) throw error;
@@ -208,8 +221,13 @@ export function NutrientGapTab() {
                 <div className="flex gap-2 mb-2 text-[13px] text-muted-foreground">
                   <span>⏱ Prép: {r.prep_time}</span>
                   <span>🔥 Cuisson: {r.cook_time}</span>
-                  <span>🔥 {r.calories} kcal</span>
+                  <span>
+                    🔥 {r.calories_partial ? "au moins " : "≈ "}{fmtKcal(r.calories)} kcal · {fmtQty(r.proteins)} g prot.
+                  </span>
                 </div>
+                <p className="text-[13px] text-muted-foreground mb-2">
+                  Calculé avec la table CIQUAL{r.uncounted?.length ? `, sans compter : ${r.uncounted.join(", ")}` : ""}.
+                </p>
                 {r.addresses && (
                   <p className="text-[13px] text-pink-deep/80 italic mb-2">{r.addresses}</p>
                 )}

@@ -129,3 +129,18 @@ describe("Fiche recette : conversion des volumes", () => {
     expect(toGrams("sauce soja", 20, "ml").grams).toBe(20);
   });
 });
+
+import { averageSnapshots } from "@/lib/daySnapshot";
+
+describe("Défi : moyenne sur plusieurs jours", () => {
+  it("fait la moyenne des nutriments et ne signale un manque que s'il persiste", () => {
+    const profile = { weight: 61, height: 165, age: 55, activity_level: "leger", objective: "maintenir" };
+    const day = (calcium: number) => buildDaySnapshot({ profile, logs: [{ meal_type: "dejeuner", calories: 500, calcium }], contributions: {} });
+    const avg = averageSnapshots([day(200), day(1400)], day(0));
+    const calcium = avg.nutrients.find((n) => n.key === "calcium")!;
+    expect(avg.days).toBe(2);
+    expect(calcium.value).toBe(800);
+    expect(calcium.reached).toBe(true); // 800 / 950 = 84 %
+    expect(averageSnapshots([], day(0)).days).toBe(0);
+  });
+});

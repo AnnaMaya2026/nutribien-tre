@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Target, Check } from "lucide-react";
 import { toast } from "sonner";
-import { useDaySnapshot } from "@/hooks/useDaySnapshot";
+import { useRecentAverageSnapshot } from "@/hooks/useDaySnapshot";
 import { cleanChallengeText, parisDateKey, parisHour } from "@/lib/challengeText";
 
 export default function DailyChallengeCard() {
@@ -22,7 +22,8 @@ export default function DailyChallengeCard() {
   // After 5pm local time, generate the challenge for TOMORROW.
   const forTomorrow = hour >= 17;
   const targetKey = parisDateKey(now, forTomorrow ? 1 : 0);
-  const refSnapshot = useDaySnapshot(parisDateKey(now, forTomorrow ? 0 : -1));
+  // Moyenne des derniers jours saisis, jusqu'à la veille du défi.
+  const refSnapshot = useRecentAverageSnapshot(parisDateKey(now, forTomorrow ? 0 : -1));
   const displayText = useMemo(() => cleanChallengeText(challenge?.challenge_text), [challenge?.challenge_text]);
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export default function DailyChallengeCard() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("daily-challenge", {
-        // Chiffres du jour de référence (la veille du défi), compléments inclus.
+        // Moyenne des derniers jours saisis avant le défi, compléments inclus.
         body: { target_date: targetKey, dashboard: refSnapshot ?? undefined },
       });
       if (error) throw error;

@@ -13,6 +13,7 @@ import { ChefHat, Leaf, AlertTriangle, Search, Loader2, UtensilsCrossed } from "
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { formatStandardPortionHint, getDefaultPortion, getPortionUnit } from "@/lib/portionUnits";
+import { useDaySnapshot } from "@/hooks/useDaySnapshot";
 
 interface NutrientGap {
   key: string;
@@ -144,20 +145,19 @@ export default function RepasPage() {
   }, [recipeQuery]);
 
   // Today's totals
+  // Apports du jour identiques à l'accueil : alimentation + compléments cochés.
+  const daySnapshot = useDaySnapshot();
   const todayTotals = useMemo(() => {
-    return logs.reduce(
-      (acc, log) => ({
-        calories: acc.calories + (log.calories || 0),
-        proteins: acc.proteins + (log.proteins || 0),
-        calcium: acc.calcium + (log.calcium || 0),
-        vitamin_d: acc.vitamin_d + (log.vitamin_d || 0),
-        magnesium: acc.magnesium + (log.magnesium || 0),
-        iron: acc.iron + (log.iron || 0),
-        omega3: acc.omega3 + (log.omega3 || 0),
-      }),
-      { calories: 0, proteins: 0, calcium: 0, vitamin_d: 0, magnesium: 0, iron: 0, omega3: 0 }
-    );
-  }, [logs]);
+    const value = (key: string) => daySnapshot?.nutrients.find((n) => n.key === key)?.value ?? 0;
+    return {
+      proteins: value("proteins"),
+      calcium: value("calcium"),
+      vitamin_d: value("vitamin_d"),
+      magnesium: value("magnesium"),
+      iron: value("iron"),
+      omega3: value("omega3"),
+    };
+  }, [daySnapshot]);
 
   const gaps: NutrientGap[] = useMemo(() => {
     const goals = getDailyGoals(profile);
@@ -171,9 +171,9 @@ export default function RepasPage() {
     ];
     return checks
       .map((c) => ({ ...c, pct: Math.round((c.current / c.target) * 100) }))
-      .filter((c) => c.pct < 50)
+      .filter((c) => daySnapshot !== null && c.pct < 50)
       .sort((a, b) => a.pct - b.pct);
-  }, [todayTotals, profile]);
+  }, [todayTotals, profile, daySnapshot]);
 
   // Fetch foods that cover gaps
   useEffect(() => {
