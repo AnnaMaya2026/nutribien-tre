@@ -8,6 +8,7 @@ import { isIndustrialFood } from "@/lib/industrialFood";
 import { estimatePhytoestrogensPer100g } from "@/lib/phytoestrogenEstimator";
 import { findCiqualMatch } from "@/lib/ciqualMatcher";
 import { scaleOrNull } from "@/lib/ciqual";
+import { readOffMicros, fillMissingFromCiqual, OFF_MICRO_KEYS } from "@/lib/openFoodFacts";
 
 const MEAL_TYPES = [
   { value: "petit-dejeuner", label: "🌅 Petit-déjeuner" },
@@ -114,53 +115,30 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
       const nm = p.nutriments || {};
       const productName = p.product_name || p.product_name_fr || "Produit inconnu";
 
-      let calcium = n(nm.calcium_100g);
-      let vitamin_d = n(nm["vitamin-d_100g"]);
-      let magnesium = n(nm.magnesium_100g);
-      let iron = n(nm.iron_100g);
-      let omega3 = n(nm["omega-3-fat_100g"]);
-      let vitamin_b12 = n(nm["vitamin-b12_100g"]);
-      let potassium = n(nm.potassium_100g);
-      let zinc = n(nm.zinc_100g);
-      let vitamin_k = n(nm["vitamin-k_100g"]);
-      let vitamin_b6 = n(nm["vitamin-b6_100g"]);
-      let vitamin_b9 = n(nm["vitamin-b9_100g"]);
-      let vitamin_e = n(nm["vitamin-e_100g"]);
+      // Open Food Facts donne tout en grammes : conversion en mg / µg dans readOffMicros.
+      const micros = readOffMicros(nm);
+      const fromOff = OFF_MICRO_KEYS.some((k) => micros[k] !== null);
       let phytoestrogens: number | null = null;
-      let microsAvailable =
-        [calcium, vitamin_d, magnesium, iron, omega3, vitamin_b12].some((v) => v !== null);
-      let microsSource: "openfoodfacts" | "ciqual" | "none" = microsAvailable
-        ? "openfoodfacts"
-        : "none";
       let ciqualMatchName: string | undefined;
+      let filledFromCiqual = 0;
 
-      // If OFF doesn't provide micros, look up CIQUAL by name (fuzzy match)
-      if (!microsAvailable) {
+      // Ce qu'Open Food Facts ne fournit pas est complété, nutriment par nutriment,
+      // par la ligne CIQUAL la plus proche du nom du produit.
+      if (OFF_MICRO_KEYS.some((k) => micros[k] === null)) {
         try {
           const match = await findCiqualMatch(productName);
           if (match) {
-            const f = match.food;
-            calcium = f.calcium_100g ?? null;
-            vitamin_d = f.vitamine_d_100g ?? null;
-            magnesium = f.magnesium_100g ?? null;
-            iron = f.fer_100g ?? null;
-            omega3 = f.omega3_total_100g ?? null;
-            vitamin_b12 = f.vitamine_b12_100g ?? null;
-            potassium = f.potassium_100g ?? null;
-            zinc = f.zinc_100g ?? null;
-            vitamin_k = f.vitamine_k_100g ?? null;
-            vitamin_b6 = f.vitamine_b6_100g ?? null;
-            vitamin_b9 = f.vitamine_b9_100g ?? null;
-            vitamin_e = f.vitamine_e_100g ?? null;
-            phytoestrogens = f.phytoestrogenes_100mg ?? null;
-            microsAvailable = true;
-            microsSource = "ciqual";
-            ciqualMatchName = f.nom;
+            filledFromCiqual = fillMissingFromCiqual(micros, match.food as any).length;
+            phytoestrogens = match.food.phytoestrogenes_100mg ?? null;
+            if (filledFromCiqual > 0) ciqualMatchName = match.food.nom;
           }
         } catch (err) {
           console.warn("CIQUAL match failed:", err);
         }
       }
+      const microsAvailable = OFF_MICRO_KEYS.some((k) => micros[k] !== null);
+      const microsSource: "openfoodfacts" | "ciqual" | "none" = filledFromCiqual > 0 ? "ciqual" : fromOff ? "openfoodfacts" : "none";
+      const { calcium, vitamin_d, magnesium, iron, omega3, vitamin_b12, potassium, zinc, vitamin_k, vitamin_b6, vitamin_b9, vitamin_e } = micros;
 
       // Isoflavones estimées d'après le nom pour les produits à base de soja ; sinon inconnu (null).
       if (phytoestrogens == null) {
@@ -566,7 +544,7 @@ export default function BarcodeScanner({ mealType, onAdd, isPending }: BarcodeSc
                 {/* Micros source banner */}
                 {product.microsSource === "ciqual" && product.ciqualMatchName && (
                   <p className="text-[13px] text-muted-foreground italic">
-                    Micronutriments estimés depuis CIQUAL ({product.ciqualMatchName})
+                    Micronutriments absents de l'étiquette complétés avec l'aliment CIQUAL « {product.ciqualMatchName} »
                   </p>
                 )}
                 {!product.microsAvailable && (

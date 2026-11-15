@@ -1,106 +1,83 @@
-export interface OFFProduct {
-  product_name: string;
-  nutriments: {
-    "energy-kcal_100g"?: number;
-    proteins_100g?: number;
-    carbohydrates_100g?: number;
-    fat_100g?: number;
-    calcium_100g?: number;  // mg
-    "vitamin-d_100g"?: number; // µg
-    magnesium_100g?: number; // mg
-    iron_100g?: number; // mg
-    "omega-3-fat_100g"?: number; // g
-    "vitamin-b12_100g"?: number; // µg
-  };
-  serving_size?: string;
+// Lecture des micronutriments d'Open Food Facts.
+//
+// Les champs « _100g » d'Open Food Facts sont tous exprimés en GRAMMES pour
+// 100 g, vitamines et minéraux compris. L'appli travaille en mg ou en µg :
+// chaque valeur est donc convertie ici, et nulle part ailleurs.
+
+export type OffMicroKey =
+  | "calcium" | "magnesium" | "iron" | "potassium" | "zinc" | "vitamin_b6" | "vitamin_e"
+  | "vitamin_d" | "vitamin_b12" | "vitamin_k" | "vitamin_b9" | "omega3";
+
+const G_TO_MG = 1000;
+const G_TO_UG = 1_000_000;
+
+/** Champ Open Food Facts et facteur de conversion vers l'unité de l'appli. */
+const OFF_FIELDS: Record<OffMicroKey, { field: string; factor: number }> = {
+  calcium: { field: "calcium_100g", factor: G_TO_MG },
+  magnesium: { field: "magnesium_100g", factor: G_TO_MG },
+  iron: { field: "iron_100g", factor: G_TO_MG },
+  potassium: { field: "potassium_100g", factor: G_TO_MG },
+  zinc: { field: "zinc_100g", factor: G_TO_MG },
+  vitamin_b6: { field: "vitamin-b6_100g", factor: G_TO_MG },
+  vitamin_e: { field: "vitamin-e_100g", factor: G_TO_MG },
+  vitamin_d: { field: "vitamin-d_100g", factor: G_TO_UG },
+  vitamin_b12: { field: "vitamin-b12_100g", factor: G_TO_UG },
+  vitamin_k: { field: "vitamin-k_100g", factor: G_TO_UG },
+  vitamin_b9: { field: "vitamin-b9_100g", factor: G_TO_UG },
+  omega3: { field: "omega-3-fat_100g", factor: 1 },
+};
+
+/** Colonne CIQUAL correspondante (déjà dans l'unité de l'appli). */
+export const CIQUAL_FIELDS: Record<OffMicroKey, string> = {
+  calcium: "calcium_100g",
+  magnesium: "magnesium_100g",
+  iron: "fer_100g",
+  potassium: "potassium_100g",
+  zinc: "zinc_100g",
+  vitamin_b6: "vitamine_b6_100g",
+  vitamin_e: "vitamine_e_100g",
+  vitamin_d: "vitamine_d_100g",
+  vitamin_b12: "vitamine_b12_100g",
+  vitamin_k: "vitamine_k_100g",
+  vitamin_b9: "vitamine_b9_100g",
+  omega3: "omega3_total_100g",
+};
+
+export const OFF_MICRO_KEYS = Object.keys(OFF_FIELDS) as OffMicroKey[];
+
+const num = (v: unknown): number | null => {
+  if (v === undefined || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+};
+
+/** Micronutriments pour 100 g dans l'unité de l'appli (mg, µg, g) ; null = non fourni. */
+export function readOffMicros(nutriments: Record<string, unknown> | null | undefined): Record<OffMicroKey, number | null> {
+  const out = {} as Record<OffMicroKey, number | null>;
+  for (const key of OFF_MICRO_KEYS) {
+    const v = num(nutriments?.[OFF_FIELDS[key].field]);
+    out[key] = v === null ? null : Math.round(v * OFF_FIELDS[key].factor * 1000) / 1000;
+  }
+  return out;
 }
 
-export interface ParsedFood {
-  name: string;
-  calories_100g: number;
-  proteins_100g: number;
-  carbs_100g: number;
-  fats_100g: number;
-  calcium_100g: number;
-  vitamin_d_100g: number;
-  magnesium_100g: number;
-  iron_100g: number;
-  omega3_100g: number;
-  vitamin_b12_100g: number;
-  phytoestrogens_100g: number;
-  serving_size: string;
-}
-
-function n(v: number | undefined): number {
-  return v && isFinite(v) ? v : 0;
-}
-
-import { sanitizePer100g } from "@/lib/nutrientSanitize";
-
-function parseProduct(p: OFFProduct): ParsedFood | null {
-  if (!p.product_name) return null;
-  const name = p.product_name;
-  return {
-    name,
-    calories_100g: sanitizePer100g("calories", n(p.nutriments["energy-kcal_100g"]), name),
-    proteins_100g: sanitizePer100g("proteins", n(p.nutriments.proteins_100g), name),
-    carbs_100g: sanitizePer100g("carbs", n(p.nutriments.carbohydrates_100g), name),
-    fats_100g: sanitizePer100g("fats", n(p.nutriments.fat_100g), name),
-    calcium_100g: sanitizePer100g("calcium", n(p.nutriments.calcium_100g), name),
-    vitamin_d_100g: sanitizePer100g("vitamin_d", n(p.nutriments["vitamin-d_100g"]), name),
-    magnesium_100g: sanitizePer100g("magnesium", n(p.nutriments.magnesium_100g), name),
-    iron_100g: sanitizePer100g("iron", n(p.nutriments.iron_100g), name),
-    omega3_100g: sanitizePer100g("omega3", n(p.nutriments["omega-3-fat_100g"]), name),
-    vitamin_b12_100g: sanitizePer100g("vitamin_b12", n(p.nutriments["vitamin-b12_100g"]), name),
-    phytoestrogens_100g: 0,
-    serving_size: p.serving_size || "100g",
-  };
-}
-
-async function fetchWithRetry(url: string, retries = 3, timeout = 10000): Promise<Response> {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeout);
-    try {
-      const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timer);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res;
-    } catch (err) {
-      clearTimeout(timer);
-      console.warn(`[OFF] Attempt ${attempt} failed:`, err);
-      if (attempt === retries) throw err;
-      await new Promise(r => setTimeout(r, 300));
+/**
+ * Complète, nutriment par nutriment, ce qu'Open Food Facts ne fournit pas
+ * avec la ligne CIQUAL la plus proche. Renvoie les clés complétées.
+ */
+export function fillMissingFromCiqual(
+  micros: Record<OffMicroKey, number | null>,
+  ciqualRow: Record<string, unknown> | null | undefined,
+): OffMicroKey[] {
+  const filled: OffMicroKey[] = [];
+  if (!ciqualRow) return filled;
+  for (const key of OFF_MICRO_KEYS) {
+    if (micros[key] !== null) continue;
+    const v = num(ciqualRow[CIQUAL_FIELDS[key]]);
+    if (v !== null) {
+      micros[key] = v;
+      filled.push(key);
     }
   }
-  throw new Error("Unreachable");
-}
-
-export async function searchFoods(query: string): Promise<ParsedFood[]> {
-  const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&fields=product_name,nutriments,serving_size&lc=fr&cc=fr&page_size=25`;
-  const res = await fetchWithRetry(url);
-  const data = await res.json();
-  const products: OFFProduct[] = data.products || [];
-  const parsed = products
-    .map(parseProduct)
-    .filter((p): p is ParsedFood => p !== null && p.calories_100g > 0)
-    .slice(0, 10);
-  return parsed;
-}
-
-export function scaleNutrients(food: ParsedFood, grams: number) {
-  const r = grams / 100;
-  return {
-    calories: Math.round(food.calories_100g * r),
-    proteins: Math.round(food.proteins_100g * r),
-    carbs: Math.round(food.carbs_100g * r),
-    fats: Math.round(food.fats_100g * r),
-    calcium: Math.round(food.calcium_100g * r),
-    vitamin_d: +(food.vitamin_d_100g * r).toFixed(1),
-    magnesium: Math.round(food.magnesium_100g * r),
-    iron: +(food.iron_100g * r).toFixed(1),
-    omega3: +(food.omega3_100g * r).toFixed(1),
-    vitamin_b12: +(food.vitamin_b12_100g * r).toFixed(1),
-    phytoestrogens: 0,
-  };
+  return filled;
 }
