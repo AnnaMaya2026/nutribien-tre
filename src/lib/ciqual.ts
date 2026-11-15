@@ -1,6 +1,7 @@
 import { isFishRoeMismatch } from "@/lib/ciqualRoe";
 import { supabase } from "@/integrations/supabase/client";
 import { amountToNutritionGrams } from "@/lib/portionUnits";
+import { matchCiqual, scoreCandidate } from "../../supabase/functions/_shared/ciqualMatch.ts";
 
 export interface CiqualFood {
   id: number;
@@ -99,20 +100,32 @@ async function runSearch(term: string): Promise<CiqualFood[]> {
   const stripAccents = (s: string) =>
     s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const lower = stripAccents(term);
-  const sorted = ((data as any[]) || []).sort((a, b) => {
-    const aNom = stripAccents(a.nom || "");
-    const bNom = stripAccents(b.nom || "");
-    const aScore = aNom.startsWith(lower) ? 0 : aNom.includes(` ${lower}`) ? 1 : 2;
-    const bScore = bNom.startsWith(lower) ? 0 : bNom.includes(` ${lower}`) ? 1 : 2;
-    // « œuf » seul : œufs de poule avant les œufs de poisson
-    const aRoe = isFishRoeMismatch(term, a.nom || "") ? 1 : 0;
-    const bRoe = isFishRoeMismatch(term, b.nom || "") ? 1 : 0;
-    if (aRoe !== bRoe) return aRoe - bRoe;
-    if (aScore !== bScore) return aScore - bScore;
-    if (aNom.length !== bNom.length) return aNom.length - bNom.length;
-    return aNom.localeCompare(bNom);
-  });
+  // Même notation que le moteur unique (_shared/ciqualMatch.ts) ; à score égal,
+  // le nom qui commence par le terme, puis le plus court.
+  const scored = ((data as any[]) || []).map((row) => ({ row, score: scoreCandidate(term, row.nom || "", row.groupe || "") }));
+  const sorted = scored
+    .sort((x, y) => {
+      if (x.score !== y.score) return y.score - x.score;
+      const aNom = stripAccents(x.row.nom || "");
+      const bNom = stripAccents(y.row.nom || "");
+      const aStart = aNom.startsWith(lower) ? 0 : aNom.includes(` ${lower}`) ? 1 : 2;
+      const bStart = bNom.startsWith(lower) ? 0 : bNom.includes(` ${lower}`) ? 1 : 2;
+      if (aStart !== bStart) return aStart - bStart;
+      if (aNom.length !== bNom.length) return aNom.length - bNom.length;
+      return aNom.localeCompare(bNom);
+    })
+    .map((c) => c.row);
   return mapRows(sorted.slice(0, 20));
+}
+
+/**
+ * Rapprochement automatique d'un nom libre avec la table CIQUAL, par le moteur
+ * unique. Renvoie null si aucun aliment n'atteint le seuil de confiance.
+ */
+export async function matchCiqualFood(name: string): Promise<{ food: CiqualFood; score: number } | null> {
+  const match = await matchCiqual(supabase, name);
+  if (!match) return null;
+  return { food: mapRows([match.row])[0], score: match.score };
 }
 
 export async function searchCiqual(query: string): Promise<CiqualFood[]> {

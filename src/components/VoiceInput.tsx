@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { scaleCiqual, CiqualFood } from "@/lib/ciqual";
+import { scaleCiqual, searchCiqual, matchCiqualFood, CiqualFood } from "@/lib/ciqual";
 import { getDefaultPortion } from "@/lib/portionUnits";
 import { toast } from "sonner";
 import { normalizeTranscript, pickBestAlternative } from "@/lib/speechCorrections";
@@ -73,56 +73,17 @@ export default function VoiceInput({ onResults, onCandidates }: VoiceInputProps)
 
       for (const item of data.foods) {
         try {
-          const cols = "id, nom, groupe, calories_100g, proteines_100g, glucides_100g, lipides_100g, fibres_100g, calcium_100g, fer_100g, magnesium_100g, vitamine_d_100g, vitamine_b12_100g, omega3_total_100g";
-          const [startsWith, contains] = await Promise.all([
-            supabase.from("aliments_ciqual").select(cols).ilike("nom", `${item.name}%`).limit(8),
-            supabase.from("aliments_ciqual").select(cols).ilike("nom", `%${item.name}%`).limit(8),
-          ]);
-          const searchError = startsWith.error || contains.error;
-          const seen = new Set<number>();
-          const results: any[] = [];
-          for (const row of [...(startsWith.data || []), ...(contains.data || [])]) {
-            if (!seen.has(row.id) && results.length < 8) {
-              seen.add(row.id);
-              results.push(row);
-            }
-          }
+          // Moteur unique : le meilleur aliment d'abord, puis les autres candidats classés.
+          const [best, ranked] = await Promise.all([matchCiqualFood(item.name), searchCiqual(item.name)]);
+          const mapped: CiqualFood[] = [
+            ...(best ? [best.food] : []),
+            ...ranked.filter((f) => f.id !== best?.food.id),
+          ].slice(0, 8);
 
-
-          if (searchError) {
-            console.error(`[Voice] Search error for "${item.name}":`, searchError);
-            toast.error(`Erreur pour "${item.name}"`);
-            continue;
-          }
-
-          if (!results || results.length === 0) {
+          if (mapped.length === 0) {
             toast.error(`"${item.name}" non trouvé, recherche manuellement`);
             continue;
           }
-
-          const mapped: CiqualFood[] = results.map((row) => ({
-            id: row.id,
-            nom: row.nom || "Sans nom",
-            groupe: row.groupe,
-            calories_100g: row.calories_100g ?? 0,
-            proteines_100g: row.proteines_100g ?? 0,
-            glucides_100g: row.glucides_100g ?? 0,
-            lipides_100g: row.lipides_100g ?? 0,
-            fibres_100g: row.fibres_100g ?? null,
-            calcium_100g: row.calcium_100g ?? null,
-            fer_100g: row.fer_100g ?? null,
-            magnesium_100g: row.magnesium_100g ?? null,
-            vitamine_d_100g: row.vitamine_d_100g ?? null,
-            vitamine_b12_100g: row.vitamine_b12_100g ?? null,
-            omega3_total_100g: row.omega3_total_100g ?? null,
-            phytoestrogenes_100mg: (row as any).phytoestrogenes_100mg ?? null,
-            potassium_100g: (row as any).potassium_100g ?? null,
-            zinc_100g: (row as any).zinc_100g ?? null,
-            vitamine_k_100g: (row as any).vitamine_k_100g ?? null,
-            vitamine_b6_100g: (row as any).vitamine_b6_100g ?? null,
-            vitamine_b9_100g: (row as any).vitamine_b9_100g ?? null,
-            vitamine_e_100g: (row as any).vitamine_e_100g ?? null,
-          }));
 
           const grams = Math.max(10, Math.min(1000, item.grams || getDefaultPortion(item.name)));
 

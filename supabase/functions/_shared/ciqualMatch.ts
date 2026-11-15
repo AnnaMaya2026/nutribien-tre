@@ -277,19 +277,20 @@ export const CIQUAL_MATCH_THRESHOLD = 0.6;
 
 
 /**
- * Find the best CIQUAL row for a free-form food name.
- * Returns null when no candidate reaches the confidence threshold.
+ * Moteur unique de reconnaissance : classe les lignes CIQUAL candidates pour un
+ * nom libre, de la plus proche à la moins proche. Utilisé par les fonctions
+ * serveur (photo, fiche recette, menus, Sophie) et par les écrans (recherche,
+ * voix, code-barres) avec le client Supabase du navigateur.
+ *
+ * keepZeroKcal : garde les lignes à 0 kcal (eau, thé, café), utiles dans une
+ * liste de recherche mais exclues d'un rapprochement automatique.
  */
-export async function matchCiqual(
+export async function rankCiqual(
   supabase: any,
   name: string,
   context: CiqualMatchContext = {},
-): Promise<{ row: any; score: number } | null> {
-  const generic = genericDrink(name);
-  if (generic) {
-    const { data } = await supabase.from("aliments_ciqual").select("*").eq("nom", generic).limit(1);
-    if (data && data[0]) return { row: data[0], score: 1 };
-  }
+  opts: { keepZeroKcal?: boolean } = {},
+): Promise<ScoredCandidate[]> {
   const cleaned = applySynonyms(stripOrigin(name) || name) || normalize(name);
   const terms: string[] = [];
   const norm = normalize(cleaned);
@@ -301,7 +302,6 @@ export async function matchCiqual(
   for (const t of tokenize(cleaned).slice(0, 3)) {
     if (!terms.includes(t)) terms.push(t);
   }
-
 
   const seen = new Set<number>();
   const candidates: any[] = [];
@@ -315,20 +315,34 @@ export async function matchCiqual(
     for (const row of (data || [])) {
       const kcal = Number(row.calories_100g);
       // Exclude rows with NULL or 0 kcal: silent traps
-      if (!isFinite(kcal) || kcal <= 0) continue;
+      if (!opts.keepZeroKcal && (!isFinite(kcal) || kcal <= 0)) continue;
       if (seen.has(row.id)) continue;
       seen.add(row.id);
       candidates.push(row);
     }
     if (candidates.length >= 200) break;
   }
-  if (candidates.length === 0) return null;
+  return candidates
+    .map((row) => ({ row, score: scoreCandidate(cleaned, row.nom || "", row.groupe || "", context) }))
+    // Tri stable : à score égal, l'ordre de la recherche est conservé.
+    .sort((a, b) => b.score - a.score);
+}
 
-  let best: { row: any; score: number } | null = null;
-  for (const row of candidates) {
-    const s = scoreCandidate(cleaned, row.nom || "", row.groupe || "", context);
-    if (!best || s > best.score) best = { row, score: s };
+/**
+ * Find the best CIQUAL row for a free-form food name.
+ * Returns null when no candidate reaches the confidence threshold.
+ */
+export async function matchCiqual(
+  supabase: any,
+  name: string,
+  context: CiqualMatchContext = {},
+): Promise<{ row: any; score: number } | null> {
+  const generic = genericDrink(name);
+  if (generic) {
+    const { data } = await supabase.from("aliments_ciqual").select("*").eq("nom", generic).limit(1);
+    if (data && data[0]) return { row: data[0], score: 1 };
   }
+  const best = (await rankCiqual(supabase, name, context))[0];
   if (!best || best.score < CIQUAL_MATCH_THRESHOLD) return null;
   return best;
 }
