@@ -2,6 +2,7 @@ import { isFishRoeMismatch } from "@/lib/ciqualRoe";
 import { supabase } from "@/integrations/supabase/client";
 import { amountToNutritionGrams } from "@/lib/portionUnits";
 import { matchCiqual, scoreCandidate } from "../../supabase/functions/_shared/ciqualMatch.ts";
+import { parisDayKey } from "@/lib/parisDate";
 
 export interface CiqualFood {
   id: number;
@@ -181,16 +182,32 @@ function isExcludedFood(nom: string): boolean {
   return EXCLUDED_TERMS.some((term) => lower.includes(term));
 }
 
-// Preferred everyday foods per nutrient gap
+// Aliments courants proposés pour chaque nutriment. Les teneurs viennent
+// toujours de la table CIQUAL ; cette liste ne sert qu'à choisir des aliments
+// du quotidien. Pas de soja : l'ANSES conseille de ne pas le mettre en avant.
 const PREFERRED_FOODS: Record<string, string[]> = {
-  vitamine_d_100g: ["saumon", "sardine", "oeuf", "champignon", "thon", "maquereau"],
-  calcium_100g: ["yaourt", "fromage", "lait", "amande", "brocoli", "épinard"],
-  magnesium_100g: ["chocolat noir", "banane", "épinard", "noix", "amande", "lentille"],
-  fer_100g: ["lentille", "épinard", "boeuf", "haricot", "tofu", "quinoa"],
-  omega3_total_100g: ["saumon", "noix", "colza", "sardine", "maquereau", "lin"],
-  proteines_100g: ["poulet", "oeuf", "thon", "lentille", "yaourt", "boeuf"],
-  vitamine_b12_100g: ["oeuf", "saumon", "fromage", "boeuf", "thon", "lait"],
+  vitamine_d_100g: ["saumon", "sardine", "oeuf", "champignon", "thon", "maquereau", "hareng", "truite", "anchois", "margarine", "fromage blanc", "jaune d'oeuf"],
+  calcium_100g: ["yaourt", "fromage", "lait", "amande", "brocoli", "épinard", "sardine", "chou", "fromage blanc", "haricot blanc", "figue", "cresson"],
+  magnesium_100g: ["chocolat noir", "banane", "épinard", "noix", "amande", "lentille", "noisette", "pois chiche", "haricot", "flocon d'avoine", "noix de cajou", "pain complet"],
+  fer_100g: ["lentille", "épinard", "boeuf", "haricot", "pois chiche", "quinoa", "boudin", "moule", "oeuf", "sardine", "persil", "flocon d'avoine"],
+  omega3_total_100g: ["saumon", "noix", "colza", "sardine", "maquereau", "lin", "hareng", "truite", "anchois", "thon", "chia", "huile de noix"],
+  proteines_100g: ["poulet", "oeuf", "thon", "lentille", "yaourt", "boeuf", "dinde", "saumon", "fromage blanc", "pois chiche", "cabillaud", "crevette"],
+  vitamine_b12_100g: ["oeuf", "saumon", "fromage", "boeuf", "thon", "lait", "sardine", "moule", "maquereau", "yaourt", "dinde", "hareng"],
 };
+
+/** Nombre d'aliments de la liste proposés chaque jour. */
+const PREFERRED_PER_DAY = 6;
+
+/**
+ * Six aliments de la liste, différents d'un jour à l'autre : la sélection
+ * avance d'un cran chaque jour, pour varier les idées sans tirage au hasard.
+ */
+export function preferredFoodsForDay(col: string, dayIndex: number): string[] {
+  const all = PREFERRED_FOODS[col] || [];
+  if (all.length <= PREFERRED_PER_DAY) return all;
+  const start = ((dayIndex % all.length) + all.length) % all.length;
+  return Array.from({ length: PREFERRED_PER_DAY }, (_, k) => all[(start + k) % all.length]);
+}
 
 /** Search preferred everyday foods for a nutrient, then fill with top DB results */
 export async function searchByNutrient(
@@ -198,7 +215,9 @@ export async function searchByNutrient(
   limit = 10
 ): Promise<CiqualFood[]> {
   const col = nutrient as string;
-  const preferred = PREFERRED_FOODS[col] || [];
+  // Jour courant à Paris, compté depuis une date fixe.
+  const dayIndex = Math.floor(Date.parse(`${parisDayKey()}T00:00:00Z`) / 86_400_000);
+  const preferred = preferredFoodsForDay(col, dayIndex);
 
   // Search preferred foods first
   const preferredResults: CiqualFood[] = [];

@@ -148,12 +148,12 @@ function computeBreakdown(opts: {
       if (symptomAvg < 5) {
         symptomPts += 1;
         positives.push({
-          label: `Symptômes maîtrisés (moy. ${symptomAvg.toFixed(1)}/10)`,
+          label: `Symptômes maîtrisés (moy. ${symptomAvg.toFixed(1).replace(".", ",")}/10)`,
           points: 1,
         });
       } else {
         negatives.push({
-          label: `Symptômes élevés : ${symptomAvg.toFixed(1)}/10`,
+          label: `Symptômes élevés : ${symptomAvg.toFixed(1).replace(".", ",")}/10`,
           points: 0,
         });
       }
@@ -216,7 +216,7 @@ function computeBreakdown(opts: {
   if (opts.routines.completed < opts.routines.total) {
     const missing = opts.routines.total - opts.routines.completed;
     suggestions.push(
-      `Complète ${missing} routine${missing > 1 ? "s" : ""} restante${missing > 1 ? "s" : ""} pour gagner jusqu'à ${Math.min(2, missing * 0.5).toFixed(1)}pt.`
+      `Complète ${missing} routine${missing > 1 ? "s" : ""} restante${missing > 1 ? "s" : ""} pour gagner jusqu'à ${Math.min(2, missing * 0.5).toFixed(1).replace(".", ",")}pt.`
     );
   }
 
@@ -329,8 +329,8 @@ export default function WellnessScoreCard() {
   let trend: { Icon: typeof ArrowUp; label: string; tone: string } | null = null;
   if (yesterdayScore !== null && !estimated) {
     const diff = scoreValue - yesterdayScore;
-    if (diff > 0.2) trend = { Icon: ArrowUp, label: `+${diff.toFixed(1)} vs hier`, tone: "text-green-500" };
-    else if (diff < -0.2) trend = { Icon: ArrowDown, label: `${diff.toFixed(1)} vs hier`, tone: "text-red-500" };
+    if (diff > 0.2) trend = { Icon: ArrowUp, label: `+${diff.toFixed(1).replace(".", ",")} vs hier`, tone: "text-green-500" };
+    else if (diff < -0.2) trend = { Icon: ArrowDown, label: `${diff.toFixed(1).replace(".", ",")} vs hier`, tone: "text-red-500" };
     else trend = { Icon: ArrowRight, label: "Stable vs hier", tone: "text-muted-foreground" };
   }
 
@@ -356,7 +356,7 @@ export default function WellnessScoreCard() {
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className={`text-xl font-bold ${colors.text}`}>{scoreValue.toFixed(1)}</span>
+                    <span className={`text-xl font-bold ${colors.text}`}>{scoreValue.toFixed(1).replace(".", ",")}</span>
                     <span className="text-[13px] text-muted-foreground">/10</span>
                   </div>
                 </button>
@@ -407,7 +407,7 @@ export default function WellnessScoreCard() {
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Ton score de bien-être : {scoreValue.toFixed(1)}/10
+              Ton score de bien-être : {scoreValue.toFixed(1).replace(".", ",")}/10
             </DialogTitle>
           </DialogHeader>
 
@@ -420,7 +420,7 @@ export default function WellnessScoreCard() {
                     <li key={i} className="flex justify-between gap-2 text-foreground">
                       <span>{c.label}</span>
                       <span className="text-green-600 font-medium whitespace-nowrap">
-                        +{c.points.toFixed(1)}pt
+                        +{c.points.toFixed(1).replace(".", ",")}pt
                       </span>
                     </li>
                   ))}
@@ -457,12 +457,12 @@ export default function WellnessScoreCard() {
               {breakdown.summary.map((s, i) => (
                 <div key={i}>
                   {i === 0
-                    ? `Base : ${s.points.toFixed(1)}/10`
-                    : `${s.points >= 0 ? "+" : ""}${s.points.toFixed(1)} pt (${s.label.toLowerCase()})`}
+                    ? `Base : ${s.points.toFixed(1).replace(".", ",")}/10`
+                    : `${s.points >= 0 ? "+" : ""}${s.points.toFixed(1).replace(".", ",")} pt (${s.label.toLowerCase()})`}
                 </div>
               ))}
               <div className="mt-1 pt-1 border-t border-border font-semibold">
-                = {scoreValue.toFixed(1)}/10
+                = {scoreValue.toFixed(1).replace(".", ",")}/10
               </div>
             </section>
           </div>

@@ -31,3 +31,17 @@ describe("Moteur unique de reconnaissance CIQUAL", () => {
     expect(await matchCiqual(fakeSupabase, "manouri")).toBeNull();
   });
 });
+
+import { preferredFoodsForDay } from "@/lib/ciqual";
+
+describe("Onglet Idées : aliments proposés", () => {
+  it("propose six aliments qui changent d'un jour à l'autre, sans soja", () => {
+    const day1 = preferredFoodsForDay("fer_100g", 100);
+    const day2 = preferredFoodsForDay("fer_100g", 101);
+    expect(day1).toHaveLength(6);
+    expect(day2).not.toEqual(day1);
+    for (let d = 0; d < 12; d++) {
+      expect(preferredFoodsForDay("fer_100g", d).join(" ")).not.toMatch(/tofu|soja/);
+    }
+  });
+});

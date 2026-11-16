@@ -189,7 +189,7 @@ function HydrationCard({ habit }: { habit: UserHabit }) {
               {habit.habit_name}
             </p>
             <p className="text-[13px] text-muted-foreground">
-              Objectif : {goal} verres/jour ({(goal * 0.25).toFixed(1)}L) · 1 verre = 250 mL
+              Objectif : {goal} verres/jour ({(goal * 0.25).toFixed(1).replace(".", ",")}L) · 1 verre = 250 mL
             </p>
           </div>
         </div>

@@ -167,8 +167,8 @@ export default function BeforeAfterButton({ entryId, entryDate, entryLabel }: Pr
                   const changeText = stable
                     ? "→ stable"
                     : delta < 0
-                    ? `↓ ${Math.abs(delta).toFixed(1)} pt${Math.abs(delta) >= 2 ? "s" : ""} (mieux)`
-                    : `↑ +${delta.toFixed(1)} pt${delta >= 2 ? "s" : ""} (pire)`;
+                    ? `↓ ${Math.abs(delta).toFixed(1).replace(".", ",")} pt${Math.abs(delta) >= 2 ? "s" : ""} (mieux)`
+                    : `↑ +${delta.toFixed(1).replace(".", ",")} pt${delta >= 2 ? "s" : ""} (pire)`;
                   return (
                     <div key={r.sym} className="bg-muted/30 rounded-lg px-3 py-2">
                       <div className="flex items-center justify-between gap-2">
@@ -178,7 +178,7 @@ export default function BeforeAfterButton({ entryId, entryDate, entryLabel }: Pr
                         </span>
                       </div>
                       <div className="text-[13px] text-muted-foreground mt-0.5">
-                        Avant : {(r.before as number).toFixed(1)}/10 · Après : {(r.after as number).toFixed(1)}/10
+                        Avant : {(r.before as number).toFixed(1).replace(".", ",")}/10 · Après : {(r.after as number).toFixed(1).replace(".", ",")}/10
                       </div>
                     </div>
                   );

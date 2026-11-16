@@ -248,7 +248,7 @@ function WeeklySummary({ logs, period }: { logs: any[]; period: number }) {
               <div className="w-20 h-2 rounded-full bg-muted overflow-hidden">
                 <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
               </div>
-              <span className="text-xs font-bold text-foreground w-8 text-right">{avg.toFixed(1)}</span>
+              <span className="text-xs font-bold text-foreground w-8 text-right">{avg.toFixed(1).replace(".", ",")}</span>
             </div>
           );
         })}
@@ -348,7 +348,7 @@ function CorrelationAnalysis({
     const actionLabel = selectedActionOption?.label.replace(/^(Routine|Habitude|Journal) · /, "") || "cette action";
 
     if (diff >= 0.5) {
-      return `📉 Les jours où tu ${actionLabel}, ton score de ${selectedSymptomLabel} est en moyenne ${diff.toFixed(1)} points plus bas`;
+      return `📉 Les jours où tu ${actionLabel}, ton score de ${selectedSymptomLabel} est en moyenne ${diff.toFixed(1).replace(".", ",")} points plus bas`;
     }
     if (diff <= -0.5) {
       return `📈 Les jours où tu ${actionLabel}, ton score de ${selectedSymptomLabel} tend à augmenter`;
@@ -880,7 +880,7 @@ export default function SymptomHistoryPage() {
           {activeSymptomKeys.slice(0, 6).map((key, i) => {
             const label = FULL_SYMPTOMS_LIST.find((x) => x.value === key)?.label || key;
             const values = chartData.map((d) => (d as any)[key] as number | undefined).filter((v): v is number => v !== undefined && v > 0);
-            const avg = values.length > 0 ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1) : "–";
+            const avg = values.length > 0 ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1).replace(".", ",") : "–";
             const max = values.length > 0 ? Math.max(...values) : 0;
             const latest = values.length > 0 ? values[values.length - 1] : 0;
 

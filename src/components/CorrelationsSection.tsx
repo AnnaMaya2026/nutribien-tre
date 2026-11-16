@@ -112,13 +112,13 @@ export default function CorrelationsSection() {
           out.push({
             id: `${id}-${sym}`,
             delta,
-            text: `${emoji} Les jours où tu consommes du ${label}, ton score de "${symLabel}" est en moyenne ${Math.abs(delta).toFixed(1)} point${Math.abs(delta) > 1 ? "s" : ""} plus bas.`,
+            text: `${emoji} Les jours où tu consommes du ${label}, ton score de "${symLabel}" est en moyenne ${Math.abs(delta).toFixed(1).replace(".", ",")} point${Math.abs(delta) > 1 ? "s" : ""} plus bas.`,
           });
         } else {
           out.push({
             id: `${id}-${sym}`,
             delta,
-            text: `${emoji} Les jours avec ${label}, ton score de "${symLabel}" est en moyenne ${delta.toFixed(1)} point${delta > 1 ? "s" : ""} plus élevé.`,
+            text: `${emoji} Les jours avec ${label}, ton score de "${symLabel}" est en moyenne ${delta.toFixed(1).replace(".", ",")} point${delta > 1 ? "s" : ""} plus élevé.`,
           });
         }
       }
