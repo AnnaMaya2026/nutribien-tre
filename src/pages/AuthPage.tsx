@@ -12,12 +12,14 @@ import {
 import { calculateCalorieGoal } from "@/lib/calorieGoal";
 import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
 import { birthYearFromAge } from "@/hooks/useProfile";
+import { HEALTH_CONSENT_TEXT } from "@/lib/healthConsent";
 
 export default function AuthPage() {
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(searchParams.get("mode") === "login");
+  const [healthConsent, setHealthConsent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -83,6 +85,10 @@ export default function AuthPage() {
     e.preventDefault();
     setError("");
     setSuccess("");
+    if (!isLogin && !healthConsent) {
+      setError("Coche la case d'accord sur tes données de santé pour créer ton compte.");
+      return;
+    }
     setLoading(true);
 
     const { error } = isLogin
@@ -134,6 +140,23 @@ export default function AuthPage() {
             minLength={6}
             className="h-12 rounded-lg bg-card border-border"
           />
+
+          {!isLogin && (
+            <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={healthConsent}
+                onChange={(e) => setHealthConsent(e.target.checked)}
+                className="mt-1 h-5 w-5 shrink-0 accent-[hsl(var(--primary))]"
+              />
+              <span className="text-[13px] text-foreground leading-relaxed">
+                {HEALTH_CONSENT_TEXT}{" "}
+                <a href="/confidentialite" target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                  Politique de confidentialité
+                </a>
+              </span>
+            </label>
+          )}
 
           {error && <p className="text-sm text-destructive text-center">{error}</p>}
           {success && <p className="text-sm text-success text-center">{success}</p>}

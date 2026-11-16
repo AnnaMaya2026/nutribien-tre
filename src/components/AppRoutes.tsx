@@ -28,6 +28,8 @@ import OnboardingTutorial from "@/components/OnboardingTutorial";
 import FeedbackButton from "@/components/FeedbackButton";
 import NotFound from "@/pages/NotFound";
 import SEOLayout from "@/components/SEOLayout";
+import HealthConsentGate from "@/components/HealthConsentGate";
+import { hasHealthConsent } from "@/lib/healthConsent";
 
 const SEO = {
   dashboard: { title: "NutriMéno — Tableau de bord nutritionnel", description: "Suis ta nutrition personnalisée pour la ménopause", path: "/" },
@@ -144,6 +146,18 @@ export default function AppRoutes() {
         <Route path="/cgu" element={withSEO(SEO.cgu, <TermsPage />)} />
         <Route path="/confidentialite" element={withSEO(SEO.confidentialite, <PrivacyPage />)} />
         <Route path="*" element={withSEO(SEO.welcome, <WelcomePage />)} />
+      </Routes>
+    );
+  }
+
+  // Sans consentement explicite aux données de santé, seul l'écran d'accord
+  // et les pages légales sont accessibles.
+  if (!hasHealthConsent(user)) {
+    return (
+      <Routes>
+        <Route path="/cgu" element={withSEO(SEO.cgu, <TermsPage />)} />
+        <Route path="/confidentialite" element={withSEO(SEO.confidentialite, <PrivacyPage />)} />
+        <Route path="*" element={<HealthConsentGate />} />
       </Routes>
     );
   }

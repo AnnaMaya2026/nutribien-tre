@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { healthConsentMetadata } from "@/lib/healthConsent";
 
 interface AuthContextType {
   user: User | null;
@@ -34,11 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  /** L'inscription enregistre la date du consentement aux données de santé. */
   const signUp = async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: window.location.origin, data: healthConsentMetadata() },
     });
     return { error: error as Error | null };
   };
