@@ -3,6 +3,7 @@
 // (per-100g table) and scales by grams; falls back to GPT estimates per 100g.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { matchCiqual } from "../_shared/ciqualMatch.ts";
+import { requireUser } from "../_shared/requireUser.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,6 +64,10 @@ const CIQUAL_MAP: Record<string, string> = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Seule une utilisatrice connectée peut appeler cette fonction.
+  const auth = await requireUser(req, corsHeaders);
+  if (auth instanceof Response) return auth;
 
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");

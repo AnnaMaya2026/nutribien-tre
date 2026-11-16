@@ -19,6 +19,7 @@ import {
   type Recipe,
   type RecipeTotals,
 } from "../_shared/sophieRecipe.ts";
+import { requireUser } from "../_shared/requireUser.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,9 +68,12 @@ const HEALTH_LABELS: Record<string, string> = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Seule une utilisatrice connectée peut appeler cette fonction.
+  const auth = await requireUser(req, corsHeaders);
+  if (auth instanceof Response) return auth;
+
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    console.log("API key loaded:", OPENAI_API_KEY?.substring(0, 10));
     if (!OPENAI_API_KEY) {
       return new Response(
         JSON.stringify({ error: "Clé API manquante — vérifiez la configuration" }),

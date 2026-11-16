@@ -6,6 +6,7 @@ import {
 } from "../_shared/profileRestrictions.ts";
 import { matchCiqual } from "../_shared/ciqualMatch.ts";
 import { computeRecipeTotals, isOverBudget, parseRecipe, scaleToBudget } from "../_shared/sophieRecipe.ts";
+import { requireUser } from "../_shared/requireUser.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,6 +15,10 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Seule une utilisatrice connectée peut appeler cette fonction.
+  const auth = await requireUser(req, corsHeaders);
+  if (auth instanceof Response) return auth;
 
   try {
     const { context, count = 3, exclude = [], budget: rawBudget } = await req.json();
