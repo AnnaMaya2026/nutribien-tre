@@ -9,12 +9,6 @@ import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.22.2";
 import { createClient } from "npm:@supabase/supabase-js@^2.101.1";
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.22.2";
 import { z } from "npm:zod@^4.4.3";
-function supabaseForUser(ctx) {
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 var list_food_logs_default = defineTool({
   name: "list_food_logs",
   title: "Lister les repas logg\xE9s",
@@ -29,7 +23,15 @@ var list_food_logs_default = defineTool({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Non authentifi\xE9" }], isError: true };
     }
-    const sb = supabaseForUser(ctx);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) {
+      throw new Error("Configuration de connexion indisponible");
+    }
+    const sb = createClient(url, key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
     let q = sb.from("food_logs").select("id, food_name, meal_type, portion_size, calories, proteins, carbs, fats, logged_at").order("logged_at", { ascending: false }).limit(limit ?? 100);
     if (from) q = q.gte("logged_at", from);
     if (to) q = q.lte("logged_at", to + "T23:59:59");
@@ -46,12 +48,6 @@ var list_food_logs_default = defineTool({
 import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.101.1";
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.22.2";
 import { z as z2 } from "npm:zod@^4.4.3";
-function supabaseForUser2(ctx) {
-  return createClient2(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 var log_food_default = defineTool2({
   name: "log_food",
   title: "Ajouter un aliment au journal",
@@ -71,7 +67,15 @@ var log_food_default = defineTool2({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Non authentifi\xE9" }], isError: true };
     }
-    const sb = supabaseForUser2(ctx);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) {
+      throw new Error("Configuration de connexion indisponible");
+    }
+    const sb = createClient2(url, key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
     const { data, error } = await sb.from("food_logs").insert({
       user_id: ctx.getUserId(),
       food_name: input.food_name,
@@ -95,12 +99,6 @@ var log_food_default = defineTool2({
 import { createClient as createClient3 } from "npm:@supabase/supabase-js@^2.101.1";
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.22.2";
 import { z as z3 } from "npm:zod@^4.4.3";
-function supabaseForUser3(ctx) {
-  return createClient3(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 var list_symptoms_default = defineTool3({
   name: "list_symptom_logs",
   title: "Lister les sympt\xF4mes enregistr\xE9s",
@@ -115,7 +113,15 @@ var list_symptoms_default = defineTool3({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Non authentifi\xE9" }], isError: true };
     }
-    const sb = supabaseForUser3(ctx);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) {
+      throw new Error("Configuration de connexion indisponible");
+    }
+    const sb = createClient3(url, key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
     let q = sb.from("symptom_logs").select(
       "id, logged_at, bouffees_chaleur, fatigue, insomnie, sautes_humeur, selected_symptoms, symptom_scores, notes"
     ).order("logged_at", { ascending: false }).limit(limit ?? 60);
@@ -134,12 +140,6 @@ var list_symptoms_default = defineTool3({
 import { createClient as createClient4 } from "npm:@supabase/supabase-js@^2.101.1";
 import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.22.2";
 import { z as z4 } from "npm:zod@^4.4.3";
-function supabaseForUser4(ctx) {
-  return createClient4(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 var list_journal_entries_default = defineTool4({
   name: "list_journal_entries",
   title: "Lister les notes du journal personnel",
@@ -154,7 +154,15 @@ var list_journal_entries_default = defineTool4({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Non authentifi\xE9" }], isError: true };
     }
-    const sb = supabaseForUser4(ctx);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) {
+      throw new Error("Configuration de connexion indisponible");
+    }
+    const sb = createClient4(url, key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
     let q = sb.from("journal_entries").select("*").order("created_at", { ascending: false }).limit(limit ?? 50);
     if (from) q = q.gte("created_at", from);
     if (to) q = q.lte("created_at", to + "T23:59:59");
@@ -170,12 +178,6 @@ var list_journal_entries_default = defineTool4({
 // src/lib/mcp/tools/get-profile.ts
 import { createClient as createClient5 } from "npm:@supabase/supabase-js@^2.101.1";
 import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.22.2";
-function supabaseForUser5(ctx) {
-  return createClient5(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 var get_profile_default = defineTool5({
   name: "get_profile",
   title: "Voir mon profil NutriM\xE9no",
@@ -186,7 +188,15 @@ var get_profile_default = defineTool5({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Non authentifi\xE9" }], isError: true };
     }
-    const sb = supabaseForUser5(ctx);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) {
+      throw new Error("Configuration de connexion indisponible");
+    }
+    const sb = createClient5(url, key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
     const { data, error } = await sb.from("profiles").select("*").eq("user_id", ctx.getUserId()).maybeSingle();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {
