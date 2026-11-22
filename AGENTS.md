@@ -1,4 +1,5 @@
 # Architecture rules
+- API usage counters reference public.profiles(user_id) with cascading deletion and expose their atomic increment function only to service_role; this keeps managed auth tables untouched and counters inaccessible to app users.
 - Every nutritional reference (ANSES targets, safety limits, protein g/kg, omega-3, phytoestrogen threshold) lives only in `supabase/functions/_shared/nutrientReferences.ts`; the frontend reads it through `src/lib/nutrientReferences.ts` and server functions import it directly. Never write a reference value anywhere else; `src/test/nutrientReferences.test.ts` enforces this.
 - Reuse SupplementFrequencyChoice and its settings validation in both supplement entry dialogs so frequency options cannot diverge between entry paths.
 - Pass the raw-ingredient CIQUAL context only where weights are raw by construction (recipe-card analysis and Sophie's recipes); keep the default matcher unchanged so journal entries retain their cooked-food preference.

@@ -107,6 +107,35 @@ export type Database = {
         }
         Relationships: []
       }
+      api_usage: {
+        Row: {
+          call_count: number
+          function_name: string
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          call_count?: number
+          function_name: string
+          usage_date: string
+          user_id: string
+        }
+        Update: {
+          call_count?: number
+          function_name?: string
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       daily_challenges: {
         Row: {
           challenge_date: string
@@ -1171,6 +1200,14 @@ export type Database = {
     }
     Functions: {
       f_unaccent: { Args: { "": string }; Returns: string }
+      increment_api_usage: {
+        Args: {
+          p_function_name: string
+          p_usage_date: string
+          p_user_id: string
+        }
+        Returns: number
+      }
       search_aliments_unaccent: {
         Args: { max_results?: number; search_term: string }
         Returns: {

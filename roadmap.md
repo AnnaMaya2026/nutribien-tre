@@ -1,4 +1,7 @@
 # Corrections demandées
+- [x] Redéployer les 17 fonctions depuis main ; déploiements confirmés, comparaison des versions antérieures indisponible.
+- [x] Vérifier le déclenchement de weekly-report-batch en lecture seule : deux tâches pg_cron actives, dimanche à 18 h et 19 h UTC.
+- [x] Créer api_usage et increment_api_usage, vérifier sécurité et types, tester 1 puis 2 dans une transaction annulée ; rattachement aux profils pour respecter les contraintes des tables gérées.
 - [x] Favoriser les ingrédients crus/secs uniquement dans les fiches recettes ; trois cas demandés et deux protections supplémentaires vérifiés, 79 tests réussis sans modifier les tests existants, compilation automatique réussie.
 - [x] Partager le choix de fréquence entre les deux dialogues de complément ; les trois modes ont été enregistrés et relus dans l'écran connecté, puis les compléments temporaires supprimés.
 - [x] Permettre la répartition d'une dose depuis un complément actif sans périodicité ; limites et mise à jour vérifiées, sans changer le calcul.
