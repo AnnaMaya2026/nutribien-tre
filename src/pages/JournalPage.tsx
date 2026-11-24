@@ -437,6 +437,8 @@ export default function JournalPage() {
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
+          {/* Les résultats s'affichent SOUS le champ, sans jamais le recouvrir. */}
+          <div className="relative">
           <div className="flex gap-2">
             <Input
               value={search}
@@ -451,18 +453,18 @@ export default function JournalPage() {
             />
           </div>
           {searching && (
-            <div className="absolute z-10 top-[5.5rem] left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <div className="absolute z-10 top-full mt-1 left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               Recherche en cours...
             </div>
           )}
           {!searching && searchError && results.length === 0 && search.length >= 2 && !selectedFood && (
-            <div className="absolute z-10 top-[5.5rem] left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
+            <div className="absolute z-10 top-full mt-1 left-0 right-0 bg-card border border-border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
               {searchError}
             </div>
           )}
           {results.length > 0 && !selectedFood && !searching && (
-            <div className="absolute z-10 top-[5.5rem] left-0 right-0 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-10 top-full mt-1 left-0 right-0 bg-card border border-border rounded-lg shadow-lg max-h-[40vh] overflow-y-auto">
               {results.map((f) => (
                 <button
                   key={f.id}
@@ -478,6 +480,7 @@ export default function JournalPage() {
               ))}
             </div>
           )}
+          </div>
         </div>
       )}
 

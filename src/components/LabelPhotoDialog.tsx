@@ -109,6 +109,15 @@ const MICRO_FIELDS: { key: string; label: string; unit: string; col: string }[] 
   { key: "phytoestrogens", label: "Phytoestrogènes", unit: "mg", col: "phytoestrogens" },
 ];
 
+/** Valeur affichée dans un champ : kcal entières, une décimale au plus, virgule française. */
+const toField = (v: unknown, key: string): string => {
+  if (v === null || v === undefined || v === "") return "";
+  const n = Number(v);
+  if (!isFinite(n)) return "";
+  const r = key === "calories" || Math.abs(n) >= 100 ? Math.round(n) : Math.round(n * 10) / 10;
+  return String(r).replace(".", ",");
+};
+
 const numOrNull = (s: string): number | null => {
   const n = Number(String(s).replace(",", "."));
   return s.trim() === "" || !isFinite(n) || n < 0 ? null : n;
@@ -237,7 +246,7 @@ export default function LabelPhotoDialog({
           return {
             key: f.key,
             label: f.label,
-            amount: v === null || v === undefined ? "" : String(v),
+            amount: toField(v, f.key),
             unit: f.unit,
             source: (f.key === "sodium" ? "calcule" : f.key === "sugars" || f.key === "saturated_fats" ? "fiche"
               : data?.macro_sources?.[f.key] === "etiquette" ? "fiche"
@@ -251,7 +260,7 @@ export default function LabelPhotoDialog({
           return {
             key: f.key,
             label: f.label,
-            amount: v === null || v === undefined ? "" : String(v),
+            amount: toField(v, f.key),
             unit: f.unit,
             source: "ingredients" as Source,
           };
@@ -321,7 +330,7 @@ export default function LabelPhotoDialog({
             return {
               key: f.key,
               label: f.label,
-              amount: v === null || v === undefined ? "" : String(v),
+              amount: toField(v, f.key),
               unit: f.unit,
               source: (f.key === "sodium" ? "calcule" : "etiquette") as Source,
             };
@@ -333,7 +342,7 @@ export default function LabelPhotoDialog({
             return {
               key: f.key,
               label: f.label,
-              amount: v === null || v === undefined ? "" : String(v),
+              amount: toField(v, f.key),
               unit: f.unit,
               source: "estime" as Source,
             };
