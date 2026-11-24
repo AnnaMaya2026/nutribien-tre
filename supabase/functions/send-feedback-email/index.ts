@@ -1,5 +1,5 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
-import { requireUser } from "../_shared/requireUser.ts";
+import { enforceDailyLimit, requireUser } from "../_shared/requireUser.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
@@ -18,6 +18,8 @@ Deno.serve(async (req) => {
   // Seule une utilisatrice connectée peut appeler cette fonction.
   const auth = await requireUser(req, corsHeaders);
   if (auth instanceof Response) return auth;
+  const overLimit = await enforceDailyLimit(auth.user.id, "send-feedback-email", corsHeaders);
+  if (overLimit) return overLimit;
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");

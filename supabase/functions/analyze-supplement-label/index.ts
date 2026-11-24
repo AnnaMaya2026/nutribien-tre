@@ -3,7 +3,7 @@
 // Même schéma vision que analyze-meal-photo / parse-menu-foods (OpenAI gpt-4o).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { NUTRIENT_REFERENCES } from "../_shared/nutrientReferences.ts";
-import { requireUser } from "../_shared/requireUser.ts";
+import { enforceDailyLimit, requireUser } from "../_shared/requireUser.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -114,6 +114,8 @@ Deno.serve(async (req) => {
   // Seule une utilisatrice connectée peut appeler cette fonction.
   const auth = await requireUser(req, corsHeaders);
   if (auth instanceof Response) return auth;
+  const overLimit = await enforceDailyLimit(auth.user.id, "analyze-supplement-label", corsHeaders);
+  if (overLimit) return overLimit;
 
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");

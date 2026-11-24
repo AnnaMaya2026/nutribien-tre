@@ -188,6 +188,15 @@ Ton chaleureux, jamais culpabilisant.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  // Réservé aux tâches planifiées : dès que le secret CRON_SECRET est défini,
+  // un appel sans l'en-tête x-cron-secret correspondant est refusé.
+  const cronSecret = Deno.env.get("CRON_SECRET");
+  if (cronSecret && req.headers.get("x-cron-secret") !== cronSecret) {
+    return new Response(JSON.stringify({ error: "Non autorisé" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
@@ -196,14 +205,19 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Semaine à résumer : lancé le dimanche soir, le rapport porte sur la semaine
+    // qui se termine ce dimanche (lundi → dimanche), pas sur la précédente.
     const now = new Date();
-    const thisMonday = getMondayOf(now);
-    const lastMonday = new Date(thisMonday);
-    lastMonday.setDate(thisMonday.getDate() - 7);
-    const lastSunday = new Date(thisMonday);
-    lastSunday.setDate(thisMonday.getDate() - 1);
-    const weekStart = toKey(lastMonday);
-    const weekEnd = toKey(lastSunday);
+    const parisDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(now);
+    const today = new Date(`${parisDay}T12:00:00Z`);
+    const isSunday = today.getUTCDay() === 0;
+    const weekEndDate = new Date(today);
+    if (!isSunday) weekEndDate.setUTCDate(today.getUTCDate() - today.getUTCDay());
+    const weekStartDate = new Date(weekEndDate);
+    weekStartDate.setUTCDate(weekEndDate.getUTCDate() - 6);
+    const lastMonday = new Date(`${toKey(weekStartDate)}T00:00:00`);
+    const weekStart = toKey(weekStartDate);
+    const weekEnd = toKey(weekEndDate);
 
     // Active users = anyone with food_logs in the target week
     const { data: activeRows, error: activeErr } = await supabase

@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { requireUser } from "../_shared/requireUser.ts";
+import { enforceDailyLimit, requireUser } from "../_shared/requireUser.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +12,8 @@ serve(async (req) => {
   // Seule une utilisatrice connectée peut appeler cette fonction.
   const auth = await requireUser(req, corsHeaders);
   if (auth instanceof Response) return auth;
+  const overLimit = await enforceDailyLimit(auth.user.id, "tts-sophie", corsHeaders);
+  if (overLimit) return overLimit;
 
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");

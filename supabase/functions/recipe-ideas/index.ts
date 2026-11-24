@@ -6,7 +6,7 @@ import {
   isRecipeAllowed,
   isFoodAllowed,
 } from "../_shared/profileRestrictions.ts";
-import { requireUser } from "../_shared/requireUser.ts";
+import { enforceDailyLimit, requireUser } from "../_shared/requireUser.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,6 +19,8 @@ Deno.serve(async (req) => {
   // Seule une utilisatrice connectée peut appeler cette fonction.
   const auth = await requireUser(req, corsHeaders);
   if (auth instanceof Response) return auth;
+  const overLimit = await enforceDailyLimit(auth.user.id, "recipe-ideas", corsHeaders);
+  if (overLimit) return overLimit;
 
   try {
     const { ingredient, nutrient } = await req.json();
