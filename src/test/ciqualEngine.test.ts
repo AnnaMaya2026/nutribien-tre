@@ -45,3 +45,29 @@ describe("Onglet Idées : aliments proposés", () => {
     }
   });
 });
+
+describe("Formes de pâtes absentes de CIQUAL", () => {
+  const PASTA = [
+    { id: 10, nom: "Pâtes sèches standard, crues", groupe: "produits céréaliers", calories_100g: 357 },
+    { id: 11, nom: "Pâtes sèches standard, cuites, non salées", groupe: "produits céréaliers", calories_100g: 154 },
+    { id: 12, nom: "Pâte feuilletée, crue", groupe: "produits céréaliers", calories_100g: 400 },
+    { id: 13, nom: "Pâtes fraîches, aux oeufs, crues", groupe: "produits céréaliers", calories_100g: 280 },
+  ];
+  const sb = {
+    rpc: async (_fn: string, { search_term }: { search_term: string }) => ({
+      data: PASTA.filter((r) => r.nom.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes(search_term.replace(/s$/, ""))),
+      error: null,
+    }),
+    from: () => ({ select: () => ({ eq: () => ({ limit: async () => ({ data: [] }) }) }) }),
+  };
+  it("compte les casarecce d'une fiche recette comme des pâtes sèches crues", async () => {
+    const m = await matchCiqual(sb, "casarecce Bio", { ingredientsBruts: true });
+    expect(m?.row.id).toBe(10);
+    expect((await matchCiqual(sb, "fusilli", { ingredientsBruts: true }))?.row.id).toBe(10);
+    expect((await matchCiqual(sb, "pâtes", { ingredientsBruts: true }))?.row.id).toBe(10);
+  });
+  it("compte des pâtes saisies au journal comme cuites", async () => {
+    expect((await matchCiqual(sb, "casarecce"))?.row.id).toBe(11);
+    expect((await matchCiqual(sb, "pâtes"))?.row.id).toBe(11);
+  });
+});

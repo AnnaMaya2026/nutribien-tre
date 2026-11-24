@@ -98,6 +98,10 @@ const SYNONYMS: [RegExp, string][] = [
   [/\b(allege|allegee|leger|legere)\b/g, "teneur reduite"],
   [/\bfait maison\b/g, "fait maison"],
   [/\b(parmigiano( reggiano)?|grana padano)\b/g, "parmesan"],
+  // Formes de pâtes absentes de CIQUAL : comptées comme des pâtes alimentaires.
+  // Sans cette règle, « casarecce » restait introuvable et les pâtes étaient
+  // retirées du calcul d'une fiche recette (309 kcal au lieu d'environ 666).
+  [/\b(casarecce|fusillis?|farfalles?|rigatonis?|linguines?|orecchiette|conchiglie|trofie|strozzapreti|mezze maniche|paccheri|gemellis?|radiatori|cavatappi|campanelle|pappardelle|fettuccines?|tortiglioni|bucatinis?|ziti|lumaconi|lasagnes?|torsades?|coquillettes?|papillons?|coudes?|creste di gallo|caserecce|calamarata|mafaldine)\b/g, "pates seches"],
 ];
 
 // Mots qui ne sont pas des distinctions CIQUAL
@@ -291,7 +295,12 @@ export async function rankCiqual(
   context: CiqualMatchContext = {},
   opts: { keepZeroKcal?: boolean } = {},
 ): Promise<ScoredCandidate[]> {
-  const cleaned = applySynonyms(stripOrigin(name) || name) || normalize(name);
+  let cleaned = applySynonyms(stripOrigin(name) || name) || normalize(name);
+  // « pâtes » seules = pâtes alimentaires sèches (pas la pâte feuilletée ni les
+  // pâtes fraîches). Sans précision, crues dans une fiche recette (poids avant
+  // cuisson), cuites dans le journal.
+  if (cleaned === "pates" || cleaned === "pate") cleaned = "pates seches";
+  if (cleaned === "pates seches") cleaned += context.ingredientsBruts ? " crues" : " cuites";
   const terms: string[] = [];
   const norm = normalize(cleaned);
   const sing = singularize(cleaned);
